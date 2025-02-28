@@ -1,0 +1,1 @@
+<img {{ $attributes }} src="{{ asset('/img/shs-logo-white.png') }}" alt="ShipShark, Ltd.">

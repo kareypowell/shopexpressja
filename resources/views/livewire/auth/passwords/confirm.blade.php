@@ -3,7 +3,7 @@
 <div>
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
         <a href="{{ route('home') }}">
-            <x-logo class="w-auto h-48 mx-auto text-pomegranate-600" />
+            <x-logo class="w-auto h-48 mx-auto text-wax-flower-600" />
         </a>
 
         <h2 class="mt-6 text-3xl font-extrabold text-center text-gray-900 leading-9">
@@ -33,7 +33,7 @@
 
                 <div class="flex items-center justify-end mt-6">
                     <div class="text-sm leading-5">
-                        <a href="{{ route('password.request') }}" class="font-medium text-pomegranate-600 hover:text-pomegranate-500 focus:outline-none focus:underline transition ease-in-out duration-150">
+                        <a href="{{ route('password.request') }}" class="font-medium text-wax-flower-600 hover:text-wax-flower-500 focus:outline-none focus:underline transition ease-in-out duration-150">
                             Forgot your password?
                         </a>
                     </div>
@@ -41,7 +41,7 @@
 
                 <div class="mt-6">
                     <span class="block w-full rounded-md shadow-sm">
-                        <button type="submit" class="flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-pomegranate-600 border border-transparent rounded-md hover:bg-pomegranate-500 focus:outline-none focus:border-pomegranate-700 focus:ring-pomegranate active:bg-pomegranate-700 transition duration-150 ease-in-out">
+                        <button type="submit" class="flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-wax-flower-600 border border-transparent rounded-md hover:bg-wax-flower-500 focus:outline-none focus:border-wax-flower-700 focus:ring-wax-flower active:bg-wax-flower-700 transition duration-150 ease-in-out">
                             Confirm password
                         </button>
                     </span>

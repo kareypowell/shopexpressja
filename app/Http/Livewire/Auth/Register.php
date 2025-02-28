@@ -12,7 +12,10 @@ use Livewire\Component;
 class Register extends Component
 {
     /** @var string */
-    public $name = '';
+    public $firstName = '';
+
+    /** @var string */
+    public $lastName = '';
 
     /** @var string */
     public $email = '';
@@ -23,18 +26,47 @@ class Register extends Component
     /** @var string */
     public $passwordConfirmation = '';
 
+    /** @var string */
+    public $taxNumber = '';
+
+    /** @var string */
+    public $telephoneNumber = '';
+
+    /** @var string */
+    public $streetAddress = '';
+
+    /** @var string */
+    public $townCity = '';
+
+    /** @var string */
+    public $parish = '';
+
+    /** @var boolean */
+    public $termsAccepted = false;
+
     public function register()
     {
         $this->validate([
-            'name' => ['required'],
+            'firstName' => ['required'],
+            'lastName' => ['required'],
             'email' => ['required', 'email', 'unique:users'],
             'password' => ['required', 'min:8', 'same:passwordConfirmation'],
         ]);
 
         $user = User::create([
             'email' => $this->email,
-            'name' => $this->name,
+            'first_name' => $this->firstName,
+            'last_name' => $this->lastName,
             'password' => Hash::make($this->password),
+        ]);
+
+        $user->profile()->create([
+            'shs_number' => 'SHS' . $user->id,
+            'tax_number' => $this->taxNumber,
+            'telephone_number' => $this->telephoneNumber,
+            'street_address' => $this->streetAddress,
+            'city_town' => $this->townCity,
+            'parish' => $this->parish,
         ]);
 
         event(new Registered($user));

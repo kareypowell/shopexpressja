@@ -1,22 +1,22 @@
-<nav class="bg-pomegranate-600">
+<nav class="bg-wax-flower-600">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between h-16">
         <div class="flex items-center">
         <div class="flex-shrink-0">
             <a href="{{ route('home') }}">
-                <x-logo class="h-8 w-32 text-pomegranate-600" />
+                <x-banner-logo class="h-8 w-32 text-wax-flower-600" />
             </a>
         </div>
         <div class="hidden md:block">
             <div class="ml-10 flex items-baseline space-x-4">
-            <!-- Current: "bg-pomegranate-700 text-white", Default: "text-white hover:bg-pomegranate-500 hover:bg-opacity-75" -->
-            <a href="{{ route('home') }}" class="{{ \Route::is('home') == true ? 'bg-pomegranate-700 text-white' : 'text-white hover:bg-pomegranate-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Dashboard</a>
+            <!-- Current: "bg-wax-flower-700 text-white", Default: "text-white hover:bg-wax-flower-500 hover:bg-opacity-75" -->
+            <a href="{{ route('home') }}" class="{{ \Route::is('home') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Dashboard</a>
             </div>
         </div>
         </div>
         <div class="hidden md:block">
         <div class="ml-4 flex items-center md:ml-6">
-            <button type="button" class="p-1 bg-pomegranate-600 rounded-full text-pomegranate-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-pomegranate-600 focus:ring-white">
+            <button type="button" class="p-1 bg-wax-flower-600 rounded-full text-wax-flower-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-wax-flower-600 focus:ring-white">
             <span class="sr-only">View notifications</span>
             <!-- Heroicon name: outline/bell -->
             <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -27,7 +27,7 @@
             <!-- Profile dropdown -->
             <div class="ml-3 relative" x-data="{ open: false }">
             <div>
-                <button x-on:click="open = !open" type="button" class="max-w-xs bg-pomegranate-600 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-pomegranate-600 focus:ring-white" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                <button x-on:click="open = !open" type="button" class="max-w-xs bg-wax-flower-600 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-wax-flower-600 focus:ring-white" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
                 <span class="sr-only">Open user menu</span>
                 <img class="h-8 w-8 rounded-full" src="https://via.placeholder.com/32" alt="">
                 </button>
@@ -61,7 +61,7 @@
 
         <div class="-mr-2 flex md:hidden" x-data="{ open: false }">
         <!-- Mobile menu button -->
-        <button x-on:click="open = !open" type="button" class="bg-pomegranate-600 inline-flex items-center justify-center p-2 rounded-md text-pomegranate-200 hover:text-white hover:bg-pomegranate-500 hover:bg-opacity-75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-pomegranate-600 focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
+        <button x-on:click="open = !open" type="button" class="bg-wax-flower-600 inline-flex items-center justify-center p-2 rounded-md text-wax-flower-200 hover:text-white hover:bg-wax-flower-500 hover:bg-opacity-75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-wax-flower-600 focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
             <span class="sr-only">Open main menu</span>
             <!--
             Heroicon name: outline/menu
@@ -87,19 +87,21 @@
     <!-- Mobile menu, show/hide based on menu state. -->
     <div x-show="open" x-on:click.away="open = false" class="md:hidden" id="mobile-menu">
     <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-        <!-- Current: "bg-pomegranate-700 text-white", Default: "text-white hover:bg-pomegranate-500 hover:bg-opacity-75" -->
-        <a href="{{ route('home') }}" class="{{ \Route::is('home') == true ? 'bg-pomegranate-700 text-white' : 'text-white hover:bg-pomegranate-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Dashboard</a>
+        <!-- Current: "bg-wax-flower-700 text-white", Default: "text-white hover:bg-wax-flower-500 hover:bg-opacity-75" -->
+        <a href="{{ route('home') }}" class="{{ \Route::is('home') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Dashboard</a>
     </div>
-    <div class="pt-4 pb-3 border-t border-pomegranate-700">
+    <div class="pt-4 pb-3 border-t border-wax-flower-700">
         <div class="flex items-center px-5">
         <div class="flex-shrink-0">
             <img class="h-10 w-10 rounded-full" src="https://via.placeholder.com/32" alt="">
         </div>
         <div class="ml-3">
-            <div class="text-base font-medium text-white">{{ auth()->user()->name }}</div>
-            <div class="text-sm font-medium text-pomegranate-300">{{ auth()->user()->email }}</div>
+            @auth
+            <div class="text-base font-medium text-white">{{ auth()->user()->first_name }}</div>
+            <div class="text-sm font-medium text-wax-flower-300">{{ auth()->user()->email }}</div>
+            @endauth
         </div>
-        <button type="button" class="ml-auto bg-pomegranate-600 flex-shrink-0 p-1 rounded-full text-pomegranate-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-pomegranate-600 focus:ring-white">
+        <button type="button" class="ml-auto bg-wax-flower-600 flex-shrink-0 p-1 rounded-full text-wax-flower-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-wax-flower-600 focus:ring-white">
             <span class="sr-only">View notifications</span>
             <!-- Heroicon name: outline/bell -->
             <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -108,12 +110,12 @@
         </button>
         </div>
         <div class="mt-3 px-2 space-y-1">
-        <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-pomegranate-500 hover:bg-opacity-75">Your Profile</a>
+        <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-wax-flower-500 hover:bg-opacity-75">Your Profile</a>
 
-        <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-pomegranate-500 hover:bg-opacity-75">Settings</a>
+        <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-wax-flower-500 hover:bg-opacity-75">Settings</a>
 
         <a href="{{ route('logout') }}"
-            onclick="event.preventDefault(); document.getElementById('logout-form-2').submit();" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-pomegranate-500 hover:bg-opacity-75">Sign out</a>
+            onclick="event.preventDefault(); document.getElementById('logout-form-2').submit();" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-wax-flower-500 hover:bg-opacity-75">Sign out</a>
         <form id="logout-form-2" action="{{ route('logout') }}" method="POST" style="display: none;">
             @csrf
         </form>
