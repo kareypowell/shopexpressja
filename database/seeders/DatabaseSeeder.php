@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Rate;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -15,5 +16,9 @@ class DatabaseSeeder extends Seeder
     {
         // \App\Models\User::factory(10)->create();
         $this->call(AddressesTableSeeder::class);
+        $this->call(ManifestsTableSeeder::class);
+        $this->call(OfficesTableSeeder::class);
+        $this->call(ShippersTableSeeder::class);
+        $this->call(RatesTableSeeder::class);
     }
 }
