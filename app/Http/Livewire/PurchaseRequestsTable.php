@@ -12,6 +12,8 @@ class PurchaseRequestsTable extends DataTableComponent
 {
     protected $model = PurchaseRequest::class;
 
+    public $refresh = true;
+
     public function configure(): void
     {
         $this->setPrimaryKey('id');
@@ -46,14 +48,14 @@ class PurchaseRequestsTable extends DataTableComponent
                 ->sortable(),
             Column::make("Quantity", "quantity")
                 ->sortable(),
-            Column::make("Unit Price (USD)", "unit_price")
+            Column::make("Unit Price", "unit_price")
                 ->sortable()
                 ->addClass('hidden md:table-cell'),
-            Column::make("Shipping Fee (USD)", "shipping_fee")
+            Column::make("Shipping Fee", "shipping_fee")
                 ->sortable(),
-            Column::make("Tax (USD)", "tax")
+            Column::make("Tax", "tax")
                 ->sortable(),
-            Column::make("Total Price (USD)", "total_price")
+            Column::make("Total Price", "total_price")
                 ->sortable(),
             Column::make("Status", "status")
                 ->sortable(),
@@ -65,6 +67,7 @@ class PurchaseRequestsTable extends DataTableComponent
     public function query(): Builder
     {
         return PurchaseRequest::query()
+            ->orderBy('id', 'desc')
             ->where('user_id', auth()->id())
             ->when($this->getFilter('search'), fn($query, $search) => $query->search($search))
             ->when($this->getFilter('item_name'), fn($query, $item_name) => $query->where('item_name', $item_name))

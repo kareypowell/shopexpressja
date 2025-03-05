@@ -22,7 +22,7 @@
                 <div class="hidden md:block">
                     <div class="ml-10 flex items-baseline space-x-4">
                         <!-- Current: "bg-wax-flower-700 text-white", Default: "text-white hover:bg-wax-flower-500 hover:bg-opacity-75" -->
-                        <a href="{{ route('invoices') }}" class="{{ \Route::is('invoices') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Invoices</a>
+                        <a href="{{ route('pre-alerts') }}" class="{{ \Route::is('pre-alerts') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Pre-Alerts</a>
                     </div>
                 </div>
                 <div class="hidden md:block">

@@ -18,13 +18,13 @@
 
 <x-livewire-tables::table.cell>
   <div>
-    @if($row->status == 'Processing')
+    @if($row->status == 'processing')
     <x-badges.primary>{{ $row->status }}</x-badges.primary>
-    @elseif($row->status == 'Shipped')
+    @elseif($row->status == 'shipped')
     <x-badges.success>{{ $row->status }}</x-badges.success>
-    @elseif($row->status == 'Delayed')
+    @elseif($row->status == 'delayed')
     <x-badges.warning>{{ $row->status }}</x-badges.warning>
-    @elseif($row->status == 'Ready for Pickup')
+    @elseif($row->status == 'ready')
     <x-badges.primary>{{ $row->status }}</x-badges.primary>
     @else
     <x-badges.default>{{ $row->status }}</x-badges.default>

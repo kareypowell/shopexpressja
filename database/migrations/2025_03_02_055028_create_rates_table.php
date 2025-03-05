@@ -18,7 +18,7 @@ class CreateRatesTable extends Migration
             $table->decimal('weight', 10, 2);
             $table->decimal('rate', 10, 2);
             $table->decimal('processing_fee', 10, 2);
-            $table->string('type')->default('Air'); // Air, Sea
+            $table->string('type')->default('air'); // air, sea
             $table->timestamps();
         });
     }

@@ -24,7 +24,7 @@ class CreatePackagesTable extends Migration
             $table->string('description');
             $table->decimal('weight', 15, 2);
             $table->decimal('value', 15, 2);
-            $table->string('status')->default('Pending'); // Pending, Processing, Shipped, Delayed, Ready for Pickup
+            $table->string('status')->default('pending'); // Pending, Processing, Shipped, Delayed, Ready for Pickup
             $table->decimal('estimated_value', 15, 2)->default(0);
             $table->decimal('freight_price', 15, 2)->default(0);
             $table->decimal('processing_fee', 15, 2)->default(0);

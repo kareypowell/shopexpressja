@@ -11,6 +11,7 @@ use App\Http\Livewire\Auth\Verify;
 use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\Dashboard;
 use App\Http\Livewire\Invoice;
+use App\Http\Livewire\PreAlert;
 use App\Http\Livewire\PurchaseRequest;
 use App\Http\Livewire\ShippingInformation;
 use Illuminate\Http\Request;
@@ -80,5 +81,8 @@ Route::post('/email/verification-notification', function (Request $request) {
 Route::middleware('auth')->group(function () {
     Route::get('/invoices', Invoice::class)->name('invoices');
     Route::get('/shipping-information', ShippingInformation::class)->name('shipping-information');
+    Route::get('/pre-alerts', PreAlert::class)->name('pre-alerts');
+    Route::get('/pre-alerts/{pre_alert_id}/view', PreAlert::class)->name('view-pre-alert');
     Route::get('/purchase-requests', PurchaseRequest::class)->name('purchase-requests');
+    Route::get('/purchase-requests/{purchase_request_id}/view', PurchaseRequest::class)->name('view-purchase-request');
 });

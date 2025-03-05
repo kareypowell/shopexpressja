@@ -2,7 +2,9 @@
 
 namespace App\Http\Livewire;
 
+use App\Models\Package;
 use Livewire\Component;
+use Illuminate\Database\Eloquent\Builder;
 
 class Dashboard extends Component
 {
@@ -12,6 +14,41 @@ class Dashboard extends Component
     public int $availableSea = 0;
     public float $accountBalance = 0;
     public int $delayedPackages = 0;
+
+    public function mount()
+    {
+        $this->inComingAir = Package::whereHas('manifest', function (Builder $query) {
+                                        $query->where('type', 'air');
+                                    })
+                                    ->where('user_id', auth()->id())
+                                    ->whereIn('status', ['Shipped'])
+                                    ->count();
+
+        $this->inComingSea = Package::whereHas('manifest', function (Builder $query) {
+                                        $query->where('type', 'sea');
+                                    })
+                                    ->where('user_id', auth()->id())
+                                    ->whereIn('status', ['Shipped'])
+                                    ->count();
+
+        $this->availableAir = Package::whereHas('manifest', function (Builder $query) {
+                                        $query->where('type', 'air');
+                                    })
+                                    ->where('user_id', auth()->id())
+                                    ->whereIn('status', ['Ready for Pickup'])
+                                    ->count();
+
+        $this->availableSea = Package::whereHas('manifest', function (Builder $query) {
+                                        $query->where('type', 'sea');
+                                    })
+                                    ->where('user_id', auth()->id())
+                                    ->whereIn('status', ['Ready for Pickup'])
+                                    ->count();
+
+        $this->accountBalance = Package::sum('freight_price');
+
+        $this->delayedPackages = Package::where('status', 'delayed')->count();
+    }
 
     public function render()
     {

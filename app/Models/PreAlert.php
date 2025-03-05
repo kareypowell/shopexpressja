@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Package extends Model
+class PreAlert extends Model
 {
     use HasFactory;
 
@@ -17,16 +17,6 @@ class Package extends Model
             fn($query) => $query->where('tracking_number', 'like', '%' . $term . '%')
                 ->orWhere('status', 'like', '%' . $term . '%')
         );
-    }
-
-    public function manifest()
-    {
-        return $this->belongsTo(Manifest::class);
-    }
-
-    public function office()
-    {
-        return $this->belongsTo(Office::class);
     }
 
     public function user()
@@ -42,11 +32,6 @@ class Package extends Model
     public function packagePreAlert()
     {
         return $this->hasOne(PackagePreAlert::class);
-    }
-
-    public function getFormattedWeightAttribute()
-    {
-        return number_format($this->weight, 2);
     }
 
     public function getFormattedValueAttribute()

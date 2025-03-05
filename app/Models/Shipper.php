@@ -15,4 +15,9 @@ class Shipper extends Model
     {
         return $this->hasMany(Package::class);
     }
+
+    public function preAlerts()
+    {
+        return $this->hasMany(PreAlert::class);
+    }
 }

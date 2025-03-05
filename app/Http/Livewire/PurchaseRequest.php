@@ -94,7 +94,7 @@ class PurchaseRequest extends Component
         $this->closeModal();
         $this->resetInputFields();
 
-        return redirect('/purchase-requests');
+        // return redirect('/purchase-requests');
     }
 
     public function render()

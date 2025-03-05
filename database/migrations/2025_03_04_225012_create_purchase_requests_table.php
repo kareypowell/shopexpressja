@@ -25,7 +25,7 @@ class CreatePurchaseRequestsTable extends Migration
             $table->decimal('shipping_fee', 15, 2)->default(0);
             $table->decimal('tax', 15, 2)->default(0);
             $table->decimal('total_price', 15, 2);
-            $table->string('status')->default('Pending'); // Pending, Approved, Rejected, Completed, Cancelled
+            $table->string('status')->default('pending'); // Pending, Approved, Rejected, Completed, Cancelled
             $table->string('remarks')->nullable();
             $table->timestamp('approved_at')->nullable();
             $table->timestamp('rejected_at')->nullable();
