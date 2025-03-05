@@ -8,4 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 class Office extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'address',
+    ];
+
+    public function manifests()
+    {
+        return $this->hasMany(Manifest::class);
+    }
+
+    public function packages()
+    {
+        return $this->hasMany(Package::class);
+    }
 }

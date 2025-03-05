@@ -22,6 +22,18 @@ class ManifestsTableSeeder extends Seeder
             'flight_number' => 'AA123',
             'flight_destination' => 'MIA',
             'exchange_rate' => 150.00,
+            'type' => 'air',
+            'is_open' => true,
+        ]);
+
+        Manifest::create([
+            'name' => 'Test Manifest #2',
+            'shipment_date' => now(),
+            'reservation_number' => '123488',
+            'flight_number' => 'AA321',
+            'flight_destination' => 'MIA',
+            'exchange_rate' => 150.00,
+            'type' => 'sea',
             'is_open' => true,
         ]);
     }

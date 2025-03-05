@@ -8,4 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class Shipper extends Model
 {
     use HasFactory;
+
+    protected $guarded = ['id'];
+
+    public function packages()
+    {
+        return $this->hasMany(Package::class);
+    }
 }

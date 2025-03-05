@@ -10,6 +10,11 @@ use App\Http\Livewire\Auth\Register;
 use App\Http\Livewire\Auth\Verify;
 use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\Dashboard;
+use App\Http\Livewire\Invoice;
+use App\Http\Livewire\PurchaseRequest;
+use App\Http\Livewire\ShippingInformation;
+use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,7 +27,7 @@ use App\Http\Livewire\Dashboard;
 |
 */
 
-Route::get('/', Dashboard::class)->middleware('auth')->name('home');
+Route::get('/', Dashboard::class)->middleware('auth', 'verified')->name('home');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', Login::class)
@@ -54,4 +59,26 @@ Route::middleware('auth')->group(function () {
 
     Route::post('logout', LogoutController::class)
         ->name('logout');
+});
+
+Route::get('/email/verify', function () {
+    return view('livewire.auth.verify');
+})->middleware('auth')->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+
+    return redirect('/');
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+Route::post('/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+
+    return back()->with('message', 'Verification link sent!');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/invoices', Invoice::class)->name('invoices');
+    Route::get('/shipping-information', ShippingInformation::class)->name('shipping-information');
+    Route::get('/purchase-requests', PurchaseRequest::class)->name('purchase-requests');
 });

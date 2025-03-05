@@ -16,19 +16,19 @@
                 <div class="hidden md:block">
                     <div class="ml-10 flex items-baseline space-x-4">
                         <!-- Current: "bg-wax-flower-700 text-white", Default: "text-white hover:bg-wax-flower-500 hover:bg-opacity-75" -->
-                        <a href="#" class="{{ \Route::is('') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Track Packages</a>
+                        <a href="{{ route('shipping-information') }}" class="{{ \Route::is('shipping-information') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Shipping Information</a>
                     </div>
                 </div>
                 <div class="hidden md:block">
                     <div class="ml-10 flex items-baseline space-x-4">
                         <!-- Current: "bg-wax-flower-700 text-white", Default: "text-white hover:bg-wax-flower-500 hover:bg-opacity-75" -->
-                        <a href="#" class="{{ \Route::is('') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Pre-Alerts</a>
+                        <a href="{{ route('invoices') }}" class="{{ \Route::is('invoices') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Invoices</a>
                     </div>
                 </div>
                 <div class="hidden md:block">
                     <div class="ml-10 flex items-baseline space-x-4">
                         <!-- Current: "bg-wax-flower-700 text-white", Default: "text-white hover:bg-wax-flower-500 hover:bg-opacity-75" -->
-                        <a href="#" class="{{ \Route::is('') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Purchase Requests</a>
+                        <a href="{{ route('purchase-requests') }}" class="{{ \Route::is('purchase-requests') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Purchase Requests</a>
                     </div>
                 </div>
             </div>
@@ -107,6 +107,18 @@
         <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <!-- Current: "bg-wax-flower-700 text-white", Default: "text-white hover:bg-wax-flower-500 hover:bg-opacity-75" -->
             <a href="{{ route('home') }}" class="{{ \Route::is('home') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Dashboard</a>
+        </div>
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <!-- Current: "bg-wax-flower-700 text-white", Default: "text-white hover:bg-wax-flower-500 hover:bg-opacity-75" -->
+            <a href="{{ route('shipping-information') }}" class="{{ \Route::is('shipping-information') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Shipping Information</a>
+        </div>
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <!-- Current: "bg-wax-flower-700 text-white", Default: "text-white hover:bg-wax-flower-500 hover:bg-opacity-75" -->
+            <a href="{{ route('invoices') }}" class="{{ \Route::is('invoices') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Invoices</a>
+        </div>
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <!-- Current: "bg-wax-flower-700 text-white", Default: "text-white hover:bg-wax-flower-500 hover:bg-opacity-75" -->
+            <a href="{{ route('purchase-requests') }}" class="{{ \Route::is('purchase-requests') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Purchase Requests</a>
         </div>
         <div class="pt-4 pb-3 border-t border-wax-flower-700">
             <div class="flex items-center px-5">

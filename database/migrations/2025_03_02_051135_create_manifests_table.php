@@ -21,6 +21,7 @@ class CreateManifestsTable extends Migration
             $table->string('flight_number')->nullable();
             $table->string('flight_destination')->nullable();
             $table->decimal('exchange_rate', 15, 2)->default(0);
+            $table->string('type')->default('air'); // air, sea
             $table->boolean('is_open')->default(true);
             $table->timestamps();
         });
