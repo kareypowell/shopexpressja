@@ -7,16 +7,21 @@ use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Column;
 use Rappasoft\LaravelLivewireTables\Views\Filter;
 use App\Models\Package;
+use App\Models\User;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class CustomerPackagesTable extends DataTableComponent
 {
+    // use AuthorizesRequests;
+
     protected $model = Package::class;
     public bool $perPageAll = true;
 
-    public function configure(): void
-    {
-        $this->setPrimaryKey('id');
-    }
+    // public function mount()
+    // {
+    //     // Check authorization when component is mounted
+    //     $this->authorize('viewAny', User::class);
+    // }
 
     // public array $bulkActions = [
     //     'exportSelected' => 'Export',

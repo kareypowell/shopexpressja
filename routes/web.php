@@ -78,7 +78,7 @@ Route::post('/email/verification-notification', function (Request $request) {
     return back()->with('message', 'Verification link sent!');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
-Route::middleware('auth')->group(function () {
+Route::middleware('auth', 'verified')->group(function () {
     Route::get('/invoices', Invoice::class)->name('invoices');
     Route::get('/shipping-information', ShippingInformation::class)->name('shipping-information');
     Route::get('/pre-alerts', PreAlert::class)->name('pre-alerts');

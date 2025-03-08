@@ -23,7 +23,8 @@ class PreAlertsTable extends DataTableComponent
                 ->searchable()
                 ->sortable(),
             Column::make("Description", "description")
-                ->searchable(),
+                ->searchable()
+                ->sortable(),
             Column::make("Value", "value")
                 ->searchable()
                 ->sortable(),

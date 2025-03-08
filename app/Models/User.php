@@ -22,6 +22,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'last_name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -67,5 +68,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function packagePreAlerts()
     {
         return $this->hasMany(PackagePreAlert::class);
+    }
+
+    public function isAdmin()
+    {
+        return $this->role === 'admin';
     }
 }

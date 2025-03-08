@@ -4,6 +4,10 @@ namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use App\Models\User;
+use App\Policies\UserPolicy;
+use App\Models\Package;
+use App\Policies\PackagePolicy;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 
@@ -15,7 +19,8 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        // 'App\Models\Model' => 'App\Policies\ModelPolicy',
+        // User::class => UserPolicy::class,
+        // Package::class => PackagePolicy::class,
     ];
 
     /**
@@ -27,7 +32,10 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        // Define admin gate
+        // Gate::define('admin-access', function ($user) {
+        //     return $user->isAdmin();
+        // });
 
         VerifyEmail::toMailUsing(function ($notifiable, $url) {
             return (new MailMessage)
