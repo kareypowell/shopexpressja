@@ -1,8 +1,8 @@
-## About ShipSharkLtd
+## About SHS-Client
 
 ShipSharkLtd is a drop shipping and warehouse management system.
 
-## Setting up the ShipSharkLtd
+## Setting up the SHS-Client
 
 The ShipSharkLtd interface can be installed using any automation tool such as Docker, Kubernetes, but this guide assumes that you will be doing the setup manually.
 
