@@ -67,6 +67,7 @@ class CustomerPackagesTable extends DataTableComponent
     {
         return Package::query()
             ->where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
             ->when($this->getFilter('search'), fn($query, $search) => $query->search($search))
             ->when($this->getFilter('tracking_number'), fn($query, $tracking_number) => $query->where('tracking_number', $tracking_number))
             ->when($this->getFilter('status'), fn($query, $status) => $query->where('status', $status));

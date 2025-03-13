@@ -31,6 +31,12 @@
                         <a href="{{ route('purchase-requests') }}" class="{{ \Route::is('purchase-requests') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Purchase Requests</a>
                     </div>
                 </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <!-- Current: "bg-wax-flower-700 text-white", Default: "text-white hover:bg-wax-flower-500 hover:bg-opacity-75" -->
+                        <a href="{{ route('rates') }}" class="{{ \Route::is('rates') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Rates</a>
+                    </div>
+                </div>
             </div>
             <div class="hidden md:block">
                 <div class="ml-4 flex items-center md:ml-6">
@@ -51,16 +57,6 @@
                             </button>
                         </div>
 
-                        <!--
-                Dropdown menu, show/hide based on menu state.
-
-                Entering: "transition ease-out duration-100"
-                From: "transform opacity-0 scale-95"
-                To: "transform opacity-100 scale-100"
-                Leaving: "transition ease-in duration-75"
-                From: "transform opacity-100 scale-100"
-                To: "transform opacity-0 scale-95"
-            -->
                         <div x-show="open" x-on:click.away="open = false" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
                             <!-- Active: "bg-gray-100", Not Active: "" -->
                             <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-0">Your Profile</a>
@@ -81,11 +77,6 @@
                 <!-- Mobile menu button -->
                 <button x-on:click="open = !open" type="button" class="bg-wax-flower-600 inline-flex items-center justify-center p-2 rounded-md text-wax-flower-200 hover:text-white hover:bg-wax-flower-500 hover:bg-opacity-75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-wax-flower-600 focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
                     <span class="sr-only">Open main menu</span>
-                    <!--
-            Heroicon name: outline/menu
-
-            Menu open: "hidden", Menu closed: "block"
-            -->
                     <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
@@ -119,6 +110,10 @@
         <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <!-- Current: "bg-wax-flower-700 text-white", Default: "text-white hover:bg-wax-flower-500 hover:bg-opacity-75" -->
             <a href="{{ route('purchase-requests') }}" class="{{ \Route::is('purchase-requests') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Purchase Requests</a>
+        </div>
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <!-- Current: "bg-wax-flower-700 text-white", Default: "text-white hover:bg-wax-flower-500 hover:bg-opacity-75" -->
+            <a href="{{ route('rates') }}" class="{{ \Route::is('rates') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Rates</a>
         </div>
         <div class="pt-4 pb-3 border-t border-wax-flower-700">
             <div class="flex items-center px-5">

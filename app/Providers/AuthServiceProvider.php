@@ -33,9 +33,9 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         // Define admin gate
-        // Gate::define('admin-access', function ($user) {
-        //     return $user->isAdmin();
-        // });
+        Gate::define('admin-access', function ($user) {
+            return $user->isAdmin();
+        });
 
         VerifyEmail::toMailUsing(function ($notifiable, $url) {
             return (new MailMessage)

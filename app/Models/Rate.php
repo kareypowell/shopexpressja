@@ -10,4 +10,13 @@ class Rate extends Model
     use HasFactory;
 
     protected $guarded = ['id'];
+
+    public function scopeSearch($query, $term)
+    {
+        return $query->where(
+            fn($query) => $query->where('weight', 'like', '%' . $term . '%')
+                ->orWhere('rate', 'like', '%' . $term . '%')
+                ->orWhere('type', 'like', '%' . $term . '%')
+        );
+    }
 }

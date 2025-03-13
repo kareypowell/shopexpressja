@@ -51,6 +51,8 @@
             toastr.warning(event.detail.message);
         });
     </script>
+
+    <x-tawk-to />
 </body>
 
 </html>
