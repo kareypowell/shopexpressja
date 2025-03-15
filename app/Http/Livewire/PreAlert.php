@@ -23,7 +23,7 @@ class PreAlert extends Component
 
     public function mount()
     {
-        $this->shipperList = Shipper::all();
+        $this->shipperList = Shipper::orderBy('name', 'asc')->get();
     }
 
     public function create()

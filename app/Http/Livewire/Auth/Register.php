@@ -2,8 +2,8 @@
 
 namespace App\Http\Livewire\Auth;
 
-use App\Providers\RouteServiceProvider;
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Profile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -59,6 +59,7 @@ class Register extends Component
             'first_name' => $this->firstName,
             'last_name' => $this->lastName,
             'password' => Hash::make($this->password),
+            'role_id' => Role::where('name', 'customer')->first()->id,
         ]);
 
         $user->profile()->create([
@@ -84,7 +85,7 @@ class Register extends Component
 
     // create a private method to generate unique 7 digit account numbers with 'SHS' prefix.
     // these numbers must not collide with existing account numbers.
-    private function generateAccountNumber() : string
+    private function generateAccountNumber(): string
     {
         $shsNumber = 'SHS' . mt_rand(1000000, 9999999);
 

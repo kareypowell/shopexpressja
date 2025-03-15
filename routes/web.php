@@ -14,6 +14,7 @@ use App\Http\Livewire\Invoice;
 use App\Http\Livewire\PreAlert;
 use App\Http\Livewire\PurchaseRequest;
 use App\Http\Livewire\Rate;
+use App\Http\Livewire\Profile\Profile;
 use App\Http\Livewire\ShippingInformation;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -80,8 +81,9 @@ Route::post('/email/verification-notification', function (Request $request) {
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 // Customer routes
-Route::middleware('auth', 'verified')->group(function () {
+Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
     Route::get('/invoices', Invoice::class)->name('invoices');
+    Route::get('/my-profile', Profile::class)->name('my-profile');
     Route::get('/shipping-information', ShippingInformation::class)->name('shipping-information');
     Route::get('/pre-alerts', PreAlert::class)->name('pre-alerts');
     Route::get('/pre-alerts/{pre_alert_id}/view', PreAlert::class)->name('view-pre-alert');
@@ -91,6 +93,11 @@ Route::middleware('auth', 'verified')->group(function () {
 });
 
 // Admin routes
-Route::middleware('auth', 'verified', 'admin')->prefix('admin')->group(function () {
+Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->group(function () {
+    // Route::get('/rates', Rate::class)->name('rates');
+});
+
+// Purchaser routes
+Route::middleware(['auth', 'verified', 'role:purchaser'])->prefix('staff')->group(function () {
     // Route::get('/rates', Rate::class)->name('rates');
 });

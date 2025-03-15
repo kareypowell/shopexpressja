@@ -6,19 +6,20 @@ use Closure;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Http\Request;
 
-class AdminMiddleware
+class RoleMiddleware
 {
     /**
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
+     * @param  string  $role
      * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next, $role)
     {
-        if (Gate::denies('admin-access')) {
-            abort(403, 'Unauthorized action.');
+        if (!$request->user() || !$request->user()->hasRole($role)) {
+            abort(403, 'You do not have permission to access this area.');
         }
 
         return $next($request);

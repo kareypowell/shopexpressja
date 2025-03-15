@@ -23,7 +23,7 @@ class CreateProfilesTable extends Migration
             $table->string('city_town');
             $table->string('parish');
             $table->string('country')->default('Jamaica');
-            $table->string('pickup_location')->nullable();
+            $table->integer('pickup_location')->nullable();
             $table->string('profile_photo_path')->nullable();
             $table->timestamps();
         });

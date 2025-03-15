@@ -22,7 +22,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'last_name',
         'email',
         'password',
-        'role',
+        'role_id',
     ];
 
     /**
@@ -70,8 +70,59 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(PackagePreAlert::class);
     }
 
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    /**
+     * Check if the user has the given role.
+     *
+     * @param string $role
+     * @return bool
+     */
+    public function hasRole($role)
+    {
+        return $this->role->name === $role;
+    }
+
+    /**
+     * Check if the user has superadmin role.
+     *
+     * @return bool
+     */
+    public function isSuperAdmin()
+    {
+        return $this->hasRole('superadmin');
+    }
+
+    /**
+     * Check if the user has admin role.
+     *
+     * @return bool
+     */
     public function isAdmin()
     {
-        return $this->role === 'admin';
+        return $this->hasRole('admin');
+    }
+
+    /**
+     * Check if the user has customer role.
+     *
+     * @return bool
+     */
+    public function isCustomer()
+    {
+        return $this->hasRole('customer');
+    }
+
+    /**
+     * Check if the user has purchaser role.
+     *
+     * @return bool
+     */
+    public function isPurchaser()
+    {
+        return $this->hasRole('purchaser');
     }
 }
