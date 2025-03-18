@@ -55,7 +55,7 @@
                     <div class="sm:flex sm:items-center">
                         <div class="sm:flex-auto">
                             <h1 class="text-base font-bold text-lg text-gray-900">Sea Freight Address</h1>
-                            <p class="mt-2 text-sm text-gray-700">Use the address below to send items via air. Be sure to enter your address in this format.</p>
+                            <p class="mt-2 text-sm text-gray-700">Use the address below to send items via ocean. Be sure to enter your address in this format.</p>
                         </div>
                     </div>
                     <div class="mt-8 flow-root">

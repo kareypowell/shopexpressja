@@ -5,7 +5,7 @@
 <div class="min-h-full py-12 px-4 sm:px-6 lg:px-8">
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
         <a href="{{ route('home') }}">
-            <x-logo class="w-auto h-48 mx-auto text-wax-flower-600" />
+            <x-logo class="w-auto h-40 mx-auto text-wax-flower-600" />
         </a>
 
         <h2 class="mt-6 text-3xl font-extrabold text-center text-gray-900 leading-9">
