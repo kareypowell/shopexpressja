@@ -1,1 +1,1 @@
-<img {{ $attributes }} src="{{ asset('/img/shipsharkltd-logo.png') }}" alt="ShipShark, Ltd.">
+<img {{ $attributes }} src="{{ asset('/img/shs-logo.svg') }}" alt="Ship Heaven Sharks Ltd.">

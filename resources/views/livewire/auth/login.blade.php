@@ -4,7 +4,7 @@
     <div class="max-w-md w-full space-y-8">
         <div>
             <a href="{{ route('home') }}">
-                <x-logo class="w-auto h-32 mx-auto text-wax-flower-600" />
+                <x-logo class="w-auto h-48 mx-auto text-wax-flower-600" />
             </a>
             <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
 
