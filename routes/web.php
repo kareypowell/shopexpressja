@@ -16,6 +16,7 @@ use App\Http\Livewire\PurchaseRequest;
 use App\Http\Livewire\Rate;
 use App\Http\Livewire\Profile\Profile;
 use App\Http\Livewire\ShippingInformation;
+use App\Http\Livewire\ViewPreAlert;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
@@ -80,13 +81,18 @@ Route::post('/email/verification-notification', function (Request $request) {
     return back()->with('message', 'Verification link sent!');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
+// Super Admin routes
+Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->group(function () {
+    // Route::get('/rates', Rate::class)->name('rates');
+});
+
 // Customer routes
 Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
     Route::get('/invoices', Invoice::class)->name('invoices');
     Route::get('/my-profile', Profile::class)->name('my-profile');
     Route::get('/shipping-information', ShippingInformation::class)->name('shipping-information');
     Route::get('/pre-alerts', PreAlert::class)->name('pre-alerts');
-    Route::get('/pre-alerts/{pre_alert_id}/view', PreAlert::class)->name('view-pre-alert');
+    Route::get('/pre-alerts/{pre_alert_id}/view', ViewPreAlert::class)->name('view-pre-alert');
     Route::get('/purchase-requests', PurchaseRequest::class)->name('purchase-requests');
     Route::get('/purchase-requests/{purchase_request_id}/view', PurchaseRequest::class)->name('view-purchase-request');
     Route::get('/rates', Rate::class)->name('rates');

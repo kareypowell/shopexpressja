@@ -8,6 +8,6 @@ class ViewPreAlert extends Component
 {
     public function render()
     {
-        return view('livewire.view-pre-alert');
+        return view('livewire.pre-alerts.view-pre-alert');
     }
 }

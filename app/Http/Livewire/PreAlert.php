@@ -7,7 +7,8 @@ use App\Models\Shipper;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-
+use Illuminate\Support\Facades\Http;
+use Exception;
 class PreAlert extends Component
 {
     use WithFileUploads;
@@ -20,6 +21,15 @@ class PreAlert extends Component
     public $file_path = null;
     public string $file_url = '';
     public $shipperList = [];
+
+    public $test = 'TEST';
+
+    public $fromCurrency = 'USD';
+    public $toCurrency = 'JMD';
+    public $amount = 1;
+    public $result = null;
+    public $loading = true;
+    public $error = null;
 
     public function mount()
     {

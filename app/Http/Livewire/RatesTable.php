@@ -29,13 +29,13 @@ class RatesTable extends DataTableComponent
     public function columns(): array
     {
         return [
-            Column::make("Weight", "weight")
+            Column::make("Weight (lbs)", "weight")
                 ->sortable()
                 ->searchable(),
-            Column::make("Rate", "rate")
+            Column::make("Rate (USD)", "rate")
                 ->sortable()
                 ->searchable(),
-            Column::make("Processing Fee", "processing_fee")
+            Column::make("Processing Fee (USD)", "processing_fee")
                 ->sortable()
                 ->searchable(),
             Column::make("Channel", "type")

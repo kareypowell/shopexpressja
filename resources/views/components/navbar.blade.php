@@ -73,18 +73,14 @@
                 </div>
             </div>
 
-            <div class="-mr-2 flex md:hidden" x-data="{ open: false }">
+            <div class="-mr-2 flex md:hidden">
                 <!-- Mobile menu button -->
                 <button x-on:click="open = !open" type="button" class="bg-wax-flower-600 inline-flex items-center justify-center p-2 rounded-md text-wax-flower-200 hover:text-white hover:bg-wax-flower-500 hover:bg-opacity-75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-wax-flower-600 focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
                     <span class="sr-only">Open main menu</span>
                     <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
-                    <!--
-            Heroicon name: outline/x
 
-            Menu open: "block", Menu closed: "hidden"
-            -->
                     <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -105,7 +101,7 @@
         </div>
         <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <!-- Current: "bg-wax-flower-700 text-white", Default: "text-white hover:bg-wax-flower-500 hover:bg-opacity-75" -->
-            <a href="{{ route('invoices') }}" class="{{ \Route::is('invoices') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Invoices</a>
+            <a href="{{ route('pre-alerts') }}" class="{{ \Route::is('pre-alerts') == true ? 'bg-wax-flower-700 text-white' : 'text-white hover:bg-wax-flower-500 hover:text-white hover:bg-opacity-75' }} block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Pre-Alerts</a>
         </div>
         <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <!-- Current: "bg-wax-flower-700 text-white", Default: "text-white hover:bg-wax-flower-500 hover:bg-opacity-75" -->
@@ -122,7 +118,7 @@
                 </div>
                 <div class="ml-3">
                     @auth
-                    <div class="text-base font-medium text-white">{{ auth()->user()->first_name }}</div>
+                    <div class="text-base font-medium text-white">{{ auth()->user()->first_name . ' ' . auth()->user()->last_name }}</div>
                     <div class="text-sm font-medium text-wax-flower-300">{{ auth()->user()->email }}</div>
                     @endauth
                 </div>
@@ -135,9 +131,7 @@
                 </button>
             </div>
             <div class="mt-3 px-2 space-y-1">
-                <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-wax-flower-500 hover:bg-opacity-75">Your Profile</a>
-
-                <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-wax-flower-500 hover:bg-opacity-75">Settings</a>
+                <a href="{{ route('my-profile') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-wax-flower-500 hover:bg-opacity-75">Your Profile</a>
 
                 <a href="{{ route('logout') }}"
                     onclick="event.preventDefault(); document.getElementById('logout-form-2').submit();" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-wax-flower-500 hover:bg-opacity-75">Sign out</a>
