@@ -1,7 +1,7 @@
 <div>
     <h3 class="mt-5 text-base font-semibold text-gray-900">Shipping Addresses</h3>
-    <div class="mt-5 grid grid-cols-3 xl:grid-cols-3 gap-5 -px-4 py-4">
-        <!-- <div class="w-full bg-white rounded-lg shadow col-span-2"></div> -->
+    <div class="mt-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 py-4">
+        <!-- Air Freight Address Card -->
         <div class="w-full bg-white rounded-lg shadow">
             <div class="px-4 py-4">
                 <div class="px-4 sm:px-6 lg:px-8">
@@ -49,6 +49,7 @@
             </div>
         </div>
 
+        <!-- Sea Freight Address Card -->
         <div class="w-full bg-white rounded-lg shadow">
             <div class="px-4 py-4">
                 <div class="px-4 sm:px-6 lg:px-8">
@@ -96,8 +97,10 @@
             </div>
         </div>
 
-        <div class="w-full bg-white rounded-lg shadow">
+        <!-- Third card (empty) -->
+        <div class="w-full bg-white rounded-lg shadow md:col-span-2 lg:col-span-1">
             <div class="px-4 py-4">
+                <!-- Content for third card if needed -->
             </div>
         </div>
     </div>
