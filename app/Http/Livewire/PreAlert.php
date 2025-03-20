@@ -17,7 +17,7 @@ class PreAlert extends Component
     public int $shipper_id = 0;
     public string $tracking_number = '';
     public string $description = '';
-    public float $value = 0.0;
+    public $value = '';
     public $file_path = null;
     public string $file_url = '';
     public $shipperList = [];
@@ -34,6 +34,8 @@ class PreAlert extends Component
     public function mount()
     {
         $this->shipperList = Shipper::orderBy('name', 'asc')->get();
+
+        $this->value = 0.0;
     }
 
     public function create()
@@ -121,7 +123,7 @@ class PreAlert extends Component
         $this->closeModal();
         $this->resetInputFields();
 
-        // return redirect('/pre-alerts');
+        return redirect('/pre-alerts');
     }
 
     public function render()

@@ -10,11 +10,18 @@ class PurchaseRequest extends Component
     public bool $isOpen = false;
     public string $item_name = '';
     public string $item_url = '';
-    public int $quantity = 0;
-    public float $unit_price = 0.0;
-    public float $shipping_fee = 0.0;
-    public float $tax = 0.0;
+    public $quantity = '';
+    public $unit_price = '';
+    public $shipping_fee = '';
+    public $tax = '';
 
+    public function mount() {
+        $this->quantity = 0;
+        $this->unit_price = 0.0;
+        $this->shipping_fee = 0.0;
+        $this->tax = 0.0;
+    }
+    
     public function create()
     {
         $this->resetInputFields();
@@ -94,7 +101,7 @@ class PurchaseRequest extends Component
         $this->closeModal();
         $this->resetInputFields();
 
-        // return redirect('/purchase-requests');
+        return redirect('/purchase-requests');
     }
 
     public function render()

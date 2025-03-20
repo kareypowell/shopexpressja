@@ -84,7 +84,23 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function hasRole($role)
     {
-        return $this->role->name === $role;
+        // Convert the input role string to an array if it's a comma-separated string
+        if (is_string($role) && strpos($role, ',') !== false) {
+            $roles = array_map('trim', explode(',', $role));
+            return in_array($this->role->name, $roles);
+        }
+
+        // If checking for a single role as a string
+        if (is_string($role)) {
+            return $this->role->name === $role;
+        }
+
+        // If checking for multiple roles passed as an array
+        if (is_array($role)) {
+            return in_array($this->role->name, $role);
+        }
+
+        return false;
     }
 
     /**
