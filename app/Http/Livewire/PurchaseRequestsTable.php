@@ -10,14 +10,7 @@ use App\Models\PurchaseRequest;
 
 class PurchaseRequestsTable extends DataTableComponent
 {
-    protected $model = PurchaseRequest::class;
-
-    public $refresh = true;
-
-    public function configure(): void
-    {
-        $this->setPrimaryKey('id');
-    }
+    public $refresh = 'visible';
 
     public array $filterNames = [
         'status' => 'Status',

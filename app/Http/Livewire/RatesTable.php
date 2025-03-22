@@ -10,6 +10,8 @@ use Rappasoft\LaravelLivewireTables\Views\Filter;
 
 class RatesTable extends DataTableComponent
 {
+    // public $refresh = 'visible';
+
     public array $filterNames = [
         'type' => 'Channel',
     ];

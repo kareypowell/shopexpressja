@@ -9,7 +9,8 @@ use App\Models\Role;
 
 class RolesTable extends DataTableComponent
 {
-
+    public $refresh = 'visible';
+    
     public function columns(): array
     {
         return [

@@ -17,6 +17,8 @@ class CustomerPackagesTable extends DataTableComponent
     protected $model = Package::class;
     public bool $perPageAll = true;
 
+    public $refresh = 'visible';
+
     // public function mount()
     // {
     //     // Check authorization when component is mounted

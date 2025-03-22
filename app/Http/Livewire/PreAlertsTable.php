@@ -10,7 +10,7 @@ use App\Models\PreAlert;
 class PreAlertsTable extends DataTableComponent
 {
     protected $model = PreAlert::class;
-    public $refresh = true;
+    public $refresh = 'visible';
 
     public function columns(): array
     {

@@ -8,6 +8,7 @@ use App\Http\Livewire\Auth\Passwords\Email;
 use App\Http\Livewire\Auth\Passwords\Reset;
 use App\Http\Livewire\Auth\Register;
 use App\Http\Livewire\Auth\Verify;
+use App\Http\Livewire\Customers\Customer;
 use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\Dashboard;
 use App\Http\Livewire\Invoice;
@@ -83,7 +84,7 @@ Route::post('/email/verification-notification', function (Request $request) {
 
 // Super Admin routes
 Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->group(function () {
-    // Route::get('/rates', Rate::class)->name('rates');
+    Route::get('/customers', Customer::class)->name('customers');
 });
 
 // Customer routes
