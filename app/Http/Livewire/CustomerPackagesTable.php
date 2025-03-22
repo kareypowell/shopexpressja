@@ -13,10 +13,6 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class CustomerPackagesTable extends DataTableComponent
 {
     // use AuthorizesRequests;
-
-    protected $model = Package::class;
-    public bool $perPageAll = true;
-
     public $refresh = 'visible';
 
     // public function mount()
@@ -61,7 +57,7 @@ class CustomerPackagesTable extends DataTableComponent
             Column::make("Status", "status")
                 ->sortable()
                 ->searchable(),
-            Column::blank(),
+            Column::make("Actions", ""),
         ];
     }
 

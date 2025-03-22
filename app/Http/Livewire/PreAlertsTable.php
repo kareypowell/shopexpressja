@@ -9,7 +9,6 @@ use App\Models\PreAlert;
 
 class PreAlertsTable extends DataTableComponent
 {
-    protected $model = PreAlert::class;
     public $refresh = 'visible';
 
     public function columns(): array
@@ -32,7 +31,7 @@ class PreAlertsTable extends DataTableComponent
                 ->sortable(),
             Column::make("Created at", "created_at")
                 ->sortable(),
-            Column::blank(),
+            Column::make("Actions"),
         ];
     }
 

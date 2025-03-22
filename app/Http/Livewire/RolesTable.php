@@ -14,17 +14,22 @@ class RolesTable extends DataTableComponent
     public function columns(): array
     {
         return [
-            Column::make("Id", "id")
-                ->sortable(),
-            Column::make("Created at", "created_at")
-                ->sortable(),
-            Column::make("Updated at", "updated_at")
-                ->sortable(),
+            Column::make("Role Name", "name")
+                ->sortable()
+                ->searchable(),
+            Column::make("Description", "description")
+                ->searchable(),
+            Column::make("Actions", ""),
         ];
     }
 
     public function query(): Builder
     {
         return Role::query();
+    }
+
+    public function rowView(): string
+    {
+        return 'livewire-tables.rows.roles-table';
     }
 }

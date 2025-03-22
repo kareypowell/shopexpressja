@@ -16,6 +16,7 @@ use App\Http\Livewire\PreAlert;
 use App\Http\Livewire\PurchaseRequest;
 use App\Http\Livewire\Rate;
 use App\Http\Livewire\Profile\Profile;
+use App\Http\Livewire\Roles\Role;
 use App\Http\Livewire\ShippingInformation;
 use App\Http\Livewire\ViewPreAlert;
 use Illuminate\Http\Request;
@@ -85,6 +86,7 @@ Route::post('/email/verification-notification', function (Request $request) {
 // Super Admin routes
 Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->group(function () {
     Route::get('/customers', Customer::class)->name('customers');
+    Route::get('/roles', Role::class)->name('roles');
 });
 
 // Customer routes

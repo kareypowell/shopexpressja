@@ -53,7 +53,7 @@ class PurchaseRequestsTable extends DataTableComponent
             Column::make("Status", "status")
                 ->sortable(),
             Column::make("Remarks", "remarks"),
-            Column::blank(),
+            Column::make("Actions"),
         ];
     }
 

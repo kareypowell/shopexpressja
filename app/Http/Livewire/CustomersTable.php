@@ -10,7 +10,7 @@ use App\Models\User;
 
 class CustomersTable extends DataTableComponent
 {
-    public $refresh = 'visible';
+    // public $refresh = 'visible';
 
     public array $bulkActions = [
         'exportCustomers' => 'Export XLXS',
