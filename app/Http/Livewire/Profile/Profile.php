@@ -105,25 +105,39 @@ class Profile extends Component
      */
     public function updatePassword() {
         $this->validate([
-            'current_password' => ['required'],
-            'new_password' => ['required', 'min:8', 'same:confirm_password'],
+            'currentPassword' => ['required'],
+            'newPassword' => ['required', 'min:8', 'same:confirmPassword'],
         ]);
 
         // check if the old password is correct
-        if (!Hash::check($this->current_password, auth()->user()->password)) {
+        if (!Hash::check($this->currentPassword, auth()->user()->password)) {
             $this->dispatchBrowserEvent('toastr:error', [
-                'message' => 'Current password is incorrect.',
+                'message' => 'There is something wrong with the current password.',
             ]);
             return;
         } else {
             auth()->user()->update([
-                'password' => bcrypt($this->password),
+                'password' => bcrypt($this->newPassword),
             ]);
 
             $this->dispatchBrowserEvent('toastr:success', [
                 'message' => 'Password Updated Successfully.',
             ]);
+
+            $this->resetInputFields();
         }
+    }
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    private function resetInputFields()
+    {
+        $this->currentPassword = '';
+        $this->newPassword = '';
+        $this->confirmPassword = '';
     }
     
     public function render()

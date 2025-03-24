@@ -19,8 +19,10 @@ use App\Http\Livewire\Profile\Profile;
 use App\Http\Livewire\Roles\Role;
 use App\Http\Livewire\ShippingInformation;
 use App\Http\Livewire\ViewPreAlert;
+use App\Mail\WelcomeUser;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Support\Facades\Mail;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,6 +75,8 @@ Route::get('/email/verify', function () {
 
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
     $request->fulfill();
+
+    // Mail::to(auth()->user()->email)->send(new WelcomeUser(auth()->user()->first_name));
 
     return redirect('/');
 })->middleware(['auth', 'signed'])->name('verification.verify');
