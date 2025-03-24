@@ -51,6 +51,8 @@ class Register extends Component
             'firstName' => ['required'],
             'lastName' => ['required'],
             'email' => ['required', 'email', 'unique:users'],
+            'taxNumber' => ['required', 'numeric'],
+            'telephoneNumber' => ['required', 'numeric'],
             'password' => ['required', 'min:8', 'same:passwordConfirmation'],
         ]);
 
