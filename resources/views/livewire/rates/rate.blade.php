@@ -9,5 +9,5 @@
         </button> -->
     </div>
 
-    <livewire:rates-table />
+    <livewire:rates.rates-table />
 </div>

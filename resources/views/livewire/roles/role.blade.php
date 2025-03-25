@@ -9,5 +9,5 @@
         </button> -->
     </div>
 
-    <livewire:roles-table />
+    <livewire:roles.roles-table />
 </div>

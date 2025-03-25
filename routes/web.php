@@ -14,7 +14,7 @@ use App\Http\Livewire\Dashboard;
 use App\Http\Livewire\Invoice;
 use App\Http\Livewire\PreAlert;
 use App\Http\Livewire\PurchaseRequest;
-use App\Http\Livewire\Rate;
+use App\Http\Livewire\Rates\Rate;
 use App\Http\Livewire\Profile\Profile;
 use App\Http\Livewire\Roles\Role;
 use App\Http\Livewire\ShippingInformation;
