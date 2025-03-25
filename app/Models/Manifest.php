@@ -20,6 +20,15 @@ class Manifest extends Model
         'is_open',
     ];
 
+    public function scopeSearch($query, $term)
+    {
+        return $query->where(
+            fn($query) => $query->where('name', 'like', '%' . $term . '%')
+                ->orWhere('reservation_number', 'like', '%' . $term . '%')
+                ->orWhere('flight_number', 'like', '%' . $term . '%')
+        );
+    }
+
     public function packages()
     {
         return $this->hasMany(Package::class);

@@ -7,7 +7,6 @@ use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Column;
 use Rappasoft\LaravelLivewireTables\Views\Filter;
 use App\Models\Package;
-use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class CustomerPackagesTable extends DataTableComponent

@@ -22,8 +22,6 @@ class PreAlert extends Component
     public string $file_url = '';
     public $shipperList = [];
 
-    public $test = 'TEST';
-
     public $fromCurrency = 'USD';
     public $toCurrency = 'JMD';
     public $amount = 1;
@@ -123,7 +121,7 @@ class PreAlert extends Component
         $this->closeModal();
         $this->resetInputFields();
 
-        return redirect('/pre-alerts');
+        // return redirect('/pre-alerts');
     }
 
     public function render()

@@ -12,6 +12,8 @@ use App\Http\Livewire\Customers\Customer;
 use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\Dashboard;
 use App\Http\Livewire\Invoice;
+use App\Http\Livewire\Manifests\Manifest;
+use App\Http\Livewire\Manifests\Packages\ManifestPackage;
 use App\Http\Livewire\PreAlert;
 use App\Http\Livewire\PurchaseRequest;
 use App\Http\Livewire\Rates\Rate;
@@ -90,6 +92,8 @@ Route::post('/email/verification-notification', function (Request $request) {
 // Super Admin routes
 Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->group(function () {
     Route::get('/customers', Customer::class)->name('customers');
+    Route::get('/manifests', Manifest::class)->name('manifests');
+    Route::get('/manifests/{manifest_id}/packages', ManifestPackage::class)->name('manifests.packages');
     Route::get('/roles', Role::class)->name('roles');
 });
 
