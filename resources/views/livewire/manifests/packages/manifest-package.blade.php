@@ -9,9 +9,9 @@
         </button>
     </div>
 
-    {{--@if($isOpen)
+    @if($isOpen)
     @include('livewire.manifests.packages.create')
-    @endif--}}
+    @endif
 
     <livewire:manifests.packages.manifest-packages-table />
 </div>

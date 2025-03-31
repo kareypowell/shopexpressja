@@ -20,10 +20,9 @@ class OfficesTableSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         collect([
-            ['name' => 'HQ', 'address' => 'Mandeville, Manchester'],
-            ['name' => 'Branch 1', 'address' => 'Sample Addr'],
-            ['name' => 'Branch 2', 'address' => 'Sample Addr'],
-            ['name' => 'Branch 3', 'address' => 'Sample Addr'],
+            ['name' => 'Mandeville', 'address' => 'Shop #24b Reliance Plaza, Mandeville, Manchester'],
+            ['name' => 'Junction', 'address' => 'Lot 28, Main Street, Junction, St. Elizabeth'],
+            ['name' => 'Santa Cruz', 'address' => 'Ashwood, Santa Cruz, St. Elizabeth'],
         ])->each(function ($office) {
             Office::create($office);
         });

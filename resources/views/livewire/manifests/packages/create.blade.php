@@ -23,11 +23,57 @@
               <p class="text-sm text-gray-500">
                 Fill in the form below to add a package to the manifest.
               </p>
+              <p>
+                Manifest ID: {{ $manifest_id }}
+              </p>
             </div>
 
             <div class="bg-white px-4 pt-5 pb-4">
               <div class="text-left">
-                
+                <div class="mt-6 mb-5">
+                  <label for="user_id" class="block text-gray-700 text-sm font-bold mb-2">Select customer</label>
+                  <div class="mt-1 rounded-md shadow-sm">
+                    <select wire:model.lazy="user_id" id="user_id" required autofocus class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('user_id') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror">
+                      <option value="" selected>--- Select customer ---</option>
+                      @foreach($customerList as $customer)
+                      <option value="{{ $customer->id }}">{{ $customer->full_name . " (" . $customer->profile->account_number . ")" }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                  @error('user_id')
+                  <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                  @enderror
+                </div>
+
+                <div class="mt-6 mb-5">
+                  <label for="shipper_id" class="block text-gray-700 text-sm font-bold mb-2">Select the shipper (carrier)</label>
+                  <div class="mt-1 rounded-md shadow-sm">
+                    <select wire:model.lazy="shipper_id" id="shipper_id" required autofocus class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('shipper_id') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror">
+                      <option value="" selected>--- Select your shipper ---</option>
+                      @foreach($shipperList as $shipper)
+                      <option value="{{ $shipper->id }}">{{ $shipper->name }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                  @error('shipper_id')
+                  <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                  @enderror
+                </div>
+
+                <div class="mt-6 mb-5">
+                  <label for="office_id" class="block text-gray-700 text-sm font-bold mb-2">Select destination</label>
+                  <div class="mt-1 rounded-md shadow-sm">
+                    <select wire:model.lazy="office_id" id="office_id" required autofocus class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('office_id') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror">
+                      <option value="" selected>--- Select location ---</option>
+                      @foreach($officeList as $office)
+                      <option value="{{ $office->id }}">{{ $office->name }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                  @error('office_id')
+                  <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                  @enderror
+                </div>
               </div>
             </div>
           </div>
