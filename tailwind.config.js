@@ -40,6 +40,7 @@ module.exports = {
             './resources/**/*.php',
             './resources/**/*.vue',
             './resources/**/*.twig',
+            './vendor/rappasoft/laravel-livewire-tables/resources/views/tailwind/**/*.blade.php',
         ],
         options: {
             defaultExtractor: (content) => content.match(/[\w-/.:]+(?<!:)/g) || [],
