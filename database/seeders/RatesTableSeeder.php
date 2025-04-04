@@ -19,7 +19,7 @@ class RatesTableSeeder extends Seeder
         DB::table('rates')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        Rate::create(['weight' => 1, 'rate' => 1.50, 'processing_fee' => 1, 'type' => 'air']);
+        Rate::create(['weight' => 0.5, 'rate' => 1.50, 'processing_fee' => 1, 'type' => 'air']);
         Rate::create(['weight' => 1, 'rate' => 3.00, 'processing_fee' => 1.25, 'type' => 'air']);
         Rate::create(['weight' => 2, 'rate' => 6.00, 'processing_fee' => 2.25, 'type' => 'air']);
         Rate::create(['weight' => 3, 'rate' => 9.00, 'processing_fee' => 2.50, 'type' => 'air']);
