@@ -23,9 +23,6 @@
               <p class="text-sm text-gray-500">
                 Fill in the form below to add a package to the manifest.
               </p>
-              <p>
-                Manifest ID: {{ $manifest_id }}
-              </p>
             </div>
 
             <div class="bg-white px-4 pt-5 pb-4">
@@ -49,7 +46,7 @@
                   <label for="shipper_id" class="block text-gray-700 text-sm font-bold mb-2">Select the shipper (carrier)</label>
                   <div class="mt-1 rounded-md shadow-sm">
                     <select wire:model.lazy="shipper_id" id="shipper_id" required autofocus class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('shipper_id') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror">
-                      <option value="" selected>--- Select your shipper ---</option>
+                      <option value="" selected>--- Select shipper ---</option>
                       @foreach($shipperList as $shipper)
                       <option value="{{ $shipper->id }}">{{ $shipper->name }}</option>
                       @endforeach
@@ -74,12 +71,36 @@
                   <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                   @enderror
                 </div>
+
+                <div class="mb-4">
+                  <label for="tracking_number" class="block text-gray-700 text-sm font-bold mb-2">Tracking Number</label>
+                  <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="tracking_number" placeholder="Enter tracking number for the item" wire:model="tracking_number" autocomplete="off">
+                  @error('tracking_number') <span class="text-red-500">{{ $message }}</span>@enderror
+                </div>
+
+                <div class="mb-4">
+                  <label for="weight" class="block text-gray-700 text-sm font-bold mb-2">Weight (lbs)</label>
+                  <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="weight" placeholder="Enter weight for the item" wire:model="weight" autocomplete="off">
+                  @error('weight') <span class="text-red-500">{{ $message }}</span>@enderror
+                </div>
+
+                <div class="mb-4">
+                  <label for="description" class="block text-gray-700 text-sm font-bold mb-2">Description</label>
+                  <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="description" placeholder="Briefly describe the item" wire:model="description" autocomplete="off" rows="4"></textarea>
+                  @error('description') <span class="text-red-500">{{ $message }}</span>@enderror
+                </div>
+
+                <div class="mb-4">
+                  <label for="estimated_value" class="block text-gray-700 text-sm font-bold mb-2">Estimated Value (USD)</label>
+                  <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="estimated_value" placeholder="Enter the estimated value for the item" wire:model="estimated_value" autocomplete="off">
+                  @error('estimated_value') <span class="text-red-500">{{ $message }}</span>@enderror
+                </div>
               </div>
             </div>
           </div>
         </div>
         <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-          <button wire:click.prevent="" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-wax-flower-600 text-base font-medium text-white hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500 sm:col-start-2 sm:text-sm">
+          <button wire:click.prevent="store()" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-wax-flower-600 text-base font-medium text-white hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500 sm:col-start-2 sm:text-sm">
             Save
           </button>
           <button wire:click="closeModal()" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500 sm:mt-0 sm:col-start-1 sm:text-sm">

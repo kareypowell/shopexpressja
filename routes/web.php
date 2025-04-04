@@ -95,6 +95,7 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->gro
     Route::get('/manifests', Manifest::class)->name('manifests');
     Route::get('/manifests/{manifest_id}/packages', ManifestPackage::class)->name('manifests.packages');
     Route::get('/roles', Role::class)->name('roles');
+    Route::get('/rates', Rate::class)->name('rates');
 });
 
 // Customer routes
