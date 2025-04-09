@@ -16,7 +16,8 @@ use App\Http\Livewire\Manifests\Manifest;
 use App\Http\Livewire\Manifests\Packages\ManifestPackage;
 use App\Http\Livewire\PreAlerts\PreAlert;
 use App\Http\Livewire\PreAlerts\AdminPreAlert;
-use App\Http\Livewire\PurchaseRequest;
+use App\Http\Livewire\PurchaseRequests\PurchaseRequest;
+use App\Http\Livewire\PurchaseRequests\AdminPurchaseRequest;
 use App\Http\Livewire\Rates\Rate;
 use App\Http\Livewire\Profile\Profile;
 use App\Http\Livewire\Roles\Role;
@@ -96,6 +97,7 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->gro
     Route::get('/roles', Role::class)->name('roles');
     Route::get('/rates', Rate::class)->name('rates');
     Route::get('/pre-alerts', AdminPreAlert::class)->name('pre-alerts');
+    Route::get('/purchase-requests', AdminPurchaseRequest::class)->name('purchase-requests');
 });
 
 // Customer routes

@@ -13,5 +13,5 @@
         @include('livewire.purchase-requests.create')
     @endif
 
-    <livewire:purchase-requests.purchase-requests-table />
+    <livewire:purchase-requests.admin-purchase-requests-table />
 </div>

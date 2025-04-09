@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Http\Livewire\PurchaseRequests;
 
 use Livewire\Component;
 use App\Models\PurchaseRequest as PurchaseRequestModel;
 
-class PurchaseRequest extends Component
+class AdminPurchaseRequest extends Component
 {
     public bool $isOpen = false;
     public string $item_name = '';
