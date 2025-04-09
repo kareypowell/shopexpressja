@@ -13,5 +13,5 @@
         @include('livewire.pre-alerts.create')
     @endif
 
-    <livewire:pre-alerts.pre-alerts-table />
+    <livewire:pre-alerts.admin-pre-alerts-table />
 </div>

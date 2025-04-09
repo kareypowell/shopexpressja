@@ -14,17 +14,16 @@ use App\Http\Livewire\Dashboard;
 use App\Http\Livewire\Invoice;
 use App\Http\Livewire\Manifests\Manifest;
 use App\Http\Livewire\Manifests\Packages\ManifestPackage;
-use App\Http\Livewire\PreAlert;
+use App\Http\Livewire\PreAlerts\PreAlert;
+use App\Http\Livewire\PreAlerts\AdminPreAlert;
 use App\Http\Livewire\PurchaseRequest;
 use App\Http\Livewire\Rates\Rate;
 use App\Http\Livewire\Profile\Profile;
 use App\Http\Livewire\Roles\Role;
 use App\Http\Livewire\ShippingInformation;
 use App\Http\Livewire\ViewPreAlert;
-use App\Mail\WelcomeUser;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
-use Illuminate\Support\Facades\Mail;
 
 /*
 |--------------------------------------------------------------------------
@@ -96,6 +95,7 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->gro
     Route::get('/manifests/{manifest_id}/packages', ManifestPackage::class)->name('manifests.packages');
     Route::get('/roles', Role::class)->name('roles');
     Route::get('/rates', Rate::class)->name('rates');
+    Route::get('/pre-alerts', AdminPreAlert::class)->name('pre-alerts');
 });
 
 // Customer routes

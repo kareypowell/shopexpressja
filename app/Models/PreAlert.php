@@ -15,7 +15,8 @@ class PreAlert extends Model
     {
         return $query->where(
             fn($query) => $query->where('tracking_number', 'like', '%' . $term . '%')
-                ->orWhere('status', 'like', '%' . $term . '%')
+                ->orWhere('description', 'like', '%' . $term . '%')
+                ->orWhere('value', 'like', '%' . $term . '%')
         );
     }
 

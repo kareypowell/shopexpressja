@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Http\Livewire\PreAlerts;
 
 use App\Models\PreAlert as PreAlertModel;
 use App\Models\Shipper;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Http;
-use Exception;
+
 class PreAlert extends Component
 {
     use WithFileUploads;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Http\Livewire\PreAlerts;
 
 use Illuminate\Database\Eloquent\Builder;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
@@ -43,8 +43,7 @@ class PreAlertsTable extends DataTableComponent
             ->with('packagePreAlert')
             ->where('user_id', auth()->id())
             ->when($this->getFilter('search'), fn($query, $search) => $query->search($search))
-            ->when($this->getFilter('tracking_number'), fn($query, $tracking_number) => $query->where('tracking_number', $tracking_number))
-            ->when($this->getFilter('status'), fn($query, $status) => $query->where('status', $status));
+            ->when($this->getFilter('tracking_number'), fn($query, $tracking_number) => $query->where('tracking_number', $tracking_number));
     }
 
     public function rowView(): string
