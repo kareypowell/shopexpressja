@@ -10,7 +10,7 @@ use App\Models\PurchaseRequest;
 
 class PurchaseRequestsTable extends DataTableComponent
 {
-    public $refresh = 'visible';
+    // public $refresh = 'visible';
 
     public array $filterNames = [
         'status' => 'Status',

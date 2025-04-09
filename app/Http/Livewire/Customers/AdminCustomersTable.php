@@ -8,7 +8,7 @@ use Rappasoft\LaravelLivewireTables\Views\Column;
 use Rappasoft\LaravelLivewireTables\Views\Filter;
 use App\Models\User;
 
-class CustomersTable extends DataTableComponent
+class AdminCustomersTable extends DataTableComponent
 {
     // public $refresh = 'visible';
 
@@ -94,6 +94,6 @@ class CustomersTable extends DataTableComponent
 
     public function rowView(): string
     {
-        return 'livewire-tables.rows.customers-table';
+        return 'livewire-tables.rows.admin-customers-table';
     }
 }

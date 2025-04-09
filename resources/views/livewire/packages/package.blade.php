@@ -11,6 +11,6 @@
 
     <div class="mt-10">
         <h3 class="mb-5 text-base font-semibold text-gray-900">Packages</h3>
-        <livewire:customer-packages-table />
+        <livewire:customers.customer-packages-table />
     </div>
 </div>

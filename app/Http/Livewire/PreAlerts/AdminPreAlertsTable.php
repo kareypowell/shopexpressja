@@ -9,7 +9,7 @@ use App\Models\PreAlert;
 
 class AdminPreAlertsTable extends DataTableComponent
 {
-    public $refresh = 'visible';
+    // public $refresh = 'visible';
 
     public function columns(): array
     {

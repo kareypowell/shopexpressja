@@ -8,7 +8,7 @@ use App\Http\Livewire\Auth\Passwords\Email;
 use App\Http\Livewire\Auth\Passwords\Reset;
 use App\Http\Livewire\Auth\Register;
 use App\Http\Livewire\Auth\Verify;
-use App\Http\Livewire\Customers\Customer;
+use App\Http\Livewire\Customers\AdminCustomer;
 use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\Dashboard;
 use App\Http\Livewire\Invoice;
@@ -21,7 +21,7 @@ use App\Http\Livewire\PurchaseRequests\AdminPurchaseRequest;
 use App\Http\Livewire\Rates\Rate;
 use App\Http\Livewire\Profile\Profile;
 use App\Http\Livewire\Roles\Role;
-use App\Http\Livewire\ShippingInformation;
+use App\Http\Livewire\Customers\ShippingInformation;
 use App\Http\Livewire\ViewPreAlert;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -91,7 +91,7 @@ Route::post('/email/verification-notification', function (Request $request) {
 
 // Super Admin routes
 Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->group(function () {
-    Route::get('/customers', Customer::class)->name('customers');
+    Route::get('/customers', AdminCustomer::class)->name('customers');
     Route::get('/manifests', Manifest::class)->name('manifests');
     Route::get('/manifests/{manifest_id}/packages', ManifestPackage::class)->name('manifests.packages');
     Route::get('/roles', Role::class)->name('roles');

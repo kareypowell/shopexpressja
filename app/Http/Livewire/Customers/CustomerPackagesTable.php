@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Http\Livewire\Customers;
 
 use Illuminate\Database\Eloquent\Builder;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
@@ -12,7 +12,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class CustomerPackagesTable extends DataTableComponent
 {
     // use AuthorizesRequests;
-    public $refresh = 'visible';
+    // public $refresh = 'visible';
 
     // public function mount()
     // {

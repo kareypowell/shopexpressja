@@ -5,5 +5,5 @@
         </h3>
     </div>
 
-    <livewire:customers.customers-table />
+    <livewire:customers.admin-customers-table />
 </div>
