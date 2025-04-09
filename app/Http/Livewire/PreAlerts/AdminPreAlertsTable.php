@@ -14,6 +14,9 @@ class AdminPreAlertsTable extends DataTableComponent
     public function columns(): array
     {
         return [
+            Column::make("Customer", "user.full_name")
+                ->searchable()
+                ->sortable(),
             Column::make("Shipper", "shipper.name")
                 ->searchable()
                 ->sortable(),
@@ -39,6 +42,7 @@ class AdminPreAlertsTable extends DataTableComponent
     {
         return PreAlert::query()
             ->orderBy('id', 'desc')
+            ->with('user')
             ->with('shipper')
             ->with('packagePreAlert')
             ->when($this->getFilter('search'), fn($query, $search) => $query->search($search))

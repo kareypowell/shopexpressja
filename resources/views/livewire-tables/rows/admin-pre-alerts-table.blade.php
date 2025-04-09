@@ -1,5 +1,11 @@
 <x-livewire-tables::table.cell>
   <div>
+    {{ $row->user->full_name }}
+  </div>
+</x-livewire-tables::table.cell>
+
+<x-livewire-tables::table.cell>
+  <div>
     {{ $row->shipper->name }}
   </div>
 </x-livewire-tables::table.cell>
