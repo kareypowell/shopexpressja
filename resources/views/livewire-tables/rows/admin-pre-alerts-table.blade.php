@@ -6,6 +6,12 @@
 
 <x-livewire-tables::table.cell>
   <div>
+    <x-badges.shs>{{ $row->user->profile->account_number }}</x-badges.shs>
+  </div>
+</x-livewire-tables::table.cell>
+
+<x-livewire-tables::table.cell>
+  <div>
     {{ $row->shipper->name }}
   </div>
 </x-livewire-tables::table.cell>

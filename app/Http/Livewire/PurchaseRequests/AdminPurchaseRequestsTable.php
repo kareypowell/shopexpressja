@@ -8,7 +8,7 @@ use Rappasoft\LaravelLivewireTables\Views\Filter;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\PurchaseRequest;
 
-class PurchaseRequestsTable extends DataTableComponent
+class AdminPurchaseRequestsTable extends DataTableComponent
 {
     public $refresh = 'visible';
 

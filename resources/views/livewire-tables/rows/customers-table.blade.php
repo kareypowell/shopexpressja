@@ -24,7 +24,7 @@
 
 <x-livewire-tables::table.cell>
   <div>
-    <x-badges.primary>{{ $row->profile->account_number }}</x-badges.primary>
+    <x-badges.shs>{{ $row->profile->account_number }}</x-badges.shs>
   </div>
 </x-livewire-tables::table.cell>
 

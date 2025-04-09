@@ -17,6 +17,9 @@ class AdminPreAlertsTable extends DataTableComponent
             Column::make("Customer", "user.full_name")
                 ->searchable()
                 ->sortable(),
+            Column::make("Account Number", "user.profile.account_number")
+                ->searchable()
+                ->sortable(),
             Column::make("Shipper", "shipper.name")
                 ->searchable()
                 ->sortable(),

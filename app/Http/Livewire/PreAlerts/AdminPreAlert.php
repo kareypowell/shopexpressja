@@ -125,6 +125,6 @@ class AdminPreAlert extends Component
 
     public function render()
     {
-        return view('livewire.pre-alerts.pre-alert');
+        return view('livewire.pre-alerts.admin-pre-alert');
     }
 }
