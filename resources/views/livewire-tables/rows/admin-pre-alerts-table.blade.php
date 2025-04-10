@@ -37,9 +37,9 @@
 <x-livewire-tables::table.cell>
   <div>
     @if($row->packagePreAlert != null)
-    @if($row->packagePreAlert->status == 'open')
+    @if($row->packagePreAlert->status == 'Pending')
     <x-badges.primary>{{ $row->packagePreAlert->status }}</x-badges.primary>
-    @elseif($row->packagePreAlert->status == 'closed')
+    @elseif($row->packagePreAlert->status == 'Processing')
     <x-badges.success>{{ $row->packagePreAlert->status }}</x-badges.success>
     @endif
     @else

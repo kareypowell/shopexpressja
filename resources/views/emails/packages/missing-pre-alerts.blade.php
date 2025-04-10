@@ -5,7 +5,7 @@ Hello {{ $user->first_name }},
 
 We've received a package for you, but we noticed that a pre-alert wasn't submitted. Pre-alerts help us process your packages more efficiently and ensure they're handled properly.
 
-### Package Details:
+## Package Details:
 **Tracking Number:** {{ $trackingNumber }}<br />
 **Description:** {{ $description }}
 

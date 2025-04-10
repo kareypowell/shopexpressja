@@ -45,13 +45,19 @@ class Dashboard extends Component
                                     ->whereIn('status', ['Ready for Pickup'])
                                     ->count();
 
-        $this->accountBalance = Package::sum('freight_price');
+        $this->accountBalance = Package::where('user_id', auth()->id())
+                                        ->sum('freight_price');
 
-        $this->delayedPackages = Package::where('status', 'delayed')->count();
+        $this->delayedPackages = Package::where('user_id', auth()->id())
+                                        ->where('status', 'delayed')->count();
     }
 
     public function render()
     {
-        return view('livewire.dashboard');
+        if (auth()->user()->role_id == 1) {
+            return view('livewire.admin-dashboard');
+        } else {
+            return view('livewire.dashboard');
+        }
     }
 }

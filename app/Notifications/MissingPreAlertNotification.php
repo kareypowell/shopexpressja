@@ -18,16 +18,19 @@ class MissingPreAlertNotification extends Notification
 
     public $description;
 
+    public $preAlert;
+
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct($user, $tracking_number, $description)
+    public function __construct($user, $tracking_number, $description, $preAlert)
     {
         $this->user = $user;
         $this->tracking_number = $tracking_number;
         $this->description = $description;
+        $this->preAlert = $preAlert;
     }
 
     /**
@@ -49,7 +52,7 @@ class MissingPreAlertNotification extends Notification
      */
     public function toMail($notifiable)
     {
-        $url = url('/pre-alerts/');
+        $url = url('/pre-alerts/' . $this->preAlert->id . '/view');
 
         return (new MailMessage)
                     ->subject('Missing Pre-Alert Notification')

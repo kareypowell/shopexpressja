@@ -7,6 +7,7 @@ use App\Models\Shipper;
 use App\Models\User;
 use App\Models\Office;
 use App\Models\Package;
+use App\Models\PackagePreAlert;
 use App\Models\PreAlert;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -105,6 +106,18 @@ class ManifestPackage extends Component
             'estimated_value' => ['required', 'numeric'],
         ]);
 
+        // check if a package already exists for the tracking number
+        $existingPackage = Package::where('tracking_number', $this->tracking_number)->first();
+        if ($existingPackage) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Tracking number already exists in Packages.',
+            ]);
+            return;
+        }
+
+        // check if a pre-alert exists for the tracking number
+        $preAlert = PreAlert::where('tracking_number', $this->tracking_number)->first();
+
         $package = Package::create([
             'user_id' => $this->user_id,
             'shipper_id' => $this->shipper_id,
@@ -113,10 +126,43 @@ class ManifestPackage extends Component
             'tracking_number' => $this->tracking_number,
             'description' => $this->description,
             'weight' => $this->weight,
-            'status' => $this->updatePackageStatus(),
+            'status' => $this->updatePackageStatus($preAlert),
             'estimated_value' => $this->estimated_value,
             'manifest_id' => $this->manifest_id,
         ]);
+
+        // Create the package pre-alert if it doesn't exist
+        // and associate it with the package
+        if ($preAlert == null) {
+            $pre_alert = PreAlert::create([
+                'user_id' => $this->user_id,
+                'shipper_id' => $this->shipper_id,
+                'tracking_number' => $this->tracking_number,
+                'description' => $this->description,
+                'value' => $this->estimated_value,
+                'file_path' => 'Not available',
+            ]);
+
+            $packagePreAlert = PackagePreAlert::create([
+                'user_id' => $this->user_id,
+                'package_id' => $package->id,
+                'pre_alert_id' => $pre_alert->id,
+                'status' => 'Pending',
+            ]);
+
+            // If no pre-alert exists, send notification email to the customer
+            $this->sendMissingPreAlertNotification($pre_alert);
+
+            if ($packagePreAlert) {
+                $this->dispatchBrowserEvent('toastr:success', [
+                    'message' => 'Package Pre-Alert Created Successfully.',
+                ]);
+            } else {
+                $this->dispatchBrowserEvent('toastr:error', [
+                    'message' => 'Package Pre-Alert Creation Failed.',
+                ]);
+            }
+        }
 
         if ($package) {
             $this->dispatchBrowserEvent('toastr:success', [
@@ -164,15 +210,10 @@ class ManifestPackage extends Component
      * 
      * @return string The package status ('Processing' or 'Pending')
      */
-    private function updatePackageStatus(): string
+    private function updatePackageStatus($preAlert): string
     {
-        $preAlert = PreAlert::where('tracking_number', $this->tracking_number)->first();
+        // $preAlert = PreAlert::where('tracking_number', $this->tracking_number)->first();
         $status = $preAlert ? 'Processing' : 'Pending';
-
-        // If no pre-alert exists, send notification email to the customer
-        if (!$preAlert) {
-            $this->sendMissingPreAlertNotification();
-        }
 
         return $status;
     }
@@ -182,13 +223,13 @@ class ManifestPackage extends Component
      *
      * @return void
      */
-    private function sendMissingPreAlertNotification(): void
+    private function sendMissingPreAlertNotification($preAlert): void
     {
         // Get the user/customer associated with this package
         $user = User::find($this->user_id);
 
         // Send the email notification
-        $user->notify(new MissingPreAlertNotification($user, $this->tracking_number, $this->description));
+        $user->notify(new MissingPreAlertNotification($user, $this->tracking_number, $this->description, $preAlert));
 
         // Optionally log that the notification was sent
         Log::info("Missing pre-alert notification sent for tracking number: {$this->tracking_number}");
