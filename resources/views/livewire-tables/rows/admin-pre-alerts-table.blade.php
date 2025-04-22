@@ -36,13 +36,13 @@
 
 <x-livewire-tables::table.cell>
   <div>
-    @if($row->packagePreAlert->status == 'processing')
+    @if($row->packagePreAlert != null && $row->packagePreAlert->status == 'processing')
     <x-badges.primary>{{ ucfirst($row->packagePreAlert->status) }}</x-badges.primary>
-    @elseif($row->packagePreAlert->status == 'shipped')
+    @elseif($row->packagePreAlert != null && $row->packagePreAlert->status == 'shipped')
     <x-badges.shs>{{ ucfirst($row->packagePreAlert->status) }}</x-badges.shs>
-    @elseif($row->packagePreAlert->status == 'delayed')
+    @elseif($row->packagePreAlert != null && $row->packagePreAlert->status == 'delayed')
     <x-badges.warning>{{ ucfirst($row->packagePreAlert->status) }}</x-badges.warning>
-    @elseif($row->packagePreAlert->status == 'ready')
+    @elseif($row->packagePreAlert != null && $row->packagePreAlert->status == 'ready')
     <x-badges.success>{{ ucfirst($row->packagePreAlert->status) }}</x-badges.success>
     @else
     <x-badges.default>Not available</x-badges.default>
