@@ -21,11 +21,11 @@
     @if($row->status == 'processing')
     <x-badges.primary>{{ $row->status }}</x-badges.primary>
     @elseif($row->status == 'shipped')
-    <x-badges.success>{{ $row->status }}</x-badges.success>
+    <x-badges.shs>{{ $row->status }}</x-badges.shs>
     @elseif($row->status == 'delayed')
     <x-badges.warning>{{ $row->status }}</x-badges.warning>
     @elseif($row->status == 'ready')
-    <x-badges.primary>{{ $row->status }}</x-badges.primary>
+    <x-badges.success>{{ $row->status }}</x-badges.success>
     @else
     <x-badges.default>{{ $row->status }}</x-badges.default>
     @endif

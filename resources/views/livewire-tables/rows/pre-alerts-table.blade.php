@@ -24,14 +24,16 @@
 
 <x-livewire-tables::table.cell>
   <div>
-    @if($row->packagePreAlert != null)
-      @if($row->packagePreAlert->status == 'Pending')
-        <x-badges.primary>{{ $row->packagePreAlert->status }}</x-badges.primary>
-      @elseif($row->packagePreAlert->status == 'Processing')
-        <x-badges.success>{{ $row->packagePreAlert->status }}</x-badges.success>
-      @endif
+    @if($row->packagePreAlert->status == 'processing')
+    <x-badges.primary>{{ ucfirst($row->packagePreAlert->status) }}</x-badges.primary>
+    @elseif($row->packagePreAlert->status == 'shipped')
+    <x-badges.shs>{{ ucfirst($row->packagePreAlert->status) }}</x-badges.shs>
+    @elseif($row->packagePreAlert->status == 'delayed')
+    <x-badges.warning>{{ ucfirst($row->packagePreAlert->status) }}</x-badges.warning>
+    @elseif($row->packagePreAlert->status == 'ready')
+    <x-badges.success>{{ ucfirst($row->packagePreAlert->status) }}</x-badges.success>
     @else
-      <x-badges.default>Not available</x-badges.default>
+    <x-badges.default>Not available</x-badges.default>
     @endif
   </div>
 </x-livewire-tables::table.cell>
