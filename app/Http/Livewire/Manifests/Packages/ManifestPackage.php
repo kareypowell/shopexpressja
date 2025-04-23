@@ -147,7 +147,7 @@ class ManifestPackage extends Component
                 'user_id' => $this->user_id,
                 'package_id' => $package->id,
                 'pre_alert_id' => $pre_alert->id,
-                'status' => 'Pending',
+                'status' => 'pending',
             ]);
 
             // If no pre-alert exists, send notification email to the customer
@@ -213,7 +213,7 @@ class ManifestPackage extends Component
     private function updatePackageStatus($preAlert): string
     {
         // $preAlert = PreAlert::where('tracking_number', $this->tracking_number)->first();
-        $status = $preAlert ? 'Processing' : 'Pending';
+        $status = $preAlert ? 'processing' : 'pending';
 
         return $status;
     }
