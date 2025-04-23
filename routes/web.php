@@ -22,7 +22,7 @@ use App\Http\Livewire\Rates\Rate;
 use App\Http\Livewire\Profile\Profile;
 use App\Http\Livewire\Roles\Role;
 use App\Http\Livewire\Customers\ShippingInformation;
-use App\Http\Livewire\ViewPreAlert;
+use App\Http\Livewire\PreAlerts\ViewPreAlert;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 

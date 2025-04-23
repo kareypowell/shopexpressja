@@ -15,7 +15,7 @@ class ManifestPackagesTable extends DataTableComponent
 
     public function mount()
     {
-        $this->manifest_id = request()->route('manifest_id');;
+        $this->manifest_id = request()->route('manifest_id');
     }
 
     public function columns(): array

@@ -19,15 +19,15 @@
 <x-livewire-tables::table.cell>
   <div>
     @if($row->status == 'processing')
-    <x-badges.primary>{{ $row->status }}</x-badges.primary>
+    <x-badges.primary>{{ ucfirst($row->status) }}</x-badges.primary>
     @elseif($row->status == 'shipped')
-    <x-badges.shs>{{ $row->status }}</x-badges.shs>
+    <x-badges.shs>{{ ucfirst($row->status) }}</x-badges.shs>
     @elseif($row->status == 'delayed')
-    <x-badges.warning>{{ $row->status }}</x-badges.warning>
+    <x-badges.warning>{{ ucfirst($row->status) }}</x-badges.warning>
     @elseif($row->status == 'ready')
-    <x-badges.success>{{ $row->status }}</x-badges.success>
+    <x-badges.success>{{ ucfirst($row->status) }}</x-badges.success>
     @else
-    <x-badges.default>{{ $row->status }}</x-badges.default>
+    <x-badges.default>{{ ucfirst($row->status) }}</x-badges.default>
     @endif
   </div>
 </x-livewire-tables::table.cell>
@@ -40,7 +40,7 @@
 
 <x-livewire-tables::table.cell>
   <div>
-    {{ number_format($row->estimated_value, 2) }}
+    <x-badges.success>${{ number_format($row->estimated_value, 2) }} USD</x-badges.success>
   </div>
 </x-livewire-tables::table.cell>
 

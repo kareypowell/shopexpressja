@@ -21,31 +21,32 @@ class Dashboard extends Component
                                         $query->where('type', 'air');
                                     })
                                     ->where('user_id', auth()->id())
-                                    ->whereIn('status', ['Shipped'])
+                                    ->whereIn('status', ['processing', 'shipped'])
                                     ->count();
 
         $this->inComingSea = Package::whereHas('manifest', function (Builder $query) {
                                         $query->where('type', 'sea');
                                     })
                                     ->where('user_id', auth()->id())
-                                    ->whereIn('status', ['Shipped'])
+                                    ->whereIn('status', ['processing', 'shipped'])
                                     ->count();
 
         $this->availableAir = Package::whereHas('manifest', function (Builder $query) {
                                         $query->where('type', 'air');
                                     })
                                     ->where('user_id', auth()->id())
-                                    ->whereIn('status', ['Ready for Pickup'])
+                                    ->whereIn('status', ['ready'])
                                     ->count();
 
         $this->availableSea = Package::whereHas('manifest', function (Builder $query) {
                                         $query->where('type', 'sea');
                                     })
                                     ->where('user_id', auth()->id())
-                                    ->whereIn('status', ['Ready for Pickup'])
+                                    ->whereIn('status', ['ready'])
                                     ->count();
 
         $this->accountBalance = Package::where('user_id', auth()->id())
+                                        ->whereIn('status', ['ready'])
                                         ->sum('freight_price');
 
         $this->delayedPackages = Package::where('user_id', auth()->id())
