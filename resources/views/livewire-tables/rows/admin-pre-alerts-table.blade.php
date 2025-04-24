@@ -36,22 +36,6 @@
 
 <x-livewire-tables::table.cell>
   <div>
-    @if($row->packagePreAlert != null && $row->packagePreAlert->status == 'processing')
-    <x-badges.primary>{{ ucfirst($row->packagePreAlert->status) }}</x-badges.primary>
-    @elseif($row->packagePreAlert != null && $row->packagePreAlert->status == 'shipped')
-    <x-badges.shs>{{ ucfirst($row->packagePreAlert->status) }}</x-badges.shs>
-    @elseif($row->packagePreAlert != null && $row->packagePreAlert->status == 'delayed')
-    <x-badges.warning>{{ ucfirst($row->packagePreAlert->status) }}</x-badges.warning>
-    @elseif($row->packagePreAlert != null && $row->packagePreAlert->status == 'ready')
-    <x-badges.success>{{ ucfirst($row->packagePreAlert->status) }}</x-badges.success>
-    @else
-    <x-badges.default>Not available</x-badges.default>
-    @endif
-  </div>
-</x-livewire-tables::table.cell>
-
-<x-livewire-tables::table.cell>
-  <div>
     {{ $row->created_at->format('F j, Y @ G:i A') }}
   </div>
 </x-livewire-tables::table.cell>

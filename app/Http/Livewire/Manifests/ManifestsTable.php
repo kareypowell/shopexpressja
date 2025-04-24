@@ -41,6 +41,8 @@ class ManifestsTable extends DataTableComponent
                 ->sortable(),
             Column::make("Flight destination", "flight_destination")
                 ->sortable(),
+            Column::make("Packages", "manifest.packages")
+                ->sortable(),
             Column::make("Exchange rate (USD)", "exchange_rate")
                 ->sortable(),
             Column::make("Type", "type")
@@ -57,6 +59,7 @@ class ManifestsTable extends DataTableComponent
     {
         return Manifest::query()
                     ->orderBy('id', 'desc')
+                    ->with('packages')
                     ->when($this->getFilter('search'), fn($query, $search) => $query->search($search))
                     ->when($this->getFilter('name'), fn($query, $name) => $query->where('name', $name))
                     ->when($this->getFilter('reservation_number'), fn($query, $reservation_number) => $query->where('reservation_number', $reservation_number))

@@ -61,7 +61,10 @@
 
                 <div class="mb-4">
                   <label for="flight_destination" class="block text-gray-700 text-sm font-bold mb-2">Flight Destination</label>
-                  <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="flight_destination" placeholder="Enter the flight destination for the manifest" wire:model="flight_destination" autocomplete="off">
+                  <select wire:model.lazy="flight_destination" id="flight_destination" required autofocus class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('flight_destination') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror">
+                    <option value="" selected>--- Select destination ---</option>
+                    <option value="MIA-KGN">MIA-KGN</option>
+                  </select>
                   @error('flight_destination') <span class="text-red-500">{{ $message }}</span>@enderror
                 </div>
 

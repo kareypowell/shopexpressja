@@ -32,9 +32,6 @@ class AdminPreAlertsTable extends DataTableComponent
             Column::make("Value", "value")
                 ->searchable()
                 ->sortable(),
-            Column::make("Status", "packagePreAlert.status")
-                ->searchable()
-                ->sortable(),
             Column::make("Created at", "created_at")
                 ->sortable(),
             Column::make("Actions"),
@@ -47,7 +44,6 @@ class AdminPreAlertsTable extends DataTableComponent
             ->orderBy('id', 'desc')
             ->with('user')
             ->with('shipper')
-            ->with('packagePreAlert')
             ->when($this->getFilter('search'), fn($query, $search) => $query->search($search))
             ->when($this->getFilter('tracking_number'), fn($query, $tracking_number) => $query->where('tracking_number', $tracking_number));
     }
