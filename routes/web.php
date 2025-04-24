@@ -14,15 +14,13 @@ use App\Http\Livewire\Dashboard;
 use App\Http\Livewire\Invoice;
 use App\Http\Livewire\Manifests\Manifest;
 use App\Http\Livewire\Manifests\Packages\ManifestPackage;
-use App\Http\Livewire\PreAlerts\PreAlert;
-use App\Http\Livewire\PreAlerts\AdminPreAlert;
-use App\Http\Livewire\PurchaseRequests\PurchaseRequest;
-use App\Http\Livewire\PurchaseRequests\AdminPurchaseRequest;
+use App\Http\Livewire\PreAlerts\{PreAlert, AdminPreAlert, ViewPreAlert};
+use App\Http\Livewire\PurchaseRequests\{PurchaseRequest, AdminPurchaseRequest};
 use App\Http\Livewire\Rates\Rate;
 use App\Http\Livewire\Profile\Profile;
 use App\Http\Livewire\Roles\Role;
 use App\Http\Livewire\Customers\ShippingInformation;
-use App\Http\Livewire\PreAlerts\ViewPreAlert;
+use App\Http\Livewire\Manifests\EditManifest;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
@@ -78,8 +76,6 @@ Route::get('/email/verify', function () {
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
     $request->fulfill();
 
-    // Mail::to(auth()->user()->email)->send(new WelcomeUser(auth()->user()->first_name));
-
     return redirect('/');
 })->middleware(['auth', 'signed'])->name('verification.verify');
 
@@ -93,6 +89,7 @@ Route::post('/email/verification-notification', function (Request $request) {
 Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->group(function () {
     Route::get('/customers', AdminCustomer::class)->name('customers');
     Route::get('/manifests', Manifest::class)->name('manifests');
+    Route::get('/manifests/{manifest_id}/edit', EditManifest::class)->name('edit-manifest');
     Route::get('/manifests/{manifest_id}/packages', ManifestPackage::class)->name('manifests.packages');
     Route::get('/roles', Role::class)->name('roles');
     Route::get('/rates', Rate::class)->name('rates');

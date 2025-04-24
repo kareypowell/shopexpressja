@@ -4,8 +4,70 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6daebdf439bc7fe15aacf0b63aeaca78",
+    "content-hash": "39945bed0002ae1a590b6ac05b6fbb30",
     "packages": [
+        {
+            "name": "asantibanez/livewire-select",
+            "version": "v2.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/asantibanez/livewire-select.git",
+                "reference": "4d971541e2347806b58b8583f982bb378ff5f883"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/asantibanez/livewire-select/zipball/4d971541e2347806b58b8583f982bb378ff5f883",
+                "reference": "4d971541e2347806b58b8583f982bb378ff5f883",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "^6.0|^7.0|^8.0|^9.0|^10.0",
+                "livewire/livewire": "^2.0",
+                "php": "^7.2|^7.3|^7.4|^8.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^5.0|^6.0|^7.0|^8.0",
+                "phpunit/phpunit": "^8.0|^9.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "LivewireSelect": "Asantibanez\\LivewireSelect\\LivewireSelectFacade"
+                    },
+                    "providers": [
+                        "Asantibanez\\LivewireSelect\\LivewireSelectServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Asantibanez\\LivewireSelect\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Andrés Santibáñez",
+                    "email": "santibanez.andres@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Livewire dropdown select component",
+            "homepage": "https://github.com/asantibanez/livewire-select",
+            "keywords": [
+                "asantibanez",
+                "livewire-select"
+            ],
+            "support": {
+                "issues": "https://github.com/asantibanez/livewire-select/issues",
+                "source": "https://github.com/asantibanez/livewire-select/tree/v2.2.0"
+            },
+            "time": "2024-02-08T15:05:03+00:00"
+        },
         {
             "name": "asm89/stack-cors",
             "version": "v2.3.0",
