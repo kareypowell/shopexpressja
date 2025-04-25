@@ -94,9 +94,9 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->gro
     Route::get('/manifests/{manifest_id}/packages', ManifestPackage::class)->name('manifests.packages');
     Route::get('/manifests/{manifest_id}/packages/{package_id}/edit', EditManifestPackage::class)->name('manifests.packages.edit');
     Route::get('/roles', Role::class)->name('roles');
-    Route::get('/rates', Rate::class)->name('rates');
+    Route::get('/rates', Rate::class)->name('view-rates');
     Route::get('/pre-alerts', AdminPreAlert::class)->name('view-pre-alerts');
-    Route::get('/purchase-requests', AdminPurchaseRequest::class)->name('purchase-requests');
+    Route::get('/purchase-requests', AdminPurchaseRequest::class)->name('view-purchase-requests');
 });
 
 // Customer routes
