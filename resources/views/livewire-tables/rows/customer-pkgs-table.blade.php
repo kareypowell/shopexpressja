@@ -12,6 +12,12 @@
 
 <x-livewire-tables::table.cell>
   <div>
+    {{ $row->weight }}
+  </div>
+</x-livewire-tables::table.cell>
+
+<x-livewire-tables::table.cell>
+  <div>
     {{ $row->shipper->name }}
   </div>
 </x-livewire-tables::table.cell>

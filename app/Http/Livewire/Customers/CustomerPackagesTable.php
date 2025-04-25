@@ -50,6 +50,9 @@ class CustomerPackagesTable extends DataTableComponent
                 ->sortable()
                 ->searchable(),
             Column::make("Description", "description"),
+            Column::make("Weight (lbs)", "weight")
+                ->sortable()
+                ->searchable(),
             Column::make("Shipper", "shipper.name")
                 ->sortable()
                 ->searchable(),

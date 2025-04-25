@@ -25,7 +25,7 @@ class EditManifest extends Component
 
     public function mount()
     {
-        $this->manifest_id = request()->route('manifest_id');;
+        $this->manifest_id = request()->route('manifest_id');
 
         // Load the manifest data
         $manifest = Manifest::find($this->manifest_id);
@@ -75,6 +75,8 @@ class EditManifest extends Component
                 'message' => 'Manifest update failed.',
             ]);
         }
+
+        return redirect('/admin/manifests');
     }
 
     public function render()

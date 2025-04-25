@@ -21,6 +21,7 @@ use App\Http\Livewire\Profile\Profile;
 use App\Http\Livewire\Roles\Role;
 use App\Http\Livewire\Customers\ShippingInformation;
 use App\Http\Livewire\Manifests\EditManifest;
+use App\Http\Livewire\Manifests\Packages\EditManifestPackage;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
@@ -91,6 +92,7 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->gro
     Route::get('/manifests', Manifest::class)->name('manifests');
     Route::get('/manifests/{manifest_id}/edit', EditManifest::class)->name('edit-manifest');
     Route::get('/manifests/{manifest_id}/packages', ManifestPackage::class)->name('manifests.packages');
+    Route::get('/manifests/{manifest_id}/packages/{package_id}/edit', EditManifestPackage::class)->name('manifests.packages.edit');
     Route::get('/roles', Role::class)->name('roles');
     Route::get('/rates', Rate::class)->name('rates');
     Route::get('/pre-alerts', AdminPreAlert::class)->name('pre-alerts');
