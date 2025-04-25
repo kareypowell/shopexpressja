@@ -92,8 +92,6 @@ class EditManifestPackage extends Component
             ]);
         }
 
-        // session()->flash('message', __('Package updated successfully.'));
-
         return redirect(route('manifests.packages', ['manifest_id' => $this->manifest_id]))
             ->with('message', __('Package updated successfully.'));
     }
