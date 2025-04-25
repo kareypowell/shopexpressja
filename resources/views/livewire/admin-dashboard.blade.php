@@ -14,8 +14,7 @@
         <hr class="my-10">
 
         <div class="mt-10">
-            <h3 class="mb-5 text-base font-semibold text-gray-900">Manifests</h3>
-            <livewire:manifests.packages.manifest-packages-table />
+            <!-- <h3 class="mb-5 text-base font-semibold text-gray-900">Manifests</h3> -->
         </div>
     </div>
 </div>
