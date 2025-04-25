@@ -9,6 +9,8 @@ use App\Models\Office;
 use App\Models\Package;
 use App\Models\PackagePreAlert;
 use App\Models\PreAlert;
+use App\Models\Rate;
+use App\Models\Manifest;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Notifications\MissingPreAlertNotification;
@@ -129,6 +131,7 @@ class ManifestPackage extends Component
             'status' => $this->updatePackageStatus($preAlert),
             'estimated_value' => $this->estimated_value,
             'manifest_id' => $this->manifest_id,
+            'freight_price' => $this->calculateFreightPrice(),
         ]);
 
         // Create the package pre-alert if it doesn't exist
@@ -233,6 +236,29 @@ class ManifestPackage extends Component
 
         // Optionally log that the notification was sent
         Log::info("Missing pre-alert notification sent for tracking number: {$this->tracking_number}");
+    }
+
+    /**
+     * Calculate the freight price based on weight and exchange rate.
+     *
+     * @return float The calculated freight price
+     */
+    public function calculateFreightPrice(): float
+    {
+        // get the XRT for the manifest
+        $xrt = Manifest::find($this->manifest_id)->exchange_rate;
+
+        // get the weight of the package
+        $weight = ceil($this->weight);
+
+        // get the rate for the weight
+        $rate = Rate::where('weight', $weight)->first();
+        if ($rate) {
+            // calculate the freight price
+            $freightPrice = ($rate->price + $rate->processing_fee) * $xrt;
+        }
+
+        return $freightPrice ?? 0;
     }
 
     public function render()

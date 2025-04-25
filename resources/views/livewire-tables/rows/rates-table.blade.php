@@ -6,7 +6,7 @@
 
 <x-livewire-tables::table.cell>
   <div>
-    ${{ number_format($row->rate, 2) }}
+    ${{ number_format($row->price, 2) }}
   </div>
 </x-livewire-tables::table.cell>
 

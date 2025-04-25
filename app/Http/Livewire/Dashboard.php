@@ -45,9 +45,11 @@ class Dashboard extends Component
                                     ->whereIn('status', ['ready'])
                                     ->count();
 
-        $this->accountBalance = Package::where('user_id', auth()->id())
+        $total = Package::where('user_id', auth()->id())
                                         ->whereIn('status', ['ready'])
-                                        ->sum('freight_price');
+                                        ->selectRaw('SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total')
+                                        ->value('total');
+        $this->accountBalance = $total ? $total : 0;
 
         $this->delayedPackages = Package::where('user_id', auth()->id())
                                         ->where('status', 'delayed')->count();

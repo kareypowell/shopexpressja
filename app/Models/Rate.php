@@ -15,7 +15,7 @@ class Rate extends Model
     {
         return $query->where(
             fn($query) => $query->where('weight', 'like', '%' . $term . '%')
-                ->orWhere('rate', 'like', '%' . $term . '%')
+                ->orWhere('price', 'like', '%' . $term . '%')
                 ->orWhere('type', 'like', '%' . $term . '%')
         );
     }

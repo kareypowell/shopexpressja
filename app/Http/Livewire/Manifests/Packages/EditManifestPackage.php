@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\Shipper;
 use App\Models\Office;
 use App\Models\Package;
+use App\Models\Rate;
+use App\Models\Manifest;
 
 class EditManifestPackage extends Component
 {
@@ -86,6 +88,7 @@ class EditManifestPackage extends Component
                 'value' => $this->value,
                 'status' => $this->status,
                 'estimated_value' => $this->estimated_value,
+                'freight_price' => $this->calculateFreightPrice(),
             ]);
         }
 
@@ -93,6 +96,29 @@ class EditManifestPackage extends Component
 
         return redirect(route('manifests.packages', ['manifest_id' => $this->manifest_id]))
             ->with('message', __('Package updated successfully.'));
+    }
+
+    /**
+     * Calculate the freight price based on weight and exchange rate.
+     *
+     * @return float The calculated freight price
+     */
+    public function calculateFreightPrice(): float
+    {
+        // get the XRT for the manifest
+        $xrt = Manifest::find($this->manifest_id)->exchange_rate;
+
+        // get the weight of the package
+        $weight = ceil($this->weight);
+
+        // get the rate for the weight
+        $rate = Rate::where('weight', $weight)->first();
+        if ($rate) {
+            // calculate the freight price
+            $freightPrice = ($rate->price + $rate->processing_fee) * $xrt;
+        }
+
+        return $freightPrice ?? 0;
     }
 
     public function render()

@@ -34,7 +34,7 @@ class RatesTable extends DataTableComponent
             Column::make("Weight (lbs)", "weight")
                 ->sortable()
                 ->searchable(),
-            Column::make("Rate (USD)", "rate")
+            Column::make("Price (USD)", "price")
                 ->sortable()
                 ->searchable(),
             Column::make("Processing Fee (USD)", "processing_fee")
@@ -55,7 +55,7 @@ class RatesTable extends DataTableComponent
         return Rate::query()
             ->when($this->getFilter('search'), fn($query, $search) => $query->search($search))
             ->when($this->getFilter('weight'), fn($query, $weight) => $query->where('weight', $weight))
-            ->when($this->getFilter('rate'), fn($query, $rate) => $query->where('rate', $rate))
+            ->when($this->getFilter('price'), fn($query, $price) => $query->where('price', $price))
             ->when($this->getFilter('type'), fn($query, $type) => $query->where('type', $type));
     }
 
