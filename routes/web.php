@@ -2,16 +2,11 @@
 
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LogoutController;
-use App\Http\Livewire\Auth\Login;
-use App\Http\Livewire\Auth\Passwords\Confirm;
-use App\Http\Livewire\Auth\Passwords\Email;
-use App\Http\Livewire\Auth\Passwords\Reset;
-use App\Http\Livewire\Auth\Register;
-use App\Http\Livewire\Auth\Verify;
+use App\Http\Livewire\Auth\{Login, Register, Verify};
+use App\Http\Livewire\Auth\Passwords\{Confirm, Email, Reset};
 use App\Http\Livewire\Customers\AdminCustomer;
 use Illuminate\Support\Facades\Route;
-use App\Http\Livewire\Dashboard;
-use App\Http\Livewire\Invoice;
+use App\Http\Livewire\{Dashboard, Invoice};
 use App\Http\Livewire\Manifests\Manifest;
 use App\Http\Livewire\Manifests\Packages\ManifestPackage;
 use App\Http\Livewire\PreAlerts\{PreAlert, AdminPreAlert, ViewPreAlert};
