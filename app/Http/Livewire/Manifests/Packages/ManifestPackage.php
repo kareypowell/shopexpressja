@@ -11,7 +11,6 @@ use App\Models\PackagePreAlert;
 use App\Models\PreAlert;
 use App\Models\Rate;
 use App\Models\Manifest;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Notifications\MissingPreAlertNotification;
 

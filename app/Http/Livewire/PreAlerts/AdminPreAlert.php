@@ -4,6 +4,7 @@ namespace App\Http\Livewire\PreAlerts;
 
 use App\Models\PreAlert as PreAlertModel;
 use App\Models\Shipper;
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -14,12 +15,14 @@ class AdminPreAlert extends Component
 
     public bool $isOpen = false;
     public int $shipper_id = 0;
+    public int $user_id = 0;
     public string $tracking_number = '';
     public string $description = '';
     public $value = '';
     public $file_path = null;
     public string $file_url = '';
     public $shipperList = [];
+    public $customerList = [];
 
     public $fromCurrency = 'USD';
     public $toCurrency = 'JMD';
@@ -31,6 +34,10 @@ class AdminPreAlert extends Component
     public function mount()
     {
         $this->shipperList = Shipper::orderBy('name', 'asc')->get();
+
+        $this->customerList = User::where('role_id', 3)
+                                    ->where('email_verified_at', '!=', '')
+                                    ->orderBy('last_name', 'asc')->get();
 
         $this->value = 0.0;
     }
@@ -99,7 +106,7 @@ class AdminPreAlert extends Component
         }
 
         $pre_alert = PreAlertModel::create([
-            'user_id' => auth()->id(),
+            'user_id' => $this->user_id ?? auth()->id(),
             'shipper_id' => $this->shipper_id,
             'tracking_number' => $this->tracking_number,
             'description' => $this->description,

@@ -4,6 +4,7 @@ namespace App\Http\Livewire\PurchaseRequests;
 
 use Livewire\Component;
 use App\Models\PurchaseRequest as PurchaseRequestModel;
+use App\Models\User;
 
 class AdminPurchaseRequest extends Component
 {
@@ -14,12 +15,18 @@ class AdminPurchaseRequest extends Component
     public $unit_price = '';
     public $shipping_fee = '';
     public $tax = '';
+    public int $user_id = 0;
+    public $customerList = [];
 
     public function mount() {
         $this->quantity = 0;
         $this->unit_price = 0.0;
         $this->shipping_fee = 0.0;
         $this->tax = 0.0;
+
+        $this->customerList = User::where('role_id', 3)
+                                    ->where('email_verified_at', '!=', '')
+                                    ->orderBy('last_name', 'asc')->get();
     }
     
     public function create()
@@ -78,7 +85,7 @@ class AdminPurchaseRequest extends Component
         ]);
 
         $purchase_request = PurchaseRequestModel::create([
-            'user_id' => auth()->id(),
+            'user_id' => $this->user_id,
             'item_name' => $this->item_name,
             'item_url' => $this->item_url,
             'quantity' => $this->quantity,
@@ -101,12 +108,12 @@ class AdminPurchaseRequest extends Component
         $this->closeModal();
         $this->resetInputFields();
 
-        return redirect('/purchase-requests');
+        // return redirect('/admin/purchase-requests');
     }
 
     public function render()
     {
-        return view('livewire.purchase-requests.purchase-request');
+        return view('livewire.purchase-requests.admin-purchase-request');
     }
 
     // create function to calculate the final price by accepting the requisite parameters

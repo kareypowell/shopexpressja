@@ -34,6 +34,9 @@ class AdminPurchaseRequestsTable extends DataTableComponent
     public function columns(): array
     {
         return [
+            Column::make("Customer", "user.full_name")
+                ->sortable()
+                ->searchable(),
             Column::make("Item Name", "item_name")
                 ->sortable()
                 ->searchable(),
@@ -61,7 +64,6 @@ class AdminPurchaseRequestsTable extends DataTableComponent
     {
         return PurchaseRequest::query()
             ->orderBy('id', 'desc')
-            ->where('user_id', auth()->id())
             ->when($this->getFilter('search'), fn($query, $search) => $query->search($search))
             ->when($this->getFilter('item_name'), fn($query, $item_name) => $query->where('item_name', $item_name))
             ->when($this->getFilter('status'), fn($query, $status) => $query->where('status', $status));
