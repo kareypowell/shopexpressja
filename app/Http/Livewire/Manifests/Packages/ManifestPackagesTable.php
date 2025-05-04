@@ -77,6 +77,9 @@ class ManifestPackagesTable extends DataTableComponent
     public function columns(): array
     {
         return [
+            Column::make("Customer", "user.full_name")
+                ->searchable()
+                ->sortable(),
             Column::make("Tracking Number", "tracking_number")
                 ->sortable()
                 ->searchable(),

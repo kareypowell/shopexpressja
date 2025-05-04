@@ -1,5 +1,18 @@
 <x-livewire-tables::table.cell>
   <div>
+    {{ $row->user->full_name }}
+    @if($row->user->profile->account_number)
+    <p>
+      <span class="text-sm text-gray-500">
+        <small><strong>Account Number: <x-badges.shs>{{ $row->user->profile->account_number }}</x-badges.shs></small>
+      </span>
+    </p>
+    @endif
+  </div>
+</x-livewire-tables::table.cell>
+
+<x-livewire-tables::table.cell>
+  <div>
     <x-badges.primary>{{ $row->tracking_number }}</x-badges.primary>
   </div>
 </x-livewire-tables::table.cell>
