@@ -25,11 +25,13 @@ class ManifestPackagesTable extends DataTableComponent
         'setStatusToShipped' => 'Change to Shipped',
         'setStatusToDelayed' => 'Change to Delayed',
         'setStatusToReady' => 'Change to Ready',
+        'setStatusToDelivered' => 'Change to Delivered',
     ];
 
     public array $filterNames = [
         'status' => 'Status',
     ];
+
     public function filters(): array
     {
         return [
@@ -43,21 +45,30 @@ class ManifestPackagesTable extends DataTableComponent
                 ]),
         ];
     }
+
     public function setStatusToProcessing()
     {
         $this->setStatus('processing');
     }
+
     public function setStatusToShipped()
     {
         $this->setStatus('shipped');
     }
+
     public function setStatusToDelayed()
     {
         $this->setStatus('delayed');
     }
+
     public function setStatusToReady()
     {
         $this->setStatus('ready');
+    }
+
+    public function setStatusToDelivered()
+    {
+        $this->setStatus('delivered');
     }
 
     public function setStatus($status)
