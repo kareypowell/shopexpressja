@@ -36,6 +36,12 @@
 
 <x-livewire-tables::table.cell>
   <div>
+    <x-badges.success>${{ number_format($row->packages->sum('freight_price'), 2) }}</x-badges.success>
+  </div>
+</x-livewire-tables::table.cell>
+
+<x-livewire-tables::table.cell>
+  <div>
     <x-badges.success>${{ number_format($row->exchange_rate, 2) }}</x-badges.success>
   </div>
 </x-livewire-tables::table.cell>
