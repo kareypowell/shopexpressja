@@ -95,6 +95,9 @@ class ManifestPackagesTable extends DataTableComponent
             Column::make("Estimated Value (USD)", "estimated_value")
                 ->sortable()
                 ->searchable(),
+            Column::make("Freight Price (JMD)", "freight_price")
+                ->sortable()
+                ->searchable(),
             Column::make("Created at", "created_at")
                 ->sortable(),
             // Column::make("Updated at", "updated_at")

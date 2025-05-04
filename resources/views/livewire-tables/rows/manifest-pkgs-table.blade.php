@@ -46,6 +46,12 @@
 
 <x-livewire-tables::table.cell>
   <div>
+    <x-badges.success>${{ number_format($row->freight_price, 2) }} JMD</x-badges.success>
+  </div>
+</x-livewire-tables::table.cell>
+
+<x-livewire-tables::table.cell>
+  <div>
     {{ $row->created_at->format('F j, Y @ G:i A') }}
   </div>
 </x-livewire-tables::table.cell>
