@@ -10,7 +10,7 @@ use App\Models\Manifest;
 
 class ManifestsTable extends DataTableComponent
 {
-    // public $refresh = 'visible';
+    public $refresh = 'visible';
 
     public array $filterNames = [
         'type' => 'Type',
