@@ -42,6 +42,12 @@
 
 <x-livewire-tables::table.cell>
   <div>
+    <x-badges.shs>{{ number_format($row->packages->sum('weight'), 2) . " / " . number_format($row->packages->sum('weight') / 2.205, 2) }}</x-badges.shs>
+  </div>
+</x-livewire-tables::table.cell>
+
+<x-livewire-tables::table.cell>
+  <div>
     <x-badges.success>${{ number_format($row->exchange_rate, 2) }}</x-badges.success>
   </div>
 </x-livewire-tables::table.cell>

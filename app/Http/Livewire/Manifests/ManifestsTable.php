@@ -43,7 +43,9 @@ class ManifestsTable extends DataTableComponent
                 ->sortable(),
             Column::make("Packages", "manifest.packages")
                 ->sortable(),
-            Column::make("Total Value (JMD)", "manifest.packages")
+            Column::make("Estimated Value (JMD)", "manifest.packages")
+                ->sortable(),
+            Column::make("Estimated Weight (LBS/KG)", "manifest.packages")
                 ->sortable(),
             Column::make("Exchange rate (USD)", "exchange_rate")
                 ->sortable(),
