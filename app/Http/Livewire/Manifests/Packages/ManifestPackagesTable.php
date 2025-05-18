@@ -76,6 +76,30 @@ class ManifestPackagesTable extends DataTableComponent
         collect($this->selectedKeys)->each(function ($id) use ($status) {
             Package::where('id', $id)->update(['status' => $status]);
             PackagePreAlert::where('package_id', $id)->update(['status' => $status]);
+
+            $package = Package::find($id);
+            $user = $package->user;
+            $trackingNumber = $package->tracking_number;
+            $description = $package->description;
+
+            // Notify the user about the status change
+            switch ($status) {
+                case 'processing':
+                    $user->notify(new \App\Notifications\ProcessingPreAlertNotification($user, $trackingNumber, $description));
+                    break;
+                case 'shipped':
+                    $user->notify(new \App\Notifications\PackageShippedNotification($user, $trackingNumber, $description));
+                    break;
+                case 'delayed':
+                    $user->notify(new \App\Notifications\PackageDelayedNotification($user, $trackingNumber, $description));
+                    break;
+                case 'ready':
+                    $user->notify(new \App\Notifications\PackageReadyNotification($user, $trackingNumber, $description));
+                    break;
+                case 'delivered':
+                    $status = 'Delivered';
+                    break;
+            }
         });
 
         // $this->clearSelected();
