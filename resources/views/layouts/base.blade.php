@@ -52,7 +52,7 @@
         });
     </script>
 
-    {{-- <x-tawk-to /> --}}
+    <x-tawk-to />
 </body>
 
 </html>

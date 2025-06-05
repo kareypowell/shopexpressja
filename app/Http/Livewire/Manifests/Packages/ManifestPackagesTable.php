@@ -113,7 +113,7 @@ class ManifestPackagesTable extends DataTableComponent
     {
         return [
             Column::make("Customer", "user.full_name")
-                ->searchable()
+                // ->searchable()
                 ->sortable(),
             Column::make("Tracking Number", "tracking_number")
                 ->sortable()
