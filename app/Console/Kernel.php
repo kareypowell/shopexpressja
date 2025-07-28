@@ -16,6 +16,10 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
+        
+        // Schedule the weekly user signup report command
+        $schedule->command('shs:user-signup-report')
+            ->weeklyOn(7, '00:00'); // Runs every Monday at midnight
     }
 
     /**
