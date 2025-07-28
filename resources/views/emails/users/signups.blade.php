@@ -2,13 +2,16 @@
 # Weekly User Signups Report
 
 Hello,
-Here is the report of user signups for the week:
-- **Total Signups**: {{ $newUserCount }}
-- **New Users**: {{ $newUsers }}
 
-@component('mail::button', ['url' => ''])
-Button Text
-@endcomponent
+Here is the report of user signups for the week:
+
+**Total Signups**: {{ $newUserCount }}
+
+## New Users
+
+@foreach($newUsers as $user)
+- **{{ $user->first_name }} {{ $user->last_name }}** ({{ $user->email }}) - Registered {{ $user->created_at->format('M j, Y') }}
+@endforeach
 
 Thanks,<br>
 {{ config('app.name') }}

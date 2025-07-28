@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\UserSignupNotification;
 use App\Models\User;
+use Carbon\Carbon;
 
 class WeeklyUserSignupReport extends Command
 {
@@ -40,17 +41,23 @@ class WeeklyUserSignupReport extends Command
      */
     public function handle()
     {
-        $newUsers = User::all(); //where('created_at', '>=', now()->subWeek())->get();
+        $newUsers = User::whereBetween('created_at', [
+            now()->startOfWeek(Carbon::SUNDAY),
+            now()->endOfWeek(Carbon::SATURDAY)
+        ])->get();
 
         $newUserCount = $newUsers->count();
-        
+
         if ($newUserCount > 0) {
             Mail::to('support@shipsharkltd.com')
-                ->send(new UserSignupNotification($newUsers, $newUserCount));
+                ->send((new UserSignupNotification($newUsers, $newUserCount))
+                    ->from('noreply@shipsharkltd.com', 'Ship Heaven Shark Ltd.'));
+
             $this->info("Weekly user signup report sent successfully. Total new users: {$newUserCount}");
         } else {
-            $this->info("No new user signups in the last week.");
+            $this->info("No new user signups in the current week.");
         }
+
         return 0;
     }
 }
