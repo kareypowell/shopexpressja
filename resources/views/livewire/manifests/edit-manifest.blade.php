@@ -24,7 +24,7 @@
                             <div class="mt-6 mb-5">
                                 <label for="type" class="block text-gray-700 text-sm font-bold mb-2">Select manifest type</label>
                                 <div class="mt-1 rounded-md shadow-sm">
-                                    <select wire:model.lazy="type" id="type" required autofocus class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('type') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror">
+                                    <select wire:model="type" id="type" required autofocus class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('type') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror">
                                         <option value="" selected>--- Select type ---</option>
                                         <option value="air">Air</option>
                                         <option value="sea">Sea</option>
@@ -47,20 +47,56 @@
                                 @error('reservation_number') <span class="text-red-500">{{ $message }}</span>@enderror
                             </div>
 
-                            <div class="mb-4">
-                                <label for="flight_number" class="block text-gray-700 text-sm font-bold mb-2">Flight Number</label>
-                                <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="flight_number" placeholder="Enter the flight number for the manifest" wire:model="flight_number" autocomplete="off">
-                                @error('flight_number') <span class="text-red-500">{{ $message }}</span>@enderror
-                            </div>
+                            <!-- Air Manifest Fields -->
+                            @if($type === 'air')
+                                <div class="mb-4">
+                                    <label for="flight_number" class="block text-gray-700 text-sm font-bold mb-2">Flight Number</label>
+                                    <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="flight_number" placeholder="Enter the flight number for the manifest" wire:model="flight_number" autocomplete="off">
+                                    @error('flight_number') <span class="text-red-500">{{ $message }}</span>@enderror
+                                </div>
 
-                            <div class="mb-4">
-                                <label for="flight_destination" class="block text-gray-700 text-sm font-bold mb-2">Flight Destination</label>
-                                <select wire:model.lazy="flight_destination" id="flight_destination" required autofocus class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('flight_destination') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror">
-                                    <option value="" selected>--- Select destination ---</option>
-                                    <option value="MIA-KGN">MIA-KGN</option>
-                                </select>
-                                @error('flight_destination') <span class="text-red-500">{{ $message }}</span>@enderror
-                            </div>
+                                <div class="mb-4">
+                                    <label for="flight_destination" class="block text-gray-700 text-sm font-bold mb-2">Flight Destination</label>
+                                    <select wire:model.lazy="flight_destination" id="flight_destination" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('flight_destination') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror">
+                                        <option value="" selected>--- Select destination ---</option>
+                                        <option value="MIA-KGN">MIA-KGN</option>
+                                    </select>
+                                    @error('flight_destination') <span class="text-red-500">{{ $message }}</span>@enderror
+                                </div>
+                            @endif
+
+                            <!-- Sea Manifest Fields -->
+                            @if($type === 'sea')
+                                <div class="mb-4">
+                                    <label for="vessel_name" class="block text-gray-700 text-sm font-bold mb-2">Vessel Name</label>
+                                    <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="vessel_name" placeholder="Enter the vessel name" wire:model="vessel_name" autocomplete="off">
+                                    @error('vessel_name') <span class="text-red-500">{{ $message }}</span>@enderror
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="voyage_number" class="block text-gray-700 text-sm font-bold mb-2">Voyage Number</label>
+                                    <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="voyage_number" placeholder="Enter the voyage number" wire:model="voyage_number" autocomplete="off">
+                                    @error('voyage_number') <span class="text-red-500">{{ $message }}</span>@enderror
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="departure_port" class="block text-gray-700 text-sm font-bold mb-2">Departure Port</label>
+                                    <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="departure_port" placeholder="Enter the departure port" wire:model="departure_port" autocomplete="off">
+                                    @error('departure_port') <span class="text-red-500">{{ $message }}</span>@enderror
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="arrival_port" class="block text-gray-700 text-sm font-bold mb-2">Arrival Port <span class="text-gray-500 text-xs">(Optional)</span></label>
+                                    <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="arrival_port" placeholder="Enter the arrival port" wire:model="arrival_port" autocomplete="off">
+                                    @error('arrival_port') <span class="text-red-500">{{ $message }}</span>@enderror
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="estimated_arrival_date" class="block text-gray-700 text-sm font-bold mb-2">Estimated Arrival Date <span class="text-gray-500 text-xs">(Optional)</span></label>
+                                    <input type="date" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="estimated_arrival_date" placeholder="Select the estimated arrival date" wire:model="estimated_arrival_date" autocomplete="off">
+                                    @error('estimated_arrival_date') <span class="text-red-500">{{ $message }}</span>@enderror
+                                </div>
+                            @endif
 
                             <div class="mb-4">
                                 <label for="exchange_rate" class="block text-gray-700 text-sm font-bold mb-2">Exchange Rate</label>

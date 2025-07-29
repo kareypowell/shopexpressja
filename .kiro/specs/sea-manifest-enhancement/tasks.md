@@ -75,21 +75,21 @@
   - Add resetInputFields() updates to include new vessel fields
   - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 11. Update manifest creation view with conditional vessel/flight fields
+- [x] 11. Update manifest creation view with conditional vessel/flight fields
   - Modify manifest create view to show vessel fields when type is 'sea'
   - Show flight fields when type is 'air' (existing functionality)
   - Add JavaScript to toggle field visibility based on selected manifest type
   - Update field labels and placeholders to be type-appropriate
   - _Requirements: 1.1, 7.1, 7.2, 7.3_
 
-- [ ] 12. Enhance EditManifest component for vessel information
+- [x] 12. Enhance EditManifest component for vessel information
   - Add vessel-related properties to EditManifest component
   - Update mount() method to load vessel information for sea manifests
   - Modify validation rules to handle both vessel and flight information conditionally
   - Update update() method to save vessel information changes
   - _Requirements: 1.4, 1.5_
 
-- [ ] 13. Update manifest edit view with vessel information support
+- [x] 13. Update manifest edit view with vessel information support
   - Modify edit-manifest view to display vessel fields for sea manifests
   - Maintain flight field display for air manifests
   - Add conditional rendering logic based on manifest type

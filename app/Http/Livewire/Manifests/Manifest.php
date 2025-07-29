@@ -160,6 +160,21 @@ class Manifest extends Component
         // return redirect('/manifests');
     }
 
+    public function updatedType()
+    {
+        // Clear fields when type changes to prevent validation issues
+        if ($this->type === 'sea') {
+            $this->flight_number = '';
+            $this->flight_destination = '';
+        } else {
+            $this->vessel_name = '';
+            $this->voyage_number = '';
+            $this->departure_port = '';
+            $this->arrival_port = '';
+            $this->estimated_arrival_date = '';
+        }
+    }
+
     public function render()
     {
         return view('livewire.manifests.manifest');

@@ -130,4 +130,36 @@ class ManifestComponentTest extends TestCase
         $this->assertEquals('', $component->get('arrival_port'));
         $this->assertEquals('', $component->get('estimated_arrival_date'));
     }
+
+    /** @test */
+    public function it_clears_flight_fields_when_switching_to_sea_type()
+    {
+        $component = Livewire::test(Manifest::class)
+            ->set('type', 'air')
+            ->set('flight_number', 'AA123')
+            ->set('flight_destination', 'MIA-KGN')
+            ->set('type', 'sea'); // Switch to sea type
+
+        $this->assertEquals('', $component->get('flight_number'));
+        $this->assertEquals('', $component->get('flight_destination'));
+    }
+
+    /** @test */
+    public function it_clears_vessel_fields_when_switching_to_air_type()
+    {
+        $component = Livewire::test(Manifest::class)
+            ->set('type', 'sea')
+            ->set('vessel_name', 'MV Ocean Carrier')
+            ->set('voyage_number', 'VOY001')
+            ->set('departure_port', 'Miami')
+            ->set('arrival_port', 'Kingston')
+            ->set('estimated_arrival_date', '2025-08-01')
+            ->set('type', 'air'); // Switch to air type
+
+        $this->assertEquals('', $component->get('vessel_name'));
+        $this->assertEquals('', $component->get('voyage_number'));
+        $this->assertEquals('', $component->get('departure_port'));
+        $this->assertEquals('', $component->get('arrival_port'));
+        $this->assertEquals('', $component->get('estimated_arrival_date'));
+    }
 }
