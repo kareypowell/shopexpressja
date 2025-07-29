@@ -18,7 +18,6 @@ class Package extends Model
         'tracking_number',
         'description',
         'weight',
-        'value',
         'status',
         'estimated_value',
         'freight_price',
@@ -35,7 +34,6 @@ class Package extends Model
     protected $casts = [
         'cubic_feet' => 'decimal:3',
         'weight' => 'decimal:2',
-        'value' => 'decimal:2',
         'estimated_value' => 'decimal:2',
         'length_inches' => 'decimal:2',
         'width_inches' => 'decimal:2',
@@ -85,10 +83,7 @@ class Package extends Model
         return number_format($this->weight, 2);
     }
 
-    public function getFormattedValueAttribute()
-    {
-        return number_format($this->value, 2);
-    }
+
 
     /**
      * Calculate cubic feet from dimensions

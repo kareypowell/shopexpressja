@@ -27,7 +27,6 @@ class ManifestPackage extends Component
     public string $tracking_number = '';
     public string $description = '';
     public string $weight = '';
-    public string $value = '';
     public string $status = '';
     public string $estimated_value = '';
     public $customerList = [];
@@ -56,7 +55,8 @@ class ManifestPackage extends Component
 
         $this->manifest_id = request()->route('manifest_id');
 
-        $this->isSeaManifest = (Manifest::find($this->manifest_id)->type == 'sea');
+        $manifest = Manifest::find($this->manifest_id);
+        $this->isSeaManifest = $manifest && $manifest->type === 'sea';
         
         // Initialize items array for sea manifests
         $this->initializeItems();
@@ -207,6 +207,16 @@ class ManifestPackage extends Component
     public function recalculateCubicFeet()
     {
         $this->calculateCubicFeet();
+    }
+
+    /**
+     * Handle when manifest_id is updated (for testing purposes)
+     */
+    public function updatedManifestId()
+    {
+        $manifest = Manifest::find($this->manifest_id);
+        $this->isSeaManifest = $manifest && $manifest->type === 'sea';
+        $this->initializeItems();
     }
 
     /**
