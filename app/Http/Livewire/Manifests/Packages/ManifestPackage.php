@@ -11,8 +11,10 @@ use App\Models\PackagePreAlert;
 use App\Models\PreAlert;
 use App\Models\Rate;
 use App\Models\Manifest;
+use App\Models\PackageItem;
 use Illuminate\Support\Facades\Log;
 use App\Notifications\MissingPreAlertNotification;
+use App\Services\SeaRateCalculator;
 
 class ManifestPackage extends Component
 {
@@ -31,6 +33,15 @@ class ManifestPackage extends Component
     public $customerList = [];
     public $shipperList = [];
     public $officeList = [];
+    public $isSeaManifest = null;
+
+    // Sea-specific properties
+    public string $container_type = '';
+    public string $length_inches = '';
+    public string $width_inches = '';
+    public string $height_inches = '';
+    public float $cubic_feet = 0;
+    public array $items = [];
 
 
     public function mount()
@@ -44,6 +55,11 @@ class ManifestPackage extends Component
         $this->shipperList = Shipper::orderBy('name', 'asc')->get();
 
         $this->manifest_id = request()->route('manifest_id');
+
+        $this->isSeaManifest = (Manifest::find($this->manifest_id)->type == 'sea');
+        
+        // Initialize items array for sea manifests
+        $this->initializeItems();
     }
 
     public function create()
@@ -88,16 +104,120 @@ class ManifestPackage extends Component
         $this->weight = '';
         $this->status = '';
         $this->estimated_value = '';
+        
+        // Reset sea-specific fields
+        $this->container_type = '';
+        $this->length_inches = '';
+        $this->width_inches = '';
+        $this->height_inches = '';
+        $this->cubic_feet = 0;
+        $this->items = [];
+        $this->initializeItems();
     }
 
     /**
-     * The attributes that are mass assignable.
+     * Initialize items array with one empty item for sea manifests
+     */
+    private function initializeItems()
+    {
+        if ($this->isSeaManifest() && empty($this->items)) {
+            $this->items = [
+                [
+                    'description' => '',
+                    'quantity' => 1,
+                    'weight_per_item' => ''
+                ]
+            ];
+        }
+    }
+
+    /**
+     * Determine if the current manifest is a sea manifest
+     */
+    public function isSeaManifest(): bool
+    {
+        if (!$this->manifest_id) {
+            return false;
+        }
+        
+        $manifest = Manifest::find($this->manifest_id);
+        return $manifest && $manifest->type === 'sea';
+    }
+
+    /**
+     * Calculate cubic feet from dimensions with real-time calculation
+     * Formula: (length × width × height) ÷ 1728
+     */
+    public function calculateCubicFeet()
+    {
+        if ($this->length_inches && $this->width_inches && $this->height_inches) {
+            $this->cubic_feet = round(
+                ($this->length_inches * $this->width_inches * $this->height_inches) / 1728, 
+                3
+            );
+        } else {
+            $this->cubic_feet = 0;
+        }
+    }
+
+    /**
+     * Add a new item to the items array
+     */
+    public function addItem()
+    {
+        $this->items[] = [
+            'description' => '',
+            'quantity' => 1,
+            'weight_per_item' => ''
+        ];
+    }
+
+    /**
+     * Remove an item from the items array
+     */
+    public function removeItem($index)
+    {
+        if (isset($this->items[$index])) {
+            unset($this->items[$index]);
+            $this->items = array_values($this->items); // Re-index array
+        }
+    }
+
+    /**
+     * Update cubic feet when dimensions change
+     */
+    public function updatedLengthInches()
+    {
+        $this->calculateCubicFeet();
+    }
+
+    public function updatedWidthInches()
+    {
+        $this->calculateCubicFeet();
+    }
+
+    public function updatedHeightInches()
+    {
+        $this->calculateCubicFeet();
+    }
+
+    /**
+     * Real-time calculation method that can be called from the frontend
+     */
+    public function recalculateCubicFeet()
+    {
+        $this->calculateCubicFeet();
+    }
+
+    /**
+     * Store a new package with support for both air and sea manifests
      *
-     * @var array
+     * @return void
      */
     public function store()
     {
-        $this->validate([
+        // Base validation rules for all packages
+        $rules = [
             'user_id' => ['required', 'integer'],
             'shipper_id' => ['required', 'integer'],
             'office_id' => ['required', 'integer'],
@@ -105,9 +225,36 @@ class ManifestPackage extends Component
             'description' => ['required', 'string', 'max:255'],
             'weight' => ['required', 'numeric'],
             'estimated_value' => ['required', 'numeric'],
-        ]);
+        ];
 
-        // check if a package already exists for the tracking number
+        // Add sea-specific validation rules
+        if ($this->isSeaManifest()) {
+            $rules = array_merge($rules, [
+                'container_type' => ['required', 'in:box,barrel,pallet'],
+                'length_inches' => ['required', 'numeric', 'min:0.1'],
+                'width_inches' => ['required', 'numeric', 'min:0.1'],
+                'height_inches' => ['required', 'numeric', 'min:0.1'],
+                'items' => ['required', 'array', 'min:1'],
+                'items.*.description' => ['required', 'string', 'max:255'],
+                'items.*.quantity' => ['required', 'integer', 'min:1'],
+                'items.*.weight_per_item' => ['nullable', 'numeric', 'min:0'],
+            ]);
+
+            // Ensure cubic feet is calculated for sea packages
+            $this->calculateCubicFeet();
+            
+            // Validate that cubic feet is greater than 0
+            if ($this->cubic_feet <= 0) {
+                $this->dispatchBrowserEvent('toastr:error', [
+                    'message' => 'Invalid dimensions. Cubic feet must be greater than 0.',
+                ]);
+                return;
+            }
+        }
+
+        $this->validate($rules);
+
+        // Check if a package already exists for the tracking number
         $existingPackage = Package::where('tracking_number', $this->tracking_number)->first();
         if ($existingPackage) {
             $this->dispatchBrowserEvent('toastr:error', [
@@ -116,10 +263,11 @@ class ManifestPackage extends Component
             return;
         }
 
-        // check if a pre-alert exists for the tracking number
+        // Check if a pre-alert exists for the tracking number
         $preAlert = PreAlert::where('tracking_number', $this->tracking_number)->first();
 
-        $package = Package::create([
+        // Prepare base package data
+        $packageData = [
             'user_id' => $this->user_id,
             'shipper_id' => $this->shipper_id,
             'office_id' => $this->office_id,
@@ -130,8 +278,55 @@ class ManifestPackage extends Component
             'status' => $this->updatePackageStatus($preAlert),
             'estimated_value' => $this->estimated_value,
             'manifest_id' => $this->manifest_id,
-            'freight_price' => $this->calculateFreightPrice(),
-        ]);
+        ];
+
+        // Add sea-specific fields if this is a sea manifest
+        if ($this->isSeaManifest()) {
+            $packageData = array_merge($packageData, [
+                'container_type' => $this->container_type,
+                'length_inches' => $this->length_inches,
+                'width_inches' => $this->width_inches,
+                'height_inches' => $this->height_inches,
+                'cubic_feet' => $this->cubic_feet,
+            ]);
+        }
+
+        // Create the package first (without freight_price to avoid circular dependency)
+        $package = Package::create($packageData);
+
+        if (!$package) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Package Creation Failed.',
+            ]);
+            return;
+        }
+
+        // Create package items for sea manifests
+        if ($this->isSeaManifest()) {
+            foreach ($this->items as $item) {
+                if (!empty($item['description'])) {
+                    PackageItem::create([
+                        'package_id' => $package->id,
+                        'description' => $item['description'],
+                        'quantity' => $item['quantity'],
+                        'weight_per_item' => $item['weight_per_item'] ?: null,
+                    ]);
+                }
+            }
+        }
+
+        // Calculate and update freight price after package and items are created
+        try {
+            $freightPrice = $this->calculateFreightPrice($package);
+            $package->update(['freight_price' => $freightPrice]);
+        } catch (\Exception $e) {
+            // Log the error but don't fail the package creation
+            Log::error('Failed to calculate freight price for package ' . $package->id . ': ' . $e->getMessage());
+            
+            $this->dispatchBrowserEvent('toastr:warning', [
+                'message' => 'Package created but freight price calculation failed. Please check rate configuration.',
+            ]);
+        }
 
         // Create the package pre-alert if it doesn't exist
         // and associate it with the package
@@ -166,15 +361,9 @@ class ManifestPackage extends Component
             }
         }
 
-        if ($package) {
-            $this->dispatchBrowserEvent('toastr:success', [
-                'message' => 'Package Created Successfully.',
-            ]);
-        } else {
-            $this->dispatchBrowserEvent('toastr:error', [
-                'message' => 'Package Creation Failed.',
-            ]);
-        }
+        $this->dispatchBrowserEvent('toastr:success', [
+            'message' => 'Package Created Successfully.',
+        ]);
 
         $this->closeModal();
         $this->resetInputFields();
@@ -238,26 +427,65 @@ class ManifestPackage extends Component
     }
 
     /**
-     * Calculate the freight price based on weight and exchange rate.
+     * Calculate the freight price based on manifest type (air vs sea)
+     *
+     * @param Package|null $package Optional package instance for sea calculations
+     * @return float The calculated freight price
+     */
+    public function calculateFreightPrice(?Package $package = null): float
+    {
+        if ($this->isSeaManifest()) {
+            return $this->calculateSeaFreightPrice($package);
+        } else {
+            return $this->calculateAirFreightPrice();
+        }
+    }
+
+    /**
+     * Calculate freight price for air packages (existing logic)
      *
      * @return float The calculated freight price
      */
-    public function calculateFreightPrice(): float
+    private function calculateAirFreightPrice(): float
     {
-        // get the XRT for the manifest
+        // Get the exchange rate for the manifest
         $xrt = Manifest::find($this->manifest_id)->exchange_rate;
 
-        // get the weight of the package
+        // Get the weight of the package (rounded up)
         $weight = ceil($this->weight);
 
-        // get the rate for the weight
+        // Get the rate for the weight
         $rate = Rate::where('weight', $weight)->first();
         if ($rate) {
-            // calculate the freight price
+            // Calculate the freight price
             $freightPrice = ($rate->price + $rate->processing_fee) * $xrt;
+            return $freightPrice;
         }
 
-        return $freightPrice ?? 0;
+        return 0;
+    }
+
+    /**
+     * Calculate freight price for sea packages using SeaRateCalculator
+     *
+     * @param Package|null $package Package instance for calculation
+     * @return float The calculated freight price
+     */
+    private function calculateSeaFreightPrice(?Package $package = null): float
+    {
+        // If no package provided, we can't calculate sea freight price yet
+        if (!$package) {
+            return 0;
+        }
+
+        try {
+            $seaRateCalculator = new SeaRateCalculator();
+            return $seaRateCalculator->calculateFreightPrice($package);
+        } catch (\Exception $e) {
+            // Log the error and return 0
+            Log::error('Sea freight price calculation failed: ' . $e->getMessage());
+            return 0;
+        }
     }
 
     public function render()

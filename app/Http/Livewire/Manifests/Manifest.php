@@ -19,6 +19,17 @@ class Manifest extends Component
 
     public string $flight_destination;
 
+    // Vessel information properties for sea manifests
+    public string $vessel_name;
+
+    public string $voyage_number;
+
+    public string $departure_port;
+
+    public string $arrival_port;
+
+    public string $estimated_arrival_date;
+
     public string $exchange_rate;
 
     public string $shipment_date;
@@ -62,6 +73,11 @@ class Manifest extends Component
         $this->reservation_number = '';
         $this->flight_number = '';
         $this->flight_destination = '';
+        $this->vessel_name = '';
+        $this->voyage_number = '';
+        $this->departure_port = '';
+        $this->arrival_port = '';
+        $this->estimated_arrival_date = '';
         $this->exchange_rate = '';
         $this->shipment_date = '';
     }
@@ -73,26 +89,60 @@ class Manifest extends Component
      */
     public function store()
     {
-        $this->validate([
+        // Base validation rules
+        $rules = [
             'type' => ['required'],
             'name' => ['required'],
             'reservation_number' => ['required'],
-            'flight_number' => ['required'],
-            'flight_destination' => ['required'],
             'exchange_rate' => ['required', 'numeric', 'min:1'],
             'shipment_date' => ['required', 'date'],
-        ]);
+        ];
 
-        $manifest = ManifestModel::create([
+        // Conditional validation based on manifest type
+        if ($this->type === 'sea') {
+            $rules = array_merge($rules, [
+                'vessel_name' => ['required', 'string', 'max:255'],
+                'voyage_number' => ['required', 'string', 'max:255'],
+                'departure_port' => ['required', 'string', 'max:255'],
+                'arrival_port' => ['nullable', 'string', 'max:255'],
+                'estimated_arrival_date' => ['nullable', 'date', 'after:shipment_date'],
+            ]);
+        } else {
+            $rules = array_merge($rules, [
+                'flight_number' => ['required'],
+                'flight_destination' => ['required'],
+            ]);
+        }
+
+        $this->validate($rules);
+
+        // Prepare data for creation
+        $manifestData = [
             'name' => $this->name,
             'shipment_date' => $this->shipment_date,
             'reservation_number' => $this->reservation_number,
-            'flight_number' => $this->flight_number,
-            'flight_destination' => $this->flight_destination,
             'exchange_rate' => $this->exchange_rate,
             'type' => $this->type,
             'is_open' => true
-        ]);
+        ];
+
+        // Add type-specific fields
+        if ($this->type === 'sea') {
+            $manifestData = array_merge($manifestData, [
+                'vessel_name' => $this->vessel_name,
+                'voyage_number' => $this->voyage_number,
+                'departure_port' => $this->departure_port,
+                'arrival_port' => $this->arrival_port ?: null,
+                'estimated_arrival_date' => $this->estimated_arrival_date ?: null,
+            ]);
+        } else {
+            $manifestData = array_merge($manifestData, [
+                'flight_number' => $this->flight_number,
+                'flight_destination' => $this->flight_destination,
+            ]);
+        }
+
+        $manifest = ManifestModel::create($manifestData);
 
         if ($manifest) {
             $this->dispatchBrowserEvent('toastr:success', [

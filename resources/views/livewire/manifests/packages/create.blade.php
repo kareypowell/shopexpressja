@@ -5,7 +5,7 @@
     <!-- This element is to trick the browser into centering the modal contents. -->
     <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-    <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+    <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full sm:p-6">
       <form>
         <div>
           <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-wax-flower-100">
@@ -17,11 +17,11 @@
 
           <div class="mt-3 text-center sm:mt-5">
             <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-              Add Package
+              Add {{ $isSeaManifest ? 'Container' : 'Package' }}
             </h3>
             <div class="mt-2">
               <p class="text-sm text-gray-500">
-                Fill in the form below to add a package to the manifest.
+                Fill in the form below to add a {{ $isSeaManifest ? 'container' : 'package' }} to the {{ $isSeaManifest ? 'sea' : 'air' }} manifest.
               </p>
             </div>
 
@@ -95,6 +95,107 @@
                   <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="estimated_value" placeholder="Enter the estimated value for the item" wire:model="estimated_value" autocomplete="off">
                   @error('estimated_value') <span class="text-red-500">{{ $message }}</span>@enderror
                 </div>
+
+                <!-- Sea Manifest Specific Fields -->
+                @if($isSeaManifest)
+                  <!-- Container Type Selection -->
+                  <div class="mb-4">
+                    <label for="container_type" class="block text-gray-700 text-sm font-bold mb-2">Container Type</label>
+                    <select wire:model="container_type" id="container_type" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('container_type') border-red-300 text-red-900 @enderror">
+                      <option value="">--- Select Container Type ---</option>
+                      <option value="box">Box</option>
+                      <option value="barrel">Barrel</option>
+                      <option value="pallet">Pallet</option>
+                    </select>
+                    @error('container_type') <span class="text-red-500">{{ $message }}</span>@enderror
+                  </div>
+
+                  <!-- Dimensional Fields -->
+                  <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Container Dimensions (inches)</label>
+                    <div class="grid grid-cols-3 gap-2">
+                      <div>
+                        <label for="length_inches" class="block text-gray-600 text-xs mb-1">Length</label>
+                        <input type="number" step="0.1" min="0.1" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('length_inches') border-red-300 @enderror" id="length_inches" placeholder="L" wire:model="length_inches" wire:input="calculateCubicFeet" autocomplete="off">
+                        @error('length_inches') <span class="text-red-500 text-xs">{{ $message }}</span>@enderror
+                      </div>
+                      <div>
+                        <label for="width_inches" class="block text-gray-600 text-xs mb-1">Width</label>
+                        <input type="number" step="0.1" min="0.1" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('width_inches') border-red-300 @enderror" id="width_inches" placeholder="W" wire:model="width_inches" wire:input="calculateCubicFeet" autocomplete="off">
+                        @error('width_inches') <span class="text-red-500 text-xs">{{ $message }}</span>@enderror
+                      </div>
+                      <div>
+                        <label for="height_inches" class="block text-gray-600 text-xs mb-1">Height</label>
+                        <input type="number" step="0.1" min="0.1" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('height_inches') border-red-300 @enderror" id="height_inches" placeholder="H" wire:model="height_inches" wire:input="calculateCubicFeet" autocomplete="off">
+                        @error('height_inches') <span class="text-red-500 text-xs">{{ $message }}</span>@enderror
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Real-time Cubic Feet Display -->
+                  <div class="mb-4">
+                    <div class="bg-blue-50 border border-blue-200 rounded p-3">
+                      <div class="flex items-center">
+                        <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                        <span class="text-blue-800 text-sm font-medium">
+                          Calculated Volume: <span class="font-bold">{{ number_format($cubic_feet, 3) }} cubic feet</span>
+                        </span>
+                      </div>
+                      @if($cubic_feet > 0)
+                        <div class="text-blue-600 text-xs mt-1">
+                          Formula: {{ $length_inches }} × {{ $width_inches }} × {{ $height_inches }} ÷ 1728 = {{ number_format($cubic_feet, 3) }} ft³
+                        </div>
+                      @endif
+                    </div>
+                  </div>
+
+                  <!-- Package Items Management -->
+                  <div class="mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                      <label class="block text-gray-700 text-sm font-bold">Container Items</label>
+                      <button type="button" wire:click="addItem" class="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded">
+                        + Add Item
+                      </button>
+                    </div>
+                    
+                    @foreach($items as $index => $item)
+                      <div class="border border-gray-200 rounded p-3 mb-2 bg-gray-50">
+                        <div class="flex justify-between items-start mb-2">
+                          <span class="text-sm font-medium text-gray-700">Item {{ $index + 1 }}</span>
+                          @if(count($items) > 1)
+                            <button type="button" wire:click="removeItem({{ $index }})" class="text-red-500 hover:text-red-700 text-xs">
+                              Remove
+                            </button>
+                          @endif
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                          <div class="md:col-span-2">
+                            <label for="items.{{ $index }}.description" class="block text-gray-600 text-xs mb-1">Description *</label>
+                            <input type="text" class="shadow appearance-none border rounded w-full py-1 px-2 text-gray-700 text-sm leading-tight focus:outline-none focus:shadow-outline @error('items.' . $index . '.description') border-red-300 @enderror" wire:model="items.{{ $index }}.description" placeholder="Item description" autocomplete="off">
+                            @error('items.' . $index . '.description') <span class="text-red-500 text-xs">{{ $message }}</span>@enderror
+                          </div>
+                          
+                          <div>
+                            <label for="items.{{ $index }}.quantity" class="block text-gray-600 text-xs mb-1">Quantity *</label>
+                            <input type="number" min="1" class="shadow appearance-none border rounded w-full py-1 px-2 text-gray-700 text-sm leading-tight focus:outline-none focus:shadow-outline @error('items.' . $index . '.quantity') border-red-300 @enderror" wire:model="items.{{ $index }}.quantity" placeholder="1" autocomplete="off">
+                            @error('items.' . $index . '.quantity') <span class="text-red-500 text-xs">{{ $message }}</span>@enderror
+                          </div>
+                        </div>
+                        
+                        <div class="mt-2">
+                          <label for="items.{{ $index }}.weight_per_item" class="block text-gray-600 text-xs mb-1">Weight per Item (lbs) - Optional</label>
+                          <input type="number" step="0.01" min="0" class="shadow appearance-none border rounded w-full py-1 px-2 text-gray-700 text-sm leading-tight focus:outline-none focus:shadow-outline @error('items.' . $index . '.weight_per_item') border-red-300 @enderror" wire:model="items.{{ $index }}.weight_per_item" placeholder="0.00" autocomplete="off">
+                          @error('items.' . $index . '.weight_per_item') <span class="text-red-500 text-xs">{{ $message }}</span>@enderror
+                        </div>
+                      </div>
+                    @endforeach
+                    
+                    @error('items') <span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+                  </div>
+                @endif
               </div>
             </div>
           </div>
@@ -111,3 +212,61 @@
     </div>
   </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Real-time cubic feet calculation for sea manifests
+    function calculateCubicFeetRealTime() {
+        const lengthInput = document.getElementById('length_inches');
+        const widthInput = document.getElementById('width_inches');
+        const heightInput = document.getElementById('height_inches');
+        
+        if (lengthInput && widthInput && heightInput) {
+            [lengthInput, widthInput, heightInput].forEach(input => {
+                input.addEventListener('input', function() {
+                    const length = parseFloat(lengthInput.value) || 0;
+                    const width = parseFloat(widthInput.value) || 0;
+                    const height = parseFloat(heightInput.value) || 0;
+                    
+                    if (length > 0 && width > 0 && height > 0) {
+                        const cubicFeet = (length * width * height) / 1728;
+                        
+                        // Update the display immediately for better UX
+                        const volumeDisplay = document.querySelector('.bg-blue-50 .font-bold');
+                        const formulaDisplay = document.querySelector('.text-blue-600.text-xs');
+                        
+                        if (volumeDisplay) {
+                            volumeDisplay.textContent = cubicFeet.toFixed(3) + ' cubic feet';
+                        }
+                        
+                        if (formulaDisplay) {
+                            formulaDisplay.textContent = `Formula: ${length} × ${width} × ${height} ÷ 1728 = ${cubicFeet.toFixed(3)} ft³`;
+                        }
+                    } else {
+                        // Reset display when values are invalid
+                        const volumeDisplay = document.querySelector('.bg-blue-50 .font-bold');
+                        const formulaDisplay = document.querySelector('.text-blue-600.text-xs');
+                        
+                        if (volumeDisplay) {
+                            volumeDisplay.textContent = '0.000 cubic feet';
+                        }
+                        
+                        if (formulaDisplay) {
+                            formulaDisplay.textContent = '';
+                        }
+                    }
+                });
+            });
+        }
+    }
+    
+    // Initialize calculation on page load
+    calculateCubicFeetRealTime();
+    
+    // Re-initialize when Livewire updates the DOM
+    document.addEventListener('livewire:load', calculateCubicFeetRealTime);
+    document.addEventListener('livewire:update', calculateCubicFeetRealTime);
+});
+</script>
+@endpush
