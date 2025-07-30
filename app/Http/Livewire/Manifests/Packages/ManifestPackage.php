@@ -15,6 +15,9 @@ use App\Models\PackageItem;
 use Illuminate\Support\Facades\Log;
 use App\Notifications\MissingPreAlertNotification;
 use App\Services\SeaRateCalculator;
+use App\Rules\ValidContainerDimensions;
+use App\Rules\ValidPackageItems;
+use App\Exceptions\SeaRateNotFoundException;
 
 class ManifestPackage extends Component
 {
@@ -139,12 +142,18 @@ class ManifestPackage extends Component
      */
     public function isSeaManifest(): bool
     {
+        // Use cached value if available
+        if ($this->isSeaManifest !== null) {
+            return $this->isSeaManifest;
+        }
+        
         if (!$this->manifest_id) {
             return false;
         }
         
         $manifest = Manifest::find($this->manifest_id);
-        return $manifest && $manifest->type === 'sea';
+        $this->isSeaManifest = $manifest && $manifest->type === 'sea';
+        return $this->isSeaManifest;
     }
 
     /**
@@ -244,28 +253,40 @@ class ManifestPackage extends Component
         if ($this->isSeaManifest()) {
             $rules = array_merge($rules, [
                 'container_type' => ['required', 'in:box,barrel,pallet'],
-                'length_inches' => ['required', 'numeric', 'min:0.1'],
-                'width_inches' => ['required', 'numeric', 'min:0.1'],
-                'height_inches' => ['required', 'numeric', 'min:0.1'],
-                'items' => ['required', 'array', 'min:1'],
-                'items.*.description' => ['required', 'string', 'max:255'],
-                'items.*.quantity' => ['required', 'integer', 'min:1'],
-                'items.*.weight_per_item' => ['nullable', 'numeric', 'min:0'],
+                'length_inches' => ['required', 'numeric', 'min:0.1', 'max:1000', new ValidContainerDimensions($this->isSeaManifest(), 'length_inches')],
+                'width_inches' => ['required', 'numeric', 'min:0.1', 'max:1000', new ValidContainerDimensions($this->isSeaManifest(), 'width_inches')],
+                'height_inches' => ['required', 'numeric', 'min:0.1', 'max:1000', new ValidContainerDimensions($this->isSeaManifest(), 'height_inches')],
+                'items' => ['required', 'array', 'min:1', new ValidPackageItems($this->isSeaManifest())],
+                'items.*.description' => ['required', 'string', 'max:255', 'min:2'],
+                'items.*.quantity' => ['required', 'integer', 'min:1', 'max:10000'],
+                'items.*.weight_per_item' => ['nullable', 'numeric', 'min:0', 'max:1000'],
             ]);
+        }
 
+        // Validate all fields first
+        $this->validate($rules, $this->getValidationMessages());
+
+        // Additional sea-specific validation after basic validation passes
+        if ($this->isSeaManifest()) {
             // Ensure cubic feet is calculated for sea packages
             $this->calculateCubicFeet();
             
             // Validate that cubic feet is greater than 0
             if ($this->cubic_feet <= 0) {
                 $this->dispatchBrowserEvent('toastr:error', [
-                    'message' => 'Invalid dimensions. Cubic feet must be greater than 0.',
+                    'message' => 'Invalid dimensions. Please check length, width, and height values. Cubic feet must be greater than 0.',
+                ]);
+                return;
+            }
+
+            // Validate that cubic feet is reasonable (not too large)
+            if ($this->cubic_feet > 10000) {
+                $this->dispatchBrowserEvent('toastr:error', [
+                    'message' => 'Container dimensions are too large. Maximum cubic feet allowed is 10,000.',
                 ]);
                 return;
             }
         }
-
-        $this->validate($rules);
 
         // Check if a package already exists for the tracking number
         $existingPackage = Package::where('tracking_number', $this->tracking_number)->first();
@@ -332,12 +353,19 @@ class ManifestPackage extends Component
         try {
             $freightPrice = $this->calculateFreightPrice($package);
             $package->update(['freight_price' => $freightPrice]);
+        } catch (SeaRateNotFoundException $e) {
+            // Log the error but don't fail the package creation
+            Log::error('Sea rate not found for package ' . $package->id . ': ' . $e->getMessage());
+            
+            $this->dispatchBrowserEvent('toastr:warning', [
+                'message' => $e->getUserMessage(),
+            ]);
         } catch (\Exception $e) {
             // Log the error but don't fail the package creation
             Log::error('Failed to calculate freight price for package ' . $package->id . ': ' . $e->getMessage());
             
             $this->dispatchBrowserEvent('toastr:warning', [
-                'message' => 'Package created but freight price calculation failed. Please check rate configuration.',
+                'message' => 'Package created but freight price calculation failed. Please contact support for assistance.',
             ]);
         }
 
@@ -501,11 +529,71 @@ class ManifestPackage extends Component
         try {
             $seaRateCalculator = new SeaRateCalculator();
             return $seaRateCalculator->calculateFreightPrice($package);
+        } catch (SeaRateNotFoundException $e) {
+            // Re-throw the specific exception to be handled by caller
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return 0
             Log::error('Sea freight price calculation failed: ' . $e->getMessage());
             return 0;
         }
+    }
+
+    /**
+     * Get custom validation messages
+     */
+    protected function getValidationMessages(): array
+    {
+        return [
+            // Base package validation messages
+            'user_id.required' => 'Please select a customer.',
+            'user_id.integer' => 'Invalid customer selection.',
+            'shipper_id.required' => 'Please select a shipper.',
+            'shipper_id.integer' => 'Invalid shipper selection.',
+            'office_id.required' => 'Please select an office.',
+            'office_id.integer' => 'Invalid office selection.',
+            'tracking_number.required' => 'Tracking number is required.',
+            'tracking_number.max' => 'Tracking number cannot exceed 255 characters.',
+            'description.required' => 'Package description is required.',
+            'description.min' => 'Package description must be at least 2 characters.',
+            'description.max' => 'Package description cannot exceed 255 characters.',
+            'weight.required' => 'Package weight is required.',
+            'weight.numeric' => 'Package weight must be a valid number.',
+            'estimated_value.required' => 'Estimated value is required.',
+            'estimated_value.numeric' => 'Estimated value must be a valid number.',
+            
+            // Sea package specific validation messages
+            'container_type.required' => 'Container type is required for sea packages.',
+            'container_type.in' => 'Container type must be box, barrel, or pallet.',
+            'length_inches.required' => 'Container length is required for sea packages.',
+            'length_inches.numeric' => 'Container length must be a valid number.',
+            'length_inches.min' => 'Container length must be at least 0.1 inches.',
+            'length_inches.max' => 'Container length cannot exceed 1000 inches.',
+            'width_inches.required' => 'Container width is required for sea packages.',
+            'width_inches.numeric' => 'Container width must be a valid number.',
+            'width_inches.min' => 'Container width must be at least 0.1 inches.',
+            'width_inches.max' => 'Container width cannot exceed 1000 inches.',
+            'height_inches.required' => 'Container height is required for sea packages.',
+            'height_inches.numeric' => 'Container height must be a valid number.',
+            'height_inches.min' => 'Container height must be at least 0.1 inches.',
+            'height_inches.max' => 'Container height cannot exceed 1000 inches.',
+            
+            // Package items validation messages
+            'items.required' => 'At least one item is required for sea packages.',
+            'items.array' => 'Items must be provided as a list.',
+            'items.min' => 'At least one item is required for sea packages.',
+            'items.*.description.required' => 'Item description is required.',
+            'items.*.description.string' => 'Item description must be text.',
+            'items.*.description.min' => 'Item description must be at least 2 characters.',
+            'items.*.description.max' => 'Item description cannot exceed 255 characters.',
+            'items.*.quantity.required' => 'Item quantity is required.',
+            'items.*.quantity.integer' => 'Item quantity must be a whole number.',
+            'items.*.quantity.min' => 'Item quantity must be at least 1.',
+            'items.*.quantity.max' => 'Item quantity cannot exceed 10,000.',
+            'items.*.weight_per_item.numeric' => 'Weight per item must be a valid number.',
+            'items.*.weight_per_item.min' => 'Weight per item cannot be negative.',
+            'items.*.weight_per_item.max' => 'Weight per item cannot exceed 1000 lbs.',
+        ];
     }
 
     public function render()

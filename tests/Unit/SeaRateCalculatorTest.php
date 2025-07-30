@@ -6,6 +6,7 @@ use App\Models\Manifest;
 use App\Models\Package;
 use App\Models\Rate;
 use App\Services\SeaRateCalculator;
+use App\Exceptions\SeaRateNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
 use Tests\TestCase;
@@ -205,8 +206,8 @@ class SeaRateCalculatorTest extends TestCase
             'cubic_feet' => 3.0
         ]);
 
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('No sea rates found in the system');
+        $this->expectException(SeaRateNotFoundException::class);
+        $this->expectExceptionMessage('No sea shipping rate found for 3 cubic feet');
 
         $this->calculator->calculateFreightPrice($package);
     }

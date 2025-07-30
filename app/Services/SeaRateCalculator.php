@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Package;
 use App\Models\Rate;
+use App\Exceptions\SeaRateNotFoundException;
 use InvalidArgumentException;
 
 class SeaRateCalculator
@@ -74,7 +75,7 @@ class SeaRateCalculator
         }
 
         // No sea rates found at all
-        throw new InvalidArgumentException('No sea rates found in the system');
+        throw new SeaRateNotFoundException($cubicFeet);
     }
 
     /**

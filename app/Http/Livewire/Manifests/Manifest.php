@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Manifests;
 
 use Livewire\Component;
 use App\Models\Manifest as ManifestModel;
+use App\Rules\ValidVesselInformation;
 
 class Manifest extends Component
 {
@@ -101,20 +102,20 @@ class Manifest extends Component
         // Conditional validation based on manifest type
         if ($this->type === 'sea') {
             $rules = array_merge($rules, [
-                'vessel_name' => ['required', 'string', 'max:255'],
-                'voyage_number' => ['required', 'string', 'max:255'],
-                'departure_port' => ['required', 'string', 'max:255'],
-                'arrival_port' => ['nullable', 'string', 'max:255'],
+                'vessel_name' => ['required', 'string', 'max:255', 'min:2', new ValidVesselInformation($this->type, 'vessel_name')],
+                'voyage_number' => ['required', 'string', 'max:255', 'min:1', new ValidVesselInformation($this->type, 'voyage_number')],
+                'departure_port' => ['required', 'string', 'max:255', 'min:2', new ValidVesselInformation($this->type, 'departure_port')],
+                'arrival_port' => ['nullable', 'string', 'max:255', 'min:2'],
                 'estimated_arrival_date' => ['nullable', 'date', 'after:shipment_date'],
             ]);
         } else {
             $rules = array_merge($rules, [
-                'flight_number' => ['required'],
-                'flight_destination' => ['required'],
+                'flight_number' => ['required', 'string', 'max:255', 'min:1'],
+                'flight_destination' => ['required', 'string', 'max:255', 'min:2'],
             ]);
         }
 
-        $this->validate($rules);
+        $this->validate($rules, $this->getValidationMessages());
 
         // Prepare data for creation
         $manifestData = [
@@ -173,6 +174,47 @@ class Manifest extends Component
             $this->arrival_port = '';
             $this->estimated_arrival_date = '';
         }
+    }
+
+    /**
+     * Get custom validation messages
+     */
+    protected function getValidationMessages(): array
+    {
+        return [
+            'type.required' => 'Please select a manifest type (Air or Sea).',
+            'name.required' => 'Manifest name is required.',
+            'name.min' => 'Manifest name must be at least 2 characters.',
+            'reservation_number.required' => 'Reservation number is required.',
+            'exchange_rate.required' => 'Exchange rate is required.',
+            'exchange_rate.numeric' => 'Exchange rate must be a valid number.',
+            'exchange_rate.min' => 'Exchange rate must be at least 1.',
+            'shipment_date.required' => 'Shipment date is required.',
+            'shipment_date.date' => 'Please enter a valid shipment date.',
+            
+            // Sea manifest specific messages
+            'vessel_name.required' => 'Vessel name is required for sea manifests.',
+            'vessel_name.min' => 'Vessel name must be at least 2 characters.',
+            'vessel_name.max' => 'Vessel name cannot exceed 255 characters.',
+            'voyage_number.required' => 'Voyage number is required for sea manifests.',
+            'voyage_number.min' => 'Voyage number must be at least 1 character.',
+            'voyage_number.max' => 'Voyage number cannot exceed 255 characters.',
+            'departure_port.required' => 'Departure port is required for sea manifests.',
+            'departure_port.min' => 'Departure port must be at least 2 characters.',
+            'departure_port.max' => 'Departure port cannot exceed 255 characters.',
+            'arrival_port.min' => 'Arrival port must be at least 2 characters.',
+            'arrival_port.max' => 'Arrival port cannot exceed 255 characters.',
+            'estimated_arrival_date.date' => 'Please enter a valid estimated arrival date.',
+            'estimated_arrival_date.after' => 'Estimated arrival date must be after the shipment date.',
+            
+            // Air manifest specific messages
+            'flight_number.required' => 'Flight number is required for air manifests.',
+            'flight_number.min' => 'Flight number must be at least 1 character.',
+            'flight_number.max' => 'Flight number cannot exceed 255 characters.',
+            'flight_destination.required' => 'Flight destination is required for air manifests.',
+            'flight_destination.min' => 'Flight destination must be at least 2 characters.',
+            'flight_destination.max' => 'Flight destination cannot exceed 255 characters.',
+        ];
     }
 
     public function render()
