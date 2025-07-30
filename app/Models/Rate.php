@@ -24,6 +24,8 @@ class Rate extends Model
             fn($query) => $query->where('weight', 'like', '%' . $term . '%')
                 ->orWhere('price', 'like', '%' . $term . '%')
                 ->orWhere('type', 'like', '%' . $term . '%')
+                ->orWhere('min_cubic_feet', 'like', '%' . $term . '%')
+                ->orWhere('max_cubic_feet', 'like', '%' . $term . '%')
         );
     }
 

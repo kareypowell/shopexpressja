@@ -31,16 +31,16 @@ class RatesTable extends DataTableComponent
     public function columns(): array
     {
         return [
-            Column::make("Weight (lbs)", "weight")
+            Column::make("Channel", "type")
+                ->sortable()
+                ->searchable(),
+            Column::make("Weight/Volume", "weight")
                 ->sortable()
                 ->searchable(),
             Column::make("Price (USD)", "price")
                 ->sortable()
                 ->searchable(),
             Column::make("Processing Fee (USD)", "processing_fee")
-                ->sortable()
-                ->searchable(),
-            Column::make("Channel", "type")
                 ->sortable()
                 ->searchable(),
             // Column::make("Created at", "created_at")
@@ -56,7 +56,10 @@ class RatesTable extends DataTableComponent
             ->when($this->getFilter('search'), fn($query, $search) => $query->search($search))
             ->when($this->getFilter('weight'), fn($query, $weight) => $query->where('weight', $weight))
             ->when($this->getFilter('price'), fn($query, $price) => $query->where('price', $price))
-            ->when($this->getFilter('type'), fn($query, $type) => $query->where('type', $type));
+            ->when($this->getFilter('type'), fn($query, $type) => $query->where('type', $type))
+            ->orderBy('type')
+            ->orderBy('weight')
+            ->orderBy('min_cubic_feet');
     }
 
     public function rowView(): string
