@@ -148,3 +148,13 @@
   - Add error handling for missing sea rates
   - Implement user-friendly error messages for all validation scenarios
   - _Requirements: 1.2, 2.2, 3.2, 4.1, 5.4_
+
+- [x] 21. Implement searchable customer dropdown for package creation
+  - Add customer search properties to ManifestPackage component (customerSearch, showCustomerDropdown, filteredCustomers)
+  - Implement updatedCustomerSearch() method to filter customers in real-time using existing User::search() scope
+  - Create selectCustomer() method to handle customer selection from search results
+  - Update package creation view to replace static dropdown with searchable input field and results dropdown
+  - Add keyboard navigation support (up/down arrows, enter to select, escape to close)
+  - Implement click-outside-to-close functionality for better UX
+  - Limit search results to 10 customers for performance and add "Show more" option if needed
+  - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6_

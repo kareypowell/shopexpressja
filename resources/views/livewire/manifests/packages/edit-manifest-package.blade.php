@@ -27,15 +27,71 @@
                     <div class="bg-white px-4 pt-5 pb-4">
                         <div class="text-left">
                             <div class="mt-6 mb-5">
-                                <label for="user_id" class="block text-gray-700 text-sm font-bold mb-2">Select customer</label>
-                                <div class="mt-1 rounded-md shadow-sm">
-                                    <select wire:model.lazy="user_id" id="user_id" required autofocus class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('user_id') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror">
-                                        <option value="" selected>--- Select customer ---</option>
-                                        @foreach($customerList as $customer)
-                                        <option value="{{ $customer->id }}">{{ $customer->full_name . " (" . $customer->profile->account_number . ")" }}</option>
-                                        @endforeach
-                                    </select>
+                                <label for="customerSearch" class="block text-gray-700 text-sm font-bold mb-2">Select customer</label>
+                                <div class="relative mt-1">
+                                    <div class="flex">
+                                        <input 
+                                            type="text" 
+                                            wire:model.debounce.300ms="customerSearch"
+                                            wire:focus="showAllCustomers"
+                                            id="customerSearch" 
+                                            placeholder="Search by name or account number..." 
+                                            autocomplete="off"
+                                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-l-md placeholder-gray-400 focus:outline-none focus:ring-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('user_id') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror"
+                                        >
+                                        @if($user_id > 0)
+                                            <button 
+                                                type="button" 
+                                                wire:click="clearCustomerSelection"
+                                                class="px-3 py-2 border border-l-0 border-gray-300 rounded-r-md bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-blue focus:border-blue-300 transition duration-150 ease-in-out"
+                                                title="Clear selection"
+                                            >
+                                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
+                                        @else
+                                            <div class="px-3 py-2 border border-l-0 border-gray-300 rounded-r-md bg-gray-50">
+                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                                </svg>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    
+                                    <!-- Customer Dropdown Results -->
+                                    @if($showCustomerDropdown)
+                                        <div class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                                            @if($filteredCustomers->count() > 0)
+                                                @foreach($filteredCustomers as $customer)
+                                                    <div 
+                                                        wire:click="selectCustomer({{ $customer->id }})"
+                                                        class="px-3 py-2 cursor-pointer hover:bg-blue-50 hover:text-blue-900 border-b border-gray-100 last:border-b-0"
+                                                    >
+                                                        <div class="font-medium">{{ $customer->full_name }}</div>
+                                                        <div class="text-sm text-gray-500">Account: {{ $customer->profile->account_number ?? 'N/A' }}</div>
+                                                    </div>
+                                                @endforeach
+                                                @if($filteredCustomers->count() == 10)
+                                                    <div class="px-3 py-2 text-sm text-gray-500 bg-gray-50 text-center">
+                                                        Showing first 10 results. Type more to narrow search.
+                                                    </div>
+                                                @endif
+                                            @else
+                                                <div class="px-3 py-2 text-sm text-gray-500 text-center">
+                                                    No customers found matching "{{ $customerSearch }}"
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </div>
+                                
+                                @if($user_id > 0 && $selectedCustomerDisplay)
+                                    <div class="mt-2 text-sm text-green-600 bg-green-50 px-2 py-1 rounded">
+                                        ✓ Selected: {{ $selectedCustomerDisplay }}
+                                    </div>
+                                @endif
+                                
                                 @error('user_id')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -227,3 +283,138 @@
         </div> -->
     </div>
 </div>
+@push('scr
+ipts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Real-time cubic feet calculation for sea manifests
+    function calculateCubicFeetRealTime() {
+        const lengthInput = document.getElementById('length_inches');
+        const widthInput = document.getElementById('width_inches');
+        const heightInput = document.getElementById('height_inches');
+        
+        if (lengthInput && widthInput && heightInput) {
+            [lengthInput, widthInput, heightInput].forEach(input => {
+                input.addEventListener('input', function() {
+                    const length = parseFloat(lengthInput.value) || 0;
+                    const width = parseFloat(widthInput.value) || 0;
+                    const height = parseFloat(heightInput.value) || 0;
+                    
+                    if (length > 0 && width > 0 && height > 0) {
+                        const cubicFeet = (length * width * height) / 1728;
+                        
+                        // Update the display immediately for better UX
+                        const volumeDisplay = document.querySelector('.bg-blue-50 .font-bold');
+                        const formulaDisplay = document.querySelector('.text-blue-600.text-xs');
+                        
+                        if (volumeDisplay) {
+                            volumeDisplay.textContent = cubicFeet.toFixed(3) + ' cubic feet';
+                        }
+                        
+                        if (formulaDisplay) {
+                            formulaDisplay.textContent = `Formula: ${length} × ${width} × ${height} ÷ 1728 = ${cubicFeet.toFixed(3)} ft³`;
+                        }
+                    } else {
+                        // Reset display when values are invalid
+                        const volumeDisplay = document.querySelector('.bg-blue-50 .font-bold');
+                        const formulaDisplay = document.querySelector('.text-blue-600.text-xs');
+                        
+                        if (volumeDisplay) {
+                            volumeDisplay.textContent = '0.000 cubic feet';
+                        }
+                        
+                        if (formulaDisplay) {
+                            formulaDisplay.textContent = '';
+                        }
+                    }
+                });
+            });
+        }
+    }
+    
+    // Customer search dropdown functionality
+    function initializeCustomerSearch() {
+        const searchInput = document.getElementById('customerSearch');
+        
+        if (searchInput) {
+            // Handle keyboard navigation
+            searchInput.addEventListener('keydown', function(e) {
+                const dropdown = document.querySelector('.absolute.z-50');
+                if (!dropdown) return;
+                
+                const items = dropdown.querySelectorAll('[wire\\:click*="selectCustomer"]');
+                let currentIndex = -1;
+                
+                // Find currently highlighted item
+                items.forEach((item, index) => {
+                    if (item.classList.contains('bg-blue-100')) {
+                        currentIndex = index;
+                    }
+                });
+                
+                switch(e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        // Remove current highlight
+                        if (currentIndex >= 0) {
+                            items[currentIndex].classList.remove('bg-blue-100');
+                        }
+                        // Add highlight to next item
+                        currentIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+                        items[currentIndex].classList.add('bg-blue-100');
+                        items[currentIndex].scrollIntoView({ block: 'nearest' });
+                        break;
+                        
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        // Remove current highlight
+                        if (currentIndex >= 0) {
+                            items[currentIndex].classList.remove('bg-blue-100');
+                        }
+                        // Add highlight to previous item
+                        currentIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+                        items[currentIndex].classList.add('bg-blue-100');
+                        items[currentIndex].scrollIntoView({ block: 'nearest' });
+                        break;
+                        
+                    case 'Enter':
+                        e.preventDefault();
+                        if (currentIndex >= 0) {
+                            items[currentIndex].click();
+                        }
+                        break;
+                        
+                    case 'Escape':
+                        e.preventDefault();
+                        @this.call('hideCustomerDropdown');
+                        break;
+                }
+            });
+        }
+        
+        // Click outside to close dropdown
+        document.addEventListener('click', function(e) {
+            const searchContainer = document.querySelector('#customerSearch')?.closest('.relative');
+            if (searchContainer && !searchContainer.contains(e.target)) {
+                @this.call('hideCustomerDropdown');
+            }
+        });
+    }
+    
+    // Initialize functions on page load
+    calculateCubicFeetRealTime();
+    initializeCustomerSearch();
+    
+    // Re-initialize when Livewire updates the DOM
+    document.addEventListener('livewire:load', function() {
+        calculateCubicFeetRealTime();
+        initializeCustomerSearch();
+    });
+    
+    document.addEventListener('livewire:update', function() {
+        calculateCubicFeetRealTime();
+        initializeCustomerSearch();
+    });
+});
+</script>
+@endpush

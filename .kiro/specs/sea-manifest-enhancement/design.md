@@ -429,12 +429,63 @@ if ($this->isSeaManifest()) {
    - Dynamic field showing/hiding based on manifest type
    - Real-time calculations and updates
 
+### 5. Searchable Customer Dropdown
+
+#### Enhanced Customer Selection Interface
+The customer dropdown will be enhanced with real-time search functionality to improve usability when dealing with large customer lists.
+
+#### Implementation Approach
+```php
+class ManifestPackage extends Component
+{
+    public $customerSearch = '';
+    public $showCustomerDropdown = false;
+    public $filteredCustomers = [];
+    
+    public function updatedCustomerSearch()
+    {
+        if (strlen($this->customerSearch) >= 1) {
+            $this->filteredCustomers = User::where('role_id', 3)
+                ->where('email_verified_at', '!=', '')
+                ->search($this->customerSearch)
+                ->orderBy('last_name', 'asc')
+                ->limit(10)
+                ->get();
+            $this->showCustomerDropdown = true;
+        } else {
+            $this->filteredCustomers = [];
+            $this->showCustomerDropdown = false;
+        }
+    }
+    
+    public function selectCustomer($customerId)
+    {
+        $customer = User::find($customerId);
+        $this->user_id = $customerId;
+        $this->customerSearch = $customer->full_name . " (" . $customer->profile->account_number . ")";
+        $this->showCustomerDropdown = false;
+    }
+}
+```
+
+#### Frontend Implementation
+The search interface will use a combination of input field with dropdown results:
+- Input field for typing search terms
+- Dropdown list showing filtered results
+- Click-to-select functionality
+- Keyboard navigation support (up/down arrows, enter to select)
+
 ### Performance Tests
 1. **Database Query Optimization**
    - Rate lookup performance with cubic feet ranges
    - Package loading with items relationships
    - Manifest listing with type-specific data
+   - Customer search query performance with large datasets
 
 2. **Calculation Performance**
    - Cubic feet calculations for large datasets
    - Bulk pricing calculations for multiple packages
+
+3. **Search Performance**
+   - Customer search response time with large customer databases
+   - Real-time search filtering performance

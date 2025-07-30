@@ -36,6 +36,12 @@ class ManifestPackage extends Component
     public $shipperList = [];
     public $officeList = [];
     public $isSeaManifest = null;
+    
+    // Customer search properties
+    public string $customerSearch = '';
+    public bool $showCustomerDropdown = false;
+    public $filteredCustomers = [];
+    public string $selectedCustomerDisplay = '';
 
     // Sea-specific properties
     public string $container_type = '';
@@ -66,6 +72,9 @@ class ManifestPackage extends Component
         
         // Initialize items array for sea manifests
         $this->initializeItems();
+        
+        // Initialize filtered customers as empty
+        $this->filteredCustomers = collect();
     }
 
     public function create()
@@ -110,6 +119,12 @@ class ManifestPackage extends Component
         $this->weight = '';
         $this->status = '';
         $this->estimated_value = '';
+        
+        // Reset customer search fields
+        $this->customerSearch = '';
+        $this->selectedCustomerDisplay = '';
+        $this->showCustomerDropdown = false;
+        $this->filteredCustomers = collect();
         
         // Reset sea-specific fields
         $this->container_type = '';
@@ -229,6 +244,81 @@ class ManifestPackage extends Component
         $manifest = Manifest::find($this->manifest_id);
         $this->isSeaManifest = $manifest && $manifest->type === 'sea';
         $this->initializeItems();
+    }
+
+    /**
+     * Handle customer search input changes
+     */
+    public function updatedCustomerSearch()
+    {
+        if (strlen($this->customerSearch) >= 1) {
+            $this->filteredCustomers = User::where('role_id', 3)
+                ->where('email_verified_at', '!=', '')
+                ->search($this->customerSearch)
+                ->orderBy('last_name', 'asc')
+                ->limit(10)
+                ->get();
+            $this->showCustomerDropdown = true;
+        } else {
+            $this->filteredCustomers = collect();
+            $this->showCustomerDropdown = false;
+        }
+        
+        // Reset user_id if search is cleared
+        if (empty($this->customerSearch)) {
+            $this->user_id = 0;
+            $this->selectedCustomerDisplay = '';
+        }
+    }
+
+    /**
+     * Select a customer from search results
+     */
+    public function selectCustomer($customerId)
+    {
+        $customer = User::find($customerId);
+        if ($customer && $customer->profile) {
+            $this->user_id = $customerId;
+            $this->selectedCustomerDisplay = $customer->full_name . " (" . $customer->profile->account_number . ")";
+            $this->customerSearch = $this->selectedCustomerDisplay;
+            $this->showCustomerDropdown = false;
+            $this->filteredCustomers = collect();
+        }
+    }
+
+    /**
+     * Show all customers when focusing on search field
+     */
+    public function showAllCustomers()
+    {
+        if (empty($this->customerSearch)) {
+            $this->filteredCustomers = User::where('role_id', 3)
+                ->where('email_verified_at', '!=', '')
+                ->orderBy('last_name', 'asc')
+                ->limit(10)
+                ->get();
+            $this->showCustomerDropdown = true;
+        }
+    }
+
+    /**
+     * Hide customer dropdown
+     */
+    public function hideCustomerDropdown()
+    {
+        $this->showCustomerDropdown = false;
+    }
+
+    /**
+     * Clear customer selection
+     */
+    public function clearCustomerSelection()
+    {
+        $this->user_id = 0;
+        $this->customerSearch = '';
+        $this->selectedCustomerDisplay = '';
+        $this->filteredCustomers = collect();
+        $this->showCustomerDropdown = false;
     }
 
     /**

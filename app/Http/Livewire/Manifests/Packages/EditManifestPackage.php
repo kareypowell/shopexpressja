@@ -32,6 +32,12 @@ class EditManifestPackage extends Component
     public $customerList = [];
     public $shipperList = [];
     public $officeList = [];
+    
+    // Customer search properties
+    public string $customerSearch = '';
+    public bool $showCustomerDropdown = false;
+    public $filteredCustomers = [];
+    public string $selectedCustomerDisplay = '';
 
     // Sea-specific properties
     public string $container_type = '';
@@ -61,6 +67,9 @@ class EditManifestPackage extends Component
         $manifest = Manifest::find($this->manifest_id);
         $this->isSeaManifest = $manifest && $manifest->type === 'sea';
 
+        // Initialize filtered customers as empty
+        $this->filteredCustomers = collect();
+
         // Load the package data
         $package = Package::with('items')->where('id', $this->package_id)->where('manifest_id', $this->manifest_id)->first();
         if ($package) {
@@ -73,6 +82,13 @@ class EditManifestPackage extends Component
             $this->weight = $package->weight;
             $this->status = $package->status;
             $this->estimated_value = $package->estimated_value;
+            
+            // Set customer search display
+            $customer = User::find($this->user_id);
+            if ($customer && $customer->profile) {
+                $this->selectedCustomerDisplay = $customer->full_name . " (" . $customer->profile->account_number . ")";
+                $this->customerSearch = $this->selectedCustomerDisplay;
+            }
 
             // Load sea-specific data if this is a sea package
             if ($this->isSeaManifest) {
@@ -179,6 +195,81 @@ class EditManifestPackage extends Component
     public function recalculateCubicFeet()
     {
         $this->calculateCubicFeet();
+    }
+
+    /**
+     * Handle customer search input changes
+     */
+    public function updatedCustomerSearch()
+    {
+        if (strlen($this->customerSearch) >= 1) {
+            $this->filteredCustomers = User::where('role_id', 3)
+                ->where('email_verified_at', '!=', '')
+                ->search($this->customerSearch)
+                ->orderBy('last_name', 'asc')
+                ->limit(10)
+                ->get();
+            $this->showCustomerDropdown = true;
+        } else {
+            $this->filteredCustomers = collect();
+            $this->showCustomerDropdown = false;
+        }
+        
+        // Reset user_id if search is cleared
+        if (empty($this->customerSearch)) {
+            $this->user_id = 0;
+            $this->selectedCustomerDisplay = '';
+        }
+    }
+
+    /**
+     * Select a customer from search results
+     */
+    public function selectCustomer($customerId)
+    {
+        $customer = User::find($customerId);
+        if ($customer && $customer->profile) {
+            $this->user_id = $customerId;
+            $this->selectedCustomerDisplay = $customer->full_name . " (" . $customer->profile->account_number . ")";
+            $this->customerSearch = $this->selectedCustomerDisplay;
+            $this->showCustomerDropdown = false;
+            $this->filteredCustomers = collect();
+        }
+    }
+
+    /**
+     * Show all customers when focusing on search field
+     */
+    public function showAllCustomers()
+    {
+        if (empty($this->customerSearch)) {
+            $this->filteredCustomers = User::where('role_id', 3)
+                ->where('email_verified_at', '!=', '')
+                ->orderBy('last_name', 'asc')
+                ->limit(10)
+                ->get();
+            $this->showCustomerDropdown = true;
+        }
+    }
+
+    /**
+     * Hide customer dropdown
+     */
+    public function hideCustomerDropdown()
+    {
+        $this->showCustomerDropdown = false;
+    }
+
+    /**
+     * Clear customer selection
+     */
+    public function clearCustomerSelection()
+    {
+        $this->user_id = 0;
+        $this->customerSearch = '';
+        $this->selectedCustomerDisplay = '';
+        $this->filteredCustomers = collect();
+        $this->showCustomerDropdown = false;
     }
 
     public function update()

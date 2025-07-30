@@ -90,3 +90,16 @@ This feature enhances the existing manifest system to provide specialized functi
 3. WHEN switching between manifest types THEN the system SHALL dynamically update field labels and options
 4. WHEN adding packages THEN the system SHALL show container types only for sea manifests
 5. WHEN calculating pricing THEN the system SHALL use weight-based calculation for air and cubic feet-based for sea
+
+### Requirement 8
+
+**User Story:** As a shipping administrator, I want to search for customers by name or account number when adding packages to manifests, so that I can quickly find the correct customer without scrolling through a long list.
+
+#### Acceptance Criteria
+
+1. WHEN adding a package to any manifest THEN the system SHALL provide a searchable customer dropdown instead of a static dropdown
+2. WHEN typing in the customer search field THEN the system SHALL filter customers by first name, last name, or account number in real-time
+3. WHEN searching for customers THEN the system SHALL display results showing both customer name and account number for easy identification
+4. WHEN selecting a customer from search results THEN the system SHALL populate the customer field with the selected customer
+5. WHEN no search term is entered THEN the system SHALL show all available customers
+6. WHEN no customers match the search term THEN the system SHALL display a "No customers found" message
