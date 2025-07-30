@@ -5,8 +5,8 @@
         </h3>
     </div> -->
 
-    <div class="mt-1 grid grid-cols-1 md:grid-cols-2 gap-5 py-4">
-        <!-- Air Freight Address Card -->
+    <div class="mt-1 py-4">
+        <!-- Package Details Card -->
         <div class="w-full bg-white rounded-lg shadow h-full">
             <div class="p-6">
                 <div class="flex items-center mb-4">
@@ -97,46 +97,52 @@
                                 @enderror
                             </div>
 
-                            <div class="mt-6 mb-5">
-                                <label for="shipper_id" class="block text-gray-700 text-sm font-bold mb-2">Select the shipper (carrier)</label>
-                                <div class="mt-1 rounded-md shadow-sm">
-                                    <select wire:model.lazy="shipper_id" id="shipper_id" required autofocus class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('shipper_id') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror">
-                                        <option value="" selected>--- Select shipper ---</option>
-                                        @foreach($shipperList as $shipper)
-                                        <option value="{{ $shipper->id }}">{{ $shipper->name }}</option>
-                                        @endforeach
-                                    </select>
+                            <!-- Shipper and Destination Row -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 mb-5">
+                                <div>
+                                    <label for="shipper_id" class="block text-gray-700 text-sm font-bold mb-2">Select the shipper (carrier)</label>
+                                    <div class="mt-1 rounded-md shadow-sm">
+                                        <select wire:model.lazy="shipper_id" id="shipper_id" required autofocus class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('shipper_id') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror">
+                                            <option value="" selected>--- Select shipper ---</option>
+                                            @foreach($shipperList as $shipper)
+                                            <option value="{{ $shipper->id }}">{{ $shipper->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    @error('shipper_id')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
                                 </div>
-                                @error('shipper_id')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
 
-                            <div class="mt-6 mb-5">
-                                <label for="office_id" class="block text-gray-700 text-sm font-bold mb-2">Select destination</label>
-                                <div class="mt-1 rounded-md shadow-sm">
-                                    <select wire:model.lazy="office_id" id="office_id" required autofocus class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('office_id') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror">
-                                        <option value="" selected>--- Select location ---</option>
-                                        @foreach($officeList as $office)
-                                        <option value="{{ $office->id }}">{{ $office->name }}</option>
-                                        @endforeach
-                                    </select>
+                                <div>
+                                    <label for="office_id" class="block text-gray-700 text-sm font-bold mb-2">Select destination</label>
+                                    <div class="mt-1 rounded-md shadow-sm">
+                                        <select wire:model.lazy="office_id" id="office_id" required autofocus class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('office_id') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror">
+                                            <option value="" selected>--- Select location ---</option>
+                                            @foreach($officeList as $office)
+                                            <option value="{{ $office->id }}">{{ $office->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    @error('office_id')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
                                 </div>
-                                @error('office_id')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
                             </div>
 
-                            <div class="mb-4">
-                                <label for="tracking_number" class="block text-gray-700 text-sm font-bold mb-2">Tracking Number</label>
-                                <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="tracking_number" placeholder="Enter tracking number for the item" wire:model="tracking_number" autocomplete="off">
-                                @error('tracking_number') <span class="text-red-500">{{ $message }}</span>@enderror
-                            </div>
+                            <!-- Tracking Number and Weight Row -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label for="tracking_number" class="block text-gray-700 text-sm font-bold mb-2">Tracking Number</label>
+                                    <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="tracking_number" placeholder="Enter tracking number for the item" wire:model="tracking_number" autocomplete="off">
+                                    @error('tracking_number') <span class="text-red-500">{{ $message }}</span>@enderror
+                                </div>
 
-                            <div class="mb-4">
-                                <label for="weight" class="block text-gray-700 text-sm font-bold mb-2">Weight (lbs)</label>
-                                <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="weight" placeholder="Enter weight for the item" wire:model="weight" autocomplete="off">
-                                @error('weight') <span class="text-red-500">{{ $message }}</span>@enderror
+                                <div>
+                                    <label for="weight" class="block text-gray-700 text-sm font-bold mb-2">Weight (lbs)</label>
+                                    <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="weight" placeholder="Enter weight for the item" wire:model="weight" autocomplete="off">
+                                    @error('weight') <span class="text-red-500">{{ $message }}</span>@enderror
+                                </div>
                             </div>
 
                             <div class="mb-4">
@@ -167,7 +173,7 @@
                               <!-- Dimensional Fields -->
                               <div class="mb-4">
                                 <label class="block text-gray-700 text-sm font-bold mb-2">Container Dimensions (inches)</label>
-                                <div class="grid grid-cols-3 gap-2">
+                                <div class="grid grid-cols-3 gap-3">
                                   <div>
                                     <label for="length_inches" class="block text-gray-600 text-xs mb-1">Length</label>
                                     <input type="number" step="0.1" min="0.1" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('length_inches') border-red-300 @enderror" id="length_inches" placeholder="L" wire:model="length_inches" wire:input="calculateCubicFeet" autocomplete="off">
@@ -225,7 +231,7 @@
                                       @endif
                                     </div>
                                     
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                       <div class="md:col-span-2">
                                         <label for="items.{{ $index }}.description" class="block text-gray-600 text-xs mb-1">Description *</label>
                                         <input type="text" class="shadow appearance-none border rounded w-full py-1 px-2 text-gray-700 text-sm leading-tight focus:outline-none focus:shadow-outline @error('items.' . $index . '.description') border-red-300 @enderror" wire:model="items.{{ $index }}.description" placeholder="Item description" autocomplete="off">
