@@ -40,11 +40,23 @@ class RegisterTest extends TestCase
     {
         Event::fake();
 
+        // Create the customer role
+        \App\Models\Role::create([
+            'name' => 'customer',
+            'description' => 'Customer role for testing'
+        ]);
+
         Livewire::test('auth.register')
-            ->set('name', 'Tall Stack')
+            ->set('firstName', 'Tall')
+            ->set('lastName', 'Stack')
             ->set('email', 'tallstack@example.com')
             ->set('password', 'password')
             ->set('passwordConfirmation', 'password')
+            ->set('taxNumber', '1234567890')
+            ->set('telephoneNumber', '1234567890')
+            ->set('streetAddress', '123 Test St')
+            ->set('townCity', 'Test City')
+            ->set('parish', 'Test Parish')
             ->call('register')
             ->assertRedirect(route('home'));
 
@@ -58,16 +70,22 @@ class RegisterTest extends TestCase
     function name_is_required()
     {
         Livewire::test('auth.register')
-            ->set('name', '')
+            ->set('firstName', '')
+            ->set('lastName', '')
             ->call('register')
-            ->assertHasErrors(['name' => 'required']);
+            ->assertHasErrors(['firstName' => 'required'])
+            ->assertHasErrors(['lastName' => 'required']);
     }
 
     /** @test */
     function email_is_required()
     {
         Livewire::test('auth.register')
+            ->set('firstName', 'Test')
+            ->set('lastName', 'User')
             ->set('email', '')
+            ->set('taxNumber', '1234567890')
+            ->set('telephoneNumber', '1234567890')
             ->call('register')
             ->assertHasErrors(['email' => 'required']);
     }
@@ -76,7 +94,11 @@ class RegisterTest extends TestCase
     function email_is_valid_email()
     {
         Livewire::test('auth.register')
+            ->set('firstName', 'Test')
+            ->set('lastName', 'User')
             ->set('email', 'tallstack')
+            ->set('taxNumber', '1234567890')
+            ->set('telephoneNumber', '1234567890')
             ->call('register')
             ->assertHasErrors(['email' => 'email']);
     }
@@ -87,7 +109,11 @@ class RegisterTest extends TestCase
         User::factory()->create(['email' => 'tallstack@example.com']);
 
         Livewire::test('auth.register')
+            ->set('firstName', 'Test')
+            ->set('lastName', 'User')
             ->set('email', 'tallstack@example.com')
+            ->set('taxNumber', '1234567890')
+            ->set('telephoneNumber', '1234567890')
             ->call('register')
             ->assertHasErrors(['email' => 'unique']);
     }
@@ -98,7 +124,11 @@ class RegisterTest extends TestCase
         User::factory()->create(['email' => 'tallstack@example.com']);
 
         Livewire::test('auth.register')
+            ->set('firstName', 'Test')
+            ->set('lastName', 'User')
             ->set('email', 'smallstack@gmail.com')
+            ->set('taxNumber', '1234567890')
+            ->set('telephoneNumber', '1234567890')
             ->assertHasNoErrors()
             ->set('email', 'tallstack@example.com')
             ->call('register')
@@ -109,6 +139,11 @@ class RegisterTest extends TestCase
     function password_is_required()
     {
         Livewire::test('auth.register')
+            ->set('firstName', 'Test')
+            ->set('lastName', 'User')
+            ->set('email', 'test@example.com')
+            ->set('taxNumber', '1234567890')
+            ->set('telephoneNumber', '1234567890')
             ->set('password', '')
             ->set('passwordConfirmation', 'password')
             ->call('register')
@@ -119,6 +154,11 @@ class RegisterTest extends TestCase
     function password_is_minimum_of_eight_characters()
     {
         Livewire::test('auth.register')
+            ->set('firstName', 'Test')
+            ->set('lastName', 'User')
+            ->set('email', 'test@example.com')
+            ->set('taxNumber', '1234567890')
+            ->set('telephoneNumber', '1234567890')
             ->set('password', 'secret')
             ->set('passwordConfirmation', 'secret')
             ->call('register')
@@ -129,7 +169,11 @@ class RegisterTest extends TestCase
     function password_matches_password_confirmation()
     {
         Livewire::test('auth.register')
+            ->set('firstName', 'Test')
+            ->set('lastName', 'User')
             ->set('email', 'tallstack@example.com')
+            ->set('taxNumber', '1234567890')
+            ->set('telephoneNumber', '1234567890')
             ->set('password', 'password')
             ->set('passwordConfirmation', 'not-password')
             ->call('register')
