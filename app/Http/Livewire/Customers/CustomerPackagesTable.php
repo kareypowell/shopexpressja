@@ -53,6 +53,13 @@ class CustomerPackagesTable extends DataTableComponent
             Column::make("Weight (lbs)", "weight")
                 ->sortable()
                 ->searchable(),
+            Column::make("Container Type", "container_type")
+                ->sortable()
+                ->searchable(),
+            Column::make("Dimensions", ""),
+            Column::make("Cubic Feet", "cubic_feet")
+                ->sortable()
+                ->searchable(),
             Column::make("Shipper", "shipper.name")
                 ->sortable()
                 ->searchable(),
@@ -63,9 +70,12 @@ class CustomerPackagesTable extends DataTableComponent
         ];
     }
 
+
+
     public function query(): Builder
     {
         return Package::query()
+            ->with(['manifest', 'items'])
             ->where('user_id', auth()->id())
             ->orderBy('created_at', 'desc')
             ->when($this->getFilter('search'), fn($query, $search) => $query->search($search))

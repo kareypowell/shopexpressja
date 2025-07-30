@@ -53,7 +53,10 @@ class ManifestPackage extends Component
 
         $this->shipperList = Shipper::orderBy('name', 'asc')->get();
 
-        $this->manifest_id = request()->route('manifest_id');
+        // Get manifest_id from route if not already set (for testing)
+        if (!$this->manifest_id) {
+            $this->manifest_id = request()->route('manifest_id');
+        }
 
         $manifest = Manifest::find($this->manifest_id);
         $this->isSeaManifest = $manifest && $manifest->type === 'sea';
@@ -459,16 +462,23 @@ class ManifestPackage extends Component
     private function calculateAirFreightPrice(): float
     {
         // Get the exchange rate for the manifest
-        $xrt = Manifest::find($this->manifest_id)->exchange_rate;
+        $xrt = Manifest::find($this->manifest_id)->exchange_rate ?: 1;
 
         // Get the weight of the package (rounded up)
         $weight = ceil($this->weight);
 
-        // Get the rate for the weight
-        $rate = Rate::where('weight', $weight)->first();
+        // Get the rate for the weight using the proper scope
+        $rate = Rate::forAirShipment($weight)->first();
         if ($rate) {
             // Calculate the freight price
             $freightPrice = ($rate->price + $rate->processing_fee) * $xrt;
+            return $freightPrice;
+        }
+
+        // Fallback: try to find any air rate that matches the weight (for backward compatibility)
+        $fallbackRate = Rate::where('weight', $weight)->first();
+        if ($fallbackRate) {
+            $freightPrice = ($fallbackRate->price + $fallbackRate->processing_fee) * $xrt;
             return $freightPrice;
         }
 

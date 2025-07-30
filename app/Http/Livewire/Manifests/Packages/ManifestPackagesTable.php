@@ -11,7 +11,7 @@ use App\Models\PackagePreAlert;
 
 class ManifestPackagesTable extends DataTableComponent
 {
-    public $refresh = 'visible';
+    // public $refresh = 'visible';
 
     public $manifest_id;
 
@@ -124,6 +124,13 @@ class ManifestPackagesTable extends DataTableComponent
             Column::make("Weight (lbs)", "weight")
                 ->sortable()
                 ->searchable(),
+            Column::make("Container Type", "container_type")
+                ->sortable()
+                ->searchable(),
+            Column::make("Dimensions", ""),
+            Column::make("Cubic Feet", "cubic_feet")
+                ->sortable()
+                ->searchable(),
             Column::make("Status", "status")
                 ->sortable()
                 ->searchable(),
@@ -144,9 +151,12 @@ class ManifestPackagesTable extends DataTableComponent
         ];
     }
 
+
+
     public function query(): Builder
     {
         return Package::query()
+            ->with(['manifest', 'items'])
             ->where('manifest_id', $this->manifest_id)
             ->orderBy('created_at', 'desc');
     }

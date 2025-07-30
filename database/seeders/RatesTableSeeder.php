@@ -121,26 +121,56 @@ class RatesTableSeeder extends Seeder
         Rate::create(['weight' => 99, 'price' => 242.70, 'processing_fee' => 3.50, 'type' => 'air']);
         Rate::create(['weight' => 100, 'price' => 245.08, 'processing_fee' => 3.50, 'type' => 'air']);
 
-        // Sea rates based on cubic feet ranges
-        Rate::create(['min_cubic_feet' => 0.1, 'max_cubic_feet' => 1.0, 'price' => 8.00, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 1.1, 'max_cubic_feet' => 2.0, 'price' => 7.50, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 2.1, 'max_cubic_feet' => 3.0, 'price' => 7.00, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 3.1, 'max_cubic_feet' => 4.0, 'price' => 6.50, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 4.1, 'max_cubic_feet' => 5.0, 'price' => 6.00, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 5.1, 'max_cubic_feet' => 7.5, 'price' => 5.50, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 7.6, 'max_cubic_feet' => 10.0, 'price' => 5.00, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 10.1, 'max_cubic_feet' => 15.0, 'price' => 4.50, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 15.1, 'max_cubic_feet' => 20.0, 'price' => 4.00, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 20.1, 'max_cubic_feet' => 25.0, 'price' => 3.75, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 25.1, 'max_cubic_feet' => 30.0, 'price' => 3.50, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 30.1, 'max_cubic_feet' => 40.0, 'price' => 3.25, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 40.1, 'max_cubic_feet' => 50.0, 'price' => 3.00, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 50.1, 'max_cubic_feet' => 75.0, 'price' => 2.75, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 75.1, 'max_cubic_feet' => 100.0, 'price' => 2.50, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 100.1, 'max_cubic_feet' => 150.0, 'price' => 2.25, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 150.1, 'max_cubic_feet' => 200.0, 'price' => 2.00, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 200.1, 'max_cubic_feet' => 300.0, 'price' => 1.75, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 300.1, 'max_cubic_feet' => 500.0, 'price' => 1.50, 'processing_fee' => 2.00, 'type' => 'sea']);
-        Rate::create(['min_cubic_feet' => 500.1, 'max_cubic_feet' => 1000.0, 'price' => 1.25, 'processing_fee' => 2.00, 'type' => 'sea']);
+        // Sea rates based on cubic feet ranges - comprehensive coverage for testing
+        // Small packages (boxes, small barrels) - Processing fee $3.50 for 0.1-100 cubic feet
+        Rate::create(['min_cubic_feet' => 0.1, 'max_cubic_feet' => 0.5, 'price' => 9.00, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 0.6, 'max_cubic_feet' => 1.0, 'price' => 8.50, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 1.1, 'max_cubic_feet' => 1.5, 'price' => 8.00, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 1.6, 'max_cubic_feet' => 2.0, 'price' => 7.75, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 2.1, 'max_cubic_feet' => 2.5, 'price' => 7.50, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 2.6, 'max_cubic_feet' => 3.0, 'price' => 7.25, 'processing_fee' => 3.50, 'type' => 'sea']);
+        
+        // Medium packages (medium boxes, standard barrels)
+        Rate::create(['min_cubic_feet' => 3.1, 'max_cubic_feet' => 4.0, 'price' => 7.00, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 4.1, 'max_cubic_feet' => 5.0, 'price' => 6.75, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 5.1, 'max_cubic_feet' => 6.0, 'price' => 6.50, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 6.1, 'max_cubic_feet' => 7.5, 'price' => 6.25, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 7.6, 'max_cubic_feet' => 10.0, 'price' => 6.00, 'processing_fee' => 3.50, 'type' => 'sea']);
+        
+        // Large packages (large boxes, big barrels, small pallets)
+        Rate::create(['min_cubic_feet' => 10.1, 'max_cubic_feet' => 12.5, 'price' => 5.75, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 12.6, 'max_cubic_feet' => 15.0, 'price' => 5.50, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 15.1, 'max_cubic_feet' => 17.5, 'price' => 5.25, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 17.6, 'max_cubic_feet' => 20.0, 'price' => 5.00, 'processing_fee' => 3.50, 'type' => 'sea']);
+        
+        // Extra large packages (standard pallets)
+        Rate::create(['min_cubic_feet' => 20.1, 'max_cubic_feet' => 25.0, 'price' => 4.75, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 25.1, 'max_cubic_feet' => 30.0, 'price' => 4.50, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 30.1, 'max_cubic_feet' => 35.0, 'price' => 4.25, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 35.1, 'max_cubic_feet' => 40.0, 'price' => 4.00, 'processing_fee' => 3.50, 'type' => 'sea']);
+        
+        // Large pallets and bulk shipments
+        Rate::create(['min_cubic_feet' => 40.1, 'max_cubic_feet' => 50.0, 'price' => 3.75, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 50.1, 'max_cubic_feet' => 60.0, 'price' => 3.50, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 60.1, 'max_cubic_feet' => 75.0, 'price' => 3.25, 'processing_fee' => 3.50, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 75.1, 'max_cubic_feet' => 100.0, 'price' => 3.00, 'processing_fee' => 3.50, 'type' => 'sea']);
+        
+        // Commercial bulk shipments - Processing fee $10.00 for over 100 cubic feet
+        Rate::create(['min_cubic_feet' => 100.1, 'max_cubic_feet' => 125.0, 'price' => 2.75, 'processing_fee' => 10.00, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 125.1, 'max_cubic_feet' => 150.0, 'price' => 2.50, 'processing_fee' => 10.00, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 150.1, 'max_cubic_feet' => 200.0, 'price' => 2.25, 'processing_fee' => 10.00, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 200.1, 'max_cubic_feet' => 250.0, 'price' => 2.00, 'processing_fee' => 10.00, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 250.1, 'max_cubic_feet' => 300.0, 'price' => 1.90, 'processing_fee' => 10.00, 'type' => 'sea']);
+        
+        // Large commercial shipments
+        Rate::create(['min_cubic_feet' => 300.1, 'max_cubic_feet' => 400.0, 'price' => 1.80, 'processing_fee' => 10.00, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 400.1, 'max_cubic_feet' => 500.0, 'price' => 1.70, 'processing_fee' => 10.00, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 500.1, 'max_cubic_feet' => 750.0, 'price' => 1.60, 'processing_fee' => 10.00, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 750.1, 'max_cubic_feet' => 1000.0, 'price' => 1.50, 'processing_fee' => 10.00, 'type' => 'sea']);
+        
+        // Very large commercial/industrial shipments
+        Rate::create(['min_cubic_feet' => 1000.1, 'max_cubic_feet' => 1500.0, 'price' => 1.40, 'processing_fee' => 10.00, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 1500.1, 'max_cubic_feet' => 2000.0, 'price' => 1.30, 'processing_fee' => 10.00, 'type' => 'sea']);
+        Rate::create(['min_cubic_feet' => 2000.1, 'max_cubic_feet' => 5000.0, 'price' => 1.20, 'processing_fee' => 10.00, 'type' => 'sea']);
     }
 }

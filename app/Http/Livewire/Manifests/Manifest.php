@@ -9,30 +9,30 @@ class Manifest extends Component
 {
     public bool $isOpen = false;
 
-    public string $type;
+    public string $type = '';
 
-    public string $name;
+    public string $name = '';
 
-    public string $reservation_number;
+    public string $reservation_number = '';
 
-    public string $flight_number;
+    public string $flight_number = '';
 
-    public string $flight_destination;
+    public string $flight_destination = '';
 
     // Vessel information properties for sea manifests
-    public string $vessel_name;
+    public string $vessel_name = '';
 
-    public string $voyage_number;
+    public string $voyage_number = '';
 
-    public string $departure_port;
+    public string $departure_port = '';
 
-    public string $arrival_port;
+    public string $arrival_port = '';
 
-    public string $estimated_arrival_date;
+    public string $estimated_arrival_date = '';
 
-    public string $exchange_rate;
+    public string $exchange_rate = '';
 
-    public string $shipment_date;
+    public string $shipment_date = '';
 
 
     public function create()

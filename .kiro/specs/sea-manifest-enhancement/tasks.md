@@ -104,28 +104,28 @@
   - Add real-time cubic feet recalculation on dimension changes
   - _Requirements: 2.5, 3.6, 4.5_
 
-- [ ] 15. Update package edit view for sea package features
+- [x] 15. Update package edit view for sea package features
   - Modify edit-manifest-package view to show container type and dimensions for sea packages
   - Add items management interface in edit mode
   - Display current cubic feet and allow dimension modifications
   - Maintain air package edit functionality unchanged
   - _Requirements: 2.5, 3.6, 4.5, 7.4_
 
-- [ ] 16. Create database seeders for sea rates and sample data
+- [x] 16. Create database seeders for sea rates and sample data
   - Update RatesTableSeeder to include cubic feet-based sea rates
   - Create sample sea rates with various cubic feet ranges and pricing
   - Add sample sea manifest data to ManifestsTableSeeder
   - Ensure sea rates cover common cubic feet ranges for testing
   - _Requirements: 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 17. Update package display views to show sea-specific information
+- [x] 17. Update package display views to show sea-specific information
   - Modify package listing views to display container type for sea packages
   - Show cubic feet and dimensions in package details
   - Display package items list for sea packages
   - Add conditional rendering based on package manifest type
   - _Requirements: 2.4, 3.5, 4.5, 7.4_
 
-- [ ] 18. Create comprehensive test suite for sea manifest functionality
+- [x] 18. Create comprehensive test suite for sea manifest functionality
   - Write unit tests for Package model cubic feet calculations
   - Create tests for PackageItem model relationships and calculations
   - Test SeaRateCalculator service with various scenarios
@@ -134,7 +134,7 @@
   - Create tests for pricing calculations and rate lookups
   - _Requirements: All requirements validation through testing_
 
-- [ ] 19. Update freight price calculation in existing ManifestPackage component
+- [x] 19. Update freight price calculation in existing ManifestPackage component
   - Modify calculateFreightPrice() method to detect manifest type
   - Use SeaRateCalculator for sea packages and existing logic for air packages
   - Update rate lookup to use appropriate rate type (cubic feet vs weight)
