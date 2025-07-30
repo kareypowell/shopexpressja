@@ -49,8 +49,8 @@ class SeaRateCalculatorTest extends TestCase
 
         $result = $this->calculator->calculateFreightPrice($package);
 
-        // Expected: (10.00 * 3.0 + 5.00) * 1.5 = 52.5
-        $this->assertEquals(52.5, $result);
+        // Expected: ((10.00 + 5.00) * 3.0) * 1.5 = 67.5
+        $this->assertEquals(67.5, $result);
     }
 
     /** @test */
@@ -144,8 +144,8 @@ class SeaRateCalculatorTest extends TestCase
         $result = $this->calculator->calculateFreightPrice($package);
 
         // Should use the 5.0-10.0 range (closest higher range)
-        // Expected: (12.00 * 4.0 + 7.00) * 1.0 = 55.0
-        $this->assertEquals(55.0, $result);
+        // Expected: ((12.00 + 7.00) * 4.0) * 1.0 = 76.0
+        $this->assertEquals(76.0, $result);
     }
 
     /** @test */
@@ -181,8 +181,8 @@ class SeaRateCalculatorTest extends TestCase
         $result = $this->calculator->calculateFreightPrice($package);
 
         // Should use the highest range (4.0-6.0)
-        // Expected: (15.00 * 10.0 + 10.00) * 1.0 = 160.0
-        $this->assertEquals(160.0, $result);
+        // Expected: ((15.00 + 10.00) * 10.0 ) * 1.0 = 250.0
+        $this->assertEquals(250.0, $result);
     }
 
     /** @test */
@@ -235,8 +235,8 @@ class SeaRateCalculatorTest extends TestCase
 
         $result = $this->calculator->calculateFreightPrice($package);
 
-        // Expected: (10.00 * 2.0 + 5.00) * 1 = 25.0 (fallback to 1 when exchange rate is 0)
-        $this->assertEquals(25.0, $result);
+        // Expected: ((10.00 + 5.00) * 2.0 ) * 1 = 30.0 (fallback to 1 when exchange rate is 0)
+        $this->assertEquals(30.0, $result);
     }
 
     /** @test */
@@ -319,8 +319,8 @@ class SeaRateCalculatorTest extends TestCase
 
         $result = $this->calculator->calculateFreightPrice($package);
 
-        // Expected: (20.00 * 1.75 + 2.50) * 1.0 = 37.5
-        $this->assertEquals(37.5, $result);
+        // Expected: ((20.00 + 2.50) * 1.75) * 1.0 = 39.375
+        $this->assertEquals(39.375, $result);
     }
 
     /** @test */
@@ -356,6 +356,6 @@ class SeaRateCalculatorTest extends TestCase
         $result = $this->calculator->calculateFreightPrice($package);
 
         // Should use one of the matching rates
-        $this->assertTrue($result == 45.0 || $result == 36.0); // Either rate could be selected
+        $this->assertTrue($result == 60.0 || $result == 48.0); // Either rate could be selected
     }
 }

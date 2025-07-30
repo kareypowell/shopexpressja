@@ -35,8 +35,8 @@ class SeaRateCalculator
         // Get exchange rate from manifest (fallback to 1 if null or 0)
         $exchangeRate = $package->manifest->exchange_rate ?: 1;
 
-        // Calculate total price: (rate per cubic foot * cubic feet + processing fee) * exchange rate
-        return ($rate->price * $cubicFeet + $rate->processing_fee) * $exchangeRate;
+        // Calculate total price: ((rate per cubic foot + processing fee) * cubic feet) * exchange rate
+        return (($rate->price + $rate->processing_fee) * $cubicFeet) * $exchangeRate;
     }
 
     /**

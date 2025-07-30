@@ -69,8 +69,8 @@ class SeaPricingCalculationTest extends TestCase
 
         $freightPrice = $this->calculator->calculateFreightPrice($package);
 
-        // Expected: (20.00 * 1.5 + 5.00) * 1.5 = 52.5
-        $this->assertEquals(52.5, $freightPrice);
+        // Expected: ((20.00 + 5.00) * 1.5) * 1.5 = 56.25
+        $this->assertEquals(56.25, $freightPrice);
     }
 
     /** @test */
@@ -108,8 +108,8 @@ class SeaPricingCalculationTest extends TestCase
         ]);
 
         $smallPrice = $this->calculator->calculateFreightPrice($smallPackage);
-        // Expected: (25.00 * 0.8 + 3.00) * 1.5 = 34.5
-        $this->assertEquals(34.5, $smallPrice);
+        // Expected: ((25.00 + 3.00) * 0.8) * 1.5 = 33.6
+        $this->assertEquals(33.6, $smallPrice);
 
         // Test package in second range
         $mediumPackage = Package::factory()->create([
@@ -118,8 +118,8 @@ class SeaPricingCalculationTest extends TestCase
         ]);
 
         $mediumPrice = $this->calculator->calculateFreightPrice($mediumPackage);
-        // Expected: (18.00 * 2.5 + 6.00) * 1.5 = 76.5
-        $this->assertEquals(76.5, $mediumPrice);
+        // Expected: ((18.00 + 6.00) * 2.5) * 1.5 = 90
+        $this->assertEquals(90, $mediumPrice);
 
         // Test package in third range
         $largePackage = Package::factory()->create([
@@ -128,8 +128,8 @@ class SeaPricingCalculationTest extends TestCase
         ]);
 
         $largePrice = $this->calculator->calculateFreightPrice($largePackage);
-        // Expected: (12.00 * 5.0 + 10.00) * 1.5 = 105.0
-        $this->assertEquals(105.0, $largePrice);
+        // Expected: ((12.00 + 10.00) * 5.0) * 1.5 = 165
+        $this->assertEquals(165.0, $largePrice);
     }
 
     /** @test */
@@ -182,7 +182,7 @@ class SeaPricingCalculationTest extends TestCase
         ]);
 
         $minPrice = $this->calculator->calculateFreightPrice($minPackage);
-        // Expected: (20.00 * 1.0 + 5.00) * 1.5 = 37.5
+        // Expected: ((20.00 + 5.00) * 1.0) * 1.5 = 37.5
         $this->assertEquals(37.5, $minPrice);
 
         // Test exact maximum boundary
@@ -192,8 +192,8 @@ class SeaPricingCalculationTest extends TestCase
         ]);
 
         $maxPrice = $this->calculator->calculateFreightPrice($maxPackage);
-        // Expected: (20.00 * 3.0 + 5.00) * 1.5 = 97.5
-        $this->assertEquals(97.5, $maxPrice);
+        // Expected: ((20.00 + 5.00) * 3.0) * 1.5 = 112.5
+        $this->assertEquals(112.5, $maxPrice);
     }
 
     /** @test */
@@ -225,8 +225,8 @@ class SeaPricingCalculationTest extends TestCase
         $price = $this->calculator->calculateFreightPrice($package);
 
         // Should use the 4.0-8.0 range as fallback (closest higher range)
-        // Expected: (10.00 * 3.0 + 6.00) * 1.5 = 54.0
-        $this->assertEquals(54.0, $price);
+        // Expected: ((10.00 + 6.00) * 3.0) * 1.5 = 72
+        $this->assertEquals(72.0, $price);
     }
 
     /** @test */
@@ -265,7 +265,7 @@ class SeaPricingCalculationTest extends TestCase
         $this->assertEquals(1.5, (float)$package->cubic_feet);
         
         // Verify freight price calculation
-        $expectedFreightPrice = (22.00 * 1.5 + 8.50) * 1.5; // 58.125
+        $expectedFreightPrice = ((22.00 + 8.50) * 1.5) * 1.5; // 68.62
         $this->assertEquals($expectedFreightPrice, (float)$package->freight_price);
     }
 
@@ -297,10 +297,10 @@ class SeaPricingCalculationTest extends TestCase
         $price2 = $this->calculator->calculateFreightPrice($package2);
 
         // Same base calculation, different exchange rates
-        // Package 1: (10.00 * 2.0 + 5.00) * 1.0 = 25.0
-        // Package 2: (10.00 * 2.0 + 5.00) * 2.0 = 50.0
-        $this->assertEquals(25.0, $price1);
-        $this->assertEquals(50.0, $price2);
+        // Package 1: ((10.00 + 5.00) * 2.0) * 1.0 = 30.0
+        // Package 2: ((10.00 + 5.00) * 2.0) * 2.0 = 60.0
+        $this->assertEquals(30.0, $price1);
+        $this->assertEquals(60.0, $price2);
     }
 
     /** @test */
@@ -324,8 +324,8 @@ class SeaPricingCalculationTest extends TestCase
         $price = $this->calculator->calculateFreightPrice($package);
 
         // Should fallback to exchange rate of 1
-        // Expected: (15.00 * 1.5 + 3.00) * 1 = 25.5
-        $this->assertEquals(25.5, $price);
+        // Expected: ((15.00 + 3.00) * 1.5) * 1 = 27.0
+        $this->assertEquals(27.0, $price);
     }
 
     /** @test */
@@ -381,8 +381,8 @@ class SeaPricingCalculationTest extends TestCase
 
         $price = $this->calculator->calculateFreightPrice($package);
 
-        // Expected: (50.00 * 0.25 + 2.00) * 1.5 = 21.75
-        $this->assertEquals(21.75, $price);
+        // Expected: ((50.00 + 2.00) * 0.25) * 1.5 = 19.5
+        $this->assertEquals(19.5, $price);
     }
 
     /** @test */
@@ -403,7 +403,7 @@ class SeaPricingCalculationTest extends TestCase
 
         $price = $this->calculator->calculateFreightPrice($package);
 
-        // Expected: (8.00 * 25.0 + 25.00) * 1.5 = 337.5
-        $this->assertEquals(337.5, $price);
+        // Expected: ((8.00 + 25.00) * 25.0) * 1.5 = 1237.5
+        $this->assertEquals(1237.5, $price);
     }
 }

@@ -151,8 +151,8 @@ class ManifestPackageTest extends TestCase
         // Verify freight price was calculated using SeaRateCalculator
         $this->assertGreaterThan(0, $package->freight_price);
         
-        // Expected: (5.00 * 3.0 + 3.00) * 1.2 = (15.00 + 3.00) * 1.2 = 21.6
-        $expectedFreightPrice = (5.00 * $expectedCubicFeet + 3.00) * 1.2;
+        // Expected: ((5.00 + 3.00) * 3.0) * 1.2 = (8.00 * 3.00) * 1.2 = 28.8
+        $expectedFreightPrice = ((5.00 + 3.00) * $expectedCubicFeet) * 1.2;
         $this->assertEqualsWithDelta($expectedFreightPrice, $package->freight_price, 0.01);
     }
 
