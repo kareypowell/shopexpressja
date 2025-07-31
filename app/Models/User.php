@@ -4,14 +4,16 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use MailerSend\LaravelDriver\MailerSendTrait;
+use Carbon\Carbon;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable, MailerSendTrait;
+    use HasApiTokens, HasFactory, Notifiable, MailerSendTrait, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -43,7 +45,15 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
+
+    /**
+     * The attributes that should be mutated to dates.
+     *
+     * @var array
+     */
+    protected $dates = ['deleted_at'];
 
     public function scopeSearch($query, $term)
     {
@@ -58,6 +68,49 @@ class User extends Authenticatable implements MustVerifyEmail
                           ->orWhere('parish', 'like', '%' . $term . '%');
                 })
         );
+    }
+
+    /**
+     * Scope to get only customers (role_id = 3).
+     */
+    public function scopeCustomers($query)
+    {
+        return $query->where('role_id', 3);
+    }
+
+    /**
+     * Scope to get only active customers (not soft deleted).
+     */
+    public function scopeActiveCustomers($query)
+    {
+        return $query->customers()->whereNull('deleted_at');
+    }
+
+    /**
+     * Scope to get only deleted customers.
+     */
+    public function scopeDeletedCustomers($query)
+    {
+        return $query->onlyTrashed()->where('role_id', 3);
+    }
+
+    /**
+     * Scope to get customers with their profiles loaded.
+     */
+    public function scopeWithProfile($query)
+    {
+        return $query->with('profile');
+    }
+
+    /**
+     * Scope to get customers with package statistics.
+     */
+    public function scopeWithPackageStats($query)
+    {
+        return $query->withCount('packages')
+                    ->with(['packages' => function($query) {
+                        $query->select('user_id', 'freight_price', 'customs_duty', 'storage_fee', 'delivery_fee', 'created_at');
+                    }]);
     }
 
     public function profile()
@@ -88,6 +141,143 @@ class User extends Authenticatable implements MustVerifyEmail
     public function role()
     {
         return $this->belongsTo(Role::class);
+    }
+
+    /**
+     * Get the total amount spent by the customer across all packages.
+     *
+     * @return float
+     */
+    public function getTotalSpentAttribute(): float
+    {
+        return $this->packages()
+            ->selectRaw('COALESCE(SUM(freight_price), 0) + COALESCE(SUM(customs_duty), 0) + COALESCE(SUM(storage_fee), 0) + COALESCE(SUM(delivery_fee), 0) as total')
+            ->value('total') ?? 0.0;
+    }
+
+    /**
+     * Get the total number of packages for the customer.
+     *
+     * @return int
+     */
+    public function getPackageCountAttribute(): int
+    {
+        return $this->packages()->count();
+    }
+
+    /**
+     * Get the average package value for the customer.
+     *
+     * @return float
+     */
+    public function getAveragePackageValueAttribute(): float
+    {
+        $packageCount = $this->getPackageCountAttribute();
+        if ($packageCount === 0) {
+            return 0.0;
+        }
+        
+        return $this->getTotalSpentAttribute() / $packageCount;
+    }
+
+    /**
+     * Get the date of the customer's last shipment.
+     *
+     * @return Carbon|null
+     */
+    public function getLastShipmentDateAttribute(): ?Carbon
+    {
+        $lastPackage = $this->packages()->latest('created_at')->first();
+        return $lastPackage ? $lastPackage->created_at : null;
+    }
+
+    /**
+     * Get a comprehensive financial summary for the customer.
+     *
+     * @return array
+     */
+    public function getFinancialSummary(): array
+    {
+        $packages = $this->packages()
+            ->selectRaw('
+                COUNT(*) as total_packages,
+                COALESCE(SUM(freight_price), 0) as total_freight,
+                COALESCE(SUM(customs_duty), 0) as total_customs,
+                COALESCE(SUM(storage_fee), 0) as total_storage,
+                COALESCE(SUM(delivery_fee), 0) as total_delivery,
+                COALESCE(AVG(freight_price), 0) as avg_freight,
+                COALESCE(AVG(customs_duty), 0) as avg_customs,
+                COALESCE(AVG(storage_fee), 0) as avg_storage,
+                COALESCE(AVG(delivery_fee), 0) as avg_delivery
+            ')
+            ->first();
+
+        $totalSpent = ($packages->total_freight ?? 0) + 
+                     ($packages->total_customs ?? 0) + 
+                     ($packages->total_storage ?? 0) + 
+                     ($packages->total_delivery ?? 0);
+
+        return [
+            'total_packages' => $packages->total_packages ?? 0,
+            'total_spent' => $totalSpent,
+            'breakdown' => [
+                'freight' => $packages->total_freight ?? 0,
+                'customs' => $packages->total_customs ?? 0,
+                'storage' => $packages->total_storage ?? 0,
+                'delivery' => $packages->total_delivery ?? 0,
+            ],
+            'averages' => [
+                'per_package' => $packages->total_packages > 0 ? $totalSpent / $packages->total_packages : 0,
+                'freight' => $packages->avg_freight ?? 0,
+                'customs' => $packages->avg_customs ?? 0,
+                'storage' => $packages->avg_storage ?? 0,
+                'delivery' => $packages->avg_delivery ?? 0,
+            ]
+        ];
+    }
+
+    /**
+     * Get package statistics for the customer.
+     *
+     * @return array
+     */
+    public function getPackageStats(): array
+    {
+        $stats = $this->packages()
+            ->selectRaw('
+                COUNT(*) as total_packages,
+                COUNT(CASE WHEN status = "delivered" THEN 1 END) as delivered_packages,
+                COUNT(CASE WHEN status = "in_transit" THEN 1 END) as in_transit_packages,
+                COUNT(CASE WHEN status = "ready_for_pickup" THEN 1 END) as ready_packages,
+                COUNT(CASE WHEN status = "delayed" THEN 1 END) as delayed_packages,
+                COALESCE(AVG(weight), 0) as avg_weight,
+                COALESCE(SUM(weight), 0) as total_weight
+            ')
+            ->first();
+
+        // Get shipping frequency (packages per month)
+        $firstPackageDate = $this->packages()->oldest('created_at')->value('created_at');
+        $monthsActive = $firstPackageDate ? 
+            max(1, Carbon::parse($firstPackageDate)->diffInMonths(Carbon::now()) + 1) : 1;
+        
+        $shippingFrequency = ($stats->total_packages ?? 0) / $monthsActive;
+
+        return [
+            'total_packages' => $stats->total_packages ?? 0,
+            'status_breakdown' => [
+                'delivered' => $stats->delivered_packages ?? 0,
+                'in_transit' => $stats->in_transit_packages ?? 0,
+                'ready_for_pickup' => $stats->ready_packages ?? 0,
+                'delayed' => $stats->delayed_packages ?? 0,
+            ],
+            'weight_stats' => [
+                'total_weight' => $stats->total_weight ?? 0,
+                'average_weight' => $stats->avg_weight ?? 0,
+            ],
+            'shipping_frequency' => round($shippingFrequency, 2),
+            'months_active' => $monthsActive,
+            'last_shipment' => $this->getLastShipmentDateAttribute(),
+        ];
     }
 
     /**
