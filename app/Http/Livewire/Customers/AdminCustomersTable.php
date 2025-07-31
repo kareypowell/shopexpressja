@@ -14,11 +14,19 @@ class AdminCustomersTable extends DataTableComponent
 
     public array $bulkActions = [
         'exportCustomers' => 'Export XLXS',
+        'bulkDelete' => 'Delete Selected',
+        'bulkRestore' => 'Restore Selected',
     ];
 
     public array $filterNames = [
         'parish' => 'Parish',
+        'status' => 'Status',
     ];
+
+    public $showDeleteModal = false;
+    public $customerToDelete = null;
+    public $showRestoreModal = false;
+    public $customerToRestore = null;
 
     public function filters(): array
     {
@@ -40,6 +48,12 @@ class AdminCustomersTable extends DataTableComponent
                     'St. Thomas' => 'St. Thomas',
                     'Trelawny' => 'Trelawny',
                     'Westmoreland' => 'Westmoreland',
+                ]),
+            'status' => Filter::make('Status')
+                ->select([
+                    'active' => 'Active',
+                    'deleted' => 'Deleted',
+                    'all' => 'All',
                 ]),
         ];
     }
@@ -67,6 +81,8 @@ class AdminCustomersTable extends DataTableComponent
                 ->searchable(),
             Column::make("Parish", "profile.parish")
                 ->sortable(),
+            Column::make("Status", "deleted_at")
+                ->sortable(),
             Column::make("Created On", "created_at")
                 ->sortable(),
             Column::make("Actions", ""),
@@ -75,8 +91,11 @@ class AdminCustomersTable extends DataTableComponent
 
     public function query(): Builder
     {
+        $status = $this->getFilter('status') ?: 'active';
+        
         return User::query()
-            ->where('role_id', 3)
+            ->byStatus($status)
+            ->with('profile')
             ->orderBy('id', 'desc')
             ->when($this->getFilter('search'), fn($query, $search) => $query->search($search))
             ->when($this->getFilter('first_name'), fn($query, $first_name) => $query->where('first_name', $first_name))
@@ -95,5 +114,121 @@ class AdminCustomersTable extends DataTableComponent
     public function rowView(): string
     {
         return 'livewire-tables.rows.admin-customers-table';
+    }
+
+
+
+    public function confirmDelete($customerId)
+    {
+        $this->customerToDelete = User::withTrashed()->find($customerId);
+        $this->showDeleteModal = true;
+    }
+
+    public function deleteCustomer()
+    {
+        try {
+            if ($this->customerToDelete && $this->customerToDelete->canBeDeleted()) {
+                $this->customerToDelete->softDeleteCustomer();
+                session()->flash('message', 'Customer deleted successfully.');
+            } else {
+                session()->flash('error', 'Customer cannot be deleted.');
+            }
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error deleting customer: ' . $e->getMessage());
+        }
+
+        $this->showDeleteModal = false;
+        $this->customerToDelete = null;
+    }
+
+    public function confirmRestore($customerId)
+    {
+        $this->customerToRestore = User::withTrashed()->find($customerId);
+        $this->showRestoreModal = true;
+    }
+
+    public function restoreCustomer()
+    {
+        try {
+            if ($this->customerToRestore && $this->customerToRestore->canBeRestored()) {
+                $this->customerToRestore->restoreCustomer();
+                session()->flash('message', 'Customer restored successfully.');
+            } else {
+                session()->flash('error', 'Customer cannot be restored.');
+            }
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error restoring customer: ' . $e->getMessage());
+        }
+
+        $this->showRestoreModal = false;
+        $this->customerToRestore = null;
+    }
+
+    public function cancelDelete()
+    {
+        $this->showDeleteModal = false;
+        $this->customerToDelete = null;
+    }
+
+    public function cancelRestore()
+    {
+        $this->showRestoreModal = false;
+        $this->customerToRestore = null;
+    }
+
+    public function bulkDelete()
+    {
+        $customers = User::withTrashed()->whereIn('id', $this->getSelectedItems())->get();
+        $deletedCount = 0;
+        $errors = [];
+
+        foreach ($customers as $customer) {
+            try {
+                if ($customer->canBeDeleted()) {
+                    $customer->softDeleteCustomer();
+                    $deletedCount++;
+                }
+            } catch (\Exception $e) {
+                $errors[] = "Error deleting {$customer->full_name}: " . $e->getMessage();
+            }
+        }
+
+        if ($deletedCount > 0) {
+            session()->flash('message', "Successfully deleted {$deletedCount} customer(s).");
+        }
+
+        if (!empty($errors)) {
+            session()->flash('error', implode('<br>', $errors));
+        }
+
+        $this->clearSelected();
+    }
+
+    public function bulkRestore()
+    {
+        $customers = User::withTrashed()->whereIn('id', $this->getSelectedItems())->get();
+        $restoredCount = 0;
+        $errors = [];
+
+        foreach ($customers as $customer) {
+            try {
+                if ($customer->canBeRestored()) {
+                    $customer->restoreCustomer();
+                    $restoredCount++;
+                }
+            } catch (\Exception $e) {
+                $errors[] = "Error restoring {$customer->full_name}: " . $e->getMessage();
+            }
+        }
+
+        if ($restoredCount > 0) {
+            session()->flash('message', "Successfully restored {$restoredCount} customer(s).");
+        }
+
+        if (!empty($errors)) {
+            session()->flash('error', implode('<br>', $errors));
+        }
+
+        $this->clearSelected();
     }
 }

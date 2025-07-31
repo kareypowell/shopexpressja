@@ -95,6 +95,30 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Scope to get all customers including soft deleted ones.
+     */
+    public function scopeAllCustomers($query)
+    {
+        return $query->withTrashed()->where('role_id', 3);
+    }
+
+    /**
+     * Scope to get customers by status (active, deleted, all).
+     */
+    public function scopeByStatus($query, $status = 'active')
+    {
+        switch ($status) {
+            case 'deleted':
+                return $query->deletedCustomers();
+            case 'all':
+                return $query->allCustomers();
+            case 'active':
+            default:
+                return $query->activeCustomers();
+        }
+    }
+
+    /**
      * Scope to get customers with their profiles loaded.
      */
     public function scopeWithProfile($query)
@@ -355,5 +379,149 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isPurchaser()
     {
         return $this->hasRole('purchaser');
+    }
+
+    /**
+     * Soft delete a customer with validation.
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    public function softDeleteCustomer()
+    {
+        // Validate that this is a customer
+        if (!$this->isCustomer()) {
+            throw new \Exception('Only customers can be soft deleted through this method.');
+        }
+
+        // Validate that the customer is not already deleted
+        if ($this->trashed()) {
+            throw new \Exception('Customer is already deleted.');
+        }
+
+        // Validate that superadmins cannot be deleted
+        if ($this->isSuperAdmin()) {
+            throw new \Exception('Superadmin accounts cannot be deleted.');
+        }
+
+        return $this->delete();
+    }
+
+    /**
+     * Restore a soft deleted customer with validation.
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    public function restoreCustomer()
+    {
+        // Validate that this is a customer
+        if (!$this->isCustomer()) {
+            throw new \Exception('Only customers can be restored through this method.');
+        }
+
+        // Validate that the customer is actually deleted
+        if (!$this->trashed()) {
+            throw new \Exception('Customer is not deleted and cannot be restored.');
+        }
+
+        // Check for email conflicts before restoring
+        $existingUser = static::where('email', $this->email)
+            ->whereNull('deleted_at')
+            ->first();
+
+        if ($existingUser) {
+            throw new \Exception('Cannot restore customer: email address is already in use by another active user.');
+        }
+
+        return $this->restore();
+    }
+
+    /**
+     * Check if the customer can be safely deleted.
+     *
+     * @return bool
+     */
+    public function canBeDeleted()
+    {
+        // Cannot delete if not a customer
+        if (!$this->isCustomer()) {
+            return false;
+        }
+
+        // Cannot delete if already deleted
+        if ($this->trashed()) {
+            return false;
+        }
+
+        // Cannot delete superadmins
+        if ($this->isSuperAdmin()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if the customer can be restored.
+     *
+     * @return bool
+     */
+    public function canBeRestored()
+    {
+        // Can only restore customers
+        if (!$this->isCustomer()) {
+            return false;
+        }
+
+        // Can only restore if actually deleted
+        if (!$this->trashed()) {
+            return false;
+        }
+
+        // Check for email conflicts
+        $existingUser = static::where('email', $this->email)
+            ->whereNull('deleted_at')
+            ->first();
+
+        return !$existingUser;
+    }
+
+    /**
+     * Get the deletion status information.
+     *
+     * @return array
+     */
+    public function getDeletionInfo()
+    {
+        return [
+            'is_deleted' => $this->trashed(),
+            'deleted_at' => $this->deleted_at,
+            'can_be_deleted' => $this->canBeDeleted(),
+            'can_be_restored' => $this->canBeRestored(),
+            'deletion_reason' => $this->getDeletionReason(),
+        ];
+    }
+
+    /**
+     * Get the reason why a customer cannot be deleted (if applicable).
+     *
+     * @return string|null
+     */
+    private function getDeletionReason()
+    {
+        if (!$this->isCustomer()) {
+            return 'Only customers can be deleted';
+        }
+
+        if ($this->trashed()) {
+            return 'Customer is already deleted';
+        }
+
+        if ($this->isSuperAdmin()) {
+            return 'Superadmin accounts cannot be deleted';
+        }
+
+        return null;
     }
 }

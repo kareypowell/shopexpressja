@@ -61,15 +61,15 @@
     - Create user-friendly form layout with proper grouping
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 5. Implement soft delete functionality
-  - [ ] 5.1 Add soft delete methods to User model
+- [x] 5. Implement soft delete functionality
+  - [x] 5.1 Add soft delete methods to User model
     - Implement soft delete scopes for customer queries
     - Add customer restoration functionality
     - Create soft delete validation and authorization
     - Write unit tests for soft delete functionality
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-  - [ ] 5.2 Update AdminCustomersTable with delete actions
+  - [x] 5.2 Update AdminCustomersTable with delete actions
     - Add delete action buttons to customer table
     - Implement delete confirmation modal
     - Add filter options for active/deleted customers

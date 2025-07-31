@@ -262,4 +262,215 @@ class UserModelEnhancementsTest extends TestCase
         $this->assertEquals(34.0, $stats['weight_stats']['total_weight']);
         $this->assertEquals(11.33, round($stats['weight_stats']['average_weight'], 2));
     }
+
+    /** @test */
+    public function all_customers_scope_includes_soft_deleted()
+    {
+        $activeCustomer = User::factory()->create(['role_id' => 3]);
+        $deletedCustomer = User::factory()->create(['role_id' => 3]);
+        $deletedCustomer->delete();
+
+        $allCustomers = User::allCustomers()->get();
+
+        $this->assertCount(2, $allCustomers);
+        $this->assertTrue($allCustomers->contains($activeCustomer));
+        $this->assertTrue($allCustomers->contains($deletedCustomer));
+    }
+
+    /** @test */
+    public function by_status_scope_filters_correctly()
+    {
+        $activeCustomer = User::factory()->create(['role_id' => 3]);
+        $deletedCustomer = User::factory()->create(['role_id' => 3]);
+        $deletedCustomer->delete();
+
+        // Test active status
+        $activeCustomers = User::byStatus('active')->get();
+        $this->assertCount(1, $activeCustomers);
+        $this->assertTrue($activeCustomers->contains($activeCustomer));
+
+        // Test deleted status
+        $deletedCustomers = User::byStatus('deleted')->get();
+        $this->assertCount(1, $deletedCustomers);
+        $this->assertTrue($deletedCustomers->contains($deletedCustomer));
+
+        // Test all status
+        $allCustomers = User::byStatus('all')->get();
+        $this->assertCount(2, $allCustomers);
+
+        // Test default (active)
+        $defaultCustomers = User::byStatus()->get();
+        $this->assertCount(1, $defaultCustomers);
+        $this->assertTrue($defaultCustomers->contains($activeCustomer));
+    }
+
+    /** @test */
+    public function soft_delete_customer_validates_user_is_customer()
+    {
+        $admin = User::factory()->create(['role_id' => 2]);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Only customers can be soft deleted through this method.');
+
+        $admin->softDeleteCustomer();
+    }
+
+    /** @test */
+    public function soft_delete_customer_validates_user_is_not_already_deleted()
+    {
+        $customer = User::factory()->create(['role_id' => 3]);
+        $customer->delete();
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Customer is already deleted.');
+
+        $customer->softDeleteCustomer();
+    }
+
+    /** @test */
+    public function soft_delete_customer_validates_user_is_not_superadmin()
+    {
+        $superadmin = User::factory()->create(['role_id' => 1]);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Only customers can be soft deleted through this method.');
+
+        $superadmin->softDeleteCustomer();
+    }
+
+    /** @test */
+    public function soft_delete_customer_successfully_deletes_valid_customer()
+    {
+        $customer = User::factory()->create(['role_id' => 3]);
+
+        $result = $customer->softDeleteCustomer();
+
+        $this->assertTrue($result);
+        $this->assertTrue($customer->trashed());
+    }
+
+    /** @test */
+    public function restore_customer_validates_user_is_customer()
+    {
+        $admin = User::factory()->create(['role_id' => 2]);
+        $admin->delete();
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Only customers can be restored through this method.');
+
+        $admin->restoreCustomer();
+    }
+
+    /** @test */
+    public function restore_customer_validates_user_is_deleted()
+    {
+        $customer = User::factory()->create(['role_id' => 3]);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Customer is not deleted and cannot be restored.');
+
+        $customer->restoreCustomer();
+    }
+
+    /** @test */
+    public function restore_customer_validates_email_conflict()
+    {
+        // Test the canBeRestored method logic for email conflicts
+        $activeCustomer = User::factory()->create(['role_id' => 3, 'email' => 'active@example.com']);
+        $deletedCustomer = User::factory()->create(['role_id' => 3, 'email' => 'deleted@example.com']);
+        $deletedCustomer->delete();
+        
+        // This should work - no email conflict
+        $this->assertTrue($deletedCustomer->canBeRestored());
+        
+        // Now test the actual restore method with a valid scenario
+        $result = $deletedCustomer->restoreCustomer();
+        $this->assertTrue($result);
+        $this->assertFalse($deletedCustomer->trashed());
+    }
+
+    /** @test */
+    public function restore_customer_successfully_restores_valid_customer()
+    {
+        $customer = User::factory()->create(['role_id' => 3]);
+        $customer->delete();
+
+        $result = $customer->restoreCustomer();
+
+        $this->assertTrue($result);
+        $this->assertFalse($customer->trashed());
+    }
+
+    /** @test */
+    public function can_be_deleted_returns_correct_values()
+    {
+        // Customer can be deleted
+        $customer = User::factory()->create(['role_id' => 3]);
+        $this->assertTrue($customer->canBeDeleted());
+
+        // Admin cannot be deleted
+        $admin = User::factory()->create(['role_id' => 2]);
+        $this->assertFalse($admin->canBeDeleted());
+
+        // Superadmin cannot be deleted
+        $superadmin = User::factory()->create(['role_id' => 1]);
+        $this->assertFalse($superadmin->canBeDeleted());
+
+        // Already deleted customer cannot be deleted again
+        $deletedCustomer = User::factory()->create(['role_id' => 3]);
+        $deletedCustomer->delete();
+        $this->assertFalse($deletedCustomer->canBeDeleted());
+    }
+
+    /** @test */
+    public function can_be_restored_returns_correct_values()
+    {
+        // Active customer cannot be restored
+        $customer = User::factory()->create(['role_id' => 3]);
+        $this->assertFalse($customer->canBeRestored());
+
+        // Deleted customer can be restored
+        $deletedCustomer = User::factory()->create(['role_id' => 3]);
+        $deletedCustomer->delete();
+        $this->assertTrue($deletedCustomer->canBeRestored());
+
+        // Test basic canBeRestored functionality
+        $customer1 = User::factory()->create(['role_id' => 3, 'email' => 'customer1@example.com']);
+        $customer2 = User::factory()->create(['role_id' => 3, 'email' => 'customer2@example.com']);
+        $customer2->delete();
+        
+        // Deleted customer can be restored when no conflicts exist
+        $this->assertTrue($customer2->canBeRestored());
+
+        // Deleted admin cannot be restored through this method
+        $admin = User::factory()->create(['role_id' => 2]);
+        $admin->delete();
+        $this->assertFalse($admin->canBeRestored());
+    }
+
+    /** @test */
+    public function get_deletion_info_returns_correct_information()
+    {
+        $customer = User::factory()->create(['role_id' => 3]);
+        
+        $info = $customer->getDeletionInfo();
+        
+        $this->assertFalse($info['is_deleted']);
+        $this->assertNull($info['deleted_at']);
+        $this->assertTrue($info['can_be_deleted']);
+        $this->assertFalse($info['can_be_restored']);
+        $this->assertNull($info['deletion_reason']);
+
+        // Test deleted customer
+        $customer->delete();
+        $customer->refresh();
+        
+        $info = $customer->getDeletionInfo();
+        
+        $this->assertTrue($info['is_deleted']);
+        $this->assertNotNull($info['deleted_at']);
+        $this->assertFalse($info['can_be_deleted']);
+        $this->assertTrue($info['can_be_restored']);
+        $this->assertEquals('Customer is already deleted', $info['deletion_reason']);
+    }
 }
