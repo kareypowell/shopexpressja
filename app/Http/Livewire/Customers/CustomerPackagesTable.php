@@ -16,8 +16,6 @@ class CustomerPackagesTable extends DataTableComponent
     
     public User $customer;
     public $showCostBreakdown = false;
-    public $showModal = false;
-    public $selectedPackage = null;
     
     protected $model = Package::class;
 
@@ -57,6 +55,7 @@ class CustomerPackagesTable extends DataTableComponent
                     'processing' => 'Processing',
                     'shipped' => 'Shipped',
                     'delayed' => 'Delayed',
+                    'ready' => 'Ready for Pickup',
                     'ready_for_pickup' => 'Ready for Pickup',
                 ]),
             'date_range' => Filter::make('Date Range')
@@ -99,12 +98,16 @@ class CustomerPackagesTable extends DataTableComponent
             Column::make("Status", "status")
                 ->sortable()
                 ->searchable(),
-            Column::make("Total Cost", "")
-                ->sortable(fn($query, $direction) => $query->orderByRaw("(COALESCE(freight_price, 0) + COALESCE(customs_duty, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) {$direction}"))
-                ->format(fn($value, $row) => '$' . number_format($this->calculateTotalCost($row), 2)),
         ];
 
-        if ($this->showCostBreakdown) {
+        // Only show Total Cost column if user should see costs
+        if ($this->shouldShowCosts()) {
+            $columns[] = Column::make("Total Cost", "")
+                ->sortable(fn($query, $direction) => $query->orderByRaw("(COALESCE(freight_price, 0) + COALESCE(customs_duty, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) {$direction}"))
+                ->format(fn($value, $row) => '$' . number_format($this->calculateTotalCost($row), 2));
+        }
+
+        if ($this->showCostBreakdown && $this->shouldShowCosts()) {
             $columns[] = Column::make("Freight", "freight_price")
                 ->sortable()
                 ->format(fn($value) => '$' . number_format($value ?? 0, 2));
@@ -132,6 +135,42 @@ class CustomerPackagesTable extends DataTableComponent
                ($package->delivery_fee ?? 0);
     }
 
+    /**
+     * Determine if costs should be shown based on user role and viewing context
+     */
+    public function shouldShowCosts(): bool
+    {
+        $currentUser = auth()->user();
+        
+        // Admins and superadmins can always see costs
+        if ($currentUser->role_id == 1 || $currentUser->role_id == 2) { // superadmin = 1, admin = 2
+            return true;
+        }
+        
+        // For customers, they can only see costs for their own packages
+        // This method determines column visibility, individual row visibility is handled in the template
+        return $currentUser->role_id == 3 && $currentUser->id === $this->customer->id; // customer = 3
+    }
+
+    /**
+     * Determine if cost should be shown for a specific package based on its status
+     */
+    public function shouldShowCostForPackage($package): bool
+    {
+        $currentUser = auth()->user();
+        
+        // Admins and superadmins can always see costs
+        if ($currentUser->role_id == 1 || $currentUser->role_id == 2) { // superadmin = 1, admin = 2
+            return true;
+        }
+        
+        // For customers, only show costs when package is ready for pickup or delivered
+        if ($currentUser->role_id == 3 && $currentUser->id === $this->customer->id) { // customer = 3
+            return in_array($package->status, ['ready', 'ready_for_pickup', 'delivered']);
+        }
+        
+        return false;
+    }
 
 
     public function query(): Builder
@@ -176,37 +215,27 @@ class CustomerPackagesTable extends DataTableComponent
 
 
 
-    public function showPackageDetails($packageId)
-    {
-        $this->selectedPackage = Package::with(['manifest', 'items', 'shipper', 'office'])
-            ->where('id', $packageId)
-            ->where('user_id', $this->customer->id)
-            ->first();
-            
-        if ($this->selectedPackage) {
-            $this->showModal = true;
-        }
-    }
 
-    public function closeModal()
-    {
-        $this->showModal = false;
-        $this->selectedPackage = null;
-    }
 
     public function getPackageStats(): array
     {
         $packages = $this->customer->packages;
         
+        // Calculate costs only for packages where costs should be visible
+        $totalSpent = 0;
+        $packagesWithVisibleCosts = 0;
+        
+        foreach ($packages as $package) {
+            if ($this->shouldShowCostForPackage($package)) {
+                $totalSpent += $this->calculateTotalCost($package);
+                $packagesWithVisibleCosts++;
+            }
+        }
+        
         return [
             'total_packages' => $packages->count(),
-            'total_spent' => $packages->sum(function($package) {
-                return $this->calculateTotalCost($package);
-            }),
-            'average_cost' => $packages->count() > 0 ? 
-                $packages->sum(function($package) {
-                    return $this->calculateTotalCost($package);
-                }) / $packages->count() : 0,
+            'total_spent' => $totalSpent,
+            'average_cost' => $packagesWithVisibleCosts > 0 ? $totalSpent / $packagesWithVisibleCosts : 0,
             'status_breakdown' => $packages->groupBy('status')->map->count(),
         ];
     }

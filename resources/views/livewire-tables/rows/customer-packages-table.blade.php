@@ -49,7 +49,7 @@
             <x-badges.shs>{{ ucfirst($row->status) }}</x-badges.shs>
         @elseif($row->status == 'delayed')
             <x-badges.warning>{{ ucfirst($row->status) }}</x-badges.warning>
-        @elseif($row->status == 'ready_for_pickup')
+        @elseif($row->status == 'ready' || $row->status == 'ready_for_pickup')
             <x-badges.success>Ready for Pickup</x-badges.success>
         @else
             <x-badges.default>{{ ucfirst($row->status) }}</x-badges.default>
@@ -62,39 +62,61 @@
 </x-livewire-tables::table.cell>
 
 {{-- Total Cost --}}
+@if($this->shouldShowCosts())
 <x-livewire-tables::table.cell>
     <div class="text-sm font-medium text-gray-900">
-        ${{ number_format($row->total_cost, 2) }}
+        @if($this->shouldShowCostForPackage($row))
+            ${{ number_format($row->total_cost, 2) }}
+        @else
+            <span class="text-gray-400">-</span>
+        @endif
     </div>
 </x-livewire-tables::table.cell>
+@endif
 
 {{-- Cost Breakdown Columns (conditionally shown) --}}
-@if($this->showCostBreakdown)
+@if($this->showCostBreakdown && $this->shouldShowCosts())
     {{-- Freight --}}
     <x-livewire-tables::table.cell>
         <div class="text-sm text-gray-900">
-            ${{ number_format($row->freight_price ?? 0, 2) }}
+            @if($this->shouldShowCostForPackage($row))
+                ${{ number_format($row->freight_price ?? 0, 2) }}
+            @else
+                <span class="text-gray-400">-</span>
+            @endif
         </div>
     </x-livewire-tables::table.cell>
 
     {{-- Customs --}}
     <x-livewire-tables::table.cell>
         <div class="text-sm text-gray-900">
-            ${{ number_format($row->customs_duty ?? 0, 2) }}
+            @if($this->shouldShowCostForPackage($row))
+                ${{ number_format($row->customs_duty ?? 0, 2) }}
+            @else
+                <span class="text-gray-400">-</span>
+            @endif
         </div>
     </x-livewire-tables::table.cell>
 
     {{-- Storage --}}
     <x-livewire-tables::table.cell>
         <div class="text-sm text-gray-900">
-            ${{ number_format($row->storage_fee ?? 0, 2) }}
+            @if($this->shouldShowCostForPackage($row))
+                ${{ number_format($row->storage_fee ?? 0, 2) }}
+            @else
+                <span class="text-gray-400">-</span>
+            @endif
         </div>
     </x-livewire-tables::table.cell>
 
     {{-- Delivery --}}
     <x-livewire-tables::table.cell>
         <div class="text-sm text-gray-900">
-            ${{ number_format($row->delivery_fee ?? 0, 2) }}
+            @if($this->shouldShowCostForPackage($row))
+                ${{ number_format($row->delivery_fee ?? 0, 2) }}
+            @else
+                <span class="text-gray-400">-</span>
+            @endif
         </div>
     </x-livewire-tables::table.cell>
 @endif
@@ -104,7 +126,10 @@
     <div class="flex space-x-2">
         <button 
             type="button"
-            wire:click="$emit('showPackageDetails', {{ $row->id }})"
+            onclick="
+                console.log('Button clicked for package {{ $row->id }}');
+                window.livewire.emit('showPackageDetails', {{ $row->id }});
+            "
             class="text-blue-600 hover:text-blue-900 text-sm font-medium"
         >
             <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

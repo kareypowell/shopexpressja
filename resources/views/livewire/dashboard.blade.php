@@ -16,7 +16,7 @@
         @if(auth()->user()->isCustomer())
             <div class="mt-10">
                 <h3 class="mb-5 text-base font-semibold text-gray-900">Packages</h3>
-                <livewire:customers.customer-packages-table :customer="auth()->user()" />
+                <livewire:customers.customer-packages-with-modal :customer="auth()->user()" />
             </div>
         @else
             <div class="mt-10">

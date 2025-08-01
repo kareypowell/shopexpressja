@@ -68,7 +68,7 @@
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ ucfirst($selectedPackage->status) }}</span>
                                                 @elseif($selectedPackage->status == 'delayed')
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">{{ ucfirst($selectedPackage->status) }}</span>
-                                                @elseif($selectedPackage->status == 'ready_for_pickup')
+                                                @elseif($selectedPackage->status == 'ready' || $selectedPackage->status == 'ready_for_pickup')
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Ready for Pickup</span>
                                                 @else
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{{ ucfirst($selectedPackage->status) }}</span>
@@ -122,6 +122,12 @@
                                 </div>
 
                                 {{-- Cost Breakdown --}}
+                                @php
+                                    $currentUser = auth()->user();
+                                    $canSeeCosts = $currentUser->role_id == 1 || $currentUser->role_id == 2 || 
+                                                  ($currentUser->role_id == 3 && in_array($selectedPackage->status, ['ready', 'ready_for_pickup', 'delivered']));
+                                @endphp
+                                @if($canSeeCosts)
                                 <div class="bg-gray-50 rounded-lg p-4">
                                     <h4 class="text-sm font-medium text-gray-900 mb-3">Cost Breakdown</h4>
                                     <dl class="space-y-2">
@@ -147,6 +153,12 @@
                                         </div>
                                     </dl>
                                 </div>
+                                @else
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="text-sm font-medium text-gray-900 mb-3">Cost Information</h4>
+                                    <p class="text-sm text-gray-600">Cost details will be available when your package is ready for pickup or delivered.</p>
+                                </div>
+                                @endif
 
                                 {{-- Package Items (if sea package) --}}
                                 @if($selectedPackage->items && $selectedPackage->items->count() > 0)
