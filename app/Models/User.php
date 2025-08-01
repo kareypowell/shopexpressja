@@ -232,7 +232,9 @@ class User extends Authenticatable implements MustVerifyEmail
                 COALESCE(AVG(freight_price), 0) as avg_freight,
                 COALESCE(AVG(customs_duty), 0) as avg_customs,
                 COALESCE(AVG(storage_fee), 0) as avg_storage,
-                COALESCE(AVG(delivery_fee), 0) as avg_delivery
+                COALESCE(AVG(delivery_fee), 0) as avg_delivery,
+                COALESCE(MAX(freight_price + customs_duty + storage_fee + delivery_fee), 0) as highest_package_cost,
+                COALESCE(MIN(freight_price + customs_duty + storage_fee + delivery_fee), 0) as lowest_package_cost
             ')
             ->first();
 
@@ -241,23 +243,228 @@ class User extends Authenticatable implements MustVerifyEmail
                      ($packages->total_storage ?? 0) + 
                      ($packages->total_delivery ?? 0);
 
+        // Calculate cost distribution percentages
+        $freightPercentage = $totalSpent > 0 ? (($packages->total_freight ?? 0) / $totalSpent) * 100 : 0;
+        $customsPercentage = $totalSpent > 0 ? (($packages->total_customs ?? 0) / $totalSpent) * 100 : 0;
+        $storagePercentage = $totalSpent > 0 ? (($packages->total_storage ?? 0) / $totalSpent) * 100 : 0;
+        $deliveryPercentage = $totalSpent > 0 ? (($packages->total_delivery ?? 0) / $totalSpent) * 100 : 0;
+
         return [
             'total_packages' => $packages->total_packages ?? 0,
-            'total_spent' => $totalSpent,
+            'total_spent' => round($totalSpent, 2),
             'breakdown' => [
-                'freight' => $packages->total_freight ?? 0,
-                'customs' => $packages->total_customs ?? 0,
-                'storage' => $packages->total_storage ?? 0,
-                'delivery' => $packages->total_delivery ?? 0,
+                'freight' => round($packages->total_freight ?? 0, 2),
+                'customs' => round($packages->total_customs ?? 0, 2),
+                'storage' => round($packages->total_storage ?? 0, 2),
+                'delivery' => round($packages->total_delivery ?? 0, 2),
+            ],
+            'cost_percentages' => [
+                'freight' => round($freightPercentage, 1),
+                'customs' => round($customsPercentage, 1),
+                'storage' => round($storagePercentage, 1),
+                'delivery' => round($deliveryPercentage, 1),
             ],
             'averages' => [
-                'per_package' => $packages->total_packages > 0 ? $totalSpent / $packages->total_packages : 0,
-                'freight' => $packages->avg_freight ?? 0,
-                'customs' => $packages->avg_customs ?? 0,
-                'storage' => $packages->avg_storage ?? 0,
-                'delivery' => $packages->avg_delivery ?? 0,
+                'per_package' => $packages->total_packages > 0 ? round($totalSpent / $packages->total_packages, 2) : 0,
+                'freight' => round($packages->avg_freight ?? 0, 2),
+                'customs' => round($packages->avg_customs ?? 0, 2),
+                'storage' => round($packages->avg_storage ?? 0, 2),
+                'delivery' => round($packages->avg_delivery ?? 0, 2),
+            ],
+            'cost_range' => [
+                'highest_package' => round($packages->highest_package_cost ?? 0, 2),
+                'lowest_package' => round($packages->lowest_package_cost ?? 0, 2),
             ]
         ];
+    }
+
+    /**
+     * Get total spending calculation methods by category
+     *
+     * @return array
+     */
+    public function getTotalSpendingByCategory(): array
+    {
+        $categoryTotals = $this->packages()
+            ->selectRaw('
+                COALESCE(SUM(freight_price), 0) as freight_total,
+                COALESCE(SUM(customs_duty), 0) as customs_total,
+                COALESCE(SUM(storage_fee), 0) as storage_total,
+                COALESCE(SUM(delivery_fee), 0) as delivery_total,
+                COUNT(*) as package_count
+            ')
+            ->first();
+
+        $grandTotal = ($categoryTotals->freight_total ?? 0) + 
+                     ($categoryTotals->customs_total ?? 0) + 
+                     ($categoryTotals->storage_total ?? 0) + 
+                     ($categoryTotals->delivery_total ?? 0);
+
+        return [
+            'freight' => [
+                'total' => round($categoryTotals->freight_total ?? 0, 2),
+                'percentage' => $grandTotal > 0 ? round((($categoryTotals->freight_total ?? 0) / $grandTotal) * 100, 1) : 0,
+                'average_per_package' => $categoryTotals->package_count > 0 ? round(($categoryTotals->freight_total ?? 0) / $categoryTotals->package_count, 2) : 0,
+            ],
+            'customs' => [
+                'total' => round($categoryTotals->customs_total ?? 0, 2),
+                'percentage' => $grandTotal > 0 ? round((($categoryTotals->customs_total ?? 0) / $grandTotal) * 100, 1) : 0,
+                'average_per_package' => $categoryTotals->package_count > 0 ? round(($categoryTotals->customs_total ?? 0) / $categoryTotals->package_count, 2) : 0,
+            ],
+            'storage' => [
+                'total' => round($categoryTotals->storage_total ?? 0, 2),
+                'percentage' => $grandTotal > 0 ? round((($categoryTotals->storage_total ?? 0) / $grandTotal) * 100, 1) : 0,
+                'average_per_package' => $categoryTotals->package_count > 0 ? round(($categoryTotals->storage_total ?? 0) / $categoryTotals->package_count, 2) : 0,
+            ],
+            'delivery' => [
+                'total' => round($categoryTotals->delivery_total ?? 0, 2),
+                'percentage' => $grandTotal > 0 ? round((($categoryTotals->delivery_total ?? 0) / $grandTotal) * 100, 1) : 0,
+                'average_per_package' => $categoryTotals->package_count > 0 ? round(($categoryTotals->delivery_total ?? 0) / $categoryTotals->package_count, 2) : 0,
+            ],
+            'grand_total' => round($grandTotal, 2),
+            'package_count' => $categoryTotals->package_count ?? 0,
+        ];
+    }
+
+    /**
+     * Get average package value calculations
+     *
+     * @return array
+     */
+    public function getAveragePackageValueCalculations(): array
+    {
+        $stats = $this->packages()
+            ->selectRaw('
+                COUNT(*) as total_packages,
+                COALESCE(AVG(freight_price + customs_duty + storage_fee + delivery_fee), 0) as avg_total_cost,
+                COALESCE(AVG(freight_price), 0) as avg_freight,
+                COALESCE(AVG(customs_duty), 0) as avg_customs,
+                COALESCE(AVG(storage_fee), 0) as avg_storage,
+                COALESCE(AVG(delivery_fee), 0) as avg_delivery,
+                COALESCE(AVG(weight), 0) as avg_weight,
+                COALESCE(AVG(estimated_value), 0) as avg_estimated_value
+            ')
+            ->first();
+
+        return [
+            'total_cost' => round($stats->avg_total_cost ?? 0, 2),
+            'by_category' => [
+                'freight' => round($stats->avg_freight ?? 0, 2),
+                'customs' => round($stats->avg_customs ?? 0, 2),
+                'storage' => round($stats->avg_storage ?? 0, 2),
+                'delivery' => round($stats->avg_delivery ?? 0, 2),
+            ],
+            'cost_per_weight' => $stats->avg_weight > 0 ? round(($stats->avg_total_cost ?? 0) / $stats->avg_weight, 2) : 0,
+            'average_weight' => round($stats->avg_weight ?? 0, 2),
+            'average_estimated_value' => round($stats->avg_estimated_value ?? 0, 2),
+            'package_count' => $stats->total_packages ?? 0,
+        ];
+    }
+
+    /**
+     * Get financial trend analysis over time
+     *
+     * @param int $months Number of months to analyze (default: 12)
+     * @return array
+     */
+    public function getFinancialTrendAnalysis(int $months = 12): array
+    {
+        $startDate = Carbon::now()->subMonths($months);
+        
+        // Get monthly spending data
+        $monthlyData = $this->packages()
+            ->where('created_at', '>=', $startDate)
+            ->selectRaw('
+                strftime("%Y", created_at) as year,
+                strftime("%m", created_at) as month,
+                COUNT(*) as package_count,
+                COALESCE(SUM(freight_price + customs_duty + storage_fee + delivery_fee), 0) as total_spent,
+                COALESCE(AVG(freight_price + customs_duty + storage_fee + delivery_fee), 0) as avg_cost_per_package
+            ')
+            ->groupBy('year', 'month')
+            ->orderBy('year')
+            ->orderBy('month')
+            ->get();
+
+        $trends = [];
+        $totalSpending = 0;
+        $totalPackages = 0;
+        $monthlySpending = [];
+
+        foreach ($monthlyData as $data) {
+            $monthKey = $data->year . '-' . str_pad($data->month, 2, '0', STR_PAD_LEFT);
+            $monthName = Carbon::createFromDate($data->year, $data->month, 1)->format('M Y');
+            
+            $monthlySpending[] = $data->total_spent;
+            $totalSpending += $data->total_spent;
+            $totalPackages += $data->package_count;
+            
+            $trends[] = [
+                'month' => $monthName,
+                'year' => (int) $data->year,
+                'month_number' => (int) $data->month,
+                'package_count' => $data->package_count,
+                'total_spent' => round($data->total_spent, 2),
+                'average_per_package' => round($data->avg_cost_per_package, 2),
+            ];
+        }
+
+        // Calculate trend indicators
+        $trendDirection = 'stable';
+        $trendPercentage = 0;
+        
+        if (count($monthlySpending) >= 2) {
+            $firstHalf = array_slice($monthlySpending, 0, ceil(count($monthlySpending) / 2));
+            $secondHalf = array_slice($monthlySpending, floor(count($monthlySpending) / 2));
+            
+            $firstHalfAvg = count($firstHalf) > 0 ? array_sum($firstHalf) / count($firstHalf) : 0;
+            $secondHalfAvg = count($secondHalf) > 0 ? array_sum($secondHalf) / count($secondHalf) : 0;
+            
+            if ($firstHalfAvg > 0) {
+                $trendPercentage = (($secondHalfAvg - $firstHalfAvg) / $firstHalfAvg) * 100;
+                
+                if ($trendPercentage > 10) {
+                    $trendDirection = 'increasing';
+                } elseif ($trendPercentage < -10) {
+                    $trendDirection = 'decreasing';
+                }
+            }
+        }
+
+        return [
+            'period_months' => $months,
+            'monthly_trends' => $trends,
+            'summary' => [
+                'total_spent' => round($totalSpending, 2),
+                'total_packages' => $totalPackages,
+                'average_monthly_spending' => count($monthlyData) > 0 ? round($totalSpending / count($monthlyData), 2) : 0,
+                'average_monthly_packages' => count($monthlyData) > 0 ? round($totalPackages / count($monthlyData), 1) : 0,
+            ],
+            'trend_analysis' => [
+                'direction' => $trendDirection,
+                'percentage_change' => round($trendPercentage, 1),
+                'description' => $this->getTrendDescription($trendDirection, $trendPercentage),
+            ]
+        ];
+    }
+
+    /**
+     * Get a description of the spending trend
+     *
+     * @param string $direction
+     * @param float $percentage
+     * @return string
+     */
+    private function getTrendDescription(string $direction, float $percentage): string
+    {
+        switch ($direction) {
+            case 'increasing':
+                return "Spending has increased by " . abs(round($percentage, 1)) . "% over the analysis period";
+            case 'decreasing':
+                return "Spending has decreased by " . abs(round($percentage, 1)) . "% over the analysis period";
+            default:
+                return "Spending has remained relatively stable over the analysis period";
+        }
     }
 
     /**
