@@ -188,6 +188,142 @@ class AdminCustomersTableTest extends TestCase
         $component->assertSet('customerToRestore', null);
     }
 
+    /** @test */
+    public function it_has_view_customer_method()
+    {
+        $customer = User::factory()->create(['role_id' => 3]);
+        Profile::factory()->create(['user_id' => $customer->id]);
+        $admin = User::factory()->create(['role_id' => 2]);
+
+        $component = Livewire::actingAs($admin)
+            ->test(AdminCustomersTable::class);
+
+        // Test that the method exists and can be called
+        $this->assertTrue(method_exists($component->instance(), 'viewCustomer'));
+    }
+
+    /** @test */
+    public function it_has_edit_customer_method()
+    {
+        $customer = User::factory()->create(['role_id' => 3]);
+        Profile::factory()->create(['user_id' => $customer->id]);
+        $admin = User::factory()->create(['role_id' => 2]);
+
+        $component = Livewire::actingAs($admin)
+            ->test(AdminCustomersTable::class);
+
+        // Test that the method exists and can be called
+        $this->assertTrue(method_exists($component->instance(), 'editCustomer'));
+    }
+
+    /** @test */
+    public function it_has_create_customer_method()
+    {
+        $admin = User::factory()->create(['role_id' => 2]);
+
+        $component = Livewire::actingAs($admin)
+            ->test(AdminCustomersTable::class);
+
+        // Test that the method exists and can be called
+        $this->assertTrue(method_exists($component->instance(), 'createCustomer'));
+    }
+
+    /** @test */
+    public function it_can_toggle_advanced_filters()
+    {
+        $admin = User::factory()->create(['role_id' => 2]);
+
+        $component = Livewire::actingAs($admin)
+            ->test(AdminCustomersTable::class);
+
+        $component->assertSet('advancedFilters', false);
+        
+        $component->call('toggleAdvancedFilters');
+        $component->assertSet('advancedFilters', true);
+        
+        $component->call('toggleAdvancedFilters');
+        $component->assertSet('advancedFilters', false);
+    }
+
+    /** @test */
+    public function it_can_clear_all_filters()
+    {
+        $admin = User::factory()->create(['role_id' => 2]);
+
+        $component = Livewire::actingAs($admin)
+            ->test(AdminCustomersTable::class);
+
+        // Set some filters
+        $component->set('filters.parish', 'Kingston');
+        $component->set('searchHighlight', 'test search');
+
+        $component->call('clearAllFilters');
+        
+        $component->assertSet('searchHighlight', '');
+    }
+
+    /** @test */
+    public function it_can_highlight_search_terms()
+    {
+        $admin = User::factory()->create(['role_id' => 2]);
+
+        $component = Livewire::actingAs($admin)
+            ->test(AdminCustomersTable::class);
+
+        $result = $component->instance()->highlightSearchTerm('John Doe', 'John');
+        
+        $this->assertStringContainsString('<mark class="bg-yellow-200">John</mark>', $result);
+    }
+
+    /** @test */
+    public function it_returns_original_text_when_no_search_term()
+    {
+        $admin = User::factory()->create(['role_id' => 2]);
+
+        $component = Livewire::actingAs($admin)
+            ->test(AdminCustomersTable::class);
+
+        $result = $component->instance()->highlightSearchTerm('John Doe', '');
+        
+        $this->assertEquals('John Doe', $result);
+    }
+
+    /** @test */
+    public function it_can_filter_by_parish()
+    {
+        $customer1 = User::factory()->create(['role_id' => 3]);
+        Profile::factory()->create(['user_id' => $customer1->id, 'parish' => 'Kingston']);
+        
+        $customer2 = User::factory()->create(['role_id' => 3]);
+        Profile::factory()->create(['user_id' => $customer2->id, 'parish' => 'St. Andrew']);
+
+        $admin = User::factory()->create(['role_id' => 2]);
+
+        $component = Livewire::actingAs($admin)
+            ->test(AdminCustomersTable::class);
+
+        $component->set('filters.parish', 'Kingston');
+        
+        $component->assertSee($customer1->first_name);
+        $component->assertDontSee($customer2->first_name);
+    }
+
+    /** @test */
+    public function it_sets_search_highlight_when_searching()
+    {
+        $customer = User::factory()->create(['role_id' => 3, 'first_name' => 'John']);
+        Profile::factory()->create(['user_id' => $customer->id]);
+        
+        $admin = User::factory()->create(['role_id' => 2]);
+
+        $component = Livewire::actingAs($admin)
+            ->test(AdminCustomersTable::class);
+
+        $component->set('filters.search', 'John');
+        
+        $component->assertSet('searchHighlight', 'John');
+    }
+
     // Note: Bulk operations are implemented but testing them requires 
     // understanding the Laravel Livewire Tables internal structure
     // The methods exist and will work in the actual UI

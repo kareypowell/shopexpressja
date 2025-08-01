@@ -21,7 +21,8 @@ class CustomerProfile extends Component
 
     public function mount(User $customer)
     {
-        $this->authorize('view', $customer);
+        // Use customer-specific authorization
+        $this->authorize('customer.view', $customer);
         
         $this->customer = $customer->load('profile', 'role');
         $this->loadPackageStats();
@@ -36,26 +37,42 @@ class CustomerProfile extends Component
 
     public function loadFinancialSummary()
     {
-        $this->financialSummary = $this->customer->getFinancialSummary();
+        // Check if user can view financial information
+        if (auth()->user()->can('customer.viewFinancials', $this->customer)) {
+            $this->financialSummary = $this->customer->getFinancialSummary();
+        } else {
+            $this->financialSummary = [];
+        }
     }
 
     public function loadRecentPackages()
     {
-        $this->recentPackages = $this->customer->packages()
-            ->with(['manifest', 'office', 'shipper'])
-            ->latest()
-            ->take(5)
-            ->get();
+        // Check if user can view package information
+        if (auth()->user()->can('customer.viewPackages', $this->customer)) {
+            $this->recentPackages = $this->customer->packages()
+                ->with(['manifest', 'office', 'shipper'])
+                ->latest()
+                ->take(5)
+                ->get();
+        } else {
+            $this->recentPackages = [];
+        }
     }
 
     public function togglePackageView()
     {
+        // Check if user can view packages before toggling
+        $this->authorize('customer.viewPackages', $this->customer);
+        
         $this->showAllPackages = !$this->showAllPackages;
         $this->resetPage();
     }
 
     public function exportCustomerData()
     {
+        // Check if user can export customer data
+        $this->authorize('customer.export');
+        
         // This method can be implemented later for data export functionality
         $this->dispatchBrowserEvent('show-alert', [
             'type' => 'info',
@@ -65,15 +82,23 @@ class CustomerProfile extends Component
 
     public function render()
     {
-        $packages = $this->showAllPackages 
-            ? $this->customer->packages()
-                ->with(['manifest', 'office', 'shipper'])
-                ->latest()
-                ->paginate(10)
-            : collect($this->recentPackages);
+        $packages = collect([]);
+        
+        // Only load packages if user has permission
+        if (auth()->user()->can('customer.viewPackages', $this->customer)) {
+            $packages = $this->showAllPackages 
+                ? $this->customer->packages()
+                    ->with(['manifest', 'office', 'shipper'])
+                    ->latest()
+                    ->paginate(10)
+                : collect($this->recentPackages);
+        }
 
         return view('livewire.customers.customer-profile', [
-            'packages' => $packages
+            'packages' => $packages,
+            'canViewFinancials' => auth()->user()->can('customer.viewFinancials', $this->customer),
+            'canViewPackages' => auth()->user()->can('customer.viewPackages', $this->customer),
+            'canExport' => auth()->user()->can('customer.export'),
         ]);
     }
 }

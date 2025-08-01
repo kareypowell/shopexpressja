@@ -12,6 +12,7 @@ class CustomerEdit extends Component
     use AuthorizesRequests;
 
     public User $customer;
+    public $offices;
     
     // User fields
     public $firstName;
@@ -44,7 +45,7 @@ class CustomerEdit extends Component
             'cityTown' => 'required|string|max:100',
             'parish' => 'required|string|max:50',
             'country' => 'required|string|max:50',
-            'pickupLocation' => 'required|string|max:100',
+            'pickupLocation' => 'required|integer|exists:offices,id',
         ];
     }
 
@@ -60,9 +61,11 @@ class CustomerEdit extends Component
 
     public function mount(User $customer)
     {
-        $this->authorize('update', $customer);
+        // Use customer-specific authorization
+        $this->authorize('customer.update', $customer);
         
         $this->customer = $customer->load('profile');
+        $this->offices = \App\Models\Office::all();
         
         // Populate form fields with existing data
         $this->firstName = $customer->first_name;
@@ -87,6 +90,9 @@ class CustomerEdit extends Component
 
     public function save()
     {
+        // Re-check authorization before saving
+        $this->authorize('customer.update', $this->customer);
+        
         $this->validate();
 
         try {
@@ -113,8 +119,12 @@ class CustomerEdit extends Component
 
             session()->flash('success', 'Customer information updated successfully.');
             
-            // For now, redirect to customers list since profile route doesn't exist yet
-            return redirect()->route('customers');
+            // Redirect based on user role
+            if (auth()->user()->isSuperAdmin()) {
+                return redirect()->route('customers');
+            } else {
+                return redirect()->route('admin.customers.index');
+            }
             
         } catch (\Exception $e) {
             session()->flash('error', 'An error occurred while updating customer information. Please try again.');
@@ -129,8 +139,12 @@ class CustomerEdit extends Component
 
     public function cancel()
     {
-        // For now, redirect to customers list since profile route doesn't exist yet
-        return redirect()->route('customers');
+        // Redirect based on user role
+        if (auth()->user()->isSuperAdmin()) {
+            return redirect()->route('customers');
+        } else {
+            return redirect()->route('admin.customers.index');
+        }
     }
 
     public function render()

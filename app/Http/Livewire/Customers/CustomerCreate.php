@@ -12,9 +12,11 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Auth\Events\Registered;
 use Livewire\Component;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class CustomerCreate extends Component
 {
+    use AuthorizesRequests;
     // Customer basic information
     public $firstName = '';
     public $lastName = '';
@@ -65,6 +67,9 @@ class CustomerCreate extends Component
 
     public function mount()
     {
+        // Check if user can create customers
+        $this->authorize('customer.create');
+        
         // Generate a random password by default
         if ($this->generatePassword) {
             $this->password = $this->generateRandomPassword();
@@ -85,6 +90,9 @@ class CustomerCreate extends Component
 
     public function create()
     {
+        // Re-check authorization before creating
+        $this->authorize('customer.create');
+        
         $this->isCreating = true;
 
         try {

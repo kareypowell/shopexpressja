@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Livewire\Auth\{Login, Register, Verify};
 use App\Http\Livewire\Auth\Passwords\{Confirm, Email, Reset};
 use App\Http\Livewire\Customers\AdminCustomer;
+use App\Http\Livewire\Customers\{CustomerCreate, CustomerProfile, CustomerEdit};
 use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\{Dashboard, Invoice};
 use App\Http\Livewire\Manifests\Manifest;
@@ -76,6 +77,9 @@ Route::post('/email/verification-notification', function (Request $request) {
 // Super Admin routes
 Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->group(function () {
     Route::get('/customers', AdminCustomer::class)->name('customers');
+    Route::get('/customers/create', \App\Http\Livewire\Customers\CustomerCreate::class)->name('admin.customers.create');
+    Route::get('/customers/{customer}/profile', \App\Http\Livewire\Customers\CustomerProfile::class)->name('admin.customers.profile');
+    Route::get('/customers/{customer}/edit', \App\Http\Livewire\Customers\CustomerEdit::class)->name('admin.customers.edit');
     Route::get('/manifests', Manifest::class)->name('manifests');
     Route::get('/manifests/{manifest_id}/edit', EditManifest::class)->name('edit-manifest');
     Route::get('/manifests/{manifest_id}/packages', ManifestPackage::class)->name('manifests.packages');
@@ -84,6 +88,14 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->gro
     Route::get('/rates', Rate::class)->name('view-rates');
     Route::get('/pre-alerts', AdminPreAlert::class)->name('view-pre-alerts');
     Route::get('/purchase-requests', AdminPurchaseRequest::class)->name('view-purchase-requests');
+});
+
+// Admin routes (both superadmin and admin can access customer management)
+Route::middleware(['auth', 'verified', 'customer.management'])->prefix('admin')->group(function () {
+    Route::get('/customers', AdminCustomer::class)->name('admin.customers.index');
+    Route::get('/customers/create', \App\Http\Livewire\Customers\CustomerCreate::class)->name('admin.customers.create');
+    Route::get('/customers/{customer}/profile', \App\Http\Livewire\Customers\CustomerProfile::class)->name('admin.customers.profile');
+    Route::get('/customers/{customer}/edit', \App\Http\Livewire\Customers\CustomerEdit::class)->name('admin.customers.edit');
 });
 
 // Customer routes
@@ -96,11 +108,6 @@ Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
     Route::get('/purchase-requests', PurchaseRequest::class)->name('purchase-requests');
     Route::get('/purchase-requests/{purchase_request_id}/view', PurchaseRequest::class)->name('view-purchase-request');
     Route::get('/rates', Rate::class)->name('rates');
-});
-
-// Admin routes
-Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->group(function () {
-    // Route::get('/rates', Rate::class)->name('rates');
 });
 
 // Purchaser routes

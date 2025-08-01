@@ -23,4 +23,9 @@ class Office extends Model
     {
         return $this->hasMany(Package::class);
     }
+
+    public function profiles()
+    {
+        return $this->hasMany(Profile::class);
+    }
 }

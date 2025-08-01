@@ -6,6 +6,7 @@ use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvid
 use Illuminate\Support\Facades\Gate;
 use App\Models\User;
 use App\Policies\UserPolicy;
+use App\Policies\CustomerPolicy;
 use App\Models\Package;
 use App\Policies\PackagePolicy;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -24,6 +25,15 @@ class AuthServiceProvider extends ServiceProvider
     ];
 
     /**
+     * Additional policy mappings for specific contexts.
+     * These are used when we need different authorization logic
+     * for the same model in different contexts.
+     */
+    protected $contextualPolicies = [
+        'customer' => CustomerPolicy::class,
+    ];
+
+    /**
      * Register any authentication / authorization services.
      *
      * @return void
@@ -31,6 +41,7 @@ class AuthServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->registerPolicies();
+        $this->registerCustomerPolicyGates();
 
         // Define superadmin gate
         Gate::define('super-admin-access', function ($user) {
@@ -48,5 +59,31 @@ class AuthServiceProvider extends ServiceProvider
                 ->line('Click the button below to verify your email address.')
                 ->action('Verify Email Address', $url);
         });
+    }
+
+    /**
+     * Register customer-specific policy gates.
+     * These gates use the CustomerPolicy for customer-specific operations.
+     *
+     * @return void
+     */
+    protected function registerCustomerPolicyGates()
+    {
+        // Customer management gates
+        Gate::define('customer.viewAny', [CustomerPolicy::class, 'viewAny']);
+        Gate::define('customer.view', [CustomerPolicy::class, 'view']);
+        Gate::define('customer.create', [CustomerPolicy::class, 'create']);
+        Gate::define('customer.update', [CustomerPolicy::class, 'update']);
+        Gate::define('customer.delete', [CustomerPolicy::class, 'delete']);
+        Gate::define('customer.restore', [CustomerPolicy::class, 'restore']);
+        Gate::define('customer.forceDelete', [CustomerPolicy::class, 'forceDelete']);
+
+        // Customer-specific operation gates
+        Gate::define('customer.viewFinancials', [CustomerPolicy::class, 'viewFinancials']);
+        Gate::define('customer.viewPackages', [CustomerPolicy::class, 'viewPackages']);
+        Gate::define('customer.bulkOperations', [CustomerPolicy::class, 'bulkOperations']);
+        Gate::define('customer.export', [CustomerPolicy::class, 'export']);
+        Gate::define('customer.sendEmail', [CustomerPolicy::class, 'sendEmail']);
+        Gate::define('customer.viewDeleted', [CustomerPolicy::class, 'viewDeleted']);
     }
 }

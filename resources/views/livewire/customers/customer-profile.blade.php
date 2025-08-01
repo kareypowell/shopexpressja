@@ -26,13 +26,15 @@
                     </div>
                 </div>
                 <div class="flex space-x-3">
-                    <button wire:click="exportCustomerData" 
-                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        Export Data
-                    </button>
+                    @if($canExport)
+                        <button wire:click="exportCustomerData" 
+                                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Export Data
+                        </button>
+                    @endif
                 </div>
             </div>
         </div>
@@ -99,7 +101,7 @@
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Pickup Location</dt>
-                            <dd class="text-sm text-gray-900">{{ $customer->profile->pickup_location ?? 'N/A' }}</dd>
+                            <dd class="text-sm text-gray-900">{{ $customer->profile->office->name ?? 'N/A' }}</dd>
                         </div>
                     </dl>
                 @else
@@ -234,29 +236,31 @@
     </div>
 
     <!-- Financial Summary -->
-    <div class="bg-white shadow rounded-lg mb-6">
-        <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Financial Summary</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-blue-600">${{ number_format($financialSummary['breakdown']['freight'] ?? 0, 2) }}</div>
-                    <div class="text-sm text-gray-500">Freight Costs</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-red-600">${{ number_format($financialSummary['breakdown']['customs'] ?? 0, 2) }}</div>
-                    <div class="text-sm text-gray-500">Customs Duty</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-yellow-600">${{ number_format($financialSummary['breakdown']['storage'] ?? 0, 2) }}</div>
-                    <div class="text-sm text-gray-500">Storage Fees</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-green-600">${{ number_format($financialSummary['breakdown']['delivery'] ?? 0, 2) }}</div>
-                    <div class="text-sm text-gray-500">Delivery Fees</div>
+    @if($canViewFinancials)
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Financial Summary</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-600">${{ number_format($financialSummary['breakdown']['freight'] ?? 0, 2) }}</div>
+                        <div class="text-sm text-gray-500">Freight Costs</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-red-600">${{ number_format($financialSummary['breakdown']['customs'] ?? 0, 2) }}</div>
+                        <div class="text-sm text-gray-500">Customs Duty</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-yellow-600">${{ number_format($financialSummary['breakdown']['storage'] ?? 0, 2) }}</div>
+                        <div class="text-sm text-gray-500">Storage Fees</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600">${{ number_format($financialSummary['breakdown']['delivery'] ?? 0, 2) }}</div>
+                        <div class="text-sm text-gray-500">Delivery Fees</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    @endif
 
     <!-- Package Status Breakdown -->
     @if(!empty($packageStats['status_breakdown']))
@@ -286,19 +290,20 @@
     @endif
 
     <!-- Package History -->
-    <div class="bg-white shadow rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">Package History</h3>
-                <button wire:click="togglePackageView" 
-                        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    @if($showAllPackages)
-                        Show Recent Only
-                    @else
-                        Show All Packages
-                    @endif
-                </button>
-            </div>
+    @if($canViewPackages)
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Package History</h3>
+                    <button wire:click="togglePackageView" 
+                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        @if($showAllPackages)
+                            Show Recent Only
+                        @else
+                            Show All Packages
+                        @endif
+                    </button>
+                </div>
 
             @if($packages && $packages->count() > 0)
                 <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
@@ -379,6 +384,7 @@
             @endif
         </div>
     </div>
+    @endif
 </div>
 
 @push('scripts')

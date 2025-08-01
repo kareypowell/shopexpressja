@@ -249,10 +249,9 @@
                                         id="pickupLocation" 
                                         class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md @error('pickupLocation') border-red-300 @enderror">
                                     <option value="">Select Pickup Location</option>
-                                    <option value="Downtown Office">Downtown Office</option>
-                                    <option value="Uptown Office">Uptown Office</option>
-                                    <option value="Bay Office">Bay Office</option>
-                                    <option value="Warehouse">Warehouse</option>
+                                    @foreach($offices as $office)
+                                        <option value="{{ $office->id }}">{{ $office->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             @error('pickupLocation')

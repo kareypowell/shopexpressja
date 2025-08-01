@@ -76,8 +76,8 @@
     - Create bulk delete functionality
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 6. Enhance customer table with new actions
-  - [ ] 6.1 Update AdminCustomersTable component
+- [x] 6. Enhance customer table with new actions
+  - [x] 6.1 Update AdminCustomersTable component
     - Add "View Profile" action column to customer table
     - Add "Edit" action column with proper routing
     - Implement customer navigation methods
@@ -85,22 +85,22 @@
     - Write unit tests for enhanced table functionality
     - _Requirements: 1.1, 2.1, 6.1, 6.2, 6.3, 6.4, 6.5_
 
-  - [ ] 6.2 Update customer table template
+  - [x] 6.2 Update customer table template
     - Add action buttons to table rows
     - Implement responsive table design
     - Add search highlighting functionality
     - Create improved filter interface
     - _Requirements: 1.1, 2.1, 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 7. Create customer policy and authorization
-  - [ ] 7.1 Implement CustomerPolicy class
+- [x] 7. Create customer policy and authorization
+  - [x] 7.1 Implement CustomerPolicy class
     - Create policy class with all required authorization methods
     - Add role-based access control for customer operations
     - Implement authorization checks for sensitive operations
     - Write unit tests for CustomerPolicy
     - _Requirements: 1.1, 2.1, 3.1, 4.1_
 
-  - [ ] 7.2 Apply authorization to all customer components
+  - [x] 7.2 Apply authorization to all customer components
     - Add policy checks to all customer Livewire components
     - Implement middleware for customer management routes
     - Add authorization validation to customer operations

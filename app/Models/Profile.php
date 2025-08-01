@@ -31,4 +31,9 @@ class Profile extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function office()
+    {
+        return $this->belongsTo(Office::class, "pickup_location");
+    }
 }
