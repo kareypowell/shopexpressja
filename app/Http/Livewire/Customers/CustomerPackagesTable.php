@@ -16,6 +16,8 @@ class CustomerPackagesTable extends DataTableComponent
     
     public User $customer;
     public $showCostBreakdown = false;
+    public $showModal = false;
+    public $selectedPackage = null;
     
     protected $model = Package::class;
 
@@ -171,6 +173,26 @@ class CustomerPackagesTable extends DataTableComponent
 
 
 
+
+
+
+    public function showPackageDetails($packageId)
+    {
+        $this->selectedPackage = Package::with(['manifest', 'items', 'shipper', 'office'])
+            ->where('id', $packageId)
+            ->where('user_id', $this->customer->id)
+            ->first();
+            
+        if ($this->selectedPackage) {
+            $this->showModal = true;
+        }
+    }
+
+    public function closeModal()
+    {
+        $this->showModal = false;
+        $this->selectedPackage = null;
+    }
 
     public function getPackageStats(): array
     {

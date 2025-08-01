@@ -104,6 +104,7 @@
     <div class="flex space-x-2">
         <button 
             type="button"
+            wire:click="$emit('showPackageDetails', {{ $row->id }})"
             class="text-blue-600 hover:text-blue-900 text-sm font-medium"
         >
             <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

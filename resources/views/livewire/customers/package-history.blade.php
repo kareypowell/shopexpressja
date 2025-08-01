@@ -58,6 +58,6 @@
         </div>
     </div>
 
-    {{-- Package Table Component --}}
-    @livewire('customers.customer-packages-table', ['customer' => $customer])
+    {{-- Package Table Component with Modal --}}
+    @livewire('customers.customer-packages-with-modal', ['customer' => $customer])
 </div>
