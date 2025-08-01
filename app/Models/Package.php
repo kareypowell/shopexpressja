@@ -104,4 +104,59 @@ class Package extends Model
     {
         return $this->manifest && $this->manifest->type === 'sea';
     }
+
+    /**
+     * Calculate total cost for the package
+     */
+    public function getTotalCostAttribute(): float
+    {
+        return ($this->freight_price ?? 0) + 
+               ($this->customs_duty ?? 0) + 
+               ($this->storage_fee ?? 0) + 
+               ($this->delivery_fee ?? 0);
+    }
+
+    /**
+     * Get cost breakdown for the package
+     */
+    public function getCostBreakdownAttribute(): array
+    {
+        return [
+            'freight' => $this->freight_price ?? 0,
+            'customs' => $this->customs_duty ?? 0,
+            'storage' => $this->storage_fee ?? 0,
+            'delivery' => $this->delivery_fee ?? 0,
+            'total' => $this->total_cost,
+        ];
+    }
+
+    /**
+     * Get formatted dimensions string
+     */
+    public function getFormattedDimensionsAttribute(): string
+    {
+        if ($this->length_inches && $this->width_inches && $this->height_inches) {
+            return "{$this->length_inches}\" × {$this->width_inches}\" × {$this->height_inches}\"";
+        }
+        return '-';
+    }
+
+    /**
+     * Get status badge class
+     */
+    public function getStatusBadgeClassAttribute(): string
+    {
+        switch($this->status) {
+            case 'processing':
+                return 'primary';
+            case 'shipped':
+                return 'shs';
+            case 'delayed':
+                return 'warning';
+            case 'ready_for_pickup':
+                return 'success';
+            default:
+                return 'default';
+        }
+    }
 }

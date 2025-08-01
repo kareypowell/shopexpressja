@@ -141,9 +141,9 @@ class CustomerEdit extends Component
     {
         // Redirect based on user role
         if (auth()->user()->isSuperAdmin()) {
-            return redirect()->route('customers');
-        } else {
             return redirect()->route('admin.customers.index');
+        } else {
+            return redirect()->route('customers');
         }
     }
 
