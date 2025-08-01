@@ -519,6 +519,16 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function hasRole($role)
     {
+        // Load role relationship if not already loaded
+        if (!$this->relationLoaded('role')) {
+            $this->load('role');
+        }
+
+        // Return false if user has no role assigned or role relationship is null
+        if (!$this->role) {
+            return false;
+        }
+
         // Convert the input role string to an array if it's a comma-separated string
         if (is_string($role) && strpos($role, ',') !== false) {
             $roles = array_map('trim', explode(',', $role));

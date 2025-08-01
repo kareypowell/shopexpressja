@@ -15,7 +15,7 @@ class PackageHistory extends Component
     public function mount(User $customer)
     {
         $this->customer = $customer;
-        $this->authorize('view', $customer);
+        $this->authorize('customer.view', $customer);
     }
 
     public function getPackageStatsProperty()

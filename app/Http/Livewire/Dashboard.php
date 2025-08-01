@@ -57,7 +57,10 @@ class Dashboard extends Component
 
     public function render()
     {
-        if (auth()->user()->isSuperAdmin()) {
+        // Load the user with role relationship to avoid null role errors
+        $user = auth()->user()->load('role');
+        
+        if ($user->isSuperAdmin()) {
             return view('livewire.admin-dashboard');
         } else {
             return view('livewire.dashboard');

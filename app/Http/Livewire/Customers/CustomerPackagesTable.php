@@ -24,7 +24,7 @@ class CustomerPackagesTable extends DataTableComponent
     public function mount(User $customer)
     {
         $this->customer = $customer;
-        $this->authorize('view', $customer);
+        $this->authorize('customer.view', $customer);
     }
 
     public function configure(): void
@@ -93,7 +93,7 @@ class CustomerPackagesTable extends DataTableComponent
             Column::make("Date", "created_at")
                 ->sortable()
                 ->format(fn($value) => $value ? $value->format('M d, Y') : '-'),
-            Column::make("Weight (lbs)", "weight")
+            Column::make("Weight (lbs)/Volume", "weight")
                 ->sortable()
                 ->format(fn($value) => $value ? number_format($value, 2) : '-'),
             Column::make("Status", "status")

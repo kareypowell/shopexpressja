@@ -13,9 +13,18 @@
 
         <hr class="my-10">
 
-        <div class="mt-10">
-            <h3 class="mb-5 text-base font-semibold text-gray-900">Packages</h3>
-            <livewire:customers.customer-packages-table />
-        </div>
+        @if(auth()->user()->isCustomer())
+            <div class="mt-10">
+                <h3 class="mb-5 text-base font-semibold text-gray-900">Packages</h3>
+                <livewire:customers.customer-packages-table :customer="auth()->user()" />
+            </div>
+        @else
+            <div class="mt-10">
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Admin Dashboard</h3>
+                    <p class="text-gray-600">Welcome to the admin dashboard. Use the navigation menu to access admin features.</p>
+                </div>
+            </div>
+        @endif
     </div>
 </div>

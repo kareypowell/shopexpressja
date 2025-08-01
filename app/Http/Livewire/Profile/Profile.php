@@ -42,15 +42,28 @@ class Profile extends Component
      * Load all the default values.
      */
     public function mount() {
-        $this->firstName = auth()->user()->first_name;
-        $this->lastName = auth()->user()->last_name;
-        $this->email = auth()->user()->email;
-        $this->taxNumber = auth()->user()->profile->tax_number;
-        $this->telephoneNumber = auth()->user()->profile->telephone_number;
-        $this->streetAddress = auth()->user()->profile->street_address;
-        $this->cityTown = auth()->user()->profile->city_town;
-        $this->parish = auth()->user()->profile->parish;
-        $this->pickupLocation = auth()->user()->profile->pickup_location;
+        $user = auth()->user();
+        $this->firstName = $user->first_name;
+        $this->lastName = $user->last_name;
+        $this->email = $user->email;
+        
+        // Handle case where user doesn't have a profile yet
+        if ($user->profile) {
+            $this->taxNumber = $user->profile->tax_number;
+            $this->telephoneNumber = $user->profile->telephone_number;
+            $this->streetAddress = $user->profile->street_address;
+            $this->cityTown = $user->profile->city_town;
+            $this->parish = $user->profile->parish;
+            $this->pickupLocation = $user->profile->pickup_location;
+        } else {
+            // Set default values for users without profiles
+            $this->taxNumber = '';
+            $this->telephoneNumber = '';
+            $this->streetAddress = '';
+            $this->cityTown = '';
+            $this->parish = '';
+            $this->pickupLocation = '';
+        }
 
         $this->pickupLocations = Office::orderBy('name', 'asc')->get();
     }
