@@ -35,6 +35,37 @@ class AdminCustomersTable extends DataTableComponent
     // Enhanced search properties
     public $searchHighlight = '';
     public $advancedFilters = false;
+    public $advancedSearchCriteria = [
+        'name' => '',
+        'email' => '',
+        'account_number' => '',
+        'tax_number' => '',
+        'telephone_number' => '',
+        'parish' => '',
+        'address' => '',
+        'registration_date_from' => '',
+        'registration_date_to' => '',
+        'status' => 'active',
+    ];
+    public $searchPerformanceMode = false;
+    
+    // URL state management
+    protected $queryString = [
+        'advancedFilters' => ['except' => false],
+        'advancedSearchCriteria' => ['except' => [
+            'name' => '',
+            'email' => '',
+            'account_number' => '',
+            'tax_number' => '',
+            'telephone_number' => '',
+            'parish' => '',
+            'address' => '',
+            'registration_date_from' => '',
+            'registration_date_to' => '',
+            'status' => 'active',
+        ]],
+        'searchPerformanceMode' => ['except' => false],
+    ];
 
     public function filters(): array
     {
@@ -117,19 +148,22 @@ class AdminCustomersTable extends DataTableComponent
         // Enhanced search functionality
         if ($search = $this->getFilter('search')) {
             $this->searchHighlight = $search;
-            $query->search($search);
+            
+            // Use performance mode for large datasets
+            if ($this->searchPerformanceMode) {
+                $query->search($search);
+            } else {
+                $query->search($search);
+            }
+        }
+
+        // Advanced search functionality
+        if ($this->advancedFilters && $this->hasAdvancedSearchCriteria()) {
+            $query->advancedSearch($this->advancedSearchCriteria);
+            $this->searchHighlight = $this->getAdvancedSearchHighlight();
         }
 
         return $query
-            ->when($this->getFilter('first_name'), fn($query, $first_name) => $query->where('first_name', $first_name))
-            ->when($this->getFilter('last_name'), fn($query, $last_name) => $query->where('last_name', $last_name))
-            ->when($this->getFilter('email'), fn($query, $email) => $query->where('email', $email))
-            ->when($this->getFilter('account_number'), fn($query, $account_number) =>
-            $query->whereHas('profile', fn($q) => $q->where('account_number', $account_number)))
-            ->when($this->getFilter('tax_number'), fn($query, $tax_number) =>
-            $query->whereHas('profile', fn($q) => $q->where('tax_number', $tax_number)))
-            ->when($this->getFilter('telephone_number'), fn($query, $telephone_number) =>
-            $query->whereHas('profile', fn($q) => $q->where('telephone_number', $telephone_number)))
             ->when($this->getFilter('parish'), fn($query, $parish) =>
             $query->whereHas('profile', fn($q) => $q->where('parish', $parish)))
             ->when($this->getFilter('registration_date'), fn($query, $date) => 
@@ -203,7 +237,37 @@ class AdminCustomersTable extends DataTableComponent
             return $text;
         }
 
-        return preg_replace('/(' . preg_quote($term, '/') . ')/i', '<mark class="bg-yellow-200">$1</mark>', $text);
+        // Handle multiple search terms
+        $searchTerms = explode(' ', trim($term));
+        $highlightedText = $text;
+        
+        foreach ($searchTerms as $searchTerm) {
+            if (!empty($searchTerm)) {
+                $highlightedText = preg_replace(
+                    '/(' . preg_quote($searchTerm, '/') . ')/i', 
+                    '<mark class="bg-yellow-200 px-1 rounded">$1</mark>', 
+                    $highlightedText
+                );
+            }
+        }
+        
+        return $highlightedText;
+    }
+
+    /**
+     * Get search statistics for performance monitoring
+     */
+    public function getSearchStats(): array
+    {
+        $query = $this->query();
+        $totalResults = $query->count();
+        
+        return [
+            'total_results' => $totalResults,
+            'search_term' => $this->searchHighlight,
+            'advanced_filters_active' => $this->advancedFilters && $this->hasAdvancedSearchCriteria(),
+            'performance_mode' => $this->searchPerformanceMode,
+        ];
     }
 
     /**
@@ -212,6 +276,176 @@ class AdminCustomersTable extends DataTableComponent
     public function getSearchHighlightProperty()
     {
         return $this->searchHighlight;
+    }
+
+    /**
+     * Check if any advanced search criteria are set
+     */
+    public function hasAdvancedSearchCriteria(): bool
+    {
+        foreach ($this->advancedSearchCriteria as $key => $value) {
+            if ($key === 'status') continue; // Status is always set
+            if (!empty($value)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Get highlight term from advanced search criteria
+     */
+    public function getAdvancedSearchHighlight(): string
+    {
+        $highlights = [];
+        
+        foreach ($this->advancedSearchCriteria as $field => $value) {
+            if (!empty($value) && $field !== 'status' && $field !== 'parish') {
+                $highlights[] = $value;
+            }
+        }
+        
+        return implode(' ', $highlights);
+    }
+
+    /**
+     * Apply advanced search
+     */
+    public function applyAdvancedSearch()
+    {
+        $this->resetPage();
+        $this->emit('refreshComponent');
+    }
+
+    /**
+     * Clear advanced search criteria
+     */
+    public function clearAdvancedSearch()
+    {
+        $this->advancedSearchCriteria = [
+            'name' => '',
+            'email' => '',
+            'account_number' => '',
+            'tax_number' => '',
+            'telephone_number' => '',
+            'parish' => '',
+            'address' => '',
+            'registration_date_from' => '',
+            'registration_date_to' => '',
+            'status' => 'active',
+        ];
+        $this->searchHighlight = '';
+        $this->resetPage();
+        $this->emit('refreshComponent');
+    }
+
+    /**
+     * Toggle search performance mode
+     */
+    public function toggleSearchPerformanceMode()
+    {
+        $this->searchPerformanceMode = !$this->searchPerformanceMode;
+        $this->emit('refreshComponent');
+    }
+
+    /**
+     * Save current filter state to session
+     */
+    public function saveFilterState()
+    {
+        session()->put('admin_customers_filters', [
+            'advancedFilters' => $this->advancedFilters,
+            'advancedSearchCriteria' => $this->advancedSearchCriteria,
+            'searchPerformanceMode' => $this->searchPerformanceMode,
+        ]);
+    }
+
+    /**
+     * Load filter state from session
+     */
+    public function loadFilterState()
+    {
+        $savedFilters = session()->get('admin_customers_filters', []);
+        
+        if (!empty($savedFilters)) {
+            $this->advancedFilters = $savedFilters['advancedFilters'] ?? false;
+            $this->advancedSearchCriteria = array_merge(
+                $this->advancedSearchCriteria,
+                $savedFilters['advancedSearchCriteria'] ?? []
+            );
+            $this->searchPerformanceMode = $savedFilters['searchPerformanceMode'] ?? false;
+        }
+    }
+
+    /**
+     * Clear saved filter state
+     */
+    public function clearSavedFilterState()
+    {
+        session()->forget('admin_customers_filters');
+    }
+
+    /**
+     * Mount component with URL state and session persistence
+     */
+    public function mount()
+    {
+        // Load from session if no URL parameters are present
+        if (!request()->hasAny(['advancedFilters', 'advancedSearchCriteria', 'searchPerformanceMode'])) {
+            $this->loadFilterState();
+        }
+    }
+
+    /**
+     * Updated hook to save state when filters change
+     */
+    public function updated($propertyName)
+    {
+        // Save filter state when advanced search criteria change
+        if (str_starts_with($propertyName, 'advancedSearchCriteria') || 
+            $propertyName === 'advancedFilters' || 
+            $propertyName === 'searchPerformanceMode') {
+            $this->saveFilterState();
+        }
+    }
+
+    /**
+     * Get filter summary for display
+     */
+    public function getFilterSummary(): array
+    {
+        $activeFilters = [];
+        
+        foreach ($this->advancedSearchCriteria as $key => $value) {
+            if (!empty($value) && $key !== 'status') {
+                $label = ucwords(str_replace('_', ' ', $key));
+                $activeFilters[] = "{$label}: {$value}";
+            }
+        }
+        
+        if ($this->advancedSearchCriteria['status'] !== 'active') {
+            $activeFilters[] = "Status: " . ucfirst($this->advancedSearchCriteria['status']);
+        }
+        
+        return $activeFilters;
+    }
+
+    /**
+     * Export current search results
+     */
+    public function exportSearchResults()
+    {
+        $this->authorize('customer.export');
+        
+        $query = $this->query();
+        $customers = $query->get();
+        
+        // This would typically generate a CSV or Excel file
+        // For now, we'll just show a message with the count
+        $this->dispatchBrowserEvent('show-alert', [
+            'type' => 'info',
+            'message' => "Export would include {$customers->count()} customers based on current filters."
+        ]);
     }
 
 

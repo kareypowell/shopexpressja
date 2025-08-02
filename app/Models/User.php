@@ -57,17 +57,122 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function scopeSearch($query, $term)
     {
-        return $query->where(
-            fn($query) => $query->where('first_name', 'like', '%' . $term . '%')
-                ->orWhere('last_name', 'like', '%' . $term . '%')
-                ->orWhere('email', 'like', '%' . $term . '%')
-                ->orWhereHas('profile', function($query) use ($term) {
-                    $query->where('tax_number', 'like', '%' . $term . '%')
-                          ->orWhere('account_number', 'like', '%' . $term . '%')
-                          ->orWhere('telephone_number', 'like', '%' . $term . '%')
-                          ->orWhere('parish', 'like', '%' . $term . '%');
-                })
-        );
+        if (empty($term)) {
+            return $query;
+        }
+
+        // Split search term into individual words for better matching
+        $searchTerms = explode(' ', trim($term));
+        
+        return $query->where(function($query) use ($searchTerms, $term) {
+            // Search in user fields
+            $query->where(function($q) use ($searchTerms, $term) {
+                foreach ($searchTerms as $searchTerm) {
+                    $q->where('first_name', 'like', '%' . $searchTerm . '%')
+                      ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                      ->orWhere('email', 'like', '%' . $searchTerm . '%');
+                }
+                // Also search for full term
+                $q->orWhere('first_name', 'like', '%' . $term . '%')
+                  ->orWhere('last_name', 'like', '%' . $term . '%')
+                  ->orWhere('email', 'like', '%' . $term . '%');
+            })
+            // Search in profile fields
+            ->orWhereHas('profile', function($profileQuery) use ($searchTerms, $term) {
+                $profileQuery->where(function($q) use ($searchTerms, $term) {
+                    foreach ($searchTerms as $searchTerm) {
+                        $q->where('tax_number', 'like', '%' . $searchTerm . '%')
+                          ->orWhere('account_number', 'like', '%' . $searchTerm . '%')
+                          ->orWhere('telephone_number', 'like', '%' . $searchTerm . '%')
+                          ->orWhere('parish', 'like', '%' . $searchTerm . '%')
+                          ->orWhere('street_address', 'like', '%' . $searchTerm . '%')
+                          ->orWhere('city_town', 'like', '%' . $searchTerm . '%')
+                          ->orWhere('country', 'like', '%' . $searchTerm . '%')
+                          ->orWhere('pickup_location', 'like', '%' . $searchTerm . '%');
+                    }
+                    // Also search for full term in profile fields
+                    $q->orWhere('tax_number', 'like', '%' . $term . '%')
+                      ->orWhere('account_number', 'like', '%' . $term . '%')
+                      ->orWhere('telephone_number', 'like', '%' . $term . '%')
+                      ->orWhere('parish', 'like', '%' . $term . '%')
+                      ->orWhere('street_address', 'like', '%' . $term . '%')
+                      ->orWhere('city_town', 'like', '%' . $term . '%')
+                      ->orWhere('country', 'like', '%' . $term . '%')
+                      ->orWhere('pickup_location', 'like', '%' . $term . '%');
+                });
+            })
+            // Search for full name combinations
+            ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $term . '%'])
+            ->orWhereRaw("CONCAT(last_name, ' ', first_name) LIKE ?", ['%' . $term . '%']);
+        });
+    }
+
+    /**
+     * Advanced search scope with field-specific search capabilities
+     */
+    public function scopeAdvancedSearch($query, array $criteria)
+    {
+        foreach ($criteria as $field => $value) {
+            if (empty($value)) {
+                continue;
+            }
+
+            switch ($field) {
+                case 'name':
+                    $query->where(function($q) use ($value) {
+                        $q->where('first_name', 'like', '%' . $value . '%')
+                          ->orWhere('last_name', 'like', '%' . $value . '%')
+                          ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $value . '%']);
+                    });
+                    break;
+                
+                case 'email':
+                    $query->where('email', 'like', '%' . $value . '%');
+                    break;
+                
+                case 'account_number':
+                    $query->whereHas('profile', fn($q) => $q->where('account_number', 'like', '%' . $value . '%'));
+                    break;
+                
+                case 'tax_number':
+                    $query->whereHas('profile', fn($q) => $q->where('tax_number', 'like', '%' . $value . '%'));
+                    break;
+                
+                case 'telephone_number':
+                    $query->whereHas('profile', fn($q) => $q->where('telephone_number', 'like', '%' . $value . '%'));
+                    break;
+                
+                case 'parish':
+                    $query->whereHas('profile', fn($q) => $q->where('parish', $value));
+                    break;
+                
+                case 'address':
+                    $query->whereHas('profile', function($q) use ($value) {
+                        $q->where('street_address', 'like', '%' . $value . '%')
+                          ->orWhere('city_town', 'like', '%' . $value . '%');
+                    });
+                    break;
+                
+                case 'registration_date_from':
+                    $query->whereDate('created_at', '>=', $value);
+                    break;
+                
+                case 'registration_date_to':
+                    $query->whereDate('created_at', '<=', $value);
+                    break;
+                
+                case 'status':
+                    if ($value === 'active') {
+                        $query->whereNull('deleted_at');
+                    } elseif ($value === 'deleted') {
+                        $query->whereNotNull('deleted_at');
+                    }
+                    // 'all' doesn't add any condition
+                    break;
+            }
+        }
+
+        return $query;
     }
 
     /**
