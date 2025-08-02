@@ -6,6 +6,7 @@ use App\Http\Livewire\Concerns\HasBreadcrumbs;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Profile;
+use App\Models\Office;
 use App\Services\AccountNumberService;
 use App\Services\CustomerEmailService;
 use App\Mail\WelcomeUser;
@@ -59,7 +60,7 @@ class CustomerCreate extends Component
         'cityTown' => 'required|string|max:100',
         'parish' => 'required|string|max:50',
         'country' => 'required|string|max:50',
-        'pickupLocation' => 'required|string|max:100',
+        'pickupLocation' => 'required|integer|exists:offices,id',
     ];
 
     protected $validationAttributes = [
@@ -173,7 +174,7 @@ class CustomerCreate extends Component
 
     public function cancel()
     {
-        return redirect()->route('admin.customers');
+        return redirect()->route('admin.customers.index');
     }
 
     /**
@@ -401,17 +402,11 @@ class CustomerCreate extends Component
     /**
      * Get the list of available pickup locations.
      *
-     * @return array
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getPickupLocationsProperty()
     {
-        return [
-            'Kingston Office',
-            'Spanish Town Office',
-            'Montego Bay Office',
-            'Mandeville Office',
-            'May Pen Office',
-        ];
+        return Office::orderBy('name')->get();
     }
 
     public function render()

@@ -6,6 +6,7 @@ use App\Http\Livewire\Customers\CustomerCreate;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Profile;
+use App\Models\Office;
 use App\Services\AccountNumberService;
 use App\Mail\WelcomeUser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -20,20 +21,36 @@ class CustomerCreateComponentTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected $office;
+    protected $admin;
+
     protected function setUp(): void
     {
         parent::setUp();
         
-        // Create customer role
+        // Create roles
+        $adminRole = Role::factory()->create([
+            'name' => 'admin',
+            'description' => 'Admin role'
+        ]);
+        
         Role::factory()->create([
             'name' => 'customer',
             'description' => 'Customer role'
         ]);
+
+        // Create admin user
+        $this->admin = User::factory()->create(['role_id' => $adminRole->id]);
+
+        // Create test office
+        $this->office = Office::factory()->create(['name' => 'Kingston']);
     }
 
     /** @test */
     public function it_renders_successfully()
     {
+        $this->actingAs($this->admin);
+        
         Livewire::test(CustomerCreate::class)
             ->assertStatus(200);
     }
@@ -41,6 +58,8 @@ class CustomerCreateComponentTest extends TestCase
     /** @test */
     public function it_initializes_with_default_values()
     {
+        $this->actingAs($this->admin);
+        
         $component = Livewire::test(CustomerCreate::class);
 
         $component->assertSet('country', 'Jamaica')
@@ -56,6 +75,8 @@ class CustomerCreateComponentTest extends TestCase
     /** @test */
     public function it_generates_new_password_when_generate_password_is_toggled()
     {
+        $this->actingAs($this->admin);
+        
         $component = Livewire::test(CustomerCreate::class);
         $originalPassword = $component->get('password');
 
@@ -76,6 +97,8 @@ class CustomerCreateComponentTest extends TestCase
     /** @test */
     public function it_validates_required_fields()
     {
+        $this->actingAs($this->admin);
+        
         Livewire::test(CustomerCreate::class)
             ->set('firstName', '')
             ->set('lastName', '')
@@ -103,6 +126,8 @@ class CustomerCreateComponentTest extends TestCase
     /** @test */
     public function it_validates_email_format()
     {
+        $this->actingAs($this->admin);
+        
         Livewire::test(CustomerCreate::class)
             ->set('email', 'invalid-email')
             ->call('create')
@@ -112,6 +137,8 @@ class CustomerCreateComponentTest extends TestCase
     /** @test */
     public function it_validates_unique_email()
     {
+        $this->actingAs($this->admin);
+        
         User::factory()->create(['email' => 'existing@example.com']);
 
         Livewire::test(CustomerCreate::class)
@@ -123,18 +150,22 @@ class CustomerCreateComponentTest extends TestCase
     /** @test */
     public function it_validates_password_when_not_generating()
     {
+        $this->actingAs($this->admin);
+        
         Livewire::test(CustomerCreate::class)
             ->set('generatePassword', false)
             ->set('password', '')
             ->call('create')
             ->assertHasErrors(['password' => 'required_if']);
 
+        $this->actingAs($this->admin);
         Livewire::test(CustomerCreate::class)
             ->set('generatePassword', false)
             ->set('password', 'short')
             ->call('create')
             ->assertHasErrors(['password' => 'min']);
 
+        $this->actingAs($this->admin);
         Livewire::test(CustomerCreate::class)
             ->set('generatePassword', false)
             ->set('password', 'password123')
@@ -146,6 +177,8 @@ class CustomerCreateComponentTest extends TestCase
     /** @test */
     public function it_creates_customer_successfully()
     {
+        $this->actingAs($this->admin);
+        
         Mail::fake();
         Event::fake();
 
@@ -159,7 +192,8 @@ class CustomerCreateComponentTest extends TestCase
             ->set('cityTown', 'Kingston')
             ->set('parish', 'Kingston')
             ->set('country', 'Jamaica')
-            ->set('pickupLocation', 'Kingston Office')
+            ->set('pickupLocation', $this->office->id)
+            ->set('queueEmail', false)
             ->call('create');
 
         // Check user was created
@@ -179,10 +213,10 @@ class CustomerCreateComponentTest extends TestCase
         $this->assertEquals('Kingston', $user->profile->city_town);
         $this->assertEquals('Kingston', $user->profile->parish);
         $this->assertEquals('Jamaica', $user->profile->country);
-        $this->assertEquals('Kingston Office', $user->profile->pickup_location);
+        $this->assertEquals($this->office->id, $user->profile->pickup_location);
 
         // Check welcome email was sent
-        Mail::assertSent(WelcomeUser::class, function ($mail) use ($user) {
+        Mail::assertSent(\App\Mail\CustomerWelcomeEmail::class, function ($mail) use ($user) {
             return $mail->hasTo($user->email);
         });
 
@@ -198,6 +232,8 @@ class CustomerCreateComponentTest extends TestCase
     /** @test */
     public function it_creates_customer_without_sending_email_when_disabled()
     {
+        $this->actingAs($this->admin);
+        
         Mail::fake();
 
         Livewire::test(CustomerCreate::class)
@@ -209,7 +245,7 @@ class CustomerCreateComponentTest extends TestCase
             ->set('cityTown', 'Spanish Town')
             ->set('parish', 'St. Catherine')
             ->set('country', 'Jamaica')
-            ->set('pickupLocation', 'Spanish Town Office')
+            ->set('pickupLocation', $this->office->id)
             ->set('sendWelcomeEmail', false)
             ->call('create');
 
@@ -218,12 +254,14 @@ class CustomerCreateComponentTest extends TestCase
         $this->assertNotNull($user);
 
         // Check no welcome email was sent
-        Mail::assertNotSent(WelcomeUser::class);
+        Mail::assertNotSent(\App\Mail\CustomerWelcomeEmail::class);
     }
 
     /** @test */
     public function it_uses_account_number_service()
     {
+        $this->actingAs($this->admin);
+        
         Livewire::test(CustomerCreate::class)
             ->set('firstName', 'Test')
             ->set('lastName', 'User')
@@ -233,7 +271,7 @@ class CustomerCreateComponentTest extends TestCase
             ->set('cityTown', 'Test City')
             ->set('parish', 'Test Parish')
             ->set('country', 'Jamaica')
-            ->set('pickupLocation', 'Test Office')
+            ->set('pickupLocation', $this->office->id)
             ->call('create');
 
         $user = User::where('email', 'test@example.com')->first();
@@ -259,6 +297,8 @@ class CustomerCreateComponentTest extends TestCase
     /** @test */
     public function it_provides_parishes_list()
     {
+        $this->actingAs($this->admin);
+        
         $component = Livewire::test(CustomerCreate::class);
         $parishes = $component->get('parishes');
 
@@ -271,18 +311,26 @@ class CustomerCreateComponentTest extends TestCase
     /** @test */
     public function it_provides_pickup_locations_list()
     {
+        $this->actingAs($this->admin);
+        
+        // Create additional offices for testing
+        Office::factory()->create(['name' => 'Spanish Town']);
+        Office::factory()->create(['name' => 'Montego Bay']);
+
         $component = Livewire::test(CustomerCreate::class);
         $pickupLocations = $component->get('pickupLocations');
 
-        $this->assertIsArray($pickupLocations);
-        $this->assertContains('Kingston Office', $pickupLocations);
-        $this->assertContains('Spanish Town Office', $pickupLocations);
-        $this->assertContains('Montego Bay Office', $pickupLocations);
+        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $pickupLocations);
+        $this->assertTrue($pickupLocations->contains('name', 'Kingston'));
+        $this->assertTrue($pickupLocations->contains('name', 'Spanish Town'));
+        $this->assertTrue($pickupLocations->contains('name', 'Montego Bay'));
     }
 
     /** @test */
     public function it_handles_missing_customer_role()
     {
+        $this->actingAs($this->admin);
+        
         // Delete the customer role
         Role::where('name', 'customer')->delete();
 
@@ -296,7 +344,7 @@ class CustomerCreateComponentTest extends TestCase
                 ->set('cityTown', 'Test City')
                 ->set('parish', 'Test Parish')
                 ->set('country', 'Jamaica')
-                ->set('pickupLocation', 'Test Office')
+                ->set('pickupLocation', $this->office->id)
                 ->call('create');
         } catch (\Exception $e) {
             // Exception is expected when role is missing

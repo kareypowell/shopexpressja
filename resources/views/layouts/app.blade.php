@@ -2,7 +2,7 @@
 
 @section('body')
 
-@if(auth()->user()->hasRole('superadmin'))
+@if(auth()->user()->hasRole('superadmin') || auth()->user()->hasRole('admin'))
 <x-sidebar-nav />
 
 <div class="md:pl-64 flex flex-col">

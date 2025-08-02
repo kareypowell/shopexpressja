@@ -53,8 +53,17 @@ trait HasBreadcrumbs
      */
     protected function getCustomerBreadcrumb(\App\Models\User $customer, ?string $url = null): array
     {
+        $name = 'Customer';
+        if ($customer->profile) {
+            $name = $customer->profile->first_name . ' ' . $customer->profile->last_name;
+        } elseif ($customer->first_name && $customer->last_name) {
+            $name = $customer->first_name . ' ' . $customer->last_name;
+        } elseif ($customer->email) {
+            $name = $customer->email;
+        }
+        
         return [
-            'title' => $customer->profile->first_name . ' ' . $customer->profile->last_name,
+            'title' => $name,
             'url' => $url
         ];
     }
@@ -100,11 +109,20 @@ trait HasBreadcrumbs
      */
     protected function setCustomerProfileBreadcrumbs(\App\Models\User $customer)
     {
+        $name = 'Customer';
+        if ($customer->profile) {
+            $name = $customer->profile->first_name . ' ' . $customer->profile->last_name;
+        } elseif ($customer->first_name && $customer->last_name) {
+            $name = $customer->first_name . ' ' . $customer->last_name;
+        } elseif ($customer->email) {
+            $name = $customer->email;
+        }
+        
         $this->setBreadcrumbs([
             $this->getHomeBreadcrumb(),
             $this->getCustomersIndexBreadcrumb(),
             [
-                'title' => $customer->profile->first_name . ' ' . $customer->profile->last_name,
+                'title' => $name,
                 'url' => null
             ]
         ]);
