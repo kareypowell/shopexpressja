@@ -9,6 +9,7 @@ use App\Rules\ValidVesselInformation;
 class Manifest extends Component
 {
     public bool $isOpen = false;
+    public string $mode = 'index'; // 'index' or 'create'
 
     public string $type = '';
 
@@ -35,6 +36,17 @@ class Manifest extends Component
 
     public string $shipment_date = '';
 
+
+    public function mount()
+    {
+        // Determine mode based on current route
+        if (request()->routeIs('admin.manifests.create')) {
+            $this->mode = 'create';
+            $this->openModal();
+        } else {
+            $this->mode = 'index';
+        }
+    }
 
     public function create()
     {
@@ -158,7 +170,8 @@ class Manifest extends Component
         $this->closeModal();
         $this->resetInputFields();
 
-        // return redirect('/manifests');
+        // Redirect to manifests index after creation
+        return redirect()->route('admin.manifests.index');
     }
 
     public function updatedType()

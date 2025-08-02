@@ -76,10 +76,21 @@ Route::post('/email/verification-notification', function (Request $request) {
 
 // Super Admin routes
 Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->group(function () {
-    Route::get('/manifests', Manifest::class)->name('manifests');
-    Route::get('/manifests/{manifest_id}/edit', EditManifest::class)->name('edit-manifest');
-    Route::get('/manifests/{manifest_id}/packages', ManifestPackage::class)->name('manifests.packages');
-    Route::get('/manifests/{manifest_id}/packages/{package_id}/edit', EditManifestPackage::class)->name('manifests.packages.edit');
+    // Manifest routes with new naming convention
+    Route::prefix('manifests')->name('admin.manifests.')->group(function () {
+        Route::get('/', Manifest::class)->name('index');
+        Route::get('/create', Manifest::class)->name('create');
+        Route::get('/{manifest_id}/edit', EditManifest::class)->name('edit');
+        Route::get('/{manifest_id}/packages', ManifestPackage::class)->name('packages');
+        Route::get('/{manifest_id}/packages/{package_id}/edit', EditManifestPackage::class)->name('packages.edit');
+    });
+    
+
+    // Legacy route for backward compatibility
+    Route::get('/manifests', function () {
+        return redirect()->route('admin.manifests.index');
+    })->name('manifests');
+    
     Route::get('/roles', Role::class)->name('roles');
     Route::get('/rates', Rate::class)->name('view-rates');
     Route::get('/pre-alerts', AdminPreAlert::class)->name('view-pre-alerts');
