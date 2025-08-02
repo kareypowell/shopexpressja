@@ -49,6 +49,11 @@ class AdminCustomersTable extends DataTableComponent
     ];
     public $searchPerformanceMode = false;
     
+    // Loading states
+    public $isLoading = false;
+    public $loadingMessage = '';
+    public $bulkActionInProgress = false;
+    
     // URL state management
     protected $queryString = [
         'advancedFilters' => ['except' => false],
@@ -183,7 +188,7 @@ class AdminCustomersTable extends DataTableComponent
         $customer = User::findOrFail($customerId);
         $this->authorize('customer.view', $customer);
         
-        return redirect()->route('admin.customers.profile', $customerId);
+        return redirect()->route('admin.customers.show', $customerId);
     }
 
     /**
@@ -528,61 +533,77 @@ class AdminCustomersTable extends DataTableComponent
     {
         $this->authorize('customer.bulkOperations');
         
-        $customers = User::withTrashed()->whereIn('id', $this->getSelectedItems())->get();
-        $deletedCount = 0;
-        $errors = [];
+        $this->bulkActionInProgress = true;
+        $this->loadingMessage = 'Deleting selected customers...';
+        
+        try {
+            $customers = User::withTrashed()->whereIn('id', $this->getSelectedItems())->get();
+            $deletedCount = 0;
+            $errors = [];
 
-        foreach ($customers as $customer) {
-            try {
-                if (auth()->user()->can('customer.delete', $customer) && $customer->canBeDeleted()) {
-                    $customer->softDeleteCustomer();
-                    $deletedCount++;
-                } else {
-                    $errors[] = "Cannot delete {$customer->full_name}: Insufficient permissions or customer cannot be deleted.";
+            foreach ($customers as $customer) {
+                try {
+                    if (auth()->user()->can('customer.delete', $customer) && $customer->canBeDeleted()) {
+                        $customer->softDeleteCustomer();
+                        $deletedCount++;
+                    } else {
+                        $errors[] = "Cannot delete {$customer->full_name}: Insufficient permissions or customer cannot be deleted.";
+                    }
+                } catch (\Exception $e) {
+                    $errors[] = "Error deleting {$customer->full_name}: " . $e->getMessage();
                 }
-            } catch (\Exception $e) {
-                $errors[] = "Error deleting {$customer->full_name}: " . $e->getMessage();
             }
-        }
 
-        if ($deletedCount > 0) {
-            session()->flash('message', "Successfully deleted {$deletedCount} customer(s).");
-        }
+            if ($deletedCount > 0) {
+                session()->flash('message', "Successfully deleted {$deletedCount} customer(s).");
+            }
 
-        if (!empty($errors)) {
-            session()->flash('error', implode('<br>', $errors));
-        }
+            if (!empty($errors)) {
+                session()->flash('error', implode('<br>', $errors));
+            }
 
-        $this->clearSelected();
+            $this->clearSelected();
+        } finally {
+            $this->bulkActionInProgress = false;
+            $this->loadingMessage = '';
+        }
     }
 
     public function bulkRestore()
     {
         $this->authorize('customer.bulkOperations');
         
-        $customers = User::withTrashed()->whereIn('id', $this->getSelectedItems())->get();
-        $restoredCount = 0;
-        $errors = [];
+        $this->bulkActionInProgress = true;
+        $this->loadingMessage = 'Restoring selected customers...';
+        
+        try {
+            $customers = User::withTrashed()->whereIn('id', $this->getSelectedItems())->get();
+            $restoredCount = 0;
+            $errors = [];
 
-        foreach ($customers as $customer) {
-            try {
-                if (auth()->user()->can('customer.restore', $customer) && $customer->canBeRestored()) {
-                    $customer->restoreCustomer();
-                    $restoredCount++;
-                } else {
-                    $errors[] = "Cannot restore {$customer->full_name}: Insufficient permissions or customer cannot be restored.";
+            foreach ($customers as $customer) {
+                try {
+                    if (auth()->user()->can('customer.restore', $customer) && $customer->canBeRestored()) {
+                        $customer->restoreCustomer();
+                        $restoredCount++;
+                    } else {
+                        $errors[] = "Cannot restore {$customer->full_name}: Insufficient permissions or customer cannot be restored.";
+                    }
+                } catch (\Exception $e) {
+                    $errors[] = "Error restoring {$customer->full_name}: " . $e->getMessage();
                 }
-            } catch (\Exception $e) {
-                $errors[] = "Error restoring {$customer->full_name}: " . $e->getMessage();
             }
-        }
 
-        if ($restoredCount > 0) {
-            session()->flash('message', "Successfully restored {$restoredCount} customer(s).");
-        }
+            if ($restoredCount > 0) {
+                session()->flash('message', "Successfully restored {$restoredCount} customer(s).");
+            }
 
-        if (!empty($errors)) {
-            session()->flash('error', implode('<br>', $errors));
+            if (!empty($errors)) {
+                session()->flash('error', implode('<br>', $errors));
+            }
+        } finally {
+            $this->bulkActionInProgress = false;
+            $this->loadingMessage = '';
         }
 
         $this->clearSelected();
@@ -592,11 +613,19 @@ class AdminCustomersTable extends DataTableComponent
     {
         $this->authorize('customer.export');
         
-        // This method can be implemented later for data export functionality
-        $this->dispatchBrowserEvent('show-alert', [
-            'type' => 'info',
-            'message' => 'Export functionality will be implemented in a future update.'
-        ]);
+        $this->bulkActionInProgress = true;
+        $this->loadingMessage = 'Preparing export...';
+        
+        try {
+            // This method can be implemented later for data export functionality
+            $this->dispatchBrowserEvent('show-alert', [
+                'type' => 'info',
+                'message' => 'Export functionality will be implemented in a future update.'
+            ]);
+        } finally {
+            $this->bulkActionInProgress = false;
+            $this->loadingMessage = '';
+        }
         
         $this->clearSelected();
     }

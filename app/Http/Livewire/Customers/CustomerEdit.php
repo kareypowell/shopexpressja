@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Customers;
 
+use App\Http\Livewire\Concerns\HasBreadcrumbs;
 use App\Models\User;
 use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -9,7 +10,7 @@ use Illuminate\Validation\Rule;
 
 class CustomerEdit extends Component
 {
-    use AuthorizesRequests;
+    use AuthorizesRequests, HasBreadcrumbs;
 
     public User $customer;
     public $offices;
@@ -65,6 +66,7 @@ class CustomerEdit extends Component
         $this->authorize('customer.update', $customer);
         
         $this->customer = $customer->load('profile');
+        $this->setCustomerEditBreadcrumbs($customer);
         $this->offices = \App\Models\Office::all();
         
         // Populate form fields with existing data

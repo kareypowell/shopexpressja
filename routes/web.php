@@ -76,10 +76,6 @@ Route::post('/email/verification-notification', function (Request $request) {
 
 // Super Admin routes
 Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->group(function () {
-    Route::get('/customers', AdminCustomer::class)->name('customers');
-    Route::get('/customers/create', \App\Http\Livewire\Customers\CustomerCreate::class)->name('admin.customers.create');
-    Route::get('/customers/{customer}/profile', \App\Http\Livewire\Customers\CustomerProfile::class)->name('admin.customers.profile');
-    Route::get('/customers/{customer}/edit', \App\Http\Livewire\Customers\CustomerEdit::class)->name('admin.customers.edit');
     Route::get('/manifests', Manifest::class)->name('manifests');
     Route::get('/manifests/{manifest_id}/edit', EditManifest::class)->name('edit-manifest');
     Route::get('/manifests/{manifest_id}/packages', ManifestPackage::class)->name('manifests.packages');
@@ -90,12 +86,19 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->gro
     Route::get('/purchase-requests', AdminPurchaseRequest::class)->name('view-purchase-requests');
 });
 
-// Admin routes (both superadmin and admin can access customer management)
-Route::middleware(['auth', 'verified', 'customer.management'])->prefix('admin')->group(function () {
-    Route::get('/customers', AdminCustomer::class)->name('admin.customers.index');
-    Route::get('/customers/create', \App\Http\Livewire\Customers\CustomerCreate::class)->name('admin.customers.create');
-    Route::get('/customers/{customer}/profile', \App\Http\Livewire\Customers\CustomerProfile::class)->name('admin.customers.profile');
-    Route::get('/customers/{customer}/edit', \App\Http\Livewire\Customers\CustomerEdit::class)->name('admin.customers.edit');
+// Customer Management routes (both superadmin and admin can access)
+Route::middleware(['auth', 'verified', 'customer.management'])->prefix('admin')->name('admin.')->group(function () {
+    // Customer listing and management
+    Route::get('/customers', AdminCustomer::class)->name('customers.index');
+    
+    // Customer creation
+    Route::get('/customers/create', CustomerCreate::class)->name('customers.create');
+    
+    // Customer profile viewing with route model binding
+    Route::get('/customers/{customer}', CustomerProfile::class)->name('customers.show');
+    
+    // Customer editing with route model binding
+    Route::get('/customers/{customer}/edit', CustomerEdit::class)->name('customers.edit');
 });
 
 // Customer routes

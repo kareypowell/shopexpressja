@@ -36,6 +36,7 @@ class RouteServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->configureRateLimiting();
+        $this->configureRouteModelBinding();
 
         $this->routes(function () {
             Route::prefix('api')
@@ -46,6 +47,28 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('web')
                 ->namespace($this->namespace)
                 ->group(base_path('routes/web.php'));
+        });
+    }
+
+    /**
+     * Configure route model bindings for the application.
+     *
+     * @return void
+     */
+    protected function configureRouteModelBinding()
+    {
+        // Bind 'customer' parameter to User model with soft deletes included
+        Route::bind('customer', function ($value) {
+            $customerRole = \App\Models\Role::where('name', 'customer')->first();
+            
+            if (!$customerRole) {
+                throw new \Illuminate\Database\Eloquent\ModelNotFoundException();
+            }
+            
+            return \App\Models\User::withTrashed()
+                ->where('id', $value)
+                ->where('role_id', $customerRole->id)
+                ->firstOrFail();
         });
     }
 

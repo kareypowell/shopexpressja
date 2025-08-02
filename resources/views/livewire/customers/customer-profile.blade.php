@@ -1,4 +1,6 @@
 <div>
+    <x-breadcrumb :items="$breadcrumbs" />
+    
     <!-- Customer Profile Header -->
     <div class="bg-white shadow rounded-lg mb-6">
         <div class="px-4 py-5 sm:p-6">

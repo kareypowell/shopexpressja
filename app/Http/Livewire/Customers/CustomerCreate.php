@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Customers;
 
+use App\Http\Livewire\Concerns\HasBreadcrumbs;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Profile;
@@ -17,7 +18,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class CustomerCreate extends Component
 {
-    use AuthorizesRequests;
+    use AuthorizesRequests, HasBreadcrumbs;
     // Customer basic information
     public $firstName = '';
     public $lastName = '';
@@ -76,6 +77,8 @@ class CustomerCreate extends Component
     {
         // Check if user can create customers
         $this->authorize('customer.create');
+        
+        $this->setCustomerCreateBreadcrumbs();
         
         // Generate a random password by default
         if ($this->generatePassword) {
@@ -155,7 +158,7 @@ class CustomerCreate extends Component
             session()->flash('success', "Customer {$user->full_name} has been created successfully with account number {$accountNumber}.");
 
             // Redirect to customer profile
-            return redirect()->route('admin.customers.profile', $user);
+            return redirect()->route('admin.customers.show', $user);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();

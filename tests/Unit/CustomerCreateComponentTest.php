@@ -192,7 +192,7 @@ class CustomerCreateComponentTest extends TestCase
         });
 
         // Check redirect (skip route check as routes may not be defined in unit tests)
-        // $component->assertRedirect(route('admin.customers.profile', $user));
+        // $component->assertRedirect(route('admin.customers.show', $user));
     }
 
     /** @test */

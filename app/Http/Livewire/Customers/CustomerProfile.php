@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Customers;
 
+use App\Http\Livewire\Concerns\HasBreadcrumbs;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -9,7 +10,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class CustomerProfile extends Component
 {
-    use WithPagination, AuthorizesRequests;
+    use WithPagination, AuthorizesRequests, HasBreadcrumbs;
 
     public User $customer;
     public $packageStats = [];
@@ -25,6 +26,7 @@ class CustomerProfile extends Component
         $this->authorize('customer.view', $customer);
         
         $this->customer = $customer->load('profile', 'role');
+        $this->setCustomerProfileBreadcrumbs($customer);
         $this->loadPackageStats();
         $this->loadFinancialSummary();
         $this->loadRecentPackages();

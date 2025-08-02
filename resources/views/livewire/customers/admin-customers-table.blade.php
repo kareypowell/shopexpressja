@@ -1,4 +1,13 @@
 <div>
+    <!-- Loading Overlay -->
+    @if($bulkActionInProgress)
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <x-loading-spinner size="lg" :text="$loadingMessage" />
+            </div>
+        </div>
+    @endif
+
     <!-- Advanced Search Interface -->
     @if($advancedFilters)
         <div class="bg-white shadow-sm border border-gray-200 rounded-lg mb-4 p-4">
