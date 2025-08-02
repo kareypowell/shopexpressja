@@ -92,7 +92,7 @@
                                         </div>
                                         <div class="flex justify-between">
                                             <dt class="text-sm text-gray-500">Estimated Value:</dt>
-                                            <dd class="text-sm font-medium text-gray-900">${{ number_format($selectedPackage->estimated_value ?? 0, 2) }}</dd>
+                                            <dd class="text-sm font-medium text-gray-900">${{ number_format($selectedPackage->estimated_value ?? 0, 2) }} USD</dd>
                                         </div>
                                         @if($selectedPackage->shipper)
                                         <div class="flex justify-between">
@@ -125,7 +125,7 @@
                                 @php
                                     $currentUser = auth()->user();
                                     $canSeeCosts = $currentUser->role_id == 1 || $currentUser->role_id == 2 || 
-                                                  ($currentUser->role_id == 3 && in_array($selectedPackage->status, ['ready', 'ready_for_pickup', 'delivered']));
+                                                  ($currentUser->role_id == 3 && in_array($selectedPackage->status, ['ready', 'delivered']));
                                 @endphp
                                 @if($canSeeCosts)
                                 <div class="bg-gray-50 rounded-lg p-4">
@@ -133,30 +133,30 @@
                                     <dl class="space-y-2">
                                         <div class="flex justify-between">
                                             <dt class="text-sm text-gray-500">Freight:</dt>
-                                            <dd class="text-sm font-medium text-gray-900">${{ number_format($selectedPackage->freight_price ?? 0, 2) }}</dd>
+                                            <dd class="text-sm font-medium text-gray-900">${{ number_format($selectedPackage->freight_price ?? 0, 2) }} JMD</dd>
                                         </div>
                                         <div class="flex justify-between">
                                             <dt class="text-sm text-gray-500">Customs Duty:</dt>
-                                            <dd class="text-sm font-medium text-gray-900">${{ number_format($selectedPackage->customs_duty ?? 0, 2) }}</dd>
+                                            <dd class="text-sm font-medium text-gray-900">${{ number_format($selectedPackage->customs_duty ?? 0, 2) }} JMD</dd>
                                         </div>
                                         <div class="flex justify-between">
                                             <dt class="text-sm text-gray-500">Storage Fee:</dt>
-                                            <dd class="text-sm font-medium text-gray-900">${{ number_format($selectedPackage->storage_fee ?? 0, 2) }}</dd>
+                                            <dd class="text-sm font-medium text-gray-900">${{ number_format($selectedPackage->storage_fee ?? 0, 2) }} JMD</dd>
                                         </div>
                                         <div class="flex justify-between">
                                             <dt class="text-sm text-gray-500">Delivery Fee:</dt>
-                                            <dd class="text-sm font-medium text-gray-900">${{ number_format($selectedPackage->delivery_fee ?? 0, 2) }}</dd>
+                                            <dd class="text-sm font-medium text-gray-900">${{ number_format($selectedPackage->delivery_fee ?? 0, 2) }} JMD</dd>
                                         </div>
                                         <div class="flex justify-between pt-2 border-t border-gray-200">
                                             <dt class="text-sm font-medium text-gray-900">Total Cost:</dt>
-                                            <dd class="text-sm font-bold text-gray-900">${{ number_format($selectedPackage->total_cost, 2) }}</dd>
+                                            <dd class="text-sm font-bold text-gray-900">${{ number_format($selectedPackage->total_cost, 2) }} JMD</dd>
                                         </div>
                                     </dl>
                                 </div>
                                 @else
                                 <div class="bg-gray-50 rounded-lg p-4">
                                     <h4 class="text-sm font-medium text-gray-900 mb-3">Cost Information</h4>
-                                    <p class="text-sm text-gray-600">Cost details will be available when your package is ready for pickup or delivered.</p>
+                                    <p class="text-sm text-gray-600">Cost details will be available when your package is ready for pickup.</p>
                                 </div>
                                 @endif
 

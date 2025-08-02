@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\Profile;
 use App\Services\AccountNumberService;
+use App\Services\CustomerEmailService;
 use App\Mail\WelcomeUser;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -36,9 +37,15 @@ class CustomerCreate extends Component
     // Options
     public $sendWelcomeEmail = true;
     public $generatePassword = true;
+    public $queueEmail = true;
     
     // UI state
     public $isCreating = false;
+    public $emailStatus = null;
+    public $emailMessage = null;
+    public $emailDeliveryId = null;
+    public $emailRetryCount = 0;
+    public $showEmailDetails = false;
 
     protected $rules = [
         'firstName' => 'required|string|max:255',
@@ -134,7 +141,9 @@ class CustomerCreate extends Component
 
             // Send welcome email if requested
             if ($this->sendWelcomeEmail) {
-                $this->sendWelcomeEmailToCustomer($user);
+                $emailResult = $this->sendWelcomeEmailToCustomer($user);
+                $this->emailStatus = $emailResult['status'];
+                $this->emailMessage = $emailResult['message'];
             }
 
             // Fire registered event
@@ -165,23 +174,182 @@ class CustomerCreate extends Component
     }
 
     /**
+     * Retry sending welcome email for a customer.
+     *
+     * @param int $customerId
+     * @return void
+     */
+    public function retryWelcomeEmail($customerId)
+    {
+        try {
+            $customer = User::findOrFail($customerId);
+            $emailService = app(CustomerEmailService::class);
+            
+            // Increment retry count
+            $this->emailRetryCount++;
+            
+            // Check if we've exceeded maximum retry attempts
+            if ($this->emailRetryCount > 3) {
+                session()->flash('error', 'Maximum retry attempts exceeded. Please contact system administrator.');
+                return;
+            }
+            
+            $temporaryPassword = $this->generatePassword ? $this->password : null;
+            
+            $result = $emailService->retryFailedEmail($customer, 'welcome', [
+                'temporaryPassword' => $temporaryPassword,
+                'queue' => $this->queueEmail,
+                'retry_count' => $this->emailRetryCount,
+                'previous_delivery_id' => $this->emailDeliveryId,
+            ]);
+            
+            // Update tracking information
+            if (isset($result['delivery_id'])) {
+                $this->emailDeliveryId = $result['delivery_id'];
+            }
+            
+            if ($result['success']) {
+                $this->emailStatus = $result['status'];
+                $this->emailMessage = $result['message'];
+                session()->flash('success', "Welcome email retry #{$this->emailRetryCount} successful: " . $result['message']);
+                
+                // Log successful retry
+                \Log::info('Welcome email retry successful', [
+                    'customer_id' => $customerId,
+                    'retry_count' => $this->emailRetryCount,
+                    'status' => $result['status'],
+                    'delivery_id' => $this->emailDeliveryId,
+                ]);
+            } else {
+                session()->flash('error', "Welcome email retry #{$this->emailRetryCount} failed: " . $result['message']);
+                
+                // Log failed retry
+                \Log::warning('Welcome email retry failed', [
+                    'customer_id' => $customerId,
+                    'retry_count' => $this->emailRetryCount,
+                    'error' => $result['error'] ?? 'Unknown error',
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to retry welcome email', [
+                'customer_id' => $customerId,
+                'retry_count' => $this->emailRetryCount,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            session()->flash('error', 'Failed to retry welcome email: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Send welcome email to the newly created customer.
      *
      * @param User $user
-     * @return void
+     * @return array
      */
-    private function sendWelcomeEmailToCustomer(User $user): void
+    private function sendWelcomeEmailToCustomer(User $user): array
     {
         try {
-            Mail::to($user->email)->send(new WelcomeUser($user->first_name));
+            $emailService = app(CustomerEmailService::class);
+            
+            // Send the temporary password if one was generated
+            $temporaryPassword = $this->generatePassword ? $this->password : null;
+            
+            $result = $emailService->sendWelcomeEmail($user, $temporaryPassword, $this->queueEmail);
+            
+            // Track email delivery details
+            if (isset($result['delivery_id'])) {
+                $this->emailDeliveryId = $result['delivery_id'];
+            }
+            
+            if (!$result['success']) {
+                // Log the error but don't fail the customer creation
+                \Log::warning('Welcome email failed but customer creation succeeded', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'error' => $result['error'] ?? 'Unknown error',
+                    'delivery_id' => $this->emailDeliveryId,
+                ]);
+                
+                session()->flash('warning', 'Customer created successfully, but welcome email could not be sent: ' . $result['message']);
+            } else {
+                $statusMessage = $result['status'] === 'queued' ? 'queued for delivery' : 'sent successfully';
+                session()->flash('email_info', "Welcome email has been {$statusMessage}.");
+                
+                // Log successful email processing
+                \Log::info('Welcome email processed successfully', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'status' => $result['status'],
+                    'delivery_id' => $this->emailDeliveryId,
+                    'queued' => $this->queueEmail,
+                ]);
+            }
+            
+            return $result;
+            
         } catch (\Exception $e) {
             // Log the error but don't fail the customer creation
             \Log::error('Failed to send welcome email to customer: ' . $e->getMessage(), [
                 'user_id' => $user->id,
                 'email' => $user->email,
+                'trace' => $e->getTraceAsString(),
             ]);
             
             session()->flash('warning', 'Customer created successfully, but welcome email could not be sent.');
+            
+            return [
+                'success' => false,
+                'status' => 'failed',
+                'message' => 'Email service error: ' . $e->getMessage(),
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Toggle email details display.
+     *
+     * @return void
+     */
+    public function toggleEmailDetails()
+    {
+        $this->showEmailDetails = !$this->showEmailDetails;
+    }
+
+    /**
+     * Check email delivery status from queue.
+     *
+     * @return void
+     */
+    public function checkEmailDeliveryStatus()
+    {
+        if (!$this->emailDeliveryId) {
+            session()->flash('info', 'No email delivery ID available to check status.');
+            return;
+        }
+
+        try {
+            $emailService = app(CustomerEmailService::class);
+            $status = $emailService->checkDeliveryStatus($this->emailDeliveryId);
+            
+            if ($status['found']) {
+                $this->emailStatus = $status['status'];
+                $this->emailMessage = $status['message'];
+                session()->flash('info', 'Email delivery status updated: ' . $status['message']);
+            } else {
+                session()->flash('warning', 'Email delivery status not found. It may have been processed already.');
+            }
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to check email delivery status', [
+                'delivery_id' => $this->emailDeliveryId,
+                'error' => $e->getMessage(),
+            ]);
+            
+            session()->flash('error', 'Failed to check email delivery status: ' . $e->getMessage());
         }
     }
 

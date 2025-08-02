@@ -83,6 +83,123 @@
         </div>
     @endif
 
+    @if (session()->has('email_info'))
+        <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-blue-800">
+                        {{ session('email_info') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Email Status Display -->
+    @if($emailStatus)
+        <div class="mb-6">
+            @if($emailStatus === 'sent' || $emailStatus === 'processed')
+                <div class="bg-green-50 border border-green-200 rounded-md p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <h3 class="text-sm font-medium text-green-800">
+                                {{ $emailStatus === 'processed' ? 'Email Processed Successfully' : 'Email Sent Successfully' }}
+                            </h3>
+                            <p class="mt-1 text-sm text-green-700">{{ $emailMessage }}</p>
+                            @if($emailDeliveryId)
+                                <div class="mt-2 flex items-center space-x-3">
+                                    <button wire:click="toggleEmailDetails" 
+                                            class="text-xs font-medium text-green-600 hover:text-green-500">
+                                        {{ $showEmailDetails ? 'Hide' : 'Show' }} Details
+                                    </button>
+                                    @if($showEmailDetails)
+                                        <span class="text-xs text-green-600 font-mono">ID: {{ $emailDeliveryId }}</span>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @elseif($emailStatus === 'queued')
+                <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <h3 class="text-sm font-medium text-blue-800">Email Queued for Delivery</h3>
+                            <p class="mt-1 text-sm text-blue-700">{{ $emailMessage }}</p>
+                            @if($emailDeliveryId)
+                                <div class="mt-2 flex items-center space-x-3">
+                                    <button wire:click="checkEmailDeliveryStatus" 
+                                            class="text-xs font-medium text-blue-600 hover:text-blue-500">
+                                        Check Status
+                                    </button>
+                                    <button wire:click="toggleEmailDetails" 
+                                            class="text-xs font-medium text-blue-600 hover:text-blue-500">
+                                        {{ $showEmailDetails ? 'Hide' : 'Show' }} Details
+                                    </button>
+                                    @if($showEmailDetails)
+                                        <span class="text-xs text-blue-600 font-mono">ID: {{ $emailDeliveryId }}</span>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @elseif($emailStatus === 'failed')
+                <div class="bg-red-50 border border-red-200 rounded-md p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <h3 class="text-sm font-medium text-red-800">Email Delivery Failed</h3>
+                            <p class="mt-1 text-sm text-red-700">{{ $emailMessage }}</p>
+                            <div class="mt-2 flex items-center space-x-3">
+                                @if($emailRetryCount < 3)
+                                    <button wire:click="retryWelcomeEmail({{ $customer->id ?? 0 }})" 
+                                            class="text-xs font-medium text-red-600 hover:text-red-500">
+                                        Retry Email {{ $emailRetryCount > 0 ? '(Attempt #' . ($emailRetryCount + 1) . ')' : '' }}
+                                    </button>
+                                @else
+                                    <span class="text-xs text-red-500">Maximum retry attempts reached</span>
+                                @endif
+                                <button wire:click="toggleEmailDetails" 
+                                        class="text-xs font-medium text-red-600 hover:text-red-500">
+                                    {{ $showEmailDetails ? 'Hide' : 'Show' }} Details
+                                </button>
+                                @if($showEmailDetails)
+                                    <div class="text-xs text-red-600">
+                                        <div>Retry Count: {{ $emailRetryCount }}</div>
+                                        @if($emailDeliveryId)
+                                            <div class="font-mono">ID: {{ $emailDeliveryId }}</div>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
+    @endif
+
     <!-- Creation Form -->
     <form wire:submit.prevent="create">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -367,14 +484,33 @@
                         </p>
                         
                         @if($sendWelcomeEmail)
-                            <div class="mt-4 p-3 bg-blue-50 rounded-md">
-                                <p class="text-sm text-blue-600">
-                                    <svg class="inline h-4 w-4 text-blue-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
-                                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
-                                    </svg>
-                                    Welcome email will be sent upon account creation
+                            <div class="mt-4 space-y-3">
+                                <!-- Queue Email Option -->
+                                <div class="flex items-center">
+                                    <input wire:model="queueEmail" 
+                                           id="queueEmail" 
+                                           type="checkbox" 
+                                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                    <label for="queueEmail" class="ml-2 block text-sm text-gray-900">
+                                        Queue email for background delivery
+                                    </label>
+                                </div>
+                                <p class="text-xs text-gray-500 ml-6">
+                                    Recommended for better performance. Uncheck to send immediately.
                                 </p>
+                                
+                                <div class="p-3 bg-blue-50 rounded-md">
+                                    <p class="text-sm text-blue-600">
+                                        <svg class="inline h-4 w-4 text-blue-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                                        </svg>
+                                        Welcome email will be {{ $queueEmail ? 'queued for delivery' : 'sent immediately' }}
+                                        @if($generatePassword)
+                                            and will include the generated password
+                                        @endif
+                                    </p>
+                                </div>
                             </div>
                         @endif
                     </div>
