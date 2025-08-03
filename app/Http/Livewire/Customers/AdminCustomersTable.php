@@ -457,14 +457,26 @@ class AdminCustomersTable extends DataTableComponent
 
     public function confirmDelete($customerId)
     {
-        $this->reset(['showDeleteModal', 'customerToDelete']);
-        
-        $this->customerToDelete = User::withTrashed()->find($customerId);
-        $this->authorize('customer.delete', $this->customerToDelete);
-        
-        $this->showDeleteModal = true;
-        
-        $this->emit('refreshComponent');
+        try {
+            $this->reset(['showDeleteModal', 'customerToDelete']);
+            
+            $this->customerToDelete = User::withTrashed()->find($customerId);
+            
+            if (!$this->customerToDelete) {
+                session()->flash('error', 'Customer not found.');
+                return;
+            }
+            
+            $this->authorize('customer.delete', $this->customerToDelete);
+            
+            $this->showDeleteModal = true;
+            
+            // Force component refresh
+            $this->dispatchBrowserEvent('modal-opened', ['modal' => 'delete']);
+            
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error opening delete confirmation: ' . $e->getMessage());
+        }
     }
 
     public function deleteCustomer()
@@ -490,10 +502,24 @@ class AdminCustomersTable extends DataTableComponent
 
     public function confirmRestore($customerId)
     {
-        $this->customerToRestore = User::withTrashed()->find($customerId);
-        $this->authorize('customer.restore', $this->customerToRestore);
-        
-        $this->showRestoreModal = true;
+        try {
+            $this->customerToRestore = User::withTrashed()->find($customerId);
+            
+            if (!$this->customerToRestore) {
+                session()->flash('error', 'Customer not found.');
+                return;
+            }
+            
+            $this->authorize('customer.restore', $this->customerToRestore);
+            
+            $this->showRestoreModal = true;
+            
+            // Force component refresh
+            $this->dispatchBrowserEvent('modal-opened', ['modal' => 'restore']);
+            
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error opening restore confirmation: ' . $e->getMessage());
+        }
     }
 
     public function restoreCustomer()
@@ -537,7 +563,15 @@ class AdminCustomersTable extends DataTableComponent
         $this->loadingMessage = 'Deleting selected customers...';
         
         try {
-            $customers = User::withTrashed()->whereIn('id', $this->getSelectedItems())->get();
+            // Get selected items using the correct property for Laravel Livewire Tables
+            $selectedIds = $this->selectedKeys ?? [];
+            
+            if (empty($selectedIds)) {
+                session()->flash('error', 'No customers selected for deletion.');
+                return;
+            }
+            
+            $customers = User::withTrashed()->whereIn('id', $selectedIds)->get();
             $deletedCount = 0;
             $errors = [];
 
@@ -577,7 +611,15 @@ class AdminCustomersTable extends DataTableComponent
         $this->loadingMessage = 'Restoring selected customers...';
         
         try {
-            $customers = User::withTrashed()->whereIn('id', $this->getSelectedItems())->get();
+            // Get selected items using the correct property for Laravel Livewire Tables
+            $selectedIds = $this->selectedKeys ?? [];
+            
+            if (empty($selectedIds)) {
+                session()->flash('error', 'No customers selected for restoration.');
+                return;
+            }
+            
+            $customers = User::withTrashed()->whereIn('id', $selectedIds)->get();
             $restoredCount = 0;
             $errors = [];
 
@@ -628,5 +670,14 @@ class AdminCustomersTable extends DataTableComponent
         }
         
         $this->clearSelected();
+    }
+
+    /**
+     * Clear selected items
+     */
+    public function clearSelected()
+    {
+        // Clear selected items using the correct property for Laravel Livewire Tables
+        $this->selectedKeys = [];
     }
 }
