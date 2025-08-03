@@ -19,7 +19,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        // Register dashboard services
+        $this->app->singleton(\App\Services\DashboardCacheService::class);
+        $this->app->singleton(\App\Services\DashboardAnalyticsService::class);
     }
 
     /**
