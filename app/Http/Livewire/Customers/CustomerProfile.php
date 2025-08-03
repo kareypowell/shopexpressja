@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Customers;
 
 use App\Http\Livewire\Concerns\HasBreadcrumbs;
 use App\Models\User;
+use App\Services\CustomerStatisticsService;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -17,33 +18,67 @@ class CustomerProfile extends Component
     public $financialSummary = [];
     public $recentPackages = [];
     public $showAllPackages = false;
+    public $shippingPatterns = [];
+    public $cacheStatus = [];
+    public $isLoadingStats = false;
 
     protected $paginationTheme = 'bootstrap';
+    
+    protected CustomerStatisticsService $statisticsService;
 
-    public function mount(User $customer)
+    public function mount(User $customer, CustomerStatisticsService $statisticsService)
     {
         // Use customer-specific authorization
         $this->authorize('customer.view', $customer);
         
         $this->customer = $customer->load('profile', 'role');
+        $this->statisticsService = $statisticsService;
         $this->setCustomerProfileBreadcrumbs($customer);
-        $this->loadPackageStats();
-        $this->loadFinancialSummary();
-        $this->loadRecentPackages();
+        
+        // Load data with caching
+        $this->loadAllData();
     }
 
-    public function loadPackageStats()
+    /**
+     * Load all customer data with caching
+     */
+    public function loadAllData($forceRefresh = false)
     {
-        $this->packageStats = $this->customer->getPackageStats();
+        $this->isLoadingStats = true;
+        
+        try {
+            $this->loadPackageStats($forceRefresh);
+            $this->loadFinancialSummary($forceRefresh);
+            $this->loadShippingPatterns($forceRefresh);
+            $this->loadRecentPackages();
+            $this->loadCacheStatus();
+        } finally {
+            $this->isLoadingStats = false;
+        }
     }
 
-    public function loadFinancialSummary()
+    public function loadPackageStats($forceRefresh = false)
+    {
+        $this->packageStats = $this->statisticsService->getPackageMetrics($this->customer, $forceRefresh);
+    }
+
+    public function loadFinancialSummary($forceRefresh = false)
     {
         // Check if user can view financial information
         if (auth()->user()->can('customer.viewFinancials', $this->customer)) {
-            $this->financialSummary = $this->customer->getFinancialSummary();
+            $this->financialSummary = $this->statisticsService->getFinancialSummary($this->customer, $forceRefresh);
         } else {
             $this->financialSummary = [];
+        }
+    }
+
+    public function loadShippingPatterns($forceRefresh = false)
+    {
+        // Check if user can view shipping patterns
+        if (auth()->user()->can('customer.viewPackages', $this->customer)) {
+            $this->shippingPatterns = $this->statisticsService->getShippingPatterns($this->customer, $forceRefresh);
+        } else {
+            $this->shippingPatterns = [];
         }
     }
 
@@ -61,6 +96,11 @@ class CustomerProfile extends Component
         }
     }
 
+    public function loadCacheStatus()
+    {
+        $this->cacheStatus = $this->statisticsService->getCacheStatus($this->customer);
+    }
+
     public function togglePackageView()
     {
         // Check if user can view packages before toggling
@@ -68,6 +108,61 @@ class CustomerProfile extends Component
         
         $this->showAllPackages = !$this->showAllPackages;
         $this->resetPage();
+    }
+
+    /**
+     * Refresh customer data and clear cache
+     */
+    public function refreshData()
+    {
+        $this->statisticsService->clearCustomerCache($this->customer);
+        $this->loadAllData(true);
+        
+        $this->dispatchBrowserEvent('show-alert', [
+            'type' => 'success',
+            'message' => 'Customer data refreshed successfully.'
+        ]);
+    }
+
+    /**
+     * Refresh specific data type
+     */
+    public function refreshDataType($type)
+    {
+        $this->statisticsService->clearCustomerCacheType($this->customer, $type);
+        
+        switch ($type) {
+            case 'packages':
+                $this->loadPackageStats(true);
+                break;
+            case 'financial':
+                $this->loadFinancialSummary(true);
+                break;
+            case 'patterns':
+                $this->loadShippingPatterns(true);
+                break;
+        }
+        
+        $this->loadCacheStatus();
+        
+        $this->dispatchBrowserEvent('show-alert', [
+            'type' => 'success',
+            'message' => ucfirst($type) . ' data refreshed successfully.'
+        ]);
+    }
+
+    /**
+     * Warm up cache for this customer
+     */
+    public function warmUpCache()
+    {
+        $this->statisticsService->warmUpCustomerCache($this->customer);
+        $this->loadCacheStatus();
+        
+        $this->dispatchBrowserEvent('show-alert', [
+            'type' => 'success',
+            'message' => 'Cache warmed up successfully.'
+        ]);
     }
 
     public function exportCustomerData()
@@ -101,6 +196,7 @@ class CustomerProfile extends Component
             'canViewFinancials' => auth()->user()->can('customer.viewFinancials', $this->customer),
             'canViewPackages' => auth()->user()->can('customer.viewPackages', $this->customer),
             'canExport' => auth()->user()->can('customer.export'),
+            'cacheMetrics' => $this->statisticsService->getCachePerformanceMetrics(),
         ]);
     }
 }

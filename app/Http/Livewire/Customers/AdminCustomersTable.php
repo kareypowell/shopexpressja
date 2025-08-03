@@ -147,7 +147,7 @@ class AdminCustomersTable extends DataTableComponent
         
         $query = User::query()
             ->byStatus($status)
-            ->with('profile')
+            ->forCustomerTable()
             ->orderBy('id', 'desc');
 
         // Enhanced search functionality

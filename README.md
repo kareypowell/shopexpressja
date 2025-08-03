@@ -210,6 +210,126 @@ Finally, set the correct permissions for the project
 sudo chown www-data: -R /var/www/html/example.com
 ```
 
+## Performance Optimization
+
+The application includes a powerful query optimization tool to help monitor and improve database performance for customer-related operations.
+
+### Customer Query Optimization Command
+
+The `customer:optimize-queries` command provides comprehensive analysis and optimization tools for customer database queries.
+
+#### Usage
+
+```bash
+php artisan customer:optimize-queries [options]
+```
+
+#### Available Options
+
+- `--analyze` - Analyze current query performance and show execution statistics
+- `--indexes` - Display all current database indexes for customer-related tables
+- `--suggestions` - Show optimization recommendations based on current database state
+- `--test` - Run performance tests on common customer queries
+
+#### Interactive Mode
+
+Run the command without any options to access the interactive menu:
+
+```bash
+php artisan customer:optimize-queries
+```
+
+This will present you with options to:
+- Analyze query performance
+- Show current indexes
+- Show optimization suggestions
+- Run performance tests
+- Run all analyses
+
+#### Examples
+
+**Analyze Query Performance:**
+```bash
+php artisan customer:optimize-queries --analyze
+```
+Shows table statistics, customer counts, and execution times for common queries.
+
+**View Database Indexes:**
+```bash
+php artisan customer:optimize-queries --indexes
+```
+Displays all indexes on customer-related tables (users, profiles, packages, pre_alerts, purchase_requests).
+
+**Get Optimization Suggestions:**
+```bash
+php artisan customer:optimize-queries --suggestions
+```
+Provides recommendations for:
+- Database index improvements
+- Query optimization techniques
+- Performance tuning strategies
+- Application-level optimizations
+
+**Run Performance Tests:**
+```bash
+php artisan customer:optimize-queries --test
+```
+Executes performance benchmarks on:
+- Customer list queries
+- Customer search functionality
+- Package statistics calculations
+- Financial summary computations
+
+#### Performance Metrics
+
+The tool provides detailed metrics including:
+- **Query execution times** (in milliseconds)
+- **Result counts** for each query
+- **Performance ratings** (Good/Moderate/Needs Improvement)
+- **Index utilization** analysis
+- **Cache hit/miss ratios**
+
+#### Optimization Features
+
+The application includes several performance optimizations:
+
+1. **Multi-level Caching**
+   - Customer statistics cached for 1 hour
+   - Financial summaries cached for 30 minutes
+   - Package metrics cached for 45 minutes
+   - Shipping patterns cached for 2 hours
+
+2. **Strategic Database Indexes**
+   - Customer query optimization indexes
+   - Financial calculation indexes
+   - Search functionality indexes
+   - Composite indexes for complex queries
+
+3. **Query Optimization Service**
+   - Optimized pagination for large datasets
+   - Bulk operation batching
+   - Eager loading to prevent N+1 queries
+   - Query result caching
+
+4. **Automatic Cache Invalidation**
+   - Model observers automatically clear cache when data changes
+   - Bulk operation cache management
+   - Performance monitoring and metrics
+
+#### Monitoring Performance
+
+Regular use of the optimization command helps:
+- Identify slow queries before they become problems
+- Monitor the effectiveness of database indexes
+- Track performance improvements over time
+- Ensure optimal cache utilization
+
+For best results, run the analysis periodically, especially after:
+- Adding new customer data
+- Implementing new features
+- Database schema changes
+- Performance issues reports
+
 ## For Help
 
 Reach out to me at **kareypowell@gmail.com**
