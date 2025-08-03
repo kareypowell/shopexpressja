@@ -200,6 +200,183 @@ class DashboardAnalyticsService
     }
 
     /**
+     * Get shipment volume trend data
+     */
+    public function getShipmentVolumeData(array $filters): array
+    {
+        $cacheKey = $this->cacheKey('shipment_volume', $filters);
+        
+        return $this->cacheService->remember($cacheKey, 600, function () use ($filters) {
+            $dateRange = $this->getDateRange($filters);
+            
+            $volumeData = Package::whereBetween('created_at', $dateRange)
+                ->selectRaw('DATE(created_at) as date, COUNT(*) as volume, SUM(weight) as total_weight')
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'date' => $item->date,
+                        'volume' => $item->volume,
+                        'weight' => (float) $item->total_weight,
+                    ];
+                })
+                ->toArray();
+
+            return $volumeData;
+        });
+    }
+
+    /**
+     * Get package status distribution over time
+     */
+    public function getPackageStatusDistribution(array $filters): array
+    {
+        $cacheKey = $this->cacheKey('package_status_distribution', $filters);
+        
+        return $this->cacheService->remember($cacheKey, 600, function () use ($filters) {
+            $dateRange = $this->getDateRange($filters);
+            
+            $statusData = Package::whereBetween('created_at', $dateRange)
+                ->selectRaw('DATE(created_at) as date, status, COUNT(*) as count')
+                ->groupBy('date', 'status')
+                ->orderBy('date')
+                ->get()
+                ->groupBy('date')
+                ->map(function ($dayData, $date) {
+                    $statusCounts = $dayData->pluck('count', 'status')->toArray();
+                    return [
+                        'date' => $date,
+                        'pending' => $statusCounts['pending'] ?? 0,
+                        'processing' => $statusCounts['processing'] ?? 0,
+                        'in_transit' => $statusCounts['in_transit'] ?? 0,
+                        'shipped' => $statusCounts['shipped'] ?? 0,
+                        'ready_for_pickup' => $statusCounts['ready_for_pickup'] ?? 0,
+                        'delivered' => $statusCounts['delivered'] ?? 0,
+                        'delayed' => $statusCounts['delayed'] ?? 0,
+                    ];
+                })
+                ->values()
+                ->toArray();
+
+            return $statusData;
+        });
+    }
+
+    /**
+     * Get processing time analysis data
+     */
+    public function getProcessingTimeAnalysis(array $filters): array
+    {
+        $cacheKey = $this->cacheKey('processing_time_analysis', $filters);
+        
+        return $this->cacheService->remember($cacheKey, 600, function () use ($filters) {
+            $dateRange = $this->getDateRange($filters);
+            
+            $processingData = Package::whereBetween('created_at', $dateRange)
+                ->whereIn('status', ['ready_for_pickup', 'delivered'])
+                ->select('created_at', 'updated_at', 'status')
+                ->get()
+                ->map(function ($package) {
+                    $processingDays = $package->created_at->diffInDays($package->updated_at);
+                    return [
+                        'days' => $processingDays,
+                        'status' => $package->status,
+                        'date' => $package->created_at->format('Y-m-d'),
+                    ];
+                })
+                ->groupBy('date')
+                ->map(function ($dayData, $date) {
+                    $times = $dayData->pluck('days');
+                    return [
+                        'date' => $date,
+                        'avg_processing_time' => $times->avg(),
+                        'min_processing_time' => $times->min(),
+                        'max_processing_time' => $times->max(),
+                        'count' => $times->count(),
+                    ];
+                })
+                ->values()
+                ->toArray();
+
+            return $processingData;
+        });
+    }
+
+    /**
+     * Get shipping method breakdown
+     */
+    public function getShippingMethodBreakdown(array $filters): array
+    {
+        $cacheKey = $this->cacheKey('shipping_method_breakdown', $filters);
+        
+        return $this->cacheService->remember($cacheKey, 600, function () use ($filters) {
+            $dateRange = $this->getDateRange($filters);
+            
+            $methodData = Package::whereBetween('packages.created_at', $dateRange)
+                ->join('manifests', 'packages.manifest_id', '=', 'manifests.id')
+                ->select('manifests.type', DB::raw('COUNT(*) as count'), DB::raw('SUM(packages.weight) as total_weight'))
+                ->groupBy('manifests.type')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'method' => ucfirst($item->type),
+                        'count' => $item->count,
+                        'weight' => (float) $item->total_weight,
+                        'percentage' => 0,
+                    ];
+                })
+                ->toArray();
+
+            // Calculate percentages
+            $totalCount = collect($methodData)->sum('count');
+            if ($totalCount > 0) {
+                foreach ($methodData as &$method) {
+                    $method['percentage'] = round(($method['count'] / $totalCount) * 100, 1);
+                }
+            }
+
+            return $methodData;
+        });
+    }
+
+    /**
+     * Get delivery performance metrics
+     */
+    public function getDeliveryPerformanceMetrics(array $filters): array
+    {
+        $cacheKey = $this->cacheKey('delivery_performance', $filters);
+        
+        return $this->cacheService->remember($cacheKey, 300, function () use ($filters) {
+            $dateRange = $this->getDateRange($filters);
+            
+            $totalPackages = Package::whereBetween('created_at', $dateRange)->count();
+            $deliveredPackages = Package::whereBetween('created_at', $dateRange)
+                ->whereIn('status', ['delivered', 'ready_for_pickup'])
+                ->count();
+            $delayedPackages = Package::whereBetween('created_at', $dateRange)
+                ->where('status', 'delayed')
+                ->count();
+            
+            $onTimeDeliveryRate = $totalPackages > 0 
+                ? round((($deliveredPackages - $delayedPackages) / $totalPackages) * 100, 1)
+                : 0;
+            
+            $deliveryRate = $totalPackages > 0 
+                ? round(($deliveredPackages / $totalPackages) * 100, 1)
+                : 0;
+
+            return [
+                'total_packages' => $totalPackages,
+                'delivered_packages' => $deliveredPackages,
+                'delayed_packages' => $delayedPackages,
+                'on_time_delivery_rate' => $onTimeDeliveryRate,
+                'overall_delivery_rate' => $deliveryRate,
+            ];
+        });
+    }
+
+    /**
      * Generate cache key for dashboard data
      */
     public function cacheKey(string $type, array $filters): string
