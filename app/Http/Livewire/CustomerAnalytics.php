@@ -14,6 +14,11 @@ class CustomerAnalytics extends Component
     public array $filters = [];
     public bool $isLoading = false;
     
+    protected $listeners = [
+        'filtersUpdated' => 'updateFilters',
+        'refreshDashboard' => 'refreshData'
+    ];
+    
     protected DashboardCacheService $cacheService;
 
     public function boot(DashboardCacheService $cacheService)
@@ -30,10 +35,19 @@ class CustomerAnalytics extends Component
         ], $filters);
     }
 
-    public function updatedFilters()
+    public function updateFilters(array $filters)
+    {
+        $this->filters = $filters;
+        $this->isLoading = true;
+        $this->emit('dataRefreshed');
+        $this->isLoading = false;
+    }
+
+    public function refreshData()
     {
         $this->isLoading = true;
-        $this->emit('filtersUpdated', $this->filters);
+        $this->emit('dataRefreshed');
+        $this->isLoading = false;
     }
 
     public function render()
