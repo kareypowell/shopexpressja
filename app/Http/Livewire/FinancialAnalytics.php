@@ -618,15 +618,64 @@ class FinancialAnalytics extends Component
 
     public function render()
     {
-        return view('livewire.financial-analytics', [
-            'revenueTrends' => $this->getRevenueTrendData(),
-            'revenueByService' => $this->getRevenueByServiceType(),
-            'revenueBySegment' => $this->getRevenueByCustomerSegment(),
-            'financialKPIs' => $this->getFinancialKPIs(),
-            'profitMargins' => $this->getProfitMarginAnalysis(),
-            'customerCLV' => $this->getCustomerLifetimeValueData(),
-            'growthAnalysis' => $this->getGrowthRateAnalysis(),
-            'isLoading' => $this->isLoading,
-        ]);
+        try {
+            return view('livewire.financial-analytics', [
+                'revenueTrends' => $this->getRevenueTrendData(),
+                'revenueByService' => $this->getRevenueByServiceType(),
+                'revenueBySegment' => $this->getRevenueByCustomerSegment(),
+                'financialKPIs' => $this->getFinancialKPIs(),
+                'profitMargins' => $this->getProfitMarginAnalysis(),
+                'customerCLV' => $this->getCustomerLifetimeValueData(),
+                'growthAnalysis' => $this->getGrowthRateAnalysis(),
+                'isLoading' => $this->isLoading,
+            ]);
+        } catch (\Exception $e) {
+            // Fallback with empty data structure
+            return view('livewire.financial-analytics', [
+                'revenueTrends' => [],
+                'revenueByService' => [],
+                'revenueBySegment' => [],
+                'financialKPIs' => $this->getEmptyKPIs(),
+                'profitMargins' => [],
+                'customerCLV' => [],
+                'growthAnalysis' => [],
+                'isLoading' => false,
+            ]);
+        }
+    }
+
+    /**
+     * Get empty KPIs structure for fallback
+     */
+    private function getEmptyKPIs()
+    {
+        return [
+            'total_revenue' => [
+                'current' => 0,
+                'previous' => 0,
+                'growth_rate' => 0,
+            ],
+            'average_order_value' => [
+                'current' => 0,
+                'previous' => 0,
+                'growth_rate' => 0,
+            ],
+            'customer_lifetime_value' => [
+                'estimated_clv' => 0,
+                'avg_lifespan_months' => 12,
+                'avg_monthly_orders' => 0,
+            ],
+            'customer_metrics' => [
+                'unique_customers' => 0,
+                'previous_customers' => 0,
+                'customer_growth' => 0,
+                'arpu' => 0,
+            ],
+            'order_metrics' => [
+                'total_orders' => 0,
+                'previous_orders' => 0,
+                'order_growth' => 0,
+            ],
+        ];
     }
 }

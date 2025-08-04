@@ -25,9 +25,7 @@ class ProfileFactory extends Factory
                 'Trelawny', 'St. Ann', 'St. Mary', 'Portland', 'St. Thomas', 'Kingston'
             ]),
             'country' => 'Jamaica',
-            'pickup_location' => $this->faker->randomElement([
-                'Downtown', 'Half Way Tree', 'Spanish Town', 'Portmore', 'May Pen'
-            ]),
+            'pickup_location' => $this->faker->numberBetween(1, 5), // Random pickup location ID
             'profile_photo_path' => null,
         ];
     }

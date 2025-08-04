@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use Illuminate\Foundation\Mix;
+use App\Models\Role;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
@@ -12,12 +12,31 @@ abstract class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        
+        // Create basic roles for all tests to prevent foreign key constraint violations
+        $this->createBasicRoles();
+    }
 
-        // Swap out the Mix manifest implementation, so we don't need
-        // to run the npm commands to generate a manifest file for
-        // the assets in order to run tests that return views.
-        $this->swap(Mix::class, function () {
-            return '';
-        });
+    /**
+     * Create basic roles needed for tests
+     */
+    protected function createBasicRoles(): void
+    {
+        // Create roles without specifying IDs to avoid conflicts
+        if (!Role::where('name', 'superadmin')->exists()) {
+            Role::factory()->create(['name' => 'superadmin']);
+        }
+        
+        if (!Role::where('name', 'admin')->exists()) {
+            Role::factory()->create(['name' => 'admin']);
+        }
+        
+        if (!Role::where('name', 'customer')->exists()) {
+            Role::factory()->create(['name' => 'customer']);
+        }
+        
+        if (!Role::where('name', 'purchaser')->exists()) {
+            Role::factory()->create(['name' => 'purchaser']);
+        }
     }
 }
