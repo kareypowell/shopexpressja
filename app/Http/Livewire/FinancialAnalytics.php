@@ -372,7 +372,6 @@ class FinancialAnalytics extends Component
                     COUNT(packages.id) as total_orders,
                     SUM(packages.freight_price + packages.customs_duty + packages.storage_fee + packages.delivery_fee) as total_spent,
                     AVG(packages.freight_price + packages.customs_duty + packages.storage_fee + packages.delivery_fee) as avg_order_value,
-                    DATEDIFF(NOW(), users.created_at) as days_as_customer,
                     MIN(packages.created_at) as first_order_date,
                     MAX(packages.created_at) as last_order_date
                 ")
@@ -381,7 +380,7 @@ class FinancialAnalytics extends Component
                 ->having('total_orders', '>', 0)
                 ->get()
                 ->map(function ($customer) {
-                    $daysAsCustomer = max(1, $customer->days_as_customer);
+                    $daysAsCustomer = max(1, Carbon::parse($customer->customer_since)->diffInDays(Carbon::now()));
                     $monthsAsCustomer = $daysAsCustomer / 30;
                     
                     // Calculate estimated CLV based on current behavior
@@ -578,13 +577,24 @@ class FinancialAnalytics extends Component
      */
     protected function getDateFormat(string $groupBy): string
     {
+        $driver = config('database.default');
+        $connection = config("database.connections.{$driver}.driver");
+        
         switch ($groupBy) {
             case 'day':
                 return "DATE(created_at)";
             case 'week':
-                return "DATE_FORMAT(created_at, '%Y-%u')";
+                if ($connection === 'sqlite') {
+                    return "strftime('%Y-%W', created_at)";
+                } else {
+                    return "DATE_FORMAT(created_at, '%Y-%u')";
+                }
             case 'month':
-                return "DATE_FORMAT(created_at, '%Y-%m')";
+                if ($connection === 'sqlite') {
+                    return "strftime('%Y-%m', created_at)";
+                } else {
+                    return "DATE_FORMAT(created_at, '%Y-%m')";
+                }
             default:
                 return "DATE(created_at)";
         }

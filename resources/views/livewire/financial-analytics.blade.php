@@ -122,7 +122,19 @@
             </div>
         </div>
         <div class="h-80">
-            <canvas id="revenueTrendsChart" width="400" height="200"></canvas>
+            @if(empty($revenueTrends))
+                <div class="flex items-center justify-center h-full">
+                    <div class="text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No revenue data</h3>
+                        <p class="mt-1 text-sm text-gray-500">No revenue trends available for the selected period.</p>
+                    </div>
+                </div>
+            @else
+                <canvas id="revenueTrendsChart" width="400" height="200"></canvas>
+            @endif
         </div>
     </div>
 
@@ -232,11 +244,27 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Check if Chart.js is loaded
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js library failed to load');
+        return;
+    }
     // Revenue Trends Line Chart with Multiple Series
-    const revenueTrendsCtx = document.getElementById('revenueTrendsChart').getContext('2d');
+    const revenueTrendsCtx = document.getElementById('revenueTrendsChart');
+    if (!revenueTrendsCtx) {
+        console.error('Revenue trends chart canvas not found');
+        return;
+    }
+    
     const revenueTrendsData = @json($revenueTrends);
     
-    new Chart(revenueTrendsCtx, {
+    // Handle empty data
+    if (!revenueTrendsData || revenueTrendsData.length === 0) {
+        revenueTrendsCtx.getContext('2d').fillText('No data available', 50, 50);
+        return;
+    }
+    
+    new Chart(revenueTrendsCtx.getContext('2d'), {
         type: 'line',
         data: {
             labels: revenueTrendsData.map(item => item.period),
@@ -314,10 +342,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Revenue by Service Type Stacked Area Chart
-    const revenueByServiceCtx = document.getElementById('revenueByServiceChart').getContext('2d');
-    const revenueByServiceData = @json($revenueByService);
+    const revenueByServiceCtx = document.getElementById('revenueByServiceChart');
+    if (!revenueByServiceCtx) return;
     
-    new Chart(revenueByServiceCtx, {
+    const revenueByServiceData = @json($revenueByService);
+    if (!revenueByServiceData || revenueByServiceData.length === 0) {
+        revenueByServiceCtx.getContext('2d').fillText('No data available', 50, 50);
+        return;
+    }
+    
+    new Chart(revenueByServiceCtx.getContext('2d'), {
         type: 'doughnut',
         data: {
             labels: revenueByServiceData.map(item => item.service_type),
@@ -355,10 +389,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Revenue by Customer Segment Chart
-    const revenueBySegmentCtx = document.getElementById('revenueBySegmentChart').getContext('2d');
-    const revenueBySegmentData = @json($revenueBySegment);
+    const revenueBySegmentCtx = document.getElementById('revenueBySegmentChart');
+    if (!revenueBySegmentCtx) return;
     
-    new Chart(revenueBySegmentCtx, {
+    const revenueBySegmentData = @json($revenueBySegment);
+    if (!revenueBySegmentData || revenueBySegmentData.length === 0) {
+        revenueBySegmentCtx.getContext('2d').fillText('No data available', 50, 50);
+        return;
+    }
+    
+    new Chart(revenueBySegmentCtx.getContext('2d'), {
         type: 'bar',
         data: {
             labels: revenueBySegmentData.map(item => item.segment),
@@ -402,10 +442,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Profit Margin Analysis Combination Chart
-    const profitMarginCtx = document.getElementById('profitMarginChart').getContext('2d');
-    const profitMarginData = @json($profitMargins);
+    const profitMarginCtx = document.getElementById('profitMarginChart');
+    if (!profitMarginCtx) return;
     
-    new Chart(profitMarginCtx, {
+    const profitMarginData = @json($profitMargins);
+    if (!profitMarginData || profitMarginData.length === 0) {
+        profitMarginCtx.getContext('2d').fillText('No data available', 50, 50);
+        return;
+    }
+    
+    new Chart(profitMarginCtx.getContext('2d'), {
         type: 'bar',
         data: {
             labels: profitMarginData.map(item => item.date),
@@ -479,10 +525,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Customer Lifetime Value Scatter Plot
-    const customerCLVCtx = document.getElementById('customerCLVChart').getContext('2d');
-    const customerCLVData = @json($customerCLV);
+    const customerCLVCtx = document.getElementById('customerCLVChart');
+    if (!customerCLVCtx) return;
     
-    new Chart(customerCLVCtx, {
+    const customerCLVData = @json($customerCLV);
+    if (!customerCLVData || customerCLVData.length === 0) {
+        customerCLVCtx.getContext('2d').fillText('No data available', 50, 50);
+        return;
+    }
+    
+    new Chart(customerCLVCtx.getContext('2d'), {
         type: 'scatter',
         data: {
             datasets: [{

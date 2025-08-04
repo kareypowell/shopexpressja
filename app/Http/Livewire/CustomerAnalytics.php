@@ -391,26 +391,4 @@ class CustomerAnalytics extends Component
         ];
     }
 
-    /**
-     * Refresh analytics data
-     */
-    public function refreshData()
-    {
-        $this->isLoading = true;
-        
-        // Clear cache for this component
-        $patterns = [
-            'customer_analytics.customer_growth.*',
-            'customer_analytics.customer_status.*',
-            'customer_analytics.geographic_distribution.*',
-            'customer_analytics.customer_activity.*',
-        ];
-        
-        foreach ($patterns as $pattern) {
-            $this->cacheService->flush($pattern);
-        }
-        
-        $this->isLoading = false;
-        $this->emit('dataRefreshed');
-    }
 }

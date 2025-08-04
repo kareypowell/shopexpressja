@@ -32,7 +32,7 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 |
 */
 
-Route::get('/', Dashboard::class)->middleware('auth', 'verified')->name('home');
+Route::get('/', [App\Http\Controllers\DashboardController::class, 'index'])->middleware('auth', 'verified')->name('home');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', Login::class)
@@ -76,6 +76,7 @@ Route::post('/email/verification-notification', function (Request $request) {
 
 // Super Admin routes
 Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->group(function () {
+    Route::get('/dashboard', \App\Http\Livewire\AdminDashboard::class)->name('admin.dashboard');
     Route::get('/manifests', Manifest::class)->name('manifests');
     Route::get('/manifests/{manifest_id}/edit', EditManifest::class)->name('edit-manifest');
     Route::get('/manifests/{manifest_id}/packages', ManifestPackage::class)->name('manifests.packages');

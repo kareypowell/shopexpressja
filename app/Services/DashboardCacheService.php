@@ -13,7 +13,7 @@ class DashboardCacheService
     /**
      * Remember a value in cache with TTL
      */
-    public function remember(string $key, int $ttl, callable $callback): mixed
+    public function remember(string $key, int $ttl, callable $callback)
     {
         $fullKey = $this->prefix . $key;
         
@@ -178,7 +178,7 @@ class DashboardCacheService
     /**
      * Set cache with custom TTL based on data type
      */
-    public function put(string $key, mixed $value, ?int $ttl = null): bool
+    public function put(string $key, $value, ?int $ttl = null): bool
     {
         $fullKey = $this->prefix . $key;
         

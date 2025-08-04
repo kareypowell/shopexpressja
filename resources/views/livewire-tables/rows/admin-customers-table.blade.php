@@ -18,25 +18,25 @@
 
 <x-livewire-tables::table.cell>
   <div>
-    {!! $this->highlightSearchTerm($row->profile->telephone_number) !!}
+    {!! $this->highlightSearchTerm($row->profile ? $row->profile->telephone_number : 'N/A') !!}
   </div>
 </x-livewire-tables::table.cell>
 
 <x-livewire-tables::table.cell>
   <div>
-    <x-badges.shs>{!! $this->highlightSearchTerm($row->profile->account_number) !!}</x-badges.shs>
+    <x-badges.shs>{!! $this->highlightSearchTerm($row->profile ? $row->profile->account_number : 'N/A') !!}</x-badges.shs>
   </div>
 </x-livewire-tables::table.cell>
 
 <x-livewire-tables::table.cell>
   <div>
-    <x-badges.warning>{!! $this->highlightSearchTerm($row->profile->tax_number) !!}</x-badges.warning>
+    <x-badges.warning>{!! $this->highlightSearchTerm($row->profile ? $row->profile->tax_number : 'N/A') !!}</x-badges.warning>
   </div>
 </x-livewire-tables::table.cell>
 
 <x-livewire-tables::table.cell>
   <div>
-    {!! $this->highlightSearchTerm($row->profile->parish) !!}
+    {!! $this->highlightSearchTerm($row->profile ? $row->profile->parish : 'N/A') !!}
   </div>
 </x-livewire-tables::table.cell>
 
