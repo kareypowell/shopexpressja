@@ -7,119 +7,118 @@
         </div>
     </div>
 
-    {{-- First Row: Customer Growth Trends and Customer Status Distribution --}}
-    <div wire:loading.remove class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {{-- Customer Growth Trend Chart --}}
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-base font-semibold text-gray-900">Customer Growth Trends</h3>
-                <div class="flex items-center space-x-3 text-xs text-gray-600">
-                    <div class="flex items-center space-x-1">
-                        <div class="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
-                        <span>New Customers</span>
-                    </div>
-                    <div class="flex items-center space-x-1">
-                        <div class="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
-                        <span>Total Customers</span>
-                    </div>
+    {{-- Customer Growth Trends (Full Width) --}}
+    <div wire:loading.remove class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Customer Growth Trends</h3>
+            <div class="flex items-center space-x-4 text-sm text-gray-600">
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <span>New Customers</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span>Total Customers</span>
                 </div>
             </div>
-            
-            {{-- Growth Summary Stats --}}
-            <div class="grid grid-cols-3 gap-3 mb-4">
-                <div class="bg-blue-50 rounded-lg p-3">
-                    <div class="text-xl font-bold text-blue-600">{{ $customerGrowthData['summary']['total_new'] }}</div>
-                    <div class="text-xs text-blue-600 mt-1">New Customers</div>
-                </div>
-                <div class="bg-green-50 rounded-lg p-3">
-                    <div class="text-xl font-bold text-green-600">{{ number_format($customerGrowthData['summary']['current_total']) }}</div>
-                    <div class="text-xs text-green-600 mt-1">Total Customers</div>
-                </div>
-                <div class="bg-gray-50 rounded-lg p-3">
-                    <div class="text-xl font-bold text-gray-600">{{ $customerGrowthData['summary']['average_daily'] }}</div>
-                    <div class="text-xs text-gray-600 mt-1">Avg Daily Growth</div>
-                </div>
+        </div>
+        
+        {{-- Growth Summary Stats --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-blue-50 rounded-lg p-4">
+                <div class="text-2xl font-bold text-blue-600">{{ $customerGrowthData['summary']['total_new'] }}</div>
+                <div class="text-sm text-blue-600 mt-1">New Customers</div>
             </div>
-
-            <div class="relative h-80">
-                <canvas id="customerGrowthChart"></canvas>
+            <div class="bg-green-50 rounded-lg p-4">
+                <div class="text-2xl font-bold text-green-600">{{ number_format($customerGrowthData['summary']['current_total']) }}</div>
+                <div class="text-sm text-green-600 mt-1">Total Customers</div>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4">
+                <div class="text-2xl font-bold text-gray-600">{{ $customerGrowthData['summary']['average_daily'] }}</div>
+                <div class="text-sm text-gray-600 mt-1">Avg Daily Growth</div>
             </div>
         </div>
 
-        {{-- Customer Status Distribution --}}
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-base font-semibold text-gray-900">Customer Status Distribution</h3>
-                <div class="text-xs text-gray-600">
-                    Total: {{ number_format($customerStatusDistribution['summary']['total']) }} customers
-                </div>
+        <div class="relative h-96">
+            <canvas id="customerGrowthChart"></canvas>
+        </div>
+    </div>
+
+    {{-- Customer Status Distribution (Full Width) --}}
+    <div wire:loading.remove class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Customer Status Distribution</h3>
+            <div class="text-sm text-gray-600">
+                Total: {{ number_format($customerStatusDistribution['summary']['total']) }} customers
             </div>
+        </div>
 
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {{-- Status Summary --}}
-            <div class="space-y-3 mb-4">
-                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+            <div class="space-y-4">
+                <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
                     <div class="flex items-center space-x-3">
-                        <div class="w-4 h-4 bg-green-500 rounded-full"></div>
-                        <span class="text-sm font-medium text-green-800">Active</span>
+                        <div class="w-5 h-5 bg-green-500 rounded-full"></div>
+                        <span class="text-base font-medium text-green-800">Active</span>
                     </div>
                     <div class="text-right">
-                        <div class="text-xl font-bold text-green-800">{{ number_format($customerStatusDistribution['summary']['active']) }}</div>
-                        <div class="text-xs text-green-600">{{ $customerStatusDistribution['summary']['active_percentage'] }}%</div>
+                        <div class="text-2xl font-bold text-green-800">{{ number_format($customerStatusDistribution['summary']['active']) }}</div>
+                        <div class="text-sm text-green-600">{{ $customerStatusDistribution['summary']['active_percentage'] }}%</div>
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
                     <div class="flex items-center space-x-3">
-                        <div class="w-4 h-4 bg-yellow-500 rounded-full"></div>
-                        <span class="text-sm font-medium text-yellow-800">Inactive</span>
+                        <div class="w-5 h-5 bg-yellow-500 rounded-full"></div>
+                        <span class="text-base font-medium text-yellow-800">Inactive</span>
                     </div>
                     <div class="text-right">
-                        <div class="text-xl font-bold text-yellow-800">{{ number_format($customerStatusDistribution['summary']['inactive']) }}</div>
-                        <div class="text-xs text-yellow-600">
+                        <div class="text-2xl font-bold text-yellow-800">{{ number_format($customerStatusDistribution['summary']['inactive']) }}</div>
+                        <div class="text-sm text-yellow-600">
                             {{ $customerStatusDistribution['summary']['total'] > 0 ? round(($customerStatusDistribution['summary']['inactive'] / $customerStatusDistribution['summary']['total']) * 100, 1) : 0 }}%
                         </div>
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg">
                     <div class="flex items-center space-x-3">
-                        <div class="w-4 h-4 bg-red-500 rounded-full"></div>
-                        <span class="text-sm font-medium text-red-800">Suspended</span>
+                        <div class="w-5 h-5 bg-red-500 rounded-full"></div>
+                        <span class="text-base font-medium text-red-800">Suspended</span>
                     </div>
                     <div class="text-right">
-                        <div class="text-xl font-bold text-red-800">{{ number_format($customerStatusDistribution['summary']['suspended']) }}</div>
-                        <div class="text-xs text-red-600">
+                        <div class="text-2xl font-bold text-red-800">{{ number_format($customerStatusDistribution['summary']['suspended']) }}</div>
+                        <div class="text-sm text-red-600">
                             {{ $customerStatusDistribution['summary']['total'] > 0 ? round(($customerStatusDistribution['summary']['suspended'] / $customerStatusDistribution['summary']['total']) * 100, 1) : 0 }}%
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="relative h-64">
+            {{-- Chart --}}
+            <div class="relative h-80">
                 <canvas id="customerStatusChart"></canvas>
             </div>
         </div>
     </div>
 
-    {{-- Second Row: Geographic Distribution and Customer Activity Levels --}}
-    <div wire:loading.remove class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {{-- Geographic Distribution --}}
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-base font-semibold text-gray-900">Geographic Distribution</h3>
-                <div class="text-xs text-gray-600">
-                    {{ number_format($geographicDistribution['total_with_location']) }} customers with location data
-                </div>
+    {{-- Geographic Distribution (Full Width) --}}
+    <div wire:loading.remove class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Geographic Distribution</h3>
+            <div class="text-sm text-gray-600">
+                {{ number_format($geographicDistribution['total_with_location']) }} customers with location data
             </div>
+        </div>
 
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {{-- Country Summary --}}
-            <div class="mb-4">
-                <h4 class="text-sm font-medium text-gray-700 mb-3">Country Distribution</h4>
-                <div class="space-y-2">
+            <div>
+                <h4 class="text-base font-medium text-gray-700 mb-4">Country Distribution</h4>
+                <div class="space-y-3">
                     @foreach($geographicDistribution['country_summary'] as $country)
-                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <span class="font-medium text-gray-700">{{ $country['country'] ?: 'Not specified' }}</span>
-                            <span class="text-xl font-bold text-gray-600">{{ number_format($country['count']) }}</span>
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <span class="text-base font-medium text-gray-700">{{ $country['country'] ?: 'Not specified' }}</span>
+                            <span class="text-2xl font-bold text-gray-600">{{ number_format($country['count']) }}</span>
                         </div>
                     @endforeach
                 </div>
@@ -127,56 +126,58 @@
 
             {{-- Parish Distribution Chart --}}
             <div>
-                <h4 class="text-sm font-medium text-gray-700 mb-3">Top Parishes</h4>
-                <div class="relative h-64">
+                <h4 class="text-base font-medium text-gray-700 mb-4">Top Parishes</h4>
+                <div class="relative h-80">
                     <canvas id="geographicChart"></canvas>
                 </div>
             </div>
         </div>
+    </div>
 
-        {{-- Customer Activity Levels --}}
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-base font-semibold text-gray-900">Customer Activity Levels</h3>
-                <div class="text-xs text-gray-600">
-                    {{ number_format($customerActivityLevels['summary']['total_customers']) }} total customers analyzed
-                </div>
+    {{-- Customer Activity Levels (Full Width) --}}
+    <div wire:loading.remove class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Customer Activity Levels</h3>
+            <div class="text-sm text-gray-600">
+                {{ number_format($customerActivityLevels['summary']['total_customers']) }} total customers analyzed
             </div>
+        </div>
 
-            {{-- Activity Summary Stats --}}
-            <div class="grid grid-cols-2 gap-3 mb-4">
-                <div class="bg-blue-50 rounded-lg p-3">
-                    <div class="text-xl font-bold text-blue-600">{{ number_format($customerActivityLevels['summary']['active_customers']) }}</div>
-                    <div class="text-xs text-blue-600 mt-1">Active Customers</div>
-                </div>
-                <div class="bg-green-50 rounded-lg p-3">
-                    <div class="text-xl font-bold text-green-600">{{ $customerActivityLevels['summary']['average_packages_per_customer'] }}</div>
-                    <div class="text-xs text-green-600 mt-1">Avg Packages/Customer</div>
-                </div>
-                <div class="bg-purple-50 rounded-lg p-3">
-                    <div class="text-xl font-bold text-purple-600">${{ number_format($customerActivityLevels['summary']['total_revenue'], 2) }}</div>
-                    <div class="text-xs text-purple-600 mt-1">Total Revenue</div>
-                </div>
-                <div class="bg-gray-50 rounded-lg p-3">
-                    <div class="text-xl font-bold text-gray-600">
-                        {{ $customerActivityLevels['summary']['active_customers'] > 0 ? round(($customerActivityLevels['summary']['active_customers'] / $customerActivityLevels['summary']['total_customers']) * 100, 1) : 0 }}%
-                    </div>
-                    <div class="text-xs text-gray-600 mt-1">Activity Rate</div>
-                </div>
+        {{-- Activity Summary Stats --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-blue-50 rounded-lg p-4">
+                <div class="text-2xl font-bold text-blue-600">{{ number_format($customerActivityLevels['summary']['active_customers']) }}</div>
+                <div class="text-sm text-blue-600 mt-1">Active Customers</div>
             </div>
+            <div class="bg-green-50 rounded-lg p-4">
+                <div class="text-2xl font-bold text-green-600">{{ $customerActivityLevels['summary']['average_packages_per_customer'] }}</div>
+                <div class="text-sm text-green-600 mt-1">Avg Packages/Customer</div>
+            </div>
+            <div class="bg-purple-50 rounded-lg p-4">
+                <div class="text-2xl font-bold text-purple-600">${{ number_format($customerActivityLevels['summary']['total_revenue'], 2) }}</div>
+                <div class="text-sm text-purple-600 mt-1">Total Revenue</div>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4">
+                <div class="text-2xl font-bold text-gray-600">
+                    {{ $customerActivityLevels['summary']['active_customers'] > 0 ? round(($customerActivityLevels['summary']['active_customers'] / $customerActivityLevels['summary']['total_customers']) * 100, 1) : 0 }}%
+                </div>
+                <div class="text-sm text-gray-600 mt-1">Activity Rate</div>
+            </div>
+        </div>
 
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {{-- Activity Distribution Chart --}}
-            <div class="mb-4">
-                <h4 class="text-sm font-medium text-gray-700 mb-3">Customer Activity Distribution</h4>
-                <div class="relative h-64">
+            <div>
+                <h4 class="text-base font-medium text-gray-700 mb-4">Customer Activity Distribution</h4>
+                <div class="relative h-80">
                     <canvas id="activityDistributionChart"></canvas>
                 </div>
             </div>
 
             {{-- Revenue by Activity Chart --}}
             <div>
-                <h4 class="text-sm font-medium text-gray-700 mb-3">Revenue by Activity Level</h4>
-                <div class="relative h-64">
+                <h4 class="text-base font-medium text-gray-700 mb-4">Revenue by Activity Level</h4>
+                <div class="relative h-80">
                     <canvas id="revenueByActivityChart"></canvas>
                 </div>
             </div>
@@ -200,9 +201,14 @@
 </div>
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 function initializeCharts() {
+    // Wait for Chart.js to be available
+    if (typeof Chart === 'undefined') {
+        setTimeout(initializeCharts, 100);
+        return;
+    }
+    
     // Add delay to ensure DOM is fully rendered
     setTimeout(function() {
         try {

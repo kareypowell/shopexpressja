@@ -296,9 +296,15 @@
 </div>
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+function initializeShipmentCharts() {
+    // Wait for Chart.js to be available
+    if (typeof Chart === 'undefined') {
+        setTimeout(initializeShipmentCharts, 100);
+        return;
+    }
+    
+    console.log('Initializing shipment charts...');
     // Shipment Volume Chart (Area Chart)
     const shipmentVolumeCtx = document.getElementById('shipmentVolumeChart').getContext('2d');
     const shipmentVolumeData = @json($shipmentVolumeData);
@@ -592,7 +598,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-});
+}
+
+// Initialize charts when DOM is ready
+document.addEventListener('DOMContentLoaded', initializeShipmentCharts);
 
 // Listen for Livewire events to refresh charts
 document.addEventListener('livewire:load', function () {

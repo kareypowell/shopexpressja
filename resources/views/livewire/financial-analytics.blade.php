@@ -241,14 +241,15 @@
 </div>
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if Chart.js is loaded
+function initializeFinancialCharts() {
+    // Wait for Chart.js to be available
     if (typeof Chart === 'undefined') {
-        console.error('Chart.js library failed to load');
+        setTimeout(initializeFinancialCharts, 100);
         return;
     }
+    
+    console.log('Initializing financial charts...');
     // Revenue Trends Line Chart with Multiple Series
     const revenueTrendsCtx = document.getElementById('revenueTrendsChart');
     if (!revenueTrendsCtx) {
@@ -588,6 +589,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Listen for Livewire events to refresh charts
+document.addEventListener('livewire:load', function () {
+}
+
+// Initialize charts when DOM is ready
+document.addEventListener('DOMContentLoaded', initializeFinancialCharts);
 
 // Listen for Livewire events to refresh charts
 document.addEventListener('livewire:load', function () {

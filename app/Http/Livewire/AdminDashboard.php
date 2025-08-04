@@ -191,10 +191,9 @@ class AdminDashboard extends Component
      */
     protected function propagateFiltersToComponents(): void
     {
-        // Emit once to all components instead of in a loop
-        if (!empty($this->loadedComponents)) {
-            $this->emit('filtersUpdated', $this->activeFilters);
-        }
+        // Don't emit filtersUpdated here as it would create a loop
+        // The original filtersUpdated event from DashboardFilters will reach all components
+        // This method is just for internal state management
     }
 
     /**

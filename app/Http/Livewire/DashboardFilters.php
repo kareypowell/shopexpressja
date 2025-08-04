@@ -41,6 +41,10 @@ class DashboardFilters extends Component
     // UI state
     public $showAdvancedFilters = false;
     public $isLoading = false;
+    
+    // Prevent loops and excessive updates
+    private $lastEmittedFilters = null;
+    private $isUpdatingInternally = false;
 
     protected $listeners = [
         'resetFilters' => 'resetAllFilters',
@@ -179,9 +183,20 @@ class DashboardFilters extends Component
      */
     public function applyFilters()
     {
+        // Prevent excessive emissions during rapid updates or internal updates
+        if ($this->isLoading || $this->isUpdatingInternally) {
+            return;
+        }
+        
         $this->isLoading = true;
         
         $filters = $this->getFilterArray();
+        
+        // Check if filters actually changed to prevent unnecessary emissions
+        if ($this->lastEmittedFilters !== null && $this->lastEmittedFilters === $filters) {
+            $this->isLoading = false;
+            return;
+        }
         
         // Save filters to session for persistence
         $this->saveFiltersToSession($filters);
@@ -192,6 +207,9 @@ class DashboardFilters extends Component
         // Emit filter update to all dashboard components
         $this->emit('filtersUpdated', $filters);
         
+        // Remember the last emitted filters
+        $this->lastEmittedFilters = $filters;
+        
         $this->filtersApplied = true;
         $this->isLoading = false;
     }
@@ -201,6 +219,8 @@ class DashboardFilters extends Component
      */
     public function resetAllFilters()
     {
+        $this->isUpdatingInternally = true;
+        
         $this->dateRange = '30';
         $this->customStartDate = '';
         $this->customEndDate = '';
@@ -215,9 +235,12 @@ class DashboardFilters extends Component
         $this->clearFiltersFromSession();
         $this->calculateActiveFilters();
         
-        $this->emit('filtersUpdated', $this->getFilterArray());
+        $filters = $this->getFilterArray();
+        $this->emit('filtersUpdated', $filters);
+        $this->lastEmittedFilters = $filters;
         
         $this->filtersApplied = false;
+        $this->isUpdatingInternally = false;
     }
 
     /**
@@ -297,6 +320,9 @@ class DashboardFilters extends Component
         $savedFilters = Session::get('dashboard_filters', []);
         
         if (!empty($savedFilters)) {
+            // Set flag to prevent triggering applyFilters during loading
+            $this->isUpdatingInternally = true;
+            
             $this->dateRange = $savedFilters['date_range'] ?? '30';
             $this->customStartDate = $savedFilters['custom_start'] ?? '';
             $this->customEndDate = $savedFilters['custom_end'] ?? '';
@@ -309,6 +335,10 @@ class DashboardFilters extends Component
             $this->customerType = $savedFilters['customer_type'] ?? 'all';
             
             $this->filtersApplied = true;
+            $this->lastEmittedFilters = $savedFilters;
+            
+            // Reset the flag
+            $this->isUpdatingInternally = false;
         }
     }
 
