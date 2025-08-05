@@ -228,7 +228,7 @@ class CustomerStatisticsServiceTest extends TestCase
         
         // Verify cache exists
         $cacheStatus = $this->service->getCacheStatus($this->customer);
-        $this->assertTrue($cacheStatus['stats']);
+        $this->assertTrue($cacheStatus['stats']['cached']);
         
         // Second call should return cached result
         $secondCall = $this->service->getCustomerStatistics($this->customer);
@@ -243,14 +243,14 @@ class CustomerStatisticsServiceTest extends TestCase
         
         // Verify cache exists
         $cacheStatus = $this->service->getCacheStatus($this->customer);
-        $this->assertTrue($cacheStatus['stats']);
+        $this->assertTrue($cacheStatus['stats']['cached']);
         
         // Clear cache
         $this->service->clearCustomerCache($this->customer);
         
         // Verify cache is cleared
         $cacheStatus = $this->service->getCacheStatus($this->customer);
-        $this->assertFalse($cacheStatus['stats']);
+        $this->assertFalse($cacheStatus['stats']['cached']);
     }
 
     public function test_monthly_breakdown_includes_recent_months()
@@ -393,15 +393,15 @@ class CustomerStatisticsServiceTest extends TestCase
         
         // Initially no cache
         $status = $this->service->getCacheStatus($this->customer);
-        $this->assertFalse($status['stats']);
-        $this->assertFalse($status['financial']);
-        $this->assertFalse($status['patterns']);
-        $this->assertFalse($status['packages']);
+        $this->assertFalse($status['stats']['cached']);
+        $this->assertFalse($status['financial']['cached']);
+        $this->assertFalse($status['patterns']['cached']);
+        $this->assertFalse($status['packages']['cached']);
         
         // After calling service methods, cache should exist
         $this->service->getCustomerStatistics($this->customer);
         
         $status = $this->service->getCacheStatus($this->customer);
-        $this->assertTrue($status['stats']);
+        $this->assertTrue($status['stats']['cached']);
     }
 }

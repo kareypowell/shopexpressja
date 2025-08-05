@@ -277,8 +277,8 @@ class ShipmentAnalyticsTest extends TestCase
     /** @test */
     public function it_handles_empty_data_gracefully()
     {
-        // Clear all packages
-        Package::truncate();
+        // Clear all packages - use delete instead of truncate to avoid foreign key issues
+        Package::query()->delete();
         
         $component = Livewire::test(ShipmentAnalytics::class);
         

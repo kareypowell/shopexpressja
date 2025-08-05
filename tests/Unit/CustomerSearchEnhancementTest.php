@@ -20,10 +20,8 @@ class CustomerSearchEnhancementTest extends TestCase
     {
         parent::setUp();
         
-        // Create roles manually to match the application's expected structure
-        Role::create(['name' => 'superadmin', 'description' => 'Super Administrator']);
-        Role::create(['name' => 'admin', 'description' => 'Administrator']);
-        $this->customerRole = Role::create(['name' => 'customer', 'description' => 'Customer']);
+        // Use existing roles created by base TestCase
+        $this->customerRole = Role::where('name', 'customer')->first();
         $this->adminRole = Role::where('name', 'admin')->first();
     }
 

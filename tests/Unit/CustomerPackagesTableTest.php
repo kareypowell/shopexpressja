@@ -26,9 +26,9 @@ class CustomerPackagesTableTest extends TestCase
     {
         parent::setUp();
 
-        // Create roles
-        $adminRole = Role::factory()->create(['name' => 'admin']);
-        $customerRole = Role::factory()->create(['name' => 'customer']);
+        // Use existing roles
+        $adminRole = Role::find(2);
+        $customerRole = Role::find(3);
 
         // Create admin user
         $this->admin = User::factory()->create(['role_id' => $adminRole->id]);
@@ -47,6 +47,7 @@ class CustomerPackagesTableTest extends TestCase
             'manifest_id' => $manifest->id,
             'shipper_id' => $shipper->id,
             'office_id' => $office->id,
+            'status' => 'ready', // Set status to allow cost visibility
             'freight_price' => 100.00,
             'customs_duty' => 25.00,
             'storage_fee' => 10.00,
