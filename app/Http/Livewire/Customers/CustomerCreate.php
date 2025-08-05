@@ -134,7 +134,7 @@ class CustomerCreate extends Component
             // Create the profile
             $user->profile()->create([
                 'account_number' => $accountNumber,
-                'tax_number' => $this->taxNumber,
+                'tax_number' => $this->taxNumber ?: '',
                 'telephone_number' => $this->telephoneNumber,
                 'street_address' => $this->streetAddress,
                 'city_town' => $this->cityTown,
@@ -189,14 +189,14 @@ class CustomerCreate extends Component
             $customer = User::findOrFail($customerId);
             $emailService = app(CustomerEmailService::class);
             
-            // Increment retry count
-            $this->emailRetryCount++;
-            
             // Check if we've exceeded maximum retry attempts
-            if ($this->emailRetryCount > 3) {
+            if ($this->emailRetryCount >= 3) {
                 session()->flash('error', 'Maximum retry attempts exceeded. Please contact system administrator.');
                 return;
             }
+            
+            // Increment retry count
+            $this->emailRetryCount++;
             
             $temporaryPassword = $this->generatePassword ? $this->password : null;
             

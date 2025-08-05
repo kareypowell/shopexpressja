@@ -26,11 +26,14 @@ class CustomerEmailIntegrationTest extends TestCase
         parent::setUp();
         
         // Create admin user
-        $adminRole = Role::factory()->create(['name' => 'admin']);
+        $adminRole = Role::firstOrCreate(['name' => 'admin'], ['description' => 'Administrator']);
         $this->adminUser = User::factory()->create(['role_id' => $adminRole->id]);
         
         // Create customer role
-        $this->customerRole = Role::factory()->create(['name' => 'customer']);
+        $this->customerRole = Role::firstOrCreate(['name' => 'customer'], ['description' => 'Customer']);
+        
+        // Create an office for pickup location
+        \App\Models\Office::factory()->create(['id' => 1, 'name' => 1]);
     }
 
     /** @test */
@@ -49,7 +52,7 @@ class CustomerEmailIntegrationTest extends TestCase
             ->set('cityTown', 'Kingston')
             ->set('parish', 'Kingston')
             ->set('country', 'Jamaica')
-            ->set('pickupLocation', 'Kingston Office')
+            ->set('pickupLocation', 1)
             ->set('sendWelcomeEmail', true)
             ->set('queueEmail', false)
             ->call('create');
@@ -85,7 +88,7 @@ class CustomerEmailIntegrationTest extends TestCase
             ->set('cityTown', 'Spanish Town')
             ->set('parish', 'St. Catherine')
             ->set('country', 'Jamaica')
-            ->set('pickupLocation', 'Spanish Town Office')
+            ->set('pickupLocation', 1)
             ->set('sendWelcomeEmail', true)
             ->set('queueEmail', true)
             ->call('create');
@@ -211,7 +214,7 @@ class CustomerEmailIntegrationTest extends TestCase
             ->set('cityTown', 'Port Antonio')
             ->set('parish', 'Portland')
             ->set('country', 'Jamaica')
-            ->set('pickupLocation', 'Kingston Office')
+            ->set('pickupLocation', 1)
             ->set('sendWelcomeEmail', true)
             ->set('generatePassword', false)
             ->set('password', 'manualpassword123')
@@ -275,7 +278,7 @@ class CustomerEmailIntegrationTest extends TestCase
             ->set('cityTown', 'Kingston')
             ->set('parish', 'Kingston')
             ->set('country', 'Jamaica')
-            ->set('pickupLocation', 'Kingston Office')
+            ->set('pickupLocation', 1)
             ->set('sendWelcomeEmail', true)
             ->set('queueEmail', false)
             ->call('create');
@@ -302,7 +305,7 @@ class CustomerEmailIntegrationTest extends TestCase
             ->set('cityTown', 'Kingston')
             ->set('parish', 'Kingston')
             ->set('country', 'Jamaica')
-            ->set('pickupLocation', 'Kingston Office')
+            ->set('pickupLocation', 1)
             ->set('sendWelcomeEmail', true)
             ->set('queueEmail', true)
             ->call('create');
@@ -327,7 +330,7 @@ class CustomerEmailIntegrationTest extends TestCase
             ->set('cityTown', 'Kingston')
             ->set('parish', 'Kingston')
             ->set('country', 'Jamaica')
-            ->set('pickupLocation', 'Kingston Office')
+            ->set('pickupLocation', 1)
             ->set('sendWelcomeEmail', true)
             ->set('queueEmail', false)
             ->call('create');

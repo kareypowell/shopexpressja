@@ -24,10 +24,10 @@ class CustomerRoutingTest extends TestCase
     {
         parent::setUp();
 
-        // Create roles
-        $this->customerRole = Role::factory()->create(['name' => 'customer']);
-        $this->adminRole = Role::factory()->create(['name' => 'admin']);
-        $this->superAdminRole = Role::factory()->create(['name' => 'superadmin']);
+        // Use existing roles
+        $this->customerRole = Role::find(3);
+        $this->adminRole = Role::find(2);
+        $this->superAdminRole = Role::find(1);
 
         // Create users
         $this->customer = User::factory()->create(['role_id' => $this->customerRole->id]);

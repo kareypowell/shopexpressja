@@ -181,7 +181,11 @@
                         @elseif($componentName === 'metrics')
                             @livewire('dashboard-metrics', ['filters' => $currentFilters], key('dashboard-metrics'))
                         @elseif($componentName === 'financial_analytics')
-                            @livewire('financial-analytics', ['filters' => $currentFilters], key('financial-analytics'))
+                            {{-- Temporarily disabled due to data structure issues --}}
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-4">Financial Analytics</h3>
+                                <p class="text-gray-500">Financial analytics component is temporarily disabled for maintenance.</p>
+                            </div>
                         @endif
                     </div>
                 @endif
@@ -199,7 +203,11 @@
                     @foreach($halfWidthComponents as $componentName => $config)
                         <div class="dashboard-widget" data-component="{{ $componentName }}">
                             @if($componentName === 'customer_analytics')
-                                @livewire('customer-analytics', ['filters' => $currentFilters], key('customer-analytics'))
+                                {{-- Temporarily disabled due to data structure issues --}}
+                                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Customer Analytics</h3>
+                                    <p class="text-gray-500">Customer analytics component is temporarily disabled for maintenance.</p>
+                                </div>
                             @elseif($componentName === 'shipment_analytics')
                                 @livewire('shipment-analytics', ['filters' => $currentFilters], key('shipment-analytics'))
                             @endif

@@ -196,7 +196,7 @@ class CustomerProfile extends Component
             'canViewFinancials' => auth()->user()->can('customer.viewFinancials', $this->customer),
             'canViewPackages' => auth()->user()->can('customer.viewPackages', $this->customer),
             'canExport' => auth()->user()->can('customer.export'),
-            'cacheMetrics' => $this->statisticsService->getCachePerformanceMetrics(),
+            'cacheMetrics' => isset($this->statisticsService) ? $this->statisticsService->getCachePerformanceMetrics() : [],
         ]);
     }
 }

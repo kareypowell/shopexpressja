@@ -65,8 +65,9 @@ class DashboardAccessTest extends TestCase
         // Act as the superadmin
         $response = $this->actingAs($superadmin)->get('/');
         
-        // Should get 200 OK and show admin dashboard
-        $response->assertStatus(200);
+        // Should redirect to admin dashboard
+        $response->assertStatus(302);
+        $response->assertRedirect(route('admin.dashboard'));
     }
 
     /** @test */

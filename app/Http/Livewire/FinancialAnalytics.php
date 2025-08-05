@@ -22,8 +22,8 @@ class FinancialAnalytics extends Component
         'refreshDashboard' => 'refreshData'
     ];
 
-    protected DashboardAnalyticsService $analyticsService;
-    protected DashboardCacheService $cacheService;
+    protected $analyticsService;
+    protected $cacheService;
 
     public function boot(DashboardAnalyticsService $analyticsService, DashboardCacheService $cacheService)
     {
@@ -33,6 +33,14 @@ class FinancialAnalytics extends Component
 
     public function mount()
     {
+        // Initialize services if not available
+        if (!$this->analyticsService) {
+            $this->analyticsService = app(DashboardAnalyticsService::class);
+        }
+        if (!$this->cacheService) {
+            $this->cacheService = app(DashboardCacheService::class);
+        }
+        
         $this->refreshData();
     }
 
@@ -56,10 +64,17 @@ class FinancialAnalytics extends Component
      */
     public function getRevenueTrendData()
     {
-        $filters = $this->getFilters();
-        $cacheKey = $this->analyticsService->cacheKey('revenue_trends', $filters);
-        
-        return $this->cacheService->remember($cacheKey, 600, function () use ($filters) {
+        try {
+            $filters = $this->getFilters();
+            
+            // Fallback if services are not available
+            if (!$this->analyticsService || !$this->cacheService) {
+                return [];
+            }
+            
+            $cacheKey = $this->analyticsService->cacheKey('revenue_trends', $filters);
+            
+            return $this->cacheService->remember($cacheKey, 600, function () use ($filters) {
             $dateRange = $this->getDateRange($filters);
             
             // Group by day, week, or month based on date range
@@ -96,6 +111,10 @@ class FinancialAnalytics extends Component
 
             return $revenueData;
         });
+        } catch (\Exception $e) {
+            \Log::error('FinancialAnalytics getRevenueTrendData error: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
@@ -103,10 +122,17 @@ class FinancialAnalytics extends Component
      */
     public function getRevenueByServiceType()
     {
-        $filters = $this->getFilters();
-        $cacheKey = $this->analyticsService->cacheKey('revenue_by_service', $filters);
-        
-        return $this->cacheService->remember($cacheKey, 600, function () use ($filters) {
+        try {
+            $filters = $this->getFilters();
+            
+            // Fallback if services are not available
+            if (!$this->analyticsService || !$this->cacheService) {
+                return [];
+            }
+            
+            $cacheKey = $this->analyticsService->cacheKey('revenue_by_service', $filters);
+            
+            return $this->cacheService->remember($cacheKey, 600, function () use ($filters) {
             $dateRange = $this->getDateRange($filters);
             
             $serviceData = Package::whereBetween('packages.created_at', $dateRange)
@@ -149,6 +175,10 @@ class FinancialAnalytics extends Component
 
             return $serviceData;
         });
+        } catch (\Exception $e) {
+            \Log::error('FinancialAnalytics getRevenueByServiceType error: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
@@ -215,91 +245,102 @@ class FinancialAnalytics extends Component
      */
     public function getFinancialKPIs()
     {
-        $filters = $this->getFilters();
-        $cacheKey = $this->analyticsService->cacheKey('financial_kpis', $filters);
-        
-        return $this->cacheService->remember($cacheKey, 300, function () use ($filters) {
-            $dateRange = $this->getDateRange($filters);
-            $previousRange = $this->getPreviousDateRange($filters);
-
-            // Current period metrics
-            $currentMetrics = Package::whereBetween('created_at', $dateRange)
-                ->selectRaw("
-                    COUNT(*) as total_orders,
-                    SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total_revenue,
-                    AVG(freight_price + customs_duty + storage_fee + delivery_fee) as avg_order_value,
-                    COUNT(DISTINCT user_id) as unique_customers
-                ")
-                ->first();
-
-            // Previous period metrics for comparison
-            $previousMetrics = Package::whereBetween('created_at', $previousRange)
-                ->selectRaw("
-                    COUNT(*) as total_orders,
-                    SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total_revenue,
-                    AVG(freight_price + customs_duty + storage_fee + delivery_fee) as avg_order_value,
-                    COUNT(DISTINCT user_id) as unique_customers
-                ")
-                ->first();
-
-            // Calculate Customer Lifetime Value (CLV) - simplified version
-            $avgCustomerLifespan = 12; // months - could be calculated from actual data
-            $avgMonthlyOrders = $currentMetrics->total_orders / max(1, $this->getPeriodInMonths($filters));
-            $clv = ($currentMetrics->avg_order_value ?? 0) * $avgMonthlyOrders * $avgCustomerLifespan;
-
-            // Calculate growth rates
-            $revenueGrowth = $this->calculateGrowthRate(
-                $currentMetrics->total_revenue ?? 0,
-                $previousMetrics->total_revenue ?? 0
-            );
+        try {
+            $filters = $this->getFilters();
             
-            $aovGrowth = $this->calculateGrowthRate(
-                $currentMetrics->avg_order_value ?? 0,
-                $previousMetrics->avg_order_value ?? 0
-            );
+            // Fallback if services are not available
+            if (!$this->analyticsService || !$this->cacheService) {
+                return $this->calculateKPIsDirectly($filters);
+            }
+            
+            $cacheKey = $this->analyticsService->cacheKey('financial_kpis', $filters);
+            
+            return $this->cacheService->remember($cacheKey, 300, function () use ($filters) {
+                $dateRange = $this->getDateRange($filters);
+                $previousRange = $this->getPreviousDateRange($filters);
 
-            $customerGrowth = $this->calculateGrowthRate(
-                $currentMetrics->unique_customers ?? 0,
-                $previousMetrics->unique_customers ?? 0
-            );
+                // Current period metrics
+                $currentMetrics = Package::whereBetween('created_at', $dateRange)
+                    ->selectRaw("
+                        COUNT(*) as total_orders,
+                        SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total_revenue,
+                        AVG(freight_price + customs_duty + storage_fee + delivery_fee) as avg_order_value,
+                        COUNT(DISTINCT user_id) as unique_customers
+                    ")
+                    ->first();
 
-            // Calculate Average Revenue Per User (ARPU)
-            $arpu = $currentMetrics->unique_customers > 0 
-                ? ($currentMetrics->total_revenue ?? 0) / $currentMetrics->unique_customers 
-                : 0;
+                // Previous period metrics for comparison
+                $previousMetrics = Package::whereBetween('created_at', $previousRange)
+                    ->selectRaw("
+                        COUNT(*) as total_orders,
+                        SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total_revenue,
+                        AVG(freight_price + customs_duty + storage_fee + delivery_fee) as avg_order_value,
+                        COUNT(DISTINCT user_id) as unique_customers
+                    ")
+                    ->first();
 
-            return [
-                'total_revenue' => [
-                    'current' => (float) ($currentMetrics->total_revenue ?? 0),
-                    'previous' => (float) ($previousMetrics->total_revenue ?? 0),
-                    'growth_rate' => $revenueGrowth,
-                ],
-                'average_order_value' => [
-                    'current' => round((float) ($currentMetrics->avg_order_value ?? 0), 2),
-                    'previous' => round((float) ($previousMetrics->avg_order_value ?? 0), 2),
-                    'growth_rate' => $aovGrowth,
-                ],
-                'customer_lifetime_value' => [
-                    'estimated_clv' => round($clv, 2),
-                    'avg_lifespan_months' => $avgCustomerLifespan,
-                    'avg_monthly_orders' => round($avgMonthlyOrders, 2),
-                ],
-                'customer_metrics' => [
-                    'unique_customers' => $currentMetrics->unique_customers ?? 0,
-                    'previous_customers' => $previousMetrics->unique_customers ?? 0,
-                    'customer_growth' => $customerGrowth,
-                    'arpu' => round($arpu, 2),
-                ],
-                'order_metrics' => [
-                    'total_orders' => $currentMetrics->total_orders ?? 0,
-                    'previous_orders' => $previousMetrics->total_orders ?? 0,
-                    'order_growth' => $this->calculateGrowthRate(
-                        $currentMetrics->total_orders ?? 0,
-                        $previousMetrics->total_orders ?? 0
-                    ),
-                ],
-            ];
-        });
+                // Calculate Customer Lifetime Value (CLV) - simplified version
+                $avgCustomerLifespan = 12; // months - could be calculated from actual data
+                $avgMonthlyOrders = $currentMetrics->total_orders / max(1, $this->getPeriodInMonths($filters));
+                $clv = ($currentMetrics->avg_order_value ?? 0) * $avgMonthlyOrders * $avgCustomerLifespan;
+
+                // Calculate growth rates
+                $revenueGrowth = $this->calculateGrowthRate(
+                    $currentMetrics->total_revenue ?? 0,
+                    $previousMetrics->total_revenue ?? 0
+                );
+                
+                $aovGrowth = $this->calculateGrowthRate(
+                    $currentMetrics->avg_order_value ?? 0,
+                    $previousMetrics->avg_order_value ?? 0
+                );
+
+                $customerGrowth = $this->calculateGrowthRate(
+                    $currentMetrics->unique_customers ?? 0,
+                    $previousMetrics->unique_customers ?? 0
+                );
+
+                // Calculate Average Revenue Per User (ARPU)
+                $arpu = $currentMetrics->unique_customers > 0 
+                    ? ($currentMetrics->total_revenue ?? 0) / $currentMetrics->unique_customers 
+                    : 0;
+
+                return [
+                    'total_revenue' => [
+                        'current' => (float) ($currentMetrics->total_revenue ?? 0),
+                        'previous' => (float) ($previousMetrics->total_revenue ?? 0),
+                        'growth_rate' => $revenueGrowth,
+                    ],
+                    'average_order_value' => [
+                        'current' => round((float) ($currentMetrics->avg_order_value ?? 0), 2),
+                        'previous' => round((float) ($previousMetrics->avg_order_value ?? 0), 2),
+                        'growth_rate' => $aovGrowth,
+                    ],
+                    'customer_lifetime_value' => [
+                        'estimated_clv' => round($clv, 2),
+                        'avg_lifespan_months' => $avgCustomerLifespan,
+                        'avg_monthly_orders' => round($avgMonthlyOrders, 2),
+                    ],
+                    'customer_metrics' => [
+                        'unique_customers' => $currentMetrics->unique_customers ?? 0,
+                        'previous_customers' => $previousMetrics->unique_customers ?? 0,
+                        'customer_growth' => $customerGrowth,
+                        'arpu' => round($arpu, 2),
+                    ],
+                    'order_metrics' => [
+                        'total_orders' => $currentMetrics->total_orders ?? 0,
+                        'previous_orders' => $previousMetrics->total_orders ?? 0,
+                        'order_growth' => $this->calculateGrowthRate(
+                            $currentMetrics->total_orders ?? 0,
+                            $previousMetrics->total_orders ?? 0
+                        ),
+                    ],
+                ];
+            });
+        } catch (\Exception $e) {
+            \Log::error('FinancialAnalytics getFinancialKPIs error: ' . $e->getMessage());
+            return $this->getEmptyKPIs();
+        }
     }
 
     /**
@@ -619,17 +660,29 @@ class FinancialAnalytics extends Component
     public function render()
     {
         try {
+            $financialKPIs = $this->getFinancialKPIs();
+            $revenueTrends = $this->getRevenueTrendData();
+            $revenueByService = $this->getRevenueByServiceType();
+            $revenueBySegment = $this->getRevenueByCustomerSegment();
+            $profitMargins = $this->getProfitMarginAnalysis();
+            $customerCLV = $this->getCustomerLifetimeValueData();
+            $growthAnalysis = $this->getGrowthRateAnalysis();
+            
             return view('livewire.financial-analytics', [
-                'revenueTrends' => $this->getRevenueTrendData(),
-                'revenueByService' => $this->getRevenueByServiceType(),
-                'revenueBySegment' => $this->getRevenueByCustomerSegment(),
-                'financialKPIs' => $this->getFinancialKPIs(),
-                'profitMargins' => $this->getProfitMarginAnalysis(),
-                'customerCLV' => $this->getCustomerLifetimeValueData(),
-                'growthAnalysis' => $this->getGrowthRateAnalysis(),
+                'revenueTrends' => $revenueTrends,
+                'revenueByService' => $revenueByService,
+                'revenueBySegment' => $revenueBySegment,
+                'financialKPIs' => $financialKPIs,
+                'profitMargins' => $profitMargins,
+                'customerCLV' => $customerCLV,
+                'growthAnalysis' => $growthAnalysis,
                 'isLoading' => $this->isLoading,
             ]);
         } catch (\Exception $e) {
+            \Log::error('FinancialAnalytics render error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             // Fallback with empty data structure
             return view('livewire.financial-analytics', [
                 'revenueTrends' => [],
@@ -638,7 +691,7 @@ class FinancialAnalytics extends Component
                 'financialKPIs' => $this->getEmptyKPIs(),
                 'profitMargins' => [],
                 'customerCLV' => [],
-                'growthAnalysis' => [],
+                'growthAnalysis' => $this->getEmptyGrowthAnalysis(),
                 'isLoading' => false,
             ]);
         }
@@ -677,5 +730,130 @@ class FinancialAnalytics extends Component
                 'order_growth' => 0,
             ],
         ];
+    }
+
+    /**
+     * Get empty growth analysis structure for fallback
+     */
+    private function getEmptyGrowthAnalysis()
+    {
+        return [
+            'current_period' => [
+                'total_revenue' => 0,
+                'total_orders' => 0,
+                'unique_customers' => 0,
+                'avg_order_value' => 0,
+            ],
+            'previous_period' => [
+                'total_revenue' => 0,
+                'total_orders' => 0,
+                'unique_customers' => 0,
+                'avg_order_value' => 0,
+            ],
+            'growth_rates' => [
+                'revenue_growth' => 0,
+                'order_growth' => 0,
+                'customer_growth' => 0,
+                'aov_growth' => 0,
+            ],
+            'period_info' => [
+                'current_start' => now()->format('Y-m-d'),
+                'current_end' => now()->format('Y-m-d'),
+                'previous_start' => now()->subDays(30)->format('Y-m-d'),
+                'previous_end' => now()->subDay()->format('Y-m-d'),
+            ],
+        ];
+    }
+
+    /**
+     * Calculate KPIs directly without caching service
+     */
+    private function calculateKPIsDirectly($filters)
+    {
+        try {
+            $dateRange = $this->getDateRange($filters);
+            $previousRange = $this->getPreviousDateRange($filters);
+
+            // Current period metrics
+            $currentMetrics = Package::whereBetween('created_at', $dateRange)
+                ->selectRaw("
+                    COUNT(*) as total_orders,
+                    SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total_revenue,
+                    AVG(freight_price + customs_duty + storage_fee + delivery_fee) as avg_order_value,
+                    COUNT(DISTINCT user_id) as unique_customers
+                ")
+                ->first();
+
+            // Previous period metrics for comparison
+            $previousMetrics = Package::whereBetween('created_at', $previousRange)
+                ->selectRaw("
+                    COUNT(*) as total_orders,
+                    SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total_revenue,
+                    AVG(freight_price + customs_duty + storage_fee + delivery_fee) as avg_order_value,
+                    COUNT(DISTINCT user_id) as unique_customers
+                ")
+                ->first();
+
+            // Calculate Customer Lifetime Value (CLV) - simplified version
+            $avgCustomerLifespan = 12; // months - could be calculated from actual data
+            $avgMonthlyOrders = $currentMetrics->total_orders / max(1, $this->getPeriodInMonths($filters));
+            $clv = ($currentMetrics->avg_order_value ?? 0) * $avgMonthlyOrders * $avgCustomerLifespan;
+
+            // Calculate growth rates
+            $revenueGrowth = $this->calculateGrowthRate(
+                $currentMetrics->total_revenue ?? 0,
+                $previousMetrics->total_revenue ?? 0
+            );
+            
+            $aovGrowth = $this->calculateGrowthRate(
+                $currentMetrics->avg_order_value ?? 0,
+                $previousMetrics->avg_order_value ?? 0
+            );
+
+            $customerGrowth = $this->calculateGrowthRate(
+                $currentMetrics->unique_customers ?? 0,
+                $previousMetrics->unique_customers ?? 0
+            );
+
+            // Calculate Average Revenue Per User (ARPU)
+            $arpu = $currentMetrics->unique_customers > 0 
+                ? ($currentMetrics->total_revenue ?? 0) / $currentMetrics->unique_customers 
+                : 0;
+
+            return [
+                'total_revenue' => [
+                    'current' => (float) ($currentMetrics->total_revenue ?? 0),
+                    'previous' => (float) ($previousMetrics->total_revenue ?? 0),
+                    'growth_rate' => $revenueGrowth,
+                ],
+                'average_order_value' => [
+                    'current' => round((float) ($currentMetrics->avg_order_value ?? 0), 2),
+                    'previous' => round((float) ($previousMetrics->avg_order_value ?? 0), 2),
+                    'growth_rate' => $aovGrowth,
+                ],
+                'customer_lifetime_value' => [
+                    'estimated_clv' => round($clv, 2),
+                    'avg_lifespan_months' => $avgCustomerLifespan,
+                    'avg_monthly_orders' => round($avgMonthlyOrders, 2),
+                ],
+                'customer_metrics' => [
+                    'unique_customers' => $currentMetrics->unique_customers ?? 0,
+                    'previous_customers' => $previousMetrics->unique_customers ?? 0,
+                    'customer_growth' => $customerGrowth,
+                    'arpu' => round($arpu, 2),
+                ],
+                'order_metrics' => [
+                    'total_orders' => $currentMetrics->total_orders ?? 0,
+                    'previous_orders' => $previousMetrics->total_orders ?? 0,
+                    'order_growth' => $this->calculateGrowthRate(
+                        $currentMetrics->total_orders ?? 0,
+                        $previousMetrics->total_orders ?? 0
+                    ),
+                ],
+            ];
+        } catch (\Exception $e) {
+            \Log::error('FinancialAnalytics calculateKPIsDirectly error: ' . $e->getMessage());
+            return $this->getEmptyKPIs();
+        }
     }
 }

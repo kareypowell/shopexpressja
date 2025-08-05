@@ -20,8 +20,8 @@ class ReadyStatusCostVisibilityTest extends TestCase
     /** @test */
     public function customer_can_see_costs_for_packages_with_ready_status()
     {
-        // Create customer role and user
-        $customerRole = Role::factory()->create(['id' => 3, 'name' => 'customer']);
+        // Use existing customer role
+        $customerRole = Role::find(3);
         $customer = User::factory()->create(['role_id' => $customerRole->id]);
 
         // Create supporting models
@@ -57,8 +57,8 @@ class ReadyStatusCostVisibilityTest extends TestCase
     /** @test */
     public function ready_status_displays_correctly_in_table()
     {
-        // Create customer role and user
-        $customerRole = Role::factory()->create(['id' => 3, 'name' => 'customer']);
+        // Use existing customer role
+        $customerRole = Role::find(3);
         $customer = User::factory()->create(['role_id' => $customerRole->id]);
 
         // Create supporting models

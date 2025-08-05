@@ -106,7 +106,7 @@ class CustomerProfileViewingTest extends TestCase
         
         // Check that package stats are loaded
         $this->assertNotEmpty($component->get('packageStats'));
-        $this->assertEquals(5, $component->get('packageStats')['total_packages']);
+        $this->assertEquals(5, $component->get('packageStats')['total_count']);
     }
 
     /** @test */
@@ -169,7 +169,7 @@ class CustomerProfileViewingTest extends TestCase
         $component->assertStatus(200);
         
         // Check that stats show zero values
-        $this->assertEquals(0, $component->get('packageStats')['total_packages']);
+        $this->assertEquals(0, $component->get('packageStats')['total_count']);
         $this->assertEquals(0.0, $component->get('financialSummary')['total_spent']);
         $this->assertEmpty($component->get('recentPackages'));
     }

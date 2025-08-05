@@ -14,12 +14,29 @@ class AdminDashboardFeatureTest extends TestCase
     /** @test */
     public function admin_can_access_dashboard()
     {
-        // Create admin role and user
-        $role = Role::factory()->create(['name' => 'superadmin']);
+        // Use existing superadmin role
+        $role = Role::find(1);
         $user = User::factory()->create([
             'first_name' => 'Admin',
             'last_name' => 'User',
             'role_id' => $role->id,
+        ]);
+
+        // Create some test data for the dashboard to display
+        $customer = User::factory()->create(['role_id' => Role::find(3)->id]);
+        $manifest = \App\Models\Manifest::factory()->create();
+        $office = \App\Models\Office::factory()->create();
+        $shipper = \App\Models\Shipper::factory()->create();
+        
+        \App\Models\Package::factory()->create([
+            'user_id' => $customer->id,
+            'manifest_id' => $manifest->id,
+            'office_id' => $office->id,
+            'shipper_id' => $shipper->id,
+            'freight_price' => 100.00,
+            'customs_duty' => 25.00,
+            'storage_fee' => 10.00,
+            'delivery_fee' => 15.00,
         ]);
 
         // Mock the analytics service to prevent database issues
