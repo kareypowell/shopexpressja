@@ -10,6 +10,8 @@ use App\Models\User;
 use App\Models\Package;
 use App\Models\Manifest;
 use App\Models\Role;
+use App\Models\Office;
+use App\Models\Shipper;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Carbon\Carbon;
@@ -277,6 +279,10 @@ class FinancialAnalyticsTest extends TestCase
             'created_at' => Carbon::now()->subDays(30)
         ]);
 
+        // Create shared office and shipper to avoid duplicates
+        $office = Office::factory()->create();
+        $shipper = Shipper::factory()->create();
+
         // Create test manifests
         $seaManifest = Manifest::create([
             'name' => 'SEA001',
@@ -300,6 +306,8 @@ class FinancialAnalyticsTest extends TestCase
             Package::factory()->count(2)->create([
                 'user_id' => $user->id,
                 'manifest_id' => $seaManifest->id,
+                'office_id' => $office->id,
+                'shipper_id' => $shipper->id,
                 'freight_price' => 100 + ($index * 50),
                 'customs_duty' => 20 + ($index * 10),
                 'storage_fee' => 15 + ($index * 5),
@@ -312,6 +320,8 @@ class FinancialAnalyticsTest extends TestCase
             Package::factory()->count(1)->create([
                 'user_id' => $user->id,
                 'manifest_id' => $airManifest->id,
+                'office_id' => $office->id,
+                'shipper_id' => $shipper->id,
                 'freight_price' => 80 + ($index * 30),
                 'customs_duty' => 15 + ($index * 8),
                 'storage_fee' => 10 + ($index * 3),

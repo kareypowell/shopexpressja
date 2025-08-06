@@ -24,10 +24,10 @@ class CustomerNavigationUITest extends TestCase
     {
         parent::setUp();
 
-        // Create roles
-        $this->customerRole = Role::factory()->create(['name' => 'customer']);
-        $this->adminRole = Role::factory()->create(['name' => 'admin']);
-        $this->superAdminRole = Role::factory()->create(['name' => 'superadmin']);
+        // Get or create roles
+        $this->customerRole = Role::firstOrCreate(['name' => 'customer'], ['description' => 'Customer role']);
+        $this->adminRole = Role::firstOrCreate(['name' => 'admin'], ['description' => 'Admin role']);
+        $this->superAdminRole = Role::firstOrCreate(['name' => 'superadmin'], ['description' => 'Super Admin role']);
 
         // Create users
         $this->customer = User::factory()->create(['role_id' => $this->customerRole->id]);
