@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This feature enhances the manifest management system by improving navigation structure and implementing a comprehensive package workflow system. The enhancement includes updating the sidebar navigation to match the customer management pattern, creating a streamlined process for managing packages through various stages (pending, processing, shipped, customs, ready, delivered), and implementing package distribution with receipt generation and transaction logging.
+This feature enhances the manifest management system by improving navigation structure and implementing a comprehensive package workflow system. The enhancement includes updating the sidebar navigation to match the customer management pattern, creating a streamlined process for managing packages through various stages (pending, processing, shipped, customs, ready, delivered), implementing package distribution with receipt generation and transaction logging, and normalizing package status across the entire system with database seeders for existing entries.
 
 ## Requirements
 
@@ -24,7 +24,7 @@ This feature enhances the manifest management system by improving navigation str
 
 #### Acceptance Criteria
 
-1. WHEN I view a manifest THEN the system SHALL display packages with their current status (pending, processing, shipped, customs, ready, delivered)
+1. WHEN I view a manifest THEN the system SHALL display packages with their current status (pending, processing, shipped, customs, ready, delivered, delayed)
 2. WHEN I select one or more packages THEN the system SHALL allow me to update their status to the next appropriate stage
 3. WHEN I update package status THEN the system SHALL validate that the status transition is valid
 4. WHEN a package status changes THEN the system SHALL log the status change with timestamp and user information
@@ -79,3 +79,18 @@ This feature enhances the manifest management system by improving navigation str
 3. WHEN the receipt is emailed THEN it SHALL be formatted professionally with company branding
 4. IF email delivery fails THEN the system SHALL log the failure and allow manual resend
 5. WHEN I receive the email THEN it SHALL include a PDF attachment of the receipt for my records
+### Req
+uirement 7
+
+**User Story:** As a system administrator, I want all package statuses normalized to use consistent values across the entire system with database seeders for existing entries, so that there is no confusion or inconsistency in status reporting and management.
+
+#### Acceptance Criteria
+
+1. WHEN the system is updated THEN all package status values SHALL use a standardized enum with values: pending, processing, shipped, customs, ready, delivered, delayed
+2. WHEN the status normalization seeder runs THEN it SHALL identify all unique status values currently in the packages table and map them to appropriate normalized status values
+3. WHEN existing database entries are migrated THEN all current status values SHALL be updated to use the normalized status format with a summary report of changes
+4. WHEN I view any package in the system THEN the status SHALL display using the normalized status values with consistent styling across all components
+5. WHEN new packages are created THEN they SHALL only use the normalized status values with proper validation
+6. WHEN status transitions are made THEN the system SHALL validate that the transition is logically valid using the centralized enum
+7. IF legacy status values exist in historical data THEN they SHALL be displayed with their normalized equivalents for clarity
+8. IF unmappable status values are found during migration THEN the system SHALL log them for manual review and set them to a default status

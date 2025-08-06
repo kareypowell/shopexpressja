@@ -2,7 +2,7 @@
 
 ## Overview
 
-This design document outlines the enhancement of the manifest management system to include improved navigation structure and a comprehensive package workflow system. The solution builds upon the existing Laravel/Livewire architecture and follows established patterns from the customer management system.
+This design document outlines the enhancement of the manifest management system to include improved navigation structure, a comprehensive package workflow system, and normalized package status across the entire system. The solution builds upon the existing Laravel/Livewire architecture and follows established patterns from the customer management system.
 
 The enhancement includes:
 - Updating sidebar navigation to use expandable menu structure similar to customers
@@ -10,6 +10,9 @@ The enhancement includes:
 - Creating package distribution functionality with receipt generation
 - Implementing comprehensive transaction logging
 - Adding automated email notifications with receipt delivery
+- Normalizing all package status values using a centralized enum system
+- Creating database seeders to migrate existing inconsistent status values
+- Updating all components to use consistent status terminology and styling
 
 ## Architecture
 
@@ -22,10 +25,18 @@ The manifest navigation will follow the same expandable pattern as the customer 
 
 ### Package Workflow System
 The package workflow will be implemented as a state machine with the following components:
-- **Package Status Enum**: Defines valid status values and transitions
-- **Package Status Service**: Handles status transitions and validation
+- **Package Status Enum**: Defines valid status values and transitions with normalization support
+- **Package Status Service**: Handles status transitions, validation, and normalization
 - **Package Workflow Component**: Livewire component for status management UI
 - **Status History Model**: Tracks all status changes with audit trail
+- **Status Normalization Seeder**: Migrates existing status values to normalized format
+
+### Status Normalization System
+The status normalization system ensures consistency across the entire application:
+- **Centralized Status Management**: Single source of truth for all status values
+- **Legacy Status Mapping**: Maps existing inconsistent status values to normalized format
+- **Database Migration**: Updates all existing package records to use normalized status
+- **Component Updates**: Ensures all UI components display consistent status information
 
 ### Distribution System
 The package distribution system will include:
@@ -57,6 +68,47 @@ enum PackageStatus: string
     case CUSTOMS = 'customs';
     case READY = 'ready';
     case DELIVERED = 'delivered';
+    case DELAYED = 'delayed';
+    
+    // Status normalization methods
+    public static function fromLegacyStatus(string $legacyStatus): self
+    {
+        return match(strtolower(trim($legacyStatus))) {
+            'pending', 'new', 'created' => self::PENDING,
+            'processing', 'in_process', 'in process' => self::PROCESSING,
+            'shipped', 'in_transit', 'in transit' => self::SHIPPED,
+            'customs', 'at_customs', 'at customs' => self::CUSTOMS,
+            'ready', 'ready_for_pickup', 'ready for pickup' => self::READY,
+            'delivered', 'completed', 'done' => self::DELIVERED,
+            default => self::PENDING, // Default fallback
+        };
+    }
+    
+    public function getLabel(): string
+    {
+        return match($this) {
+            self::PENDING => 'Pending',
+            self::PROCESSING => 'Processing',
+            self::SHIPPED => 'Shipped',
+            self::CUSTOMS => 'At Customs',
+            self::READY => 'Ready for Pickup',
+            self::DELIVERED => 'Delivered',
+            self::DELAYED => 'Delayed',
+        };
+    }
+    
+    public function getBadgeClass(): string
+    {
+        return match($this) {
+            self::PENDING => 'default',
+            self::PROCESSING => 'primary',
+            self::SHIPPED => 'shs',
+            self::CUSTOMS => 'warning',
+            self::READY => 'success',
+            self::DELIVERED => 'success',
+            self::DELAYED => 'danger',
+        };
+    }
 }
 ```
 
@@ -71,10 +123,20 @@ enum PackageStatus: string
 #### Package Workflow Livewire Component
 - **File**: `app/Http/Livewire/Manifests/PackageWorkflow.php`
 - **Functionality**:
-  - Display packages with current status
-  - Bulk status updates
+  - Display packages with current status using normalized values
+  - Bulk status updates with validation
   - Status transition validation
   - Real-time status updates
+
+#### Package Status Normalization Seeder
+- **File**: `database/seeders/PackageStatusNormalizationSeeder.php`
+- **Methods**:
+  - `run()`: Main seeder execution method
+  - `identifyLegacyStatuses()`: Finds all unique status values in packages table
+  - `mapLegacyStatuses()`: Maps legacy statuses to normalized values
+  - `updatePackageStatuses()`: Updates database records with normalized statuses
+  - `generateReport()`: Creates summary report of changes made
+  - `logUnmappableStatuses()`: Logs any statuses that couldn't be mapped
 
 ### 3. Distribution System
 
@@ -103,6 +165,14 @@ enum PackageStatus: string
   - `checkReceiptDeliveryStatus(string $deliveryId): array`
 
 ### 4. Data Models
+
+#### Package Model Updates
+- **File**: `app/Models/Package.php`
+- **Changes**:
+  - Add status casting to PackageStatus enum
+  - Update getStatusBadgeClassAttribute to use enum method
+  - Add status validation in model mutators
+  - Update relationships to handle status history
 
 #### Package Status History Model
 - **File**: `app/Models/PackageStatusHistory.php`
@@ -175,24 +245,41 @@ enum PackageStatus: string
 ## Testing Strategy
 
 ### Unit Tests
+- **Package Status Enum Tests**: Validate status normalization, transitions, and legacy mapping
 - **Package Status Service Tests**: Validate status transitions and business logic
+- **Status Normalization Seeder Tests**: Test legacy status mapping and database updates
 - **Receipt Generator Tests**: Test PDF generation and data formatting
 - **Email Service Tests**: Mock email delivery and test error handling
-- **Model Tests**: Validate relationships and data integrity
+- **Model Tests**: Validate relationships, data integrity, and status casting
 
 ### Feature Tests
 - **Navigation Tests**: Verify expandable menu functionality and route highlighting
-- **Package Workflow Tests**: Test bulk status updates and validation
+- **Package Workflow Tests**: Test bulk status updates and validation with normalized statuses
+- **Status Normalization Tests**: Test complete status migration workflow
 - **Distribution Process Tests**: End-to-end distribution workflow testing
 - **Email Integration Tests**: Test receipt email delivery with attachments
 
 ### Browser Tests
 - **Navigation UI Tests**: Test expandable menu behavior across devices
-- **Package Management Tests**: Test package selection and status updates
+- **Package Management Tests**: Test package selection and status updates with normalized display
+- **Status Consistency Tests**: Verify consistent status display across all components
 - **Distribution UI Tests**: Test distribution interface and confirmation flows
 - **Receipt Generation Tests**: Verify PDF generation and download functionality
 
 ## Database Migrations
+
+### Package Status Normalization Migration
+```sql
+-- Migration to ensure status column supports all normalized values
+ALTER TABLE packages MODIFY COLUMN status VARCHAR(20) NOT NULL DEFAULT 'pending';
+
+-- Add index for better status filtering performance
+CREATE INDEX idx_packages_status ON packages(status);
+
+-- Add constraint to ensure only valid status values (optional, handled by enum)
+-- ALTER TABLE packages ADD CONSTRAINT chk_package_status 
+-- CHECK (status IN ('pending', 'processing', 'shipped', 'customs', 'ready', 'delivered'));
+```
 
 ### Package Status History Table
 ```sql

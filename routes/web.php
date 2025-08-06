@@ -66,8 +66,6 @@ Route::middleware('auth')->group(function () {
         ->name('logout');
 });
 
-
-
 Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
 
@@ -76,7 +74,8 @@ Route::post('/email/verification-notification', function (Request $request) {
 
 // Super Admin routes
 Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->group(function () {
-<<<<<<< HEAD
+    Route::get('/dashboard', \App\Http\Livewire\AdminDashboard::class)->name('admin.dashboard');
+    
     // Manifest routes with new naming convention
     Route::prefix('manifests')->name('admin.manifests.')->group(function () {
         Route::get('/', Manifest::class)->name('index');
@@ -86,19 +85,6 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->gro
         Route::get('/{manifest_id}/packages/{package_id}/edit', EditManifestPackage::class)->name('packages.edit');
     });
     
-
-    // Legacy route for backward compatibility
-    Route::get('/manifests', function () {
-        return redirect()->route('admin.manifests.index');
-    })->name('manifests');
-    
-=======
-    Route::get('/dashboard', \App\Http\Livewire\AdminDashboard::class)->name('admin.dashboard');
-    Route::get('/manifests', Manifest::class)->name('manifests');
-    Route::get('/manifests/{manifest_id}/edit', EditManifest::class)->name('edit-manifest');
-    Route::get('/manifests/{manifest_id}/packages', ManifestPackage::class)->name('manifests.packages');
-    Route::get('/manifests/{manifest_id}/packages/{package_id}/edit', EditManifestPackage::class)->name('manifests.packages.edit');
->>>>>>> main
     Route::get('/roles', Role::class)->name('roles');
     Route::get('/rates', Rate::class)->name('view-rates');
     Route::get('/pre-alerts', AdminPreAlert::class)->name('view-pre-alerts');

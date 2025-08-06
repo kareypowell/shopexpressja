@@ -137,7 +137,7 @@
       View
     </a> -->
 
-    <a href="{{ route('manifests.packages.edit', [$row->manifest_id, $row->id]) }}" type="button" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+    <a href="{{ route('admin.manifests.packages.edit', [$row->manifest_id, $row->id]) }}" type="button" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
       Edit
     </a>
   </div>

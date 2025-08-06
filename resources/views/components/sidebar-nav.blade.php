@@ -39,8 +39,8 @@
         </div>
 
         <!-- Manifests Expandable Menu -->
-        <div x-data="{ open: {{ (\Route::is('admin.manifests.*') || \Route::is('manifests*') || \Route::is('edit-manifest')) ? 'true' : 'false' }} }" class="space-y-1">
-          <button @click="open = !open" class="{{ (\Route::is('admin.manifests.*') || \Route::is('manifests*') || \Route::is('edit-manifest')) ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group w-full flex items-center pl-2 pr-1 py-2 text-left text-base font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <div x-data="{ open: {{ \Route::is('admin.manifests.*') ? 'true' : 'false' }} }" class="space-y-1">
+          <button @click="open = !open" class="{{ \Route::is('admin.manifests.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group w-full flex items-center pl-2 pr-1 py-2 text-left text-base font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <!-- Heroicon name: outline/calendar -->
             <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -223,8 +223,8 @@
           </div>
 
           <!-- Manifests Expandable Menu (Mobile) -->
-          <div x-data="{ open: {{ (\Route::is('admin.manifests.*') || \Route::is('manifests*') || \Route::is('edit-manifest')) ? 'true' : 'false' }} }" class="space-y-1">
-            <button @click="open = !open" class="{{ (\Route::is('admin.manifests.*') || \Route::is('manifests*') || \Route::is('edit-manifest')) ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group w-full flex items-center pl-2 pr-1 py-2 text-left text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <div x-data="{ open: {{ \Route::is('admin.manifests.*') ? 'true' : 'false' }} }" class="space-y-1">
+            <button @click="open = !open" class="{{ \Route::is('admin.manifests.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group w-full flex items-center pl-2 pr-1 py-2 text-left text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
               <!-- Heroicon name: outline/calendar -->
               <svg class="text-gray-400 group-hover:text-gray-300 mr-4 flex-shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

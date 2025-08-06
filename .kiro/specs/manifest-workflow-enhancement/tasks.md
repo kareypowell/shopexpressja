@@ -6,40 +6,56 @@
   - Implement mobile-responsive expandable menu behavior
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 2. Create package status management system
-- [ ] 2.1 Create PackageStatus enum and status transition logic
-  - Define PackageStatus enum with all workflow states (pending, processing, shipped, customs, ready, delivered)
-  - Implement status transition validation rules and allowed transitions matrix
+- [x] 2. Create package status management system
+- [x] 2.1 Create PackageStatus enum with normalization support
+  - Define PackageStatus enum with all workflow states (pending, processing, shipped, customs, ready, delivered, delayed)
+  - Implement fromLegacyStatus method to map existing inconsistent status values to normalized format
+  - Add getLabel and getBadgeClass methods for consistent display across components
   - Create helper methods for status validation and transition checking
-  - _Requirements: 2.3_
+  - _Requirements: 2.3, 7.1, 7.6_
 
-- [ ] 2.2 Create PackageStatusService for status management
+- [x] 2.2 Create PackageStatusService for status management
   - Implement updateStatus method with validation and logging
   - Create getValidTransitions method to return allowed status changes
   - Add canTransitionTo method for status transition validation
   - Implement logStatusChange method for audit trail
   - _Requirements: 2.1, 2.2, 2.4_
 
-- [ ] 2.3 Create PackageStatusHistory model and migration
+- [x] 2.3 Create PackageStatusHistory model and migration
   - Create migration for package_status_histories table with proper indexes
   - Implement PackageStatusHistory model with relationships to Package and User
   - Add model methods for querying status history and formatting timestamps
   - _Requirements: 2.4, 5.1, 5.2_
 
+- [x] 2.4 Create status normalization seeder for existing data
+  - Create PackageStatusNormalizationSeeder to identify all unique status values in packages table
+  - Implement mapping logic to convert legacy status values to normalized format using PackageStatus enum
+  - Add database update functionality to migrate all existing package records to normalized status values
+  - Create summary reporting to show how many records were updated for each status mapping
+  - Add logging for unmappable status values that require manual review
+  - _Requirements: 7.2, 7.3, 7.8_
+
+- [x] 2.5 Update Package model for status normalization
+  - Add status casting to PackageStatus enum in Package model
+  - Update getStatusBadgeClassAttribute method to use enum getBadgeClass method
+  - Add status validation in model mutators to ensure only normalized values are stored
+  - Update any existing status-related methods to work with the enum
+  - _Requirements: 7.1, 7.4, 7.5_
+
 - [ ] 3. Create package workflow management interface
 - [ ] 3.1 Create PackageWorkflow Livewire component
-  - Implement component to display packages with current status and selection
-  - Add bulk status update functionality with validation
+  - Implement component to display packages with current status using normalized values and consistent styling
+  - Add bulk status update functionality with validation using PackageStatus enum
   - Create real-time status update interface with confirmation dialogs
-  - Implement status transition validation on frontend
-  - _Requirements: 2.1, 2.2, 2.3_
+  - Implement status transition validation on frontend using enum methods
+  - _Requirements: 2.1, 2.2, 2.3, 7.4_
 
 - [ ] 3.2 Create package workflow view template
-  - Design responsive interface for package status management
+  - Design responsive interface for package status management using normalized status display
   - Implement package selection with checkboxes and bulk actions
-  - Add status badges and transition buttons with proper styling
-  - Create confirmation modals for status changes
-  - _Requirements: 2.1, 2.2_
+  - Add status badges using consistent styling from PackageStatus enum getBadgeClass method
+  - Create confirmation modals for status changes with normalized status labels
+  - _Requirements: 2.1, 2.2, 7.4_
 
 - [ ] 4. Create package distribution system
 - [ ] 4.1 Create PackageDistribution and PackageDistributionItem models
@@ -109,19 +125,28 @@
   - _Requirements: 1.3, 1.4_
 
 - [ ] 7.2 Update ManifestPackage component for workflow integration
-  - Integrate package status workflow into existing manifest package view
+  - Integrate package status workflow into existing manifest package view using normalized status values
   - Add package selection functionality for bulk status updates
-  - Implement distribution button for ready packages
-  - Update package display to show status and workflow actions
-  - _Requirements: 2.1, 2.2, 4.1_
+  - Implement distribution button for ready packages using enum status checking
+  - Update package display to show status and workflow actions with consistent styling
+  - _Requirements: 2.1, 2.2, 4.1, 7.4_
+
+- [ ] 7.3 Update all existing components to use normalized status
+  - Update all Livewire components that display package status to use PackageStatus enum methods
+  - Ensure consistent status badge styling across all components using getBadgeClass method
+  - Update search and filtering functionality to work with normalized status values
+  - Modify any hardcoded status strings to use enum values
+  - _Requirements: 7.4, 7.7_
 
 - [ ] 8. Create comprehensive testing suite
-- [ ] 8.1 Create unit tests for status management
-  - Test PackageStatus enum and transition validation logic
+- [ ] 8.1 Create unit tests for status management and normalization
+  - Test PackageStatus enum including fromLegacyStatus mapping, getLabel, and getBadgeClass methods
   - Create tests for PackageStatusService methods and error handling
+  - Test PackageStatusNormalizationSeeder with various legacy status scenarios
   - Test status history logging and audit trail functionality
   - Implement tests for status transition validation rules
-  - _Requirements: 2.3, 2.4, 5.1_
+  - Test Package model status casting and validation
+  - _Requirements: 2.3, 2.4, 5.1, 7.1, 7.2, 7.5_
 
 - [ ] 8.2 Create unit tests for distribution system
   - Test PackageDistributionService methods and payment calculations
@@ -130,19 +155,23 @@
   - Implement tests for distribution models and relationships
   - _Requirements: 4.2, 4.3, 4.4, 4.7_
 
-- [ ] 8.3 Create feature tests for workflow integration
-  - Test complete package workflow from pending to delivered status
+- [ ] 8.3 Create feature tests for workflow integration and status normalization
+  - Test complete package workflow from pending to delivered status using normalized values
+  - Test status normalization seeder end-to-end with sample legacy data
   - Create tests for distribution process with amount collection
   - Test email delivery integration with receipt generation
   - Implement tests for navigation structure and route access
-  - _Requirements: 1.1, 2.1, 4.1, 6.1_
+  - Test consistent status display across all application components
+  - _Requirements: 1.1, 2.1, 4.1, 6.1, 7.3, 7.4_
 
-- [ ] 8.4 Create browser tests for user interface
+- [ ] 8.4 Create browser tests for user interface and status consistency
   - Test expandable navigation menu functionality across devices
-  - Create tests for package selection and bulk status updates
+  - Create tests for package selection and bulk status updates with normalized status display
+  - Test consistent status badge styling and labeling across all pages
   - Test distribution interface with amount input and validation
   - Implement tests for receipt generation and download functionality
-  - _Requirements: 1.5, 2.2, 4.3_
+  - Test status filtering and searching with normalized values
+  - _Requirements: 1.5, 2.2, 4.3, 7.4_
 
 - [ ] 9. Implement transaction logging and audit trail
 - [ ] 9.1 Create comprehensive logging for all package operations
@@ -167,9 +196,11 @@
   - Validate all logging and audit trail functionality
   - _Requirements: All requirements_
 
-- [ ] 10.2 Performance optimization and cleanup
+- [ ] 10.2 Execute status normalization and performance optimization
+  - Run PackageStatusNormalizationSeeder on production data to migrate all existing status values
+  - Verify all package records have been updated to use normalized status values
   - Optimize database queries with proper indexing and eager loading
   - Implement caching for frequently accessed data
   - Clean up temporary files and optimize PDF generation
   - Add monitoring and alerting for critical workflow processes
-  - _Requirements: Performance considerations from design_
+  - _Requirements: 7.3, Performance considerations from design_

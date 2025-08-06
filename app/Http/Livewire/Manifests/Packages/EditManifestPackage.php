@@ -416,7 +416,7 @@ class EditManifestPackage extends Component
             }
         }
 
-        return redirect(route('manifests.packages', ['manifest_id' => $this->manifest_id]))
+        return redirect(route('admin.manifests.packages', ['manifest_id' => $this->manifest_id]))
             ->with('message', __('Package updated successfully.'));
     }
 
