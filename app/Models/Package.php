@@ -121,7 +121,7 @@ class Package extends Model
                         'provided_status' => $value,
                         'package_id' => $this->id ?? 'new',
                     ]);
-                    $this->attributes['status'] = PackageStatus::PENDING->value;
+                    $this->attributes['status'] = PackageStatus::PENDING;
                 }
             }
         }
@@ -243,7 +243,7 @@ class Package extends Model
      */
     public function scopeReadyForDistribution($query)
     {
-        return $query->where('status', PackageStatus::READY->value);
+        return $query->where('status', PackageStatus::READY);
     }
 
     /**
@@ -252,8 +252,8 @@ class Package extends Model
     public function scopeInTransit($query)
     {
         return $query->whereIn('status', [
-            PackageStatus::SHIPPED->value,
-            PackageStatus::CUSTOMS->value,
+            PackageStatus::SHIPPED,
+            PackageStatus::CUSTOMS,
         ]);
     }
 
@@ -262,7 +262,7 @@ class Package extends Model
      */
     public function scopeDelayed($query)
     {
-        return $query->where('status', PackageStatus::DELAYED->value);
+        return $query->where('status', PackageStatus::DELAYED);
     }
 
     /**
@@ -270,6 +270,6 @@ class Package extends Model
      */
     public function scopeDelivered($query)
     {
-        return $query->where('status', PackageStatus::DELIVERED->value);
+        return $query->where('status', PackageStatus::DELIVERED);
     }
 }
