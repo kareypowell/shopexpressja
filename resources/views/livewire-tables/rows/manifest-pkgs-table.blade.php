@@ -1,12 +1,16 @@
 <x-livewire-tables::table.cell>
   <div>
-    {{ $row->user->full_name }}
-    @if($row->user->profile->account_number)
-    <p>
-      <span class="text-sm text-gray-500">
-        <small><strong>Account Number: <x-badges.shs>{{ $row->user->profile->account_number }}</x-badges.shs></small>
-      </span>
-    </p>
+    @if($row->user)
+      {{ $row->user->full_name }}
+      @if($row->user->profile && $row->user->profile->account_number)
+      <p>
+        <span class="text-sm text-gray-500">
+          <small><strong>Account Number: <x-badges.shs>{{ $row->user->profile->account_number }}</x-badges.shs></small>
+        </span>
+      </p>
+      @endif
+    @else
+      <span class="text-red-500 text-sm">User not found</span>
     @endif
   </div>
 </x-livewire-tables::table.cell>

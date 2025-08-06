@@ -36,9 +36,9 @@ class AdminDashboard extends Component
     public array $dashboardLayout = [
         'system_status' => ['enabled' => true, 'order' => 0, 'size' => 'full'],
         'metrics' => ['enabled' => true, 'order' => 1, 'size' => 'full'],
-        'customer_analytics' => ['enabled' => true, 'order' => 2, 'size' => 'half'],
-        'shipment_analytics' => ['enabled' => true, 'order' => 3, 'size' => 'half'],
-        'financial_analytics' => ['enabled' => true, 'order' => 4, 'size' => 'full'],
+        'customer_analytics' => ['enabled' => false, 'order' => 2, 'size' => 'half'],
+        'shipment_analytics' => ['enabled' => false, 'order' => 3, 'size' => 'half'],
+        'financial_analytics' => ['enabled' => false, 'order' => 4, 'size' => 'full'],
     ];
     
     // Performance optimization - DISABLED to prevent memory issues
