@@ -209,7 +209,7 @@
     - _Requirements: 1.1, 2.1, 3.1_
 
 - [ ] 14. Performance optimization and caching
-  - [ ] 14.1 Implement caching for customer data
+  - [x] 14.1 Implement caching for customer data
     - Add caching for customer statistics calculations
     - Implement cache invalidation for customer updates
     - Create caching for financial summary data
@@ -217,7 +217,7 @@
     - Write tests for caching functionality
     - _Requirements: 5.3, 5.4, 5.5_
 
-  - [ ] 14.2 Optimize database queries and indexes
+  - [x] 14.2 Optimize database queries and indexes
     - Add database indexes for customer queries
     - Optimize eager loading for customer relationships
     - Implement pagination for large datasets

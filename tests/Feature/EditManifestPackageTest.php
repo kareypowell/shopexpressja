@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Manifest;
 use App\Models\Package;
 use App\Models\PackageItem;
@@ -23,7 +24,8 @@ class EditManifestPackageTest extends TestCase
         parent::setUp();
         
         // Create test data
-        $this->user = User::factory()->create(['role_id' => 3, 'email_verified_at' => now()]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $this->user = User::factory()->create(['role_id' => $customerRole->id]);
         $this->office = Office::factory()->create();
         $this->shipper = Shipper::factory()->create();
         

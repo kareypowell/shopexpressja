@@ -21,14 +21,16 @@ class CustomerPackagesTableTest extends TestCase
     protected $admin;
     protected $customer;
     protected $packages;
+    protected $office;
+    protected $shipper;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Create roles
-        $adminRole = Role::factory()->create(['name' => 'admin']);
-        $customerRole = Role::factory()->create(['name' => 'customer']);
+        // Use existing roles
+        $adminRole = Role::find(2);
+        $customerRole = Role::find(3);
 
         // Create admin user
         $this->admin = User::factory()->create(['role_id' => $adminRole->id]);
@@ -38,15 +40,16 @@ class CustomerPackagesTableTest extends TestCase
 
         // Create supporting models
         $manifest = Manifest::factory()->create();
-        $shipper = Shipper::factory()->create();
-        $office = Office::factory()->create();
+        $this->shipper = Shipper::factory()->create();
+        $this->office = Office::factory()->create();
 
         // Create packages for the customer
         $this->packages = Package::factory()->count(5)->create([
             'user_id' => $this->customer->id,
             'manifest_id' => $manifest->id,
-            'shipper_id' => $shipper->id,
-            'office_id' => $office->id,
+            'shipper_id' => $this->shipper->id,
+            'office_id' => $this->office->id,
+            'status' => 'ready', // Set status to allow cost visibility
             'freight_price' => 100.00,
             'customs_duty' => 25.00,
             'storage_fee' => 10.00,
@@ -123,12 +126,16 @@ class CustomerPackagesTableTest extends TestCase
         // Create packages with different statuses
         Package::factory()->create([
             'user_id' => $this->customer->id,
+            'office_id' => $this->office->id,
+            'shipper_id' => $this->shipper->id,
             'status' => 'shipped',
             'tracking_number' => 'SHIPPED001'
         ]);
 
         Package::factory()->create([
             'user_id' => $this->customer->id,
+            'office_id' => $this->office->id,
+            'shipper_id' => $this->shipper->id,
             'status' => 'processing',
             'tracking_number' => 'PROCESSING001'
         ]);
@@ -150,6 +157,8 @@ class CustomerPackagesTableTest extends TestCase
         // Create an old package
         Package::factory()->create([
             'user_id' => $this->customer->id,
+            'office_id' => $this->office->id,
+            'shipper_id' => $this->shipper->id,
             'created_at' => now()->subDays(60),
             'tracking_number' => 'OLD001'
         ]);
@@ -157,6 +166,8 @@ class CustomerPackagesTableTest extends TestCase
         // Create a recent package
         Package::factory()->create([
             'user_id' => $this->customer->id,
+            'office_id' => $this->office->id,
+            'shipper_id' => $this->shipper->id,
             'created_at' => now()->subDays(15),
             'tracking_number' => 'RECENT001'
         ]);
@@ -193,6 +204,8 @@ class CustomerPackagesTableTest extends TestCase
         // Create package with zero costs
         $packageWithZeroCosts = Package::factory()->create([
             'user_id' => $this->customer->id,
+            'office_id' => $this->office->id,
+            'shipper_id' => $this->shipper->id,
             'freight_price' => 0,
             'customs_duty' => 0,
             'storage_fee' => 0,
@@ -215,6 +228,8 @@ class CustomerPackagesTableTest extends TestCase
         // Create packages with different costs
         Package::factory()->create([
             'user_id' => $this->customer->id,
+            'office_id' => $this->office->id,
+            'shipper_id' => $this->shipper->id,
             'freight_price' => 50.00,
             'customs_duty' => 10.00,
             'storage_fee' => 5.00,
@@ -224,6 +239,8 @@ class CustomerPackagesTableTest extends TestCase
 
         Package::factory()->create([
             'user_id' => $this->customer->id,
+            'office_id' => $this->office->id,
+            'shipper_id' => $this->shipper->id,
             'freight_price' => 200.00,
             'customs_duty' => 50.00,
             'storage_fee' => 20.00,
@@ -244,6 +261,8 @@ class CustomerPackagesTableTest extends TestCase
 
         Package::factory()->create([
             'user_id' => $this->customer->id,
+            'office_id' => $this->office->id,
+            'shipper_id' => $this->shipper->id,
             'tracking_number' => 'SEARCH123'
         ]);
 
@@ -259,9 +278,15 @@ class CustomerPackagesTableTest extends TestCase
     {
         $this->actingAs($this->admin);
 
+        // Create shared office and shipper to avoid duplicates
+        $office = Office::factory()->create();
+        $shipper = Shipper::factory()->create();
+
         // Create many packages
         Package::factory()->count(30)->create([
             'user_id' => $this->customer->id,
+            'office_id' => $office->id,
+            'shipper_id' => $shipper->id,
         ]);
 
         $component = Livewire::test(CustomerPackagesTable::class, ['customer' => $this->customer]);

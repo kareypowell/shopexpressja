@@ -18,10 +18,8 @@ class AdminCustomersTableTest extends TestCase
     {
         parent::setUp();
         
-        // Create roles
-        Role::factory()->create(['id' => 1, 'name' => 'superadmin']);
-        Role::factory()->create(['id' => 2, 'name' => 'admin']);
-        Role::factory()->create(['id' => 3, 'name' => 'customer']);
+        // Use existing roles (created in TestCase)
+        // Roles are already created in TestCase::createBasicRoles()
     }
 
     /** @test */
@@ -272,7 +270,7 @@ class AdminCustomersTableTest extends TestCase
 
         $result = $component->instance()->highlightSearchTerm('John Doe', 'John');
         
-        $this->assertStringContainsString('<mark class="bg-yellow-200">John</mark>', $result);
+        $this->assertStringContainsString('<mark class="bg-yellow-200 px-1 rounded">John</mark>', $result);
     }
 
     /** @test */

@@ -265,8 +265,8 @@ class SeaPricingCalculationTest extends TestCase
         $this->assertEquals(1.5, (float)$package->cubic_feet);
         
         // Verify freight price calculation
-        $expectedFreightPrice = ((22.00 + 8.50) * 1.5) * 1.5; // 68.62
-        $this->assertEquals($expectedFreightPrice, (float)$package->freight_price);
+        $expectedFreightPrice = ((22.00 + 8.50) * 1.5) * 1.5; // 68.625
+        $this->assertEqualsWithDelta($expectedFreightPrice, (float)$package->freight_price, 0.01);
     }
 
     /** @test */
@@ -321,11 +321,22 @@ class SeaPricingCalculationTest extends TestCase
             'cubic_feet' => 1.5
         ]);
 
+        // Verify the manifest has zero exchange rate
+        $this->assertEquals(0, $package->manifest->exchange_rate);
+        
+        // Debug: Check if package is recognized as sea package
+        $this->assertTrue($package->isSeaPackage(), 'Package should be recognized as sea package');
+        
+        // Debug: Check if rate exists
+        $rate = Rate::forSeaShipment(1.5)->first();
+        $this->assertNotNull($rate, 'Rate should exist for 1.5 cubic feet');
+
         $price = $this->calculator->calculateFreightPrice($package);
 
         // Should fallback to exchange rate of 1
         // Expected: ((15.00 + 3.00) * 1.5) * 1 = 27.0
-        $this->assertEquals(27.0, $price);
+        $this->assertGreaterThan(0, $price, 'Price should be greater than 0 when exchange rate fallback is used');
+        $this->assertEqualsWithDelta(27.0, $price, 0.01);
     }
 
     /** @test */

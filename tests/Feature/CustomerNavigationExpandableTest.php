@@ -19,8 +19,8 @@ class CustomerNavigationExpandableTest extends TestCase
     {
         parent::setUp();
 
-        // Create admin role and user
-        $this->adminRole = Role::factory()->create(['name' => 'admin']);
+        // Get existing admin role
+        $this->adminRole = Role::where('name', 'admin')->first();
         $this->admin = User::factory()->create(['role_id' => $this->adminRole->id]);
         Profile::factory()->create(['user_id' => $this->admin->id]);
     }
@@ -32,11 +32,11 @@ class CustomerNavigationExpandableTest extends TestCase
         
         $response->assertStatus(200);
         
-        // Check for expandable menu elements (HTML double-encoded)
-        $response->assertSee('x-data=&amp;quot;{ open:');
+        // Check for expandable menu elements
+        $response->assertSee('x-data="{ open: true }"', false);
         $response->assertSee('All Customers');
         $response->assertSee('Create Customer');
-        $response->assertSee('@click=&amp;quot;open = !open&amp;quot;');
+        $response->assertSee('@click="open = !open"', false);
     }
 
     /** @test */

@@ -25,7 +25,7 @@ class CustomerDashboardModalTest extends TestCase
         parent::setUp();
 
         // Create customer role and user
-        $customerRole = Role::factory()->create(['id' => 3, 'name' => 'customer']);
+        $customerRole = Role::firstOrCreate(['name' => 'customer'], ['description' => 'Customer']);
         $this->customer = User::factory()->create(['role_id' => $customerRole->id]);
 
         // Create supporting models

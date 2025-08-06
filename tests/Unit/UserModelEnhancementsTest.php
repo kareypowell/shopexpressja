@@ -18,10 +18,7 @@ class UserModelEnhancementsTest extends TestCase
     {
         parent::setUp();
         
-        // Create roles
-        Role::factory()->create(['id' => 1, 'name' => 'superadmin']);
-        Role::factory()->create(['id' => 2, 'name' => 'admin']);
-        Role::factory()->create(['id' => 3, 'name' => 'customer']);
+        // Roles are already created by the base TestCase
     }
 
     /** @test */

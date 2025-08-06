@@ -7,6 +7,7 @@ use App\Models\Package;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CustomerStatisticsService
 {
@@ -14,18 +15,54 @@ class CustomerStatisticsService
      * Cache duration in seconds (1 hour)
      */
     const CACHE_DURATION = 3600;
+    
+    /**
+     * Cache duration for financial summary (30 minutes)
+     */
+    const FINANCIAL_CACHE_DURATION = 1800;
+    
+    /**
+     * Cache duration for package metrics (45 minutes)
+     */
+    const PACKAGE_CACHE_DURATION = 2700;
+    
+    /**
+     * Cache duration for shipping patterns (2 hours)
+     */
+    const PATTERNS_CACHE_DURATION = 7200;
+    
+    /**
+     * Cache tag for customer statistics
+     */
+    const CACHE_TAG_CUSTOMER_STATS = 'customer_stats';
+    
+    /**
+     * Cache tag for customer financial data
+     */
+    const CACHE_TAG_CUSTOMER_FINANCIAL = 'customer_financial';
+    
+    /**
+     * Cache tag for customer packages
+     */
+    const CACHE_TAG_CUSTOMER_PACKAGES = 'customer_packages';
 
     /**
      * Get comprehensive customer statistics with caching
      *
      * @param User $customer
+     * @param bool $forceRefresh
      * @return array
      */
-    public function getCustomerStatistics(User $customer): array
+    public function getCustomerStatistics(User $customer, bool $forceRefresh = false): array
     {
-        $cacheKey = "customer_stats_{$customer->id}";
+        $cacheKey = $this->getCacheKey('stats', $customer->id);
+        
+        if ($forceRefresh) {
+            Cache::forget($cacheKey);
+        }
         
         return Cache::remember($cacheKey, self::CACHE_DURATION, function () use ($customer) {
+            Log::info("Calculating customer statistics for customer {$customer->id}");
             return $this->calculateCustomerStatistics($customer);
         });
     }
@@ -34,13 +71,19 @@ class CustomerStatisticsService
      * Get customer financial summary with caching
      *
      * @param User $customer
+     * @param bool $forceRefresh
      * @return array
      */
-    public function getFinancialSummary(User $customer): array
+    public function getFinancialSummary(User $customer, bool $forceRefresh = false): array
     {
-        $cacheKey = "customer_financial_{$customer->id}";
+        $cacheKey = $this->getCacheKey('financial', $customer->id);
         
-        return Cache::remember($cacheKey, self::CACHE_DURATION, function () use ($customer) {
+        if ($forceRefresh) {
+            Cache::forget($cacheKey);
+        }
+        
+        return Cache::remember($cacheKey, self::FINANCIAL_CACHE_DURATION, function () use ($customer) {
+            Log::info("Calculating financial summary for customer {$customer->id}");
             return $this->calculateFinancialSummary($customer);
         });
     }
@@ -49,13 +92,19 @@ class CustomerStatisticsService
      * Get shipping patterns and frequency analysis
      *
      * @param User $customer
+     * @param bool $forceRefresh
      * @return array
      */
-    public function getShippingPatterns(User $customer): array
+    public function getShippingPatterns(User $customer, bool $forceRefresh = false): array
     {
-        $cacheKey = "customer_patterns_{$customer->id}";
+        $cacheKey = $this->getCacheKey('patterns', $customer->id);
         
-        return Cache::remember($cacheKey, self::CACHE_DURATION, function () use ($customer) {
+        if ($forceRefresh) {
+            Cache::forget($cacheKey);
+        }
+        
+        return Cache::remember($cacheKey, self::PATTERNS_CACHE_DURATION, function () use ($customer) {
+            Log::info("Analyzing shipping patterns for customer {$customer->id}");
             return $this->analyzeShippingPatterns($customer);
         });
     }
@@ -64,13 +113,19 @@ class CustomerStatisticsService
      * Get package count and value calculations
      *
      * @param User $customer
+     * @param bool $forceRefresh
      * @return array
      */
-    public function getPackageMetrics(User $customer): array
+    public function getPackageMetrics(User $customer, bool $forceRefresh = false): array
     {
-        $cacheKey = "customer_packages_{$customer->id}";
+        $cacheKey = $this->getCacheKey('packages', $customer->id);
         
-        return Cache::remember($cacheKey, self::CACHE_DURATION, function () use ($customer) {
+        if ($forceRefresh) {
+            Cache::forget($cacheKey);
+        }
+        
+        return Cache::remember($cacheKey, self::PACKAGE_CACHE_DURATION, function () use ($customer) {
+            Log::info("Calculating package metrics for customer {$customer->id}");
             return $this->calculatePackageMetrics($customer);
         });
     }
@@ -276,14 +331,17 @@ class CustomerStatisticsService
     private function getMonthlyBreakdown(User $customer): array
     {
         // Use database-agnostic date functions
+        $yearFunction = $this->getYearFunction();
+        $monthFunction = $this->getMonthFunction();
+        
         $monthlyData = $customer->packages()
             ->where('created_at', '>=', Carbon::now()->subMonths(12))
-            ->selectRaw('
-                strftime("%Y", created_at) as year,
-                strftime("%m", created_at) as month,
+            ->selectRaw("
+                {$yearFunction} as year,
+                {$monthFunction} as month,
                 COUNT(*) as package_count,
                 COALESCE(SUM(freight_price + customs_duty + storage_fee + delivery_fee), 0) as total_spent
-            ')
+            ")
             ->groupBy('year', 'month')
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
@@ -312,17 +370,19 @@ class CustomerStatisticsService
      */
     private function analyzeSeasonalPatterns(User $customer): array
     {
+        $monthFunction = $this->getMonthFunction();
+        
         $seasonalData = $customer->packages()
-            ->selectRaw('
+            ->selectRaw("
                 CASE 
-                    WHEN CAST(strftime("%m", created_at) AS INTEGER) IN (12, 1, 2) THEN "Winter"
-                    WHEN CAST(strftime("%m", created_at) AS INTEGER) IN (3, 4, 5) THEN "Spring"
-                    WHEN CAST(strftime("%m", created_at) AS INTEGER) IN (6, 7, 8) THEN "Summer"
-                    WHEN CAST(strftime("%m", created_at) AS INTEGER) IN (9, 10, 11) THEN "Fall"
+                    WHEN {$monthFunction} IN (12, 1, 2) THEN 'Winter'
+                    WHEN {$monthFunction} IN (3, 4, 5) THEN 'Spring'
+                    WHEN {$monthFunction} IN (6, 7, 8) THEN 'Summer'
+                    WHEN {$monthFunction} IN (9, 10, 11) THEN 'Fall'
                 END as season,
                 COUNT(*) as package_count,
                 COALESCE(AVG(freight_price + customs_duty + storage_fee + delivery_fee), 0) as avg_cost
-            ')
+            ")
             ->groupBy('season')
             ->get();
 
@@ -371,6 +431,18 @@ class CustomerStatisticsService
     }
 
     /**
+     * Generate cache key for customer data
+     *
+     * @param string $type
+     * @param int $customerId
+     * @return string
+     */
+    private function getCacheKey(string $type, int $customerId): string
+    {
+        return "customer_{$type}_{$customerId}";
+    }
+
+    /**
      * Clear cache for a specific customer
      *
      * @param User $customer
@@ -379,15 +451,54 @@ class CustomerStatisticsService
     public function clearCustomerCache(User $customer): void
     {
         $cacheKeys = [
-            "customer_stats_{$customer->id}",
-            "customer_financial_{$customer->id}",
-            "customer_patterns_{$customer->id}",
-            "customer_packages_{$customer->id}",
+            $this->getCacheKey('stats', $customer->id),
+            $this->getCacheKey('financial', $customer->id),
+            $this->getCacheKey('patterns', $customer->id),
+            $this->getCacheKey('packages', $customer->id),
         ];
 
         foreach ($cacheKeys as $key) {
             Cache::forget($key);
+            Log::info("Cleared cache key: {$key}");
         }
+        
+        Log::info("Cleared all cache for customer {$customer->id}");
+    }
+
+    /**
+     * Clear specific cache type for a customer
+     *
+     * @param User $customer
+     * @param string $type
+     * @return void
+     */
+    public function clearCustomerCacheType(User $customer, string $type): void
+    {
+        $cacheKey = $this->getCacheKey($type, $customer->id);
+        Cache::forget($cacheKey);
+        Log::info("Cleared {$type} cache for customer {$customer->id}");
+    }
+
+    /**
+     * Clear cache for multiple customers
+     *
+     * @param array $customerIds
+     * @return void
+     */
+    public function clearMultipleCustomersCache(array $customerIds): void
+    {
+        $types = ['stats', 'financial', 'patterns', 'packages'];
+        $clearedCount = 0;
+        
+        foreach ($customerIds as $customerId) {
+            foreach ($types as $type) {
+                $cacheKey = $this->getCacheKey($type, $customerId);
+                Cache::forget($cacheKey);
+                $clearedCount++;
+            }
+        }
+        
+        Log::info("Cleared cache for {$clearedCount} keys across " . count($customerIds) . " customers");
     }
 
     /**
@@ -397,9 +508,14 @@ class CustomerStatisticsService
      */
     public function clearAllCache(): void
     {
-        // This would require a more sophisticated cache tagging system
-        // For now, we'll implement a simple approach
-        Cache::flush();
+        // Get all customer IDs to clear their specific caches
+        $customerIds = User::customers()->pluck('id')->toArray();
+        
+        if (!empty($customerIds)) {
+            $this->clearMultipleCustomersCache($customerIds);
+        }
+        
+        Log::info("Cleared all customer statistics cache");
     }
 
     /**
@@ -411,17 +527,163 @@ class CustomerStatisticsService
     public function getCacheStatus(User $customer): array
     {
         $cacheKeys = [
-            'stats' => "customer_stats_{$customer->id}",
-            'financial' => "customer_financial_{$customer->id}",
-            'patterns' => "customer_patterns_{$customer->id}",
-            'packages' => "customer_packages_{$customer->id}",
+            'stats' => $this->getCacheKey('stats', $customer->id),
+            'financial' => $this->getCacheKey('financial', $customer->id),
+            'patterns' => $this->getCacheKey('patterns', $customer->id),
+            'packages' => $this->getCacheKey('packages', $customer->id),
         ];
 
         $status = [];
         foreach ($cacheKeys as $type => $key) {
-            $status[$type] = Cache::has($key);
+            $status[$type] = [
+                'cached' => Cache::has($key),
+                'key' => $key,
+                'ttl' => $this->getCacheTtl($key),
+            ];
         }
 
         return $status;
+    }
+
+    /**
+     * Get cache TTL for a key
+     *
+     * @param string $key
+     * @return int|null
+     */
+    private function getCacheTtl(string $key): ?int
+    {
+        try {
+            // This is implementation-specific and may not work with all cache drivers
+            $store = Cache::getStore();
+            
+            // Check if it's a Redis store
+            if (method_exists($store, 'getRedis')) {
+                return $store->getRedis()->ttl($key);
+            }
+            
+            // For other stores, return null
+            return null;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Warm up cache for a customer
+     *
+     * @param User $customer
+     * @return void
+     */
+    public function warmUpCustomerCache(User $customer): void
+    {
+        Log::info("Warming up cache for customer {$customer->id}");
+        
+        // Pre-load all customer statistics
+        $this->getCustomerStatistics($customer);
+        $this->getFinancialSummary($customer);
+        $this->getShippingPatterns($customer);
+        $this->getPackageMetrics($customer);
+        
+        Log::info("Cache warmed up for customer {$customer->id}");
+    }
+
+    /**
+     * Warm up cache for multiple customers
+     *
+     * @param array $customerIds
+     * @return void
+     */
+    public function warmUpMultipleCustomersCache(array $customerIds): void
+    {
+        Log::info("Warming up cache for " . count($customerIds) . " customers");
+        
+        $customers = User::whereIn('id', $customerIds)->get();
+        
+        foreach ($customers as $customer) {
+            try {
+                $this->warmUpCustomerCache($customer);
+            } catch (\Exception $e) {
+                Log::error("Failed to warm up cache for customer {$customer->id}: " . $e->getMessage());
+            }
+        }
+        
+        Log::info("Cache warm-up completed for " . count($customerIds) . " customers");
+    }
+
+    /**
+     * Get database-specific YEAR function
+     *
+     * @return string
+     */
+    private function getYearFunction(): string
+    {
+        $driver = DB::connection()->getDriverName();
+        
+        switch ($driver) {
+            case 'sqlite':
+                return 'strftime("%Y", created_at)';
+            case 'mysql':
+            case 'mariadb':
+            default:
+                return 'YEAR(created_at)';
+        }
+    }
+
+    /**
+     * Get database-specific MONTH function
+     *
+     * @return string
+     */
+    private function getMonthFunction(): string
+    {
+        $driver = DB::connection()->getDriverName();
+        
+        switch ($driver) {
+            case 'sqlite':
+                return 'strftime("%m", created_at)';
+            case 'mysql':
+            case 'mariadb':
+            default:
+                return 'MONTH(created_at)';
+        }
+    }
+
+    /**
+     * Get cache performance metrics
+     *
+     * @return array
+     */
+    public function getCachePerformanceMetrics(): array
+    {
+        $customerIds = User::customers()->pluck('id')->toArray();
+        $totalCustomers = count($customerIds);
+        $cachedCustomers = 0;
+        $cacheTypes = ['stats', 'financial', 'patterns', 'packages'];
+        $typeCounts = array_fill_keys($cacheTypes, 0);
+        
+        foreach ($customerIds as $customerId) {
+            $customerCached = false;
+            foreach ($cacheTypes as $type) {
+                $cacheKey = $this->getCacheKey($type, $customerId);
+                if (Cache::has($cacheKey)) {
+                    $typeCounts[$type]++;
+                    $customerCached = true;
+                }
+            }
+            if ($customerCached) {
+                $cachedCustomers++;
+            }
+        }
+        
+        return [
+            'total_customers' => $totalCustomers,
+            'cached_customers' => $cachedCustomers,
+            'cache_coverage_percentage' => $totalCustomers > 0 ? round(($cachedCustomers / $totalCustomers) * 100, 2) : 0,
+            'cache_by_type' => $typeCounts,
+            'type_coverage' => array_map(function($count) use ($totalCustomers) {
+                return $totalCustomers > 0 ? round(($count / $totalCustomers) * 100, 2) : 0;
+            }, $typeCounts),
+        ];
     }
 }

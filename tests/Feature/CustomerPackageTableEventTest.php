@@ -25,8 +25,8 @@ class CustomerPackageTableEventTest extends TestCase
     {
         parent::setUp();
 
-        // Create customer role and user
-        $customerRole = Role::factory()->create(['id' => 3, 'name' => 'customer']);
+        // Use existing customer role
+        $customerRole = Role::find(3);
         $this->customer = User::factory()->create(['role_id' => $customerRole->id]);
 
         // Create supporting models

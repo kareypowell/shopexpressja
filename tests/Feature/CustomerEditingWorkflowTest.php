@@ -282,9 +282,9 @@ class CustomerEditingWorkflowTest extends TestCase
             ->call('save')
             ->assertHasNoErrors();
 
-        // Verify tax number is set to null
+        // Verify tax number is set to empty string (since column doesn't allow null)
         $this->customer->profile->refresh();
-        $this->assertNull($this->customer->profile->tax_number);
+        $this->assertEquals('', $this->customer->profile->tax_number);
     }
 
     /** @test */

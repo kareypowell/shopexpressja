@@ -25,9 +25,9 @@ class CustomerCostVisibilityTest extends TestCase
     {
         parent::setUp();
 
-        // Create roles
-        $adminRole = Role::factory()->create(['id' => 2, 'name' => 'admin']);
-        $customerRole = Role::factory()->create(['id' => 3, 'name' => 'customer']);
+        // Use existing roles
+        $adminRole = Role::find(2);
+        $customerRole = Role::find(3);
 
         // Create admin user
         $this->admin = User::factory()->create(['role_id' => $adminRole->id]);

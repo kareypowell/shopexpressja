@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Manifest;
 use App\Models\Package;
 use App\Models\Rate;
@@ -25,13 +26,15 @@ class SeaManifestValidationTest extends TestCase
         parent::setUp();
         
         // Create test user with admin role
-        $this->user = User::factory()->create(['role_id' => 1]);
+        $adminRole = Role::where('name', 'superadmin')->first();
+        $this->user = User::factory()->create(['role_id' => $adminRole->id]);
         $this->actingAs($this->user);
         
         // Create test data
         $this->office = Office::factory()->create();
         $this->shipper = Shipper::factory()->create();
-        $this->customer = User::factory()->create(['role_id' => 3, 'email_verified_at' => now()]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $this->customer = User::factory()->create(['role_id' => $customerRole->id]);
     }
 
     /** @test */

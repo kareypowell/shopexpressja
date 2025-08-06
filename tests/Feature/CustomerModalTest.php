@@ -24,8 +24,8 @@ class CustomerModalTest extends TestCase
     {
         parent::setUp();
 
-        // Create customer role and user
-        $customerRole = Role::factory()->create(['id' => 3, 'name' => 'customer']);
+        // Get existing customer role
+        $customerRole = Role::where('name', 'customer')->first();
         $this->customer = User::factory()->create(['role_id' => $customerRole->id]);
 
         // Create supporting models

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Manifest;
 use App\Models\Package;
 use App\Models\PackageItem;
@@ -21,21 +22,9 @@ class ManifestPackageTest extends TestCase
     {
         parent::setUp();
         
-        // Create necessary test data
-        $this->user = User::factory()->create(['role_id' => 3, 'email_verified_at' => now()]);
-        
-        // Create profile for the user
-        $this->user->profile()->create([
-            'account_number' => 'ACC001',
-            'tax_number' => 'TAX001',
-            'telephone_number' => '555-1234',
-            'street_address' => '123 Test St',
-            'city_town' => 'Test City',
-            'parish' => 'Test Parish',
-            'country' => 'Test Country',
-            'pickup_location' => 'Test Location'
-        ]);
-        
+        // Create necessary test data with proper role
+        $customerRole = Role::where('name', 'customer')->first();
+        $this->user = User::factory()->create(['role_id' => $customerRole->id]);
         $this->shipper = Shipper::factory()->create();
         $this->office = Office::factory()->create();
     }

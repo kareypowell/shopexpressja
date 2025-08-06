@@ -176,11 +176,12 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Scope to get only customers (role_id = 3).
+     * Scope to get only customers.
      */
     public function scopeCustomers($query)
     {
-        return $query->where('role_id', 3);
+        $customerRole = Role::where('name', 'customer')->first();
+        return $query->where('role_id', $customerRole ? $customerRole->id : 3);
     }
 
     /**
@@ -232,6 +233,17 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Scope to get customers with optimized profile loading.
+     */
+    public function scopeWithOptimizedProfile($query)
+    {
+        return $query->with(['profile' => function($query) {
+            $query->select('user_id', 'account_number', 'tax_number', 'telephone_number', 
+                          'parish', 'city_town', 'street_address', 'country', 'pickup_location');
+        }]);
+    }
+
+    /**
      * Scope to get customers with package statistics.
      */
     public function scopeWithPackageStats($query)
@@ -240,6 +252,82 @@ class User extends Authenticatable implements MustVerifyEmail
                     ->with(['packages' => function($query) {
                         $query->select('user_id', 'freight_price', 'customs_duty', 'storage_fee', 'delivery_fee', 'created_at');
                     }]);
+    }
+
+    /**
+     * Scope to get customers with optimized package loading for statistics.
+     */
+    public function scopeWithOptimizedPackages($query)
+    {
+        return $query->withCount([
+                'packages',
+                'packages as delivered_packages_count' => function($query) {
+                    $query->where('status', 'delivered');
+                },
+                'packages as in_transit_packages_count' => function($query) {
+                    $query->where('status', 'in_transit');
+                },
+                'packages as ready_packages_count' => function($query) {
+                    $query->where('status', 'ready_for_pickup');
+                }
+            ])
+            ->withSum('packages', 'freight_price')
+            ->withSum('packages', 'customs_duty')
+            ->withSum('packages', 'storage_fee')
+            ->withSum('packages', 'delivery_fee')
+            ->withAvg('packages', 'weight');
+    }
+
+    /**
+     * Scope to get customers with recent activity.
+     */
+    public function scopeWithRecentActivity($query, int $days = 30)
+    {
+        return $query->withCount(['packages as recent_packages_count' => function($query) use ($days) {
+            $query->where('created_at', '>=', now()->subDays($days));
+        }]);
+    }
+
+    /**
+     * Scope for efficient customer table queries.
+     */
+    public function scopeForCustomerTable($query)
+    {
+        return $query->customers()
+            ->withOptimizedProfile()
+            ->withCount('packages')
+            ->select('id', 'first_name', 'last_name', 'email', 'created_at', 'deleted_at', 'role_id');
+    }
+
+    /**
+     * Scope for efficient customer search queries.
+     */
+    public function scopeForCustomerSearch($query, $searchTerm = null)
+    {
+        $query = $query->customers()
+            ->withOptimizedProfile()
+            ->select('id', 'first_name', 'last_name', 'email', 'created_at', 'deleted_at', 'role_id');
+            
+        if ($searchTerm) {
+            $query->search($searchTerm);
+        }
+        
+        return $query;
+    }
+
+    /**
+     * Scope for customer dashboard queries with minimal data.
+     */
+    public function scopeForDashboard($query)
+    {
+        return $query->customers()
+            ->select('id', 'first_name', 'last_name', 'email', 'created_at')
+            ->withCount([
+                'packages',
+                'packages as recent_packages_count' => function($query) {
+                    $query->where('created_at', '>=', now()->subMonth());
+                }
+            ]);
     }
 
     public function profile()
@@ -476,20 +564,38 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $startDate = Carbon::now()->subMonths($months);
         
-        // Get monthly spending data
-        $monthlyData = $this->packages()
+        // Get packages and group them manually to avoid database-specific functions
+        $packages = $this->packages()
             ->where('created_at', '>=', $startDate)
-            ->selectRaw('
-                strftime("%Y", created_at) as year,
-                strftime("%m", created_at) as month,
-                COUNT(*) as package_count,
-                COALESCE(SUM(freight_price + customs_duty + storage_fee + delivery_fee), 0) as total_spent,
-                COALESCE(AVG(freight_price + customs_duty + storage_fee + delivery_fee), 0) as avg_cost_per_package
-            ')
-            ->groupBy('year', 'month')
-            ->orderBy('year')
-            ->orderBy('month')
             ->get();
+
+        // Group packages by month manually
+        $monthlyDataRaw = [];
+        foreach ($packages as $package) {
+            $year = $package->created_at->year;
+            $month = $package->created_at->month;
+            $key = $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT);
+            
+            if (!isset($monthlyDataRaw[$key])) {
+                $monthlyDataRaw[$key] = (object) [
+                    'year' => $year,
+                    'month' => $month,
+                    'package_count' => 0,
+                    'total_spent' => 0,
+                ];
+            }
+            
+            $monthlyDataRaw[$key]->package_count++;
+            $monthlyDataRaw[$key]->total_spent += ($package->freight_price + $package->customs_duty + $package->storage_fee + $package->delivery_fee);
+        }
+
+        // Sort by key and calculate averages
+        ksort($monthlyDataRaw);
+        $monthlyData = [];
+        foreach ($monthlyDataRaw as $data) {
+            $data->avg_cost_per_package = $data->package_count > 0 ? $data->total_spent / $data->package_count : 0;
+            $monthlyData[] = $data;
+        }
 
         $trends = [];
         $totalSpending = 0;

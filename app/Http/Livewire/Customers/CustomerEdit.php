@@ -106,24 +106,32 @@ class CustomerEdit extends Component
             ]);
 
             // Update or create profile
+            $profileData = [
+                'telephone_number' => $this->telephoneNumber,
+                'tax_number' => $this->taxNumber ?: '',
+                'street_address' => $this->streetAddress,
+                'city_town' => $this->cityTown,
+                'parish' => $this->parish,
+                'country' => $this->country,
+                'pickup_location' => $this->pickupLocation,
+            ];
+
+            // If creating a new profile, generate account number
+            if (!$this->customer->profile) {
+                $accountNumberService = new \App\Services\AccountNumberService();
+                $profileData['account_number'] = $accountNumberService->generate();
+            }
+
             $this->customer->profile()->updateOrCreate(
                 ['user_id' => $this->customer->id],
-                [
-                    'telephone_number' => $this->telephoneNumber,
-                    'tax_number' => $this->taxNumber ?: null,
-                    'street_address' => $this->streetAddress,
-                    'city_town' => $this->cityTown,
-                    'parish' => $this->parish,
-                    'country' => $this->country,
-                    'pickup_location' => $this->pickupLocation,
-                ]
+                $profileData
             );
 
             session()->flash('success', 'Customer information updated successfully.');
             
             // Redirect based on user role
             if (auth()->user()->isSuperAdmin()) {
-                return redirect()->route('customers');
+                return redirect()->route('admin.customers.index');
             } else {
                 return redirect()->route('admin.customers.index');
             }
@@ -134,8 +142,14 @@ class CustomerEdit extends Component
             // Log the error for debugging
             \Log::error('Customer update failed: ' . $e->getMessage(), [
                 'customer_id' => $this->customer->id,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
+                'trace' => $e->getTraceAsString()
             ]);
+            
+            // Re-throw in test environment for debugging
+            if (app()->environment('testing')) {
+                throw $e;
+            }
         }
     }
 
