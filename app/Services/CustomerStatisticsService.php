@@ -163,10 +163,12 @@ class CustomerStatisticsService
             ->selectRaw('
                 COUNT(*) as total_packages,
                 COUNT(CASE WHEN status = "delivered" THEN 1 END) as delivered_packages,
-                COUNT(CASE WHEN status = "in_transit" THEN 1 END) as in_transit_packages,
-                COUNT(CASE WHEN status = "ready_for_pickup" THEN 1 END) as ready_packages,
+                COUNT(CASE WHEN status = "shipped" THEN 1 END) as shipped_packages,
+                COUNT(CASE WHEN status = "customs" THEN 1 END) as customs_packages,
+                COUNT(CASE WHEN status = "ready" THEN 1 END) as ready_packages,
                 COUNT(CASE WHEN status = "delayed" THEN 1 END) as delayed_packages,
                 COUNT(CASE WHEN status = "processing" THEN 1 END) as processing_packages,
+                COUNT(CASE WHEN status = "pending" THEN 1 END) as pending_packages,
                 COALESCE(AVG(weight), 0) as avg_weight,
                 COALESCE(SUM(weight), 0) as total_weight,
                 COALESCE(MAX(weight), 0) as max_weight,
@@ -182,14 +184,16 @@ class CustomerStatisticsService
         $deliveryRate = $totalPackages > 0 ? ($deliveredPackages / $totalPackages) * 100 : 0;
 
         return [
-            'total_count' => $totalPackages,
+            'total_packages' => $totalPackages,
             'status_breakdown' => [
                 'delivered' => $deliveredPackages,
-                'in_transit' => $packageStats->in_transit_packages ?? 0,
+                'in_transit' => ($packageStats->shipped_packages ?? 0) + ($packageStats->customs_packages ?? 0),
                 'ready_for_pickup' => $packageStats->ready_packages ?? 0,
                 'delayed' => $packageStats->delayed_packages ?? 0,
                 'processing' => $packageStats->processing_packages ?? 0,
+                'pending' => $packageStats->pending_packages ?? 0,
             ],
+            'shipping_frequency' => $this->calculateShippingFrequency($customer, $totalPackages),
             'weight_statistics' => [
                 'total_weight' => round($packageStats->total_weight ?? 0, 2),
                 'average_weight' => round($packageStats->avg_weight ?? 0, 2),
@@ -397,6 +401,32 @@ class CustomerStatisticsService
         }
 
         return $patterns;
+    }
+
+    /**
+     * Calculate shipping frequency (packages per month)
+     *
+     * @param User $customer
+     * @param int $totalPackages
+     * @return float
+     */
+    private function calculateShippingFrequency(User $customer, int $totalPackages): float
+    {
+        if ($totalPackages === 0) {
+            return 0;
+        }
+
+        $firstPackage = $customer->packages()->orderBy('created_at')->first();
+        if (!$firstPackage) {
+            return 0;
+        }
+
+        $monthsSinceFirst = Carbon::parse($firstPackage->created_at)->diffInMonths(Carbon::now());
+        if ($monthsSinceFirst === 0) {
+            $monthsSinceFirst = 1; // At least 1 month to avoid division by zero
+        }
+
+        return round($totalPackages / $monthsSinceFirst, 1);
     }
 
     /**

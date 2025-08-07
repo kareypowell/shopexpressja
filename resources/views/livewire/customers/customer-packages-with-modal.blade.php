@@ -62,16 +62,24 @@
                                         <div class="flex justify-between">
                                             <dt class="text-sm text-gray-500">Status:</dt>
                                             <dd class="text-sm">
-                                                @if($selectedPackage->status == 'processing')
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{{ ucfirst($selectedPackage->status) }}</span>
-                                                @elseif($selectedPackage->status == 'shipped')
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ ucfirst($selectedPackage->status) }}</span>
-                                                @elseif($selectedPackage->status == 'delayed')
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">{{ ucfirst($selectedPackage->status) }}</span>
-                                                @elseif($selectedPackage->status == 'ready' || $selectedPackage->status == 'ready_for_pickup')
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Ready for Pickup</span>
+                                                @php
+                                                  $badgeClass = $selectedPackage->status_badge_class ?? 'default';
+                                                  $statusLabel = $selectedPackage->status_label ?? 'Unknown';
+                                                @endphp
+                                                @if($badgeClass === 'default')
+                                                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{{ $statusLabel }}</span>
+                                                @elseif($badgeClass === 'primary')
+                                                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{{ $statusLabel }}</span>
+                                                @elseif($badgeClass === 'success')
+                                                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ $statusLabel }}</span>
+                                                @elseif($badgeClass === 'warning')
+                                                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">{{ $statusLabel }}</span>
+                                                @elseif($badgeClass === 'danger')
+                                                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">{{ $statusLabel }}</span>
+                                                @elseif($badgeClass === 'shs')
+                                                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">{{ $statusLabel }}</span>
                                                 @else
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{{ ucfirst($selectedPackage->status) }}</span>
+                                                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{{ $statusLabel }}</span>
                                                 @endif
                                             </dd>
                                         </div>
@@ -124,8 +132,9 @@
                                 {{-- Cost Breakdown --}}
                                 @php
                                     $currentUser = auth()->user();
+                                    $packageStatus = $selectedPackage->status_value;
                                     $canSeeCosts = $currentUser->role_id == 1 || $currentUser->role_id == 2 || 
-                                                  ($currentUser->role_id == 3 && in_array($selectedPackage->status, ['ready', 'delivered']));
+                                                  ($currentUser->role_id == 3 && in_array($packageStatus, ['ready', 'delivered']));
                                 @endphp
                                 @if($canSeeCosts)
                                 <div class="bg-gray-50 rounded-lg p-4">

@@ -31,7 +31,9 @@ class PackageHistory extends Component
                 $packages->sum(function($package) {
                     return $package->total_cost;
                 }) / $packages->count() : 0,
-            'status_breakdown' => $packages->groupBy('status')->map->count(),
+            'status_breakdown' => $packages->groupBy(function($package) {
+                return $package->status->value;
+            })->map->count(),
         ];
     }
 

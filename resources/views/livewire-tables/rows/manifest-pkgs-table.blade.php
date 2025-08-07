@@ -67,16 +67,24 @@
 
 <x-livewire-tables::table.cell>
   <div>
-    @if($row->status == 'processing')
-    <x-badges.primary>{{ ucfirst($row->status) }}</x-badges.primary>
-    @elseif($row->status == 'shipped')
-    <x-badges.shs>{{ ucfirst($row->status) }}</x-badges.shs>
-    @elseif($row->status == 'delayed')
-    <x-badges.warning>{{ ucfirst($row->status) }}</x-badges.warning>
-    @elseif($row->status == 'ready')
-    <x-badges.success>{{ ucfirst($row->status) }}</x-badges.success>
+    @php
+      $badgeClass = $row->status_badge_class ?? 'default';
+      $statusLabel = $row->status_label ?? 'Unknown';
+    @endphp
+    @if($badgeClass === 'default')
+      <x-badges.default>{{ $statusLabel }}</x-badges.default>
+    @elseif($badgeClass === 'primary')
+      <x-badges.primary>{{ $statusLabel }}</x-badges.primary>
+    @elseif($badgeClass === 'success')
+      <x-badges.success>{{ $statusLabel }}</x-badges.success>
+    @elseif($badgeClass === 'warning')
+      <x-badges.warning>{{ $statusLabel }}</x-badges.warning>
+    @elseif($badgeClass === 'danger')
+      <x-badges.danger>{{ $statusLabel }}</x-badges.danger>
+    @elseif($badgeClass === 'shs')
+      <x-badges.shs>{{ $statusLabel }}</x-badges.shs>
     @else
-    <x-badges.default>{{ ucfirst($row->status) }}</x-badges.default>
+      <x-badges.default>{{ $statusLabel }}</x-badges.default>
     @endif
   </div>
 </x-livewire-tables::table.cell>

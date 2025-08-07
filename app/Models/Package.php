@@ -33,7 +33,6 @@ class Package extends Model
     ];
 
     protected $casts = [
-        'status' => PackageStatus::class,
         'cubic_feet' => 'decimal:3',
         'weight' => 'decimal:2',
         'estimated_value' => 'decimal:2',
@@ -94,11 +93,35 @@ class Package extends Model
     }
 
     /**
+     * Get status attribute as PackageStatus instance
+     */
+    public function getStatusAttribute($value)
+    {
+        if (!$value) {
+            return PackageStatus::PENDING();
+        }
+        
+        try {
+            return PackageStatus::from($value);
+        } catch (\Exception $e) {
+            try {
+                return PackageStatus::fromLegacyStatus($value);
+            } catch (\Exception $e) {
+                \Log::warning('Invalid package status in database, defaulting to pending', [
+                    'status_value' => $value,
+                    'package_id' => $this->id ?? 'unknown',
+                ]);
+                return PackageStatus::PENDING();
+            }
+        }
+    }
+
+    /**
      * Set status attribute with validation
      */
     public function setStatusAttribute($value)
     {
-        // If it's already a PackageStatus enum, use its value
+        // If it's already a PackageStatus instance, use its value
         if ($value instanceof PackageStatus) {
             $this->attributes['status'] = $value->value;
             return;
@@ -106,11 +129,11 @@ class Package extends Model
 
         // If it's a string, validate it's a valid status
         if (is_string($value)) {
-            // Try to create enum from the value to validate it
+            // Try to create PackageStatus from the value to validate it
             try {
                 $status = PackageStatus::from($value);
                 $this->attributes['status'] = $status->value;
-            } catch (\ValueError $e) {
+            } catch (\Exception $e) {
                 // If invalid, try to normalize from legacy status
                 try {
                     $status = PackageStatus::fromLegacyStatus($value);
@@ -191,19 +214,61 @@ class Package extends Model
     }
 
     /**
-     * Get status badge class using enum method
+     * Get status badge class using PackageStatus class
      */
     public function getStatusBadgeClassAttribute(): string
     {
-        return $this->status->getBadgeClass();
+        try {
+            return $this->status->getBadgeClass();
+        } catch (\Exception $e) {
+            \Log::warning('Failed to get status badge class for package', [
+                'package_id' => $this->id,
+                'status_value' => $this->attributes['status'] ?? 'null',
+                'error' => $e->getMessage()
+            ]);
+            return 'default';
+        }
     }
 
     /**
-     * Get status label using enum method
+     * Get status label using PackageStatus class
      */
     public function getStatusLabelAttribute(): string
     {
-        return $this->status->getLabel();
+        try {
+            return $this->status->getLabel();
+        } catch (\Exception $e) {
+            \Log::warning('Failed to get status label for package', [
+                'package_id' => $this->id,
+                'status_value' => $this->attributes['status'] ?? 'null',
+                'error' => $e->getMessage()
+            ]);
+            return ucfirst($this->attributes['status'] ?? 'pending');
+        }
+    }
+
+    /**
+     * Get the status value safely
+     */
+    public function getStatusValueAttribute(): string
+    {
+        try {
+            return $this->status->value;
+        } catch (\Exception $e) {
+            \Log::warning('Failed to get status value for package', [
+                'package_id' => $this->id,
+                'status_value' => $this->attributes['status'] ?? 'null',
+                'error' => $e->getMessage()
+            ]);
+            return $this->attributes['status'] ?? 'pending';
+        } catch (\Exception $e) {
+            \Log::warning('Failed to get status value for package', [
+                'package_id' => $this->id,
+                'status_value' => $this->attributes['status'] ?? 'null',
+                'error' => $e->getMessage()
+            ]);
+            return 'pending';
+        }
     }
 
     /**
@@ -211,7 +276,11 @@ class Package extends Model
      */
     public function canBeDistributed(): bool
     {
-        return $this->status->allowsDistribution();
+        try {
+            return $this->status->allowsDistribution();
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     /**

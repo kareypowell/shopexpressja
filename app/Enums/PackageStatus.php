@@ -2,31 +2,116 @@
 
 namespace App\Enums;
 
-enum PackageStatus: string
+class PackageStatus
 {
-    case PENDING = 'pending';
-    case PROCESSING = 'processing';
-    case SHIPPED = 'shipped';
-    case CUSTOMS = 'customs';
-    case READY = 'ready';
-    case DELIVERED = 'delivered';
-    case DELAYED = 'delayed';
+    const PENDING = 'pending';
+    const PROCESSING = 'processing';
+    const SHIPPED = 'shipped';
+    const CUSTOMS = 'customs';
+    const READY = 'ready';
+    const DELIVERED = 'delivered';
+    const DELAYED = 'delayed';
+
+    public $value;
+
+    public function __construct(string $value)
+    {
+        $this->value = $value;
+    }
+
+    public static function PENDING(): self
+    {
+        return new self(self::PENDING);
+    }
+
+    public static function PROCESSING(): self
+    {
+        return new self(self::PROCESSING);
+    }
+
+    public static function SHIPPED(): self
+    {
+        return new self(self::SHIPPED);
+    }
+
+    public static function CUSTOMS(): self
+    {
+        return new self(self::CUSTOMS);
+    }
+
+    public static function READY(): self
+    {
+        return new self(self::READY);
+    }
+
+    public static function DELIVERED(): self
+    {
+        return new self(self::DELIVERED);
+    }
+
+    public static function DELAYED(): self
+    {
+        return new self(self::DELAYED);
+    }
+
+    public static function from(string $value): self
+    {
+        if (!in_array($value, self::values())) {
+            throw new \InvalidArgumentException("Invalid status value: {$value}");
+        }
+        return new self($value);
+    }
+
+    public static function cases(): array
+    {
+        return [
+            self::PENDING(),
+            self::PROCESSING(),
+            self::SHIPPED(),
+            self::CUSTOMS(),
+            self::READY(),
+            self::DELIVERED(),
+            self::DELAYED(),
+        ];
+    }
 
     /**
      * Map legacy status values to normalized format
      */
     public static function fromLegacyStatus(string $legacyStatus): self
     {
-        return match(strtolower(trim($legacyStatus))) {
-            'pending', 'new', 'created' => self::PENDING,
-            'processing', 'in_process', 'in process' => self::PROCESSING,
-            'shipped', 'in_transit', 'in transit' => self::SHIPPED,
-            'delayed' => self::DELAYED,
-            'customs', 'at_customs', 'at customs' => self::CUSTOMS,
-            'ready', 'ready_for_pickup', 'ready for pickup' => self::READY,
-            'delivered', 'completed', 'done' => self::DELIVERED,
-            default => self::PENDING, // Default fallback for unmappable statuses
-        };
+        $status = strtolower(trim($legacyStatus));
+        
+        switch ($status) {
+            case 'pending':
+            case 'new':
+            case 'created':
+                return self::PENDING();
+            case 'processing':
+            case 'in_process':
+            case 'in process':
+                return self::PROCESSING();
+            case 'shipped':
+            case 'in_transit':
+            case 'in transit':
+                return self::SHIPPED();
+            case 'delayed':
+                return self::DELAYED();
+            case 'customs':
+            case 'at_customs':
+            case 'at customs':
+                return self::CUSTOMS();
+            case 'ready':
+            case 'ready_for_pickup':
+            case 'ready for pickup':
+                return self::READY();
+            case 'delivered':
+            case 'completed':
+            case 'done':
+                return self::DELIVERED();
+            default:
+                return self::PENDING(); // Default fallback for unmappable statuses
+        }
     }
 
     /**
@@ -34,15 +119,24 @@ enum PackageStatus: string
      */
     public function getLabel(): string
     {
-        return match($this) {
-            self::PENDING => 'Pending',
-            self::PROCESSING => 'Processing',
-            self::SHIPPED => 'Shipped',
-            self::CUSTOMS => 'At Customs',
-            self::READY => 'Ready for Pickup',
-            self::DELIVERED => 'Delivered',
-            self::DELAYED => 'Delayed',
-        };
+        switch ($this->value) {
+            case self::PENDING:
+                return 'Pending';
+            case self::PROCESSING:
+                return 'Processing';
+            case self::SHIPPED:
+                return 'Shipped';
+            case self::CUSTOMS:
+                return 'At Customs';
+            case self::READY:
+                return 'Ready for Pickup';
+            case self::DELIVERED:
+                return 'Delivered';
+            case self::DELAYED:
+                return 'Delayed';
+            default:
+                return 'Unknown';
+        }
     }
 
     /**
@@ -50,15 +144,24 @@ enum PackageStatus: string
      */
     public function getBadgeClass(): string
     {
-        return match($this) {
-            self::PENDING => 'default',
-            self::PROCESSING => 'primary',
-            self::SHIPPED => 'shs',
-            self::CUSTOMS => 'warning',
-            self::READY => 'success',
-            self::DELIVERED => 'success',
-            self::DELAYED => 'danger',
-        };
+        switch ($this->value) {
+            case self::PENDING:
+                return 'default';
+            case self::PROCESSING:
+                return 'primary';
+            case self::SHIPPED:
+                return 'shs';
+            case self::CUSTOMS:
+                return 'warning';
+            case self::READY:
+                return 'success';
+            case self::DELIVERED:
+                return 'success';
+            case self::DELAYED:
+                return 'danger';
+            default:
+                return 'default';
+        }
     }
 
     /**
@@ -66,15 +169,24 @@ enum PackageStatus: string
      */
     public function getValidTransitions(): array
     {
-        return match($this) {
-            self::PENDING => [self::PROCESSING, self::DELAYED],
-            self::PROCESSING => [self::SHIPPED, self::PENDING, self::DELAYED],
-            self::SHIPPED => [self::CUSTOMS, self::READY, self::DELAYED],
-            self::CUSTOMS => [self::READY, self::SHIPPED, self::DELAYED],
-            self::READY => [self::DELIVERED],
-            self::DELIVERED => [], // Terminal state
-            self::DELAYED => [self::PROCESSING, self::SHIPPED, self::CUSTOMS], // Can recover from delay
-        };
+        switch ($this->value) {
+            case self::PENDING:
+                return [self::PROCESSING(), self::DELAYED()];
+            case self::PROCESSING:
+                return [self::SHIPPED(), self::PENDING(), self::DELAYED()];
+            case self::SHIPPED:
+                return [self::CUSTOMS(), self::READY(), self::DELAYED()];
+            case self::CUSTOMS:
+                return [self::READY(), self::SHIPPED(), self::DELAYED()];
+            case self::READY:
+                return [self::DELIVERED()];
+            case self::DELIVERED:
+                return []; // Terminal state
+            case self::DELAYED:
+                return [self::PROCESSING(), self::SHIPPED(), self::CUSTOMS()]; // Can recover from delay
+            default:
+                return [];
+        }
     }
 
     /**
@@ -82,7 +194,13 @@ enum PackageStatus: string
      */
     public function canTransitionTo(PackageStatus $newStatus): bool
     {
-        return in_array($newStatus, $this->getValidTransitions());
+        $validTransitions = $this->getValidTransitions();
+        foreach ($validTransitions as $transition) {
+            if ($transition->value === $newStatus->value) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -90,7 +208,15 @@ enum PackageStatus: string
      */
     public static function values(): array
     {
-        return array_column(self::cases(), 'value');
+        return [
+            self::PENDING,
+            self::PROCESSING,
+            self::SHIPPED,
+            self::CUSTOMS,
+            self::READY,
+            self::DELIVERED,
+            self::DELAYED,
+        ];
     }
 
     /**
@@ -118,6 +244,22 @@ enum PackageStatus: string
      */
     public function allowsDistribution(): bool
     {
-        return $this === self::READY;
+        return $this->value === self::READY;
+    }
+
+    /**
+     * Check if two status instances are equal
+     */
+    public function equals(PackageStatus $other): bool
+    {
+        return $this->value === $other->value;
+    }
+
+    /**
+     * String representation
+     */
+    public function __toString(): string
+    {
+        return $this->value;
     }
 }

@@ -13,7 +13,7 @@
     <div class="max-w-xs">
         <p class="text-sm font-medium text-gray-900 truncate">{{ $row->description }}</p>
         @if($row->estimated_value)
-            <p class="text-xs text-gray-500">Est. Value: ${{ number_format($row->estimated_value, 2) }}</p>
+            <p class="text-xs text-gray-500">Est. Value: ${{ number_format($row->estimated_value, 2) }} USD</p>
         @endif
     </div>
 </x-livewire-tables::table.cell>
@@ -43,16 +43,24 @@
 {{-- Status --}}
 <x-livewire-tables::table.cell>
     <div class="flex flex-col space-y-1">
-        @if($row->status == 'processing')
-            <x-badges.primary>{{ ucfirst($row->status) }}</x-badges.primary>
-        @elseif($row->status == 'shipped')
-            <x-badges.shs>{{ ucfirst($row->status) }}</x-badges.shs>
-        @elseif($row->status == 'delayed')
-            <x-badges.warning>{{ ucfirst($row->status) }}</x-badges.warning>
-        @elseif($row->status == 'ready' || $row->status == 'ready_for_pickup')
-            <x-badges.success>Ready for Pickup</x-badges.success>
+        @php
+          $badgeClass = $row->status_badge_class ?? 'default';
+          $statusLabel = $row->status_label ?? 'Unknown';
+        @endphp
+        @if($badgeClass === 'default')
+          <x-badges.default>{{ $statusLabel }}</x-badges.default>
+        @elseif($badgeClass === 'primary')
+          <x-badges.primary>{{ $statusLabel }}</x-badges.primary>
+        @elseif($badgeClass === 'success')
+          <x-badges.success>{{ $statusLabel }}</x-badges.success>
+        @elseif($badgeClass === 'warning')
+          <x-badges.warning>{{ $statusLabel }}</x-badges.warning>
+        @elseif($badgeClass === 'danger')
+          <x-badges.danger>{{ $statusLabel }}</x-badges.danger>
+        @elseif($badgeClass === 'shs')
+          <x-badges.shs>{{ $statusLabel }}</x-badges.shs>
         @else
-            <x-badges.default>{{ ucfirst($row->status) }}</x-badges.default>
+          <x-badges.default>{{ $statusLabel }}</x-badges.default>
         @endif
         
         @if($row->shipper)
