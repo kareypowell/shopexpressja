@@ -141,9 +141,7 @@
 
 <x-livewire-tables::table.cell>
   <div>
-    <!-- <a href="{{ route('manifests.packages', $row->id) }}" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-wax-flower-600 hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500">
-      View
-    </a> -->
+
 
     <a href="{{ route('admin.manifests.packages.edit', [$row->manifest_id, $row->id]) }}" type="button" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
       Edit

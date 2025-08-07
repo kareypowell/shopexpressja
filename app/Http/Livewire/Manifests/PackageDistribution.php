@@ -1,0 +1,224 @@
+<?php
+
+namespace App\Http\Livewire\Manifests;
+
+use App\Models\Package;
+use App\Models\User;
+use App\Services\PackageDistributionService;
+use App\Enums\PackageStatus;
+use Livewire\Component;
+use Illuminate\Support\Facades\Auth;
+
+class PackageDistribution extends Component
+{
+    public $selectedPackages = [];
+    public $amountCollected = 0;
+    public $customerId;
+    public $customer;
+    public $packages;
+    public $showConfirmation = false;
+    public $distributionSummary = [];
+    public $totalCost = 0;
+    public $paymentStatus = 'unpaid';
+    public $successMessage = '';
+    public $errorMessage = '';
+    public $isProcessing = false;
+
+    protected $rules = [
+        'amountCollected' => 'required|numeric|min:0',
+        'selectedPackages' => 'required|array|min:1',
+        'selectedPackages.*' => 'exists:packages,id',
+    ];
+
+    protected $messages = [
+        'selectedPackages.required' => 'Please select at least one package for distribution.',
+        'selectedPackages.min' => 'Please select at least one package for distribution.',
+        'amountCollected.required' => 'Please enter the amount collected.',
+        'amountCollected.numeric' => 'Amount collected must be a valid number.',
+        'amountCollected.min' => 'Amount collected cannot be negative.',
+    ];
+
+    public function mount($customerId = null)
+    {
+        $this->customerId = $customerId;
+        
+        if ($customerId) {
+            $this->customer = User::find($customerId);
+            $this->loadReadyPackages();
+        }
+    }
+
+    public function loadReadyPackages()
+    {
+        if (!$this->customerId) {
+            return;
+        }
+
+        $this->packages = Package::where('user_id', $this->customerId)
+            ->where('status', PackageStatus::READY)
+            ->with(['manifest', 'office'])
+            ->get();
+    }
+
+    public function updatedSelectedPackages()
+    {
+        $this->calculateTotals();
+        $this->updatePaymentStatus();
+    }
+
+    public function updatedAmountCollected()
+    {
+        $this->updatePaymentStatus();
+    }
+
+    public function calculateTotals()
+    {
+        if (empty($this->selectedPackages)) {
+            $this->totalCost = 0;
+            return;
+        }
+
+        $selectedPackageModels = $this->packages->whereIn('id', $this->selectedPackages);
+        $this->totalCost = $selectedPackageModels->sum('total_cost');
+    }
+
+    public function updatePaymentStatus()
+    {
+        if ($this->totalCost == 0) {
+            $this->paymentStatus = 'unpaid';
+            return;
+        }
+
+        if ($this->amountCollected >= $this->totalCost) {
+            $this->paymentStatus = 'paid';
+        } elseif ($this->amountCollected > 0) {
+            $this->paymentStatus = 'partial';
+        } else {
+            $this->paymentStatus = 'unpaid';
+        }
+    }
+
+    public function showDistributionConfirmation()
+    {
+        $this->validate();
+
+        $this->calculateTotals();
+        $this->updatePaymentStatus();
+
+        // Prepare distribution summary
+        $selectedPackageModels = $this->packages->whereIn('id', $this->selectedPackages);
+        
+        $this->distributionSummary = [
+            'packages' => $selectedPackageModels->map(function ($package) {
+                return [
+                    'id' => $package->id,
+                    'tracking_number' => $package->tracking_number,
+                    'description' => $package->description,
+                    'freight_price' => $package->freight_price ?? 0,
+                    'customs_duty' => $package->customs_duty ?? 0,
+                    'storage_fee' => $package->storage_fee ?? 0,
+                    'delivery_fee' => $package->delivery_fee ?? 0,
+                    'total_cost' => $package->total_cost,
+                ];
+            })->toArray(),
+            'total_cost' => $this->totalCost,
+            'amount_collected' => $this->amountCollected,
+            'payment_status' => $this->paymentStatus,
+            'outstanding_balance' => max(0, $this->totalCost - $this->amountCollected),
+            'customer' => [
+                'name' => $this->customer->name,
+                'email' => $this->customer->email,
+            ],
+        ];
+
+        $this->showConfirmation = true;
+    }
+
+    public function cancelDistribution()
+    {
+        $this->showConfirmation = false;
+        $this->distributionSummary = [];
+    }
+
+    public function processDistribution()
+    {
+        if ($this->isProcessing) {
+            return;
+        }
+
+        $this->isProcessing = true;
+        $this->errorMessage = '';
+        $this->successMessage = '';
+
+        try {
+            $distributionService = app(PackageDistributionService::class);
+            
+            $result = $distributionService->distributePackages(
+                $this->selectedPackages,
+                $this->amountCollected,
+                Auth::user()
+            );
+
+            if ($result['success']) {
+                $this->successMessage = $result['message'];
+                $this->resetForm();
+                $this->loadReadyPackages(); // Refresh the package list
+                
+                // Emit event to notify other components
+                $this->emit('packageDistributed', [
+                    'distribution_id' => $result['distribution']->id,
+                    'customer_id' => $this->customerId,
+                    'package_count' => count($this->selectedPackages),
+                ]);
+            } else {
+                $this->errorMessage = $result['message'];
+            }
+        } catch (\Exception $e) {
+            $this->errorMessage = 'An error occurred while processing the distribution. Please try again.';
+            \Log::error('Package distribution error in Livewire component', [
+                'error' => $e->getMessage(),
+                'customer_id' => $this->customerId,
+                'selected_packages' => $this->selectedPackages,
+                'amount_collected' => $this->amountCollected,
+            ]);
+        } finally {
+            $this->isProcessing = false;
+            $this->showConfirmation = false;
+        }
+    }
+
+    public function resetForm()
+    {
+        $this->selectedPackages = [];
+        $this->amountCollected = 0;
+        $this->totalCost = 0;
+        $this->paymentStatus = 'unpaid';
+        $this->distributionSummary = [];
+        $this->showConfirmation = false;
+    }
+
+    public function getPaymentStatusColorAttribute()
+    {
+        return match($this->paymentStatus) {
+            'paid' => 'text-green-600',
+            'partial' => 'text-yellow-600',
+            'unpaid' => 'text-red-600',
+            default => 'text-gray-600',
+        };
+    }
+
+    public function getPaymentStatusLabelAttribute()
+    {
+        return match($this->paymentStatus) {
+            'paid' => 'Fully Paid',
+            'partial' => 'Partially Paid',
+            'unpaid' => 'Unpaid',
+            default => 'Unknown',
+        };
+    }
+
+    public function render()
+    {
+        return view('livewire.manifests.package-distribution');
+    }
+}
