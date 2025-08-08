@@ -95,7 +95,7 @@ class ManifestPackagesTable extends DataTableComponent
                         'Bulk status update from manifest packages table'
                     );
 
-                    if ($result['success']) {
+                    if ($result) {
                         $successCount++;
                         
                         // Update PackagePreAlert status as well for backward compatibility

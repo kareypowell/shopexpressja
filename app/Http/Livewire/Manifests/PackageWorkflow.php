@@ -287,6 +287,71 @@ class PackageWorkflow extends Component
         });
     }
 
+    public function getNextLogicalStatus($currentStatusValue)
+    {
+        $currentStatus = PackageStatus::from($currentStatusValue);
+        $validTransitions = $currentStatus->getValidTransitions();
+        
+        // Define the logical progression order
+        $progressionOrder = [
+            PackageStatus::PENDING => PackageStatus::PROCESSING(),
+            PackageStatus::PROCESSING => PackageStatus::SHIPPED(),
+            PackageStatus::SHIPPED => PackageStatus::CUSTOMS(),
+            PackageStatus::CUSTOMS => PackageStatus::READY(),
+            PackageStatus::READY => PackageStatus::DELIVERED(),
+        ];
+        
+        // Return the next logical status if it's a valid transition
+        if (isset($progressionOrder[$currentStatus->value])) {
+            $nextStatus = $progressionOrder[$currentStatus->value];
+            foreach ($validTransitions as $transition) {
+                if ($transition->value === $nextStatus->value) {
+                    return $nextStatus;
+                }
+            }
+        }
+        
+        // If no logical next status, return the first valid transition
+        return !empty($validTransitions) ? $validTransitions[0] : null;
+    }
+
+    public function getCommonNextStatus()
+    {
+        if (empty($this->selectedPackages)) {
+            return null;
+        }
+
+        $packages = Package::whereIn('id', $this->selectedPackages)->get();
+        $nextStatuses = [];
+
+        foreach ($packages as $package) {
+            $nextStatus = $this->getNextLogicalStatus($package->status);
+            if ($nextStatus) {
+                $nextStatuses[] = $nextStatus->value;
+            }
+        }
+
+        // If all packages have the same next status, return it
+        $uniqueNextStatuses = array_unique($nextStatuses);
+        if (count($uniqueNextStatuses) === 1) {
+            return PackageStatus::from($uniqueNextStatuses[0]);
+        }
+
+        return null;
+    }
+
+    public function bulkAdvanceToNext()
+    {
+        $commonNextStatus = $this->getCommonNextStatus();
+        if (!$commonNextStatus) {
+            session()->flash('error', 'Selected packages cannot be advanced to a common next status.');
+            return;
+        }
+
+        $this->bulkStatus = $commonNextStatus->value;
+        $this->confirmBulkStatusUpdate();
+    }
+
     public function initiateDistribution($packageIds = null)
     {
         // If specific package IDs are provided, use those; otherwise use selected packages
@@ -311,16 +376,13 @@ class PackageWorkflow extends Component
         // Store selected packages in session for the distribution page
         session(['distribution_packages' => $packagesToDistribute]);
         
-        // Redirect to distribution page
-        $manifestParam = $this->manifestId ?: 'all';
-        
+        // Redirect to the new standalone distribution page
         try {
-            return redirect()->route('admin.manifests.distribution', $manifestParam);
+            return redirect()->route('package-distribution');
         } catch (\Exception $e) {
             session()->flash('error', 'Unable to navigate to distribution page. Please try again.');
             \Log::error('Distribution redirect error', [
                 'error' => $e->getMessage(),
-                'manifest_param' => $manifestParam,
                 'packages' => $packagesToDistribute
             ]);
         }

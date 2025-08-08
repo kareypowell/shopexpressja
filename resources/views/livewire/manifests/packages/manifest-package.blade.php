@@ -8,12 +8,6 @@
             <button wire:click="goToWorkflow()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                 Package Workflow
             </button>
-            
-            @if(count($this->readyPackages) > 0)
-            <button wire:click="goToDistribution()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                Distribute Packages ({{ count($this->readyPackages) }})
-            </button>
-            @endif
 
             <button wire:click="create()" class="bg-wax-flower-500 hover:bg-wax-flower-700 text-white font-bold py-2 px-4 rounded">
                 Add Package
@@ -50,6 +44,10 @@
                     <button wire:click="resetFilters()" 
                             class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                         Reset Filters
+                    </button>
+                    <button wire:click="clearSelections()" 
+                            class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                        Clear Selections
                     </button>
                 </div>
             </div>
@@ -88,7 +86,9 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <input type="checkbox" wire:model="selectAll" wire:click="toggleSelectAll()" 
+                                    <input type="checkbox" 
+                                           @if($selectAll) checked @endif
+                                           wire:click="toggleSelectAll()"
                                            class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -115,7 +115,8 @@
                             @foreach($this->packages as $package)
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <input type="checkbox" wire:model="selectedPackages" value="{{ $package->id }}" 
+                                        <input type="checkbox" 
+                                               @if(in_array($package->id, $selectedPackages)) checked @endif
                                                wire:click="togglePackageSelection({{ $package->id }})"
                                                class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                     </td>

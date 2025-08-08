@@ -89,6 +89,7 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->gro
         Route::get('/{manifest}/distribution', \App\Http\Livewire\Manifests\PackageDistribution::class)->name('distribution');
     });
     
+    Route::get('/package-distribution', \App\Http\Livewire\PackageDistribution::class)->name('package-distribution');
     Route::get('/roles', Role::class)->name('roles');
     Route::get('/rates', Rate::class)->name('view-rates');
     Route::get('/pre-alerts', AdminPreAlert::class)->name('view-pre-alerts');

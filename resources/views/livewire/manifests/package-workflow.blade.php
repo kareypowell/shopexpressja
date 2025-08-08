@@ -1,4 +1,4 @@
-<div>
+<div x-data="{}">
     <!-- Flash Messages -->
     @if (session()->has('success'))
         <div class="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50" role="alert">
@@ -126,35 +126,58 @@
                         {{ count($selectedPackages) }} package(s) selected
                     </span>
                     
-                    <select 
-                        wire:model="bulkStatus"
-                        class="border-wax-flower-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
-                    >
-                        <option value="">Select new status...</option>
-                        @foreach($statusOptions as $value => $label)
-                            <option value="{{ $value }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
+                    <!-- Quick Actions -->
+                    <div class="flex items-center space-x-2">
+                        @php
+                            $commonNextStatus = $this->getCommonNextStatus();
+                        @endphp
+                        
+                        @if($commonNextStatus)
+                            <button 
+                                wire:click="bulkAdvanceToNext"
+                                class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                title="Advance all selected packages to {{ $commonNextStatus->getLabel() }}"
+                            >
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                                Advance to {{ $commonNextStatus->getLabel() }}
+                            </button>
+                        @endif
 
-                    <button 
-                        wire:click="confirmBulkStatusUpdate"
-                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-wax-flower-600 hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
-                        @if(!$bulkStatus) disabled @endif
-                    >
-                        Update Status
-                    </button>
-
-                    @if($this->canDistributeSelected())
-                        <button 
-                            wire:click="initiateDistribution"
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                        @if($this->canDistributeSelected())
+                            <button 
+                                wire:click="initiateDistribution"
+                                class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                            >
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                </svg>
+                                Distribute
+                            </button>
+                        @endif
+                    </div>
+                    
+                    <!-- Custom Status Selection -->
+                    <div class="flex items-center space-x-2">
+                        <select 
+                            wire:model="bulkStatus"
+                            class="border-wax-flower-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
                         >
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                            </svg>
-                            Distribute Packages
+                            <option value="">Custom status...</option>
+                            @foreach($statusOptions as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+
+                        <button 
+                            wire:click="confirmBulkStatusUpdate"
+                            class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-wax-flower-600 hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
+                            @if(!$bulkStatus) disabled @endif
+                        >
+                            Update
                         </button>
-                    @endif
+                    </div>
                 </div>
 
                 <button 
@@ -251,42 +274,86 @@
                             </div>
 
                             <div class="flex items-center space-x-2">
-                                <!-- Quick Status Update -->
-                                <select 
-                                    wire:change="updateSinglePackageStatus({{ $package->id }}, $event.target.value)"
-                                    class="text-sm border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500"
-                                >
-                                    <option value="">Change Status...</option>
-                                    @foreach($statusOptions as $value => $label)
-                                        @if($value !== $package->status)
-                                            <option value="{{ $value }}">{{ $label }}</option>
-                                        @endif
-                                    @endforeach
-                                </select>
-
-                                <!-- Package Actions -->
+                                <!-- Status Progression Buttons -->
                                 <div class="flex items-center space-x-1">
+                                    @php
+                                        $currentStatus = \App\Enums\PackageStatus::from($package->status);
+                                        $validTransitions = $currentStatus->getValidTransitions();
+                                        $nextStatus = $this->getNextLogicalStatus($package->status);
+                                    @endphp
+                                    
+                                    @if($nextStatus)
+                                        <button 
+                                            wire:click="updateSinglePackageStatus({{ $package->id }}, '{{ $nextStatus->value }}')"
+                                            class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                            title="Advance to {{ $nextStatus->getLabel() }}"
+                                        >
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                            {{ $nextStatus->getLabel() }}
+                                        </button>
+                                    @endif
+
                                     @if($package->canBeDistributed())
                                         <button 
                                             wire:click="initiateDistribution([{{ $package->id }}])"
-                                            class="inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                            class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                                             title="Distribute Package"
                                         >
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                                             </svg>
+                                            Distribute
                                         </button>
                                     @endif
-                                    
+                                </div>
+
+                                <!-- More Options Dropdown -->
+                                <div class="relative" x-data="{ open: false }">
                                     <button 
-                                        class="inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-white bg-wax-flower-600 hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
-                                        title="View Package Details"
+                                        @click="open = !open"
+                                        class="inline-flex items-center p-1 border border-gray-300 rounded-full shadow-sm text-gray-400 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
+                                        title="More Options"
                                     >
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
                                         </svg>
                                     </button>
+                                    
+                                    <div 
+                                        x-show="open" 
+                                        @click.away="open = false"
+                                        x-transition:enter="transition ease-out duration-100"
+                                        x-transition:enter-start="transform opacity-0 scale-95"
+                                        x-transition:enter-end="transform opacity-100 scale-100"
+                                        x-transition:leave="transition ease-in duration-75"
+                                        x-transition:leave-start="transform opacity-100 scale-100"
+                                        x-transition:leave-end="transform opacity-0 scale-95"
+                                        class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200"
+                                    >
+                                        <div class="py-1">
+                                            @foreach($validTransitions as $transition)
+                                                @if(!$nextStatus || $transition->value !== $nextStatus->value)
+                                                    <button 
+                                                        wire:click="updateSinglePackageStatus({{ $package->id }}, '{{ $transition->value }}')"
+                                                        @click="open = false"
+                                                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                    >
+                                                        {{ $transition->getLabel() }}
+                                                    </button>
+                                                @endif
+                                            @endforeach
+                                            
+                                            <div class="border-t border-gray-100"></div>
+                                            <button 
+                                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                title="View Package Details"
+                                            >
+                                                View Details
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -53,7 +53,7 @@ class ManifestPackage extends Component
     public string $confirmationMessage = '';
 
     // Services
-    protected PackageStatusService $packageStatusService;
+    protected $packageStatusService;
     
     // Customer search properties
     public string $customerSearch = '';
@@ -100,6 +100,21 @@ class ManifestPackage extends Component
 
         // Initialize package status service
         $this->packageStatusService = app(PackageStatusService::class);
+        
+        // Ensure selected packages array is properly initialized
+        $this->selectedPackages = [];
+        $this->selectAll = false;
+    }
+
+    /**
+     * Get the package status service instance
+     */
+    protected function getPackageStatusService(): PackageStatusService
+    {
+        if (!$this->packageStatusService) {
+            $this->packageStatusService = app(PackageStatusService::class);
+        }
+        return $this->packageStatusService;
     }
 
     public function create()
@@ -379,34 +394,7 @@ class ManifestPackage extends Component
         return $query->orderBy('created_at', 'desc')->paginate(20);
     }
 
-    /**
-     * Toggle package selection
-     */
-    public function togglePackageSelection($packageId)
-    {
-        if (in_array($packageId, $this->selectedPackages)) {
-            $this->selectedPackages = array_diff($this->selectedPackages, [$packageId]);
-        } else {
-            $this->selectedPackages[] = $packageId;
-        }
 
-        $this->updateBulkActionsVisibility();
-        $this->updateSelectAllState();
-    }
-
-    /**
-     * Toggle select all packages
-     */
-    public function toggleSelectAll()
-    {
-        if ($this->selectAll) {
-            $this->selectedPackages = $this->packages->pluck('id')->toArray();
-        } else {
-            $this->selectedPackages = [];
-        }
-
-        $this->updateBulkActionsVisibility();
-    }
 
     /**
      * Update bulk actions visibility
@@ -435,6 +423,19 @@ class ManifestPackage extends Component
         $this->selectedPackages = [];
         $this->selectAll = false;
         $this->showBulkActions = false;
+    }
+
+    /**
+     * Debug method to check selection state
+     */
+    public function debugSelection()
+    {
+        \Log::info('Selection Debug', [
+            'selectedPackages' => $this->selectedPackages,
+            'selectAll' => $this->selectAll,
+            'showBulkActions' => $this->showBulkActions,
+            'packageIds' => $this->packages->pluck('id')->toArray()
+        ]);
     }
 
     /**
@@ -477,23 +478,30 @@ class ManifestPackage extends Component
 
         $successCount = 0;
         $errorCount = 0;
+        $packageStatusService = $this->getPackageStatusService();
 
         foreach ($this->selectedPackages as $packageId) {
             try {
                 $package = Package::find($packageId);
                 if ($package) {
-                    $result = $this->packageStatusService->updateStatus(
+                    $result = $packageStatusService->updateStatus(
                         $package,
                         PackageStatus::from($this->bulkStatus),
                         auth()->user(),
                         'Bulk status update from manifest package view'
                     );
 
-                    if ($result['success']) {
+                    if ($result) {
                         $successCount++;
                     } else {
                         $errorCount++;
                     }
+                } else {
+                    $errorCount++;
+                    Log::warning('Package not found during bulk status update', [
+                        'package_id' => $packageId,
+                        'status' => $this->bulkStatus,
+                    ]);
                 }
             } catch (\Exception $e) {
                 $errorCount++;
@@ -597,6 +605,52 @@ class ManifestPackage extends Component
     public function updatedStatusFilter()
     {
         $this->resetPage();
+    }
+
+    /**
+     * Toggle package selection
+     */
+    public function togglePackageSelection($packageId)
+    {
+        // Ensure packageId is an integer
+        $packageId = (int) $packageId;
+        
+        // Ensure selectedPackages is an array of integers
+        $this->selectedPackages = array_map('intval', $this->selectedPackages);
+        
+        if (in_array($packageId, $this->selectedPackages)) {
+            // Remove the package ID and reindex the array
+            $this->selectedPackages = array_values(array_diff($this->selectedPackages, [$packageId]));
+        } else {
+            // Add the package ID if it's not already selected
+            if (!in_array($packageId, $this->selectedPackages)) {
+                $this->selectedPackages[] = $packageId;
+            }
+        }
+
+        $this->updateBulkActionsVisibility();
+        $this->updateSelectAllState();
+    }
+
+    /**
+     * Toggle select all packages
+     */
+    public function toggleSelectAll()
+    {
+        // Toggle the selectAll state first
+        $this->selectAll = !$this->selectAll;
+        
+        if ($this->selectAll) {
+            // Select all packages on current page
+            $this->selectedPackages = $this->packages->pluck('id')->map(function($id) {
+                return (int) $id;
+            })->toArray();
+        } else {
+            // Clear all selections
+            $this->selectedPackages = [];
+        }
+
+        $this->updateBulkActionsVisibility();
     }
 
     /**
@@ -813,7 +867,7 @@ class ManifestPackage extends Component
     private function updatePackageStatus($preAlert): string
     {
         $status = $preAlert ? PackageStatus::PROCESSING : PackageStatus::PENDING;
-        return $status->value;
+        return $status;
     }
 
     /**
