@@ -76,13 +76,17 @@ Route::post('/email/verification-notification', function (Request $request) {
 Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', \App\Http\Livewire\AdminDashboard::class)->name('admin.dashboard');
     
-    // Manifest routes with new naming convention
+    // Manifest routes with new navigation structure
     Route::prefix('manifests')->name('admin.manifests.')->group(function () {
         Route::get('/', Manifest::class)->name('index');
         Route::get('/create', Manifest::class)->name('create');
-        Route::get('/{manifest_id}/edit', EditManifest::class)->name('edit');
-        Route::get('/{manifest_id}/packages', ManifestPackage::class)->name('packages');
-        Route::get('/{manifest_id}/packages/{package_id}/edit', EditManifestPackage::class)->name('packages.edit');
+        Route::get('/{manifest}/edit', EditManifest::class)->name('edit');
+        Route::get('/{manifest}/packages', ManifestPackage::class)->name('packages');
+        Route::get('/{manifest}/packages/{package}/edit', EditManifestPackage::class)->name('packages.edit');
+        
+        // Package workflow routes
+        Route::get('/{manifest}/workflow', \App\Http\Livewire\Manifests\PackageWorkflow::class)->name('workflow');
+        Route::get('/{manifest}/distribution', \App\Http\Livewire\Manifests\PackageDistribution::class)->name('distribution');
     });
     
     Route::get('/roles', Role::class)->name('roles');

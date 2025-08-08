@@ -38,12 +38,17 @@ class PackageDistribution extends Component
         'amountCollected.min' => 'Amount collected cannot be negative.',
     ];
 
-    public function mount($customerId = null)
+    public function mount($manifest = null, $customerId = null)
     {
         $this->customerId = $customerId;
         
-        if ($customerId) {
-            $this->customer = User::find($customerId);
+        // Check if we have packages from the workflow session
+        $distributionPackages = session('distribution_packages');
+        if ($distributionPackages) {
+            // Load packages from session (from workflow)
+            $this->loadPackagesFromSession($distributionPackages);
+        } elseif ($customerId) {
+            $this->customer = User::with('profile')->find($customerId);
             $this->loadReadyPackages();
         }
     }
@@ -58,6 +63,35 @@ class PackageDistribution extends Component
             ->where('status', PackageStatus::READY)
             ->with(['manifest', 'office'])
             ->get();
+    }
+
+    public function loadPackagesFromSession($packageIds)
+    {
+        $this->packages = Package::whereIn('id', $packageIds)
+            ->where('status', PackageStatus::READY)
+            ->with(['manifest', 'office', 'user'])
+            ->get();
+
+        // Pre-select all packages from session
+        $this->selectedPackages = $packageIds;
+        
+        // If all packages belong to the same customer, set that customer
+        $customerIds = $this->packages->pluck('user_id')->unique();
+        if ($customerIds->count() === 1) {
+            $this->customerId = $customerIds->first();
+            $this->customer = User::with('profile')->find($this->customerId);
+        } else {
+            // Multiple customers - we'll handle this in the confirmation
+            $this->customerId = null;
+            $this->customer = null;
+        }
+
+        // Calculate initial totals
+        $this->calculateTotals();
+        $this->updatePaymentStatus();
+
+        // Clear the session data
+        session()->forget('distribution_packages');
     }
 
     public function updatedSelectedPackages()
@@ -102,11 +136,27 @@ class PackageDistribution extends Component
     {
         $this->validate();
 
+        // Check if selected packages belong to multiple customers
+        $selectedPackageModels = $this->packages->whereIn('id', $this->selectedPackages);
+        $selectedCustomerIds = $selectedPackageModels->pluck('user_id')->unique();
+        
+        if ($selectedCustomerIds->count() > 1) {
+            $this->addError('selectedPackages', 'Cannot distribute packages from multiple customers in a single transaction. Please select packages from one customer at a time.');
+            return;
+        }
+
         $this->calculateTotals();
         $this->updatePaymentStatus();
 
         // Prepare distribution summary
         $selectedPackageModels = $this->packages->whereIn('id', $this->selectedPackages);
+        
+        // Check if all selected packages belong to the same customer
+        $selectedCustomerIds = $selectedPackageModels->pluck('user_id')->unique();
+        if ($selectedCustomerIds->count() === 1 && !$this->customer) {
+            $this->customerId = $selectedCustomerIds->first();
+            $this->customer = User::with('profile')->find($this->customerId);
+        }
         
         $this->distributionSummary = [
             'packages' => $selectedPackageModels->map(function ($package) {
@@ -125,9 +175,20 @@ class PackageDistribution extends Component
             'amount_collected' => $this->amountCollected,
             'payment_status' => $this->paymentStatus,
             'outstanding_balance' => max(0, $this->totalCost - $this->amountCollected),
-            'customer' => [
-                'name' => $this->customer->name,
+            'customer' => $this->customer ? [
+                'name' => $this->customer->full_name ?? $this->customer->name,
                 'email' => $this->customer->email,
+                'phone' => $this->customer->profile->telephone_number ?? 'N/A',
+                'account_number' => $this->customer->profile->account_number ?? 'N/A',
+                'tax_number' => $this->customer->profile->tax_number ?? null,
+                'address' => $this->getCustomerAddress(),
+            ] : [
+                'name' => 'Multiple Customers',
+                'email' => 'N/A',
+                'phone' => 'N/A',
+                'account_number' => 'N/A',
+                'tax_number' => null,
+                'address' => 'N/A',
             ],
         ];
 
@@ -197,24 +258,49 @@ class PackageDistribution extends Component
         $this->showConfirmation = false;
     }
 
-    public function getPaymentStatusColorAttribute()
+    public function getPaymentStatusColor()
     {
-        return match($this->paymentStatus) {
-            'paid' => 'text-green-600',
-            'partial' => 'text-yellow-600',
-            'unpaid' => 'text-red-600',
-            default => 'text-gray-600',
-        };
+        switch ($this->paymentStatus) {
+            case 'paid':
+                return 'text-green-600';
+            case 'partial':
+                return 'text-yellow-600';
+            case 'unpaid':
+                return 'text-red-600';
+            default:
+                return 'text-gray-600';
+        }
     }
 
-    public function getPaymentStatusLabelAttribute()
+    public function getPaymentStatusLabel()
     {
-        return match($this->paymentStatus) {
-            'paid' => 'Fully Paid',
-            'partial' => 'Partially Paid',
-            'unpaid' => 'Unpaid',
-            default => 'Unknown',
-        };
+        switch ($this->paymentStatus) {
+            case 'paid':
+                return 'Fully Paid';
+            case 'partial':
+                return 'Partially Paid';
+            case 'unpaid':
+                return 'Unpaid';
+            default:
+                return 'Unknown';
+        }
+    }
+
+    private function getCustomerAddress()
+    {
+        if (!$this->customer || !$this->customer->profile) {
+            return 'N/A';
+        }
+
+        $profile = $this->customer->profile;
+        $addressParts = array_filter([
+            $profile->street_address,
+            $profile->city_town,
+            $profile->parish,
+            $profile->country
+        ]);
+
+        return !empty($addressParts) ? implode(', ', $addressParts) : 'N/A';
     }
 
     public function render()

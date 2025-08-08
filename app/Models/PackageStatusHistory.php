@@ -21,8 +21,6 @@ class PackageStatusHistory extends Model
     ];
 
     protected $casts = [
-        'old_status' => PackageStatus::class,
-        'new_status' => PackageStatus::class,
         'changed_at' => 'datetime',
     ];
 
@@ -99,17 +97,17 @@ class PackageStatusHistory extends Model
     public function isStatusUpgrade(): bool
     {
         $statusOrder = [
-            PackageStatus::PENDING->value => 1,
-            PackageStatus::PROCESSING->value => 2,
-            PackageStatus::SHIPPED->value => 3,
-            PackageStatus::CUSTOMS->value => 4,
-            PackageStatus::READY->value => 5,
-            PackageStatus::DELIVERED->value => 6,
-            PackageStatus::DELAYED->value => 0, // Special case - not part of normal progression
+            PackageStatus::PENDING => 1,
+            PackageStatus::PROCESSING => 2,
+            PackageStatus::SHIPPED => 3,
+            PackageStatus::CUSTOMS => 4,
+            PackageStatus::READY => 5,
+            PackageStatus::DELIVERED => 6,
+            PackageStatus::DELAYED => 0, // Special case - not part of normal progression
         ];
 
-        $oldOrder = $statusOrder[$this->old_status->value] ?? 0;
-        $newOrder = $statusOrder[$this->new_status->value] ?? 0;
+        $oldOrder = $statusOrder[$this->old_status] ?? 0;
+        $newOrder = $statusOrder[$this->new_status] ?? 0;
 
         return $newOrder > $oldOrder;
     }

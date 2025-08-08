@@ -35,7 +35,7 @@ class PackageDistributionService
 
             // Validate packages are ready for distribution
             $packages = Package::whereIn('id', $packageIds)
-                ->where('status', PackageStatus::READY->value)
+                ->where('status', PackageStatus::READY)
                 ->get();
 
             if ($packages->count() !== count($packageIds)) {
@@ -85,7 +85,7 @@ class PackageDistributionService
                 ]);
 
                 // Update package status to delivered
-                $package->update(['status' => PackageStatus::DELIVERED->value]);
+                $package->update(['status' => PackageStatus::DELIVERED]);
             }
 
             // Generate receipt PDF
@@ -210,7 +210,7 @@ class PackageDistributionService
     public function getReadyPackagesForCustomer(int $customerId)
     {
         return Package::where('user_id', $customerId)
-            ->where('status', PackageStatus::READY->value)
+            ->where('status', PackageStatus::READY)
             ->get();
     }
 

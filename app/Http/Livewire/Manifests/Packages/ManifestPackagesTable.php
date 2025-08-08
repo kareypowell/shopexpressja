@@ -8,6 +8,9 @@ use Rappasoft\LaravelLivewireTables\Views\Column;
 use Rappasoft\LaravelLivewireTables\Views\Filter;
 use App\Models\Package;
 use App\Models\PackagePreAlert;
+use App\Enums\PackageStatus;
+use App\Services\PackageStatusService;
+use Illuminate\Support\Facades\Log;
 
 class ManifestPackagesTable extends DataTableComponent
 {
@@ -23,9 +26,10 @@ class ManifestPackagesTable extends DataTableComponent
     public array $bulkActions = [
         'setStatusToProcessing' => 'Change to Processing',
         'setStatusToShipped' => 'Change to Shipped',
-        'setStatusToDelayed' => 'Change to Delayed',
+        'setStatusToCustoms' => 'Change to Customs',
         'setStatusToReady' => 'Change to Ready',
         'setStatusToDelivered' => 'Change to Delivered',
+        'setStatusToDelayed' => 'Change to Delayed',
     ];
 
     public array $filterNames = [
@@ -34,79 +38,119 @@ class ManifestPackagesTable extends DataTableComponent
 
     public function filters(): array
     {
+        $statusOptions = collect(PackageStatus::cases())->mapWithKeys(function ($status) {
+            return [$status->value => $status->getLabel()];
+        })->toArray();
+
         return [
             'status' => Filter::make('Status')
-                ->select([
-                    '' => 'Any',
-                    'Processing' => 'Processing',
-                    'Shipped' => 'Shipped',
-                    'Delayed' => 'Delayed',
-                    'Ready' => 'Ready',
-                ]),
+                ->select(array_merge(['' => 'Any'], $statusOptions)),
         ];
     }
 
     public function setStatusToProcessing()
     {
-        $this->setStatus('processing');
+        $this->setStatus(PackageStatus::PROCESSING);
     }
 
     public function setStatusToShipped()
     {
-        $this->setStatus('shipped');
+        $this->setStatus(PackageStatus::SHIPPED);
     }
 
-    public function setStatusToDelayed()
+    public function setStatusToCustoms()
     {
-        $this->setStatus('delayed');
+        $this->setStatus(PackageStatus::CUSTOMS);
     }
 
     public function setStatusToReady()
     {
-        $this->setStatus('ready');
+        $this->setStatus(PackageStatus::READY);
     }
 
     public function setStatusToDelivered()
     {
-        $this->setStatus('delivered');
+        $this->setStatus(PackageStatus::DELIVERED);
     }
 
-    public function setStatus($status)
+    public function setStatusToDelayed()
     {
-        collect($this->selectedKeys)->each(function ($id) use ($status) {
-            Package::where('id', $id)->update(['status' => $status]);
-            PackagePreAlert::where('package_id', $id)->update(['status' => $status]);
+        $this->setStatus(PackageStatus::DELAYED);
+    }
 
-            $package = Package::find($id);
-            $user = $package->user;
-            $trackingNumber = $package->tracking_number;
-            $description = $package->description;
+    public function setStatus(PackageStatus $status)
+    {
+        $packageStatusService = app(PackageStatusService::class);
+        $successCount = 0;
+        $errorCount = 0;
 
-            // Notify the user about the status change
-            switch ($status) {
-                case 'processing':
-                    $user->notify(new \App\Notifications\ProcessingPreAlertNotification($user, $trackingNumber, $description));
-                    break;
-                case 'shipped':
-                    $user->notify(new \App\Notifications\PackageShippedNotification($user, $trackingNumber, $description));
-                    break;
-                case 'delayed':
-                    $user->notify(new \App\Notifications\PackageDelayedNotification($user, $trackingNumber, $description));
-                    break;
-                case 'ready':
-                    $user->notify(new \App\Notifications\PackageReadyNotification($user, $trackingNumber, $description));
-                    break;
-                case 'delivered':
-                    $status = 'Delivered';
-                    break;
+        collect($this->selectedKeys)->each(function ($id) use ($status, $packageStatusService, &$successCount, &$errorCount) {
+            try {
+                $package = Package::find($id);
+                if ($package) {
+                    $result = $packageStatusService->updateStatus(
+                        $package,
+                        $status,
+                        auth()->user(),
+                        'Bulk status update from manifest packages table'
+                    );
+
+                    if ($result['success']) {
+                        $successCount++;
+                        
+                        // Update PackagePreAlert status as well for backward compatibility
+                        PackagePreAlert::where('package_id', $id)->update(['status' => $status->value]);
+
+                        // Send notifications based on status
+                        $user = $package->user;
+                        $trackingNumber = $package->tracking_number;
+                        $description = $package->description;
+
+                        switch ($status) {
+                            case PackageStatus::PROCESSING:
+                                $user->notify(new \App\Notifications\ProcessingPreAlertNotification($user, $trackingNumber, $description));
+                                break;
+                            case PackageStatus::SHIPPED:
+                                $user->notify(new \App\Notifications\PackageShippedNotification($user, $trackingNumber, $description));
+                                break;
+                            case PackageStatus::DELAYED:
+                                $user->notify(new \App\Notifications\PackageDelayedNotification($user, $trackingNumber, $description));
+                                break;
+                            case PackageStatus::READY:
+                                $user->notify(new \App\Notifications\PackageReadyNotification($user, $trackingNumber, $description));
+                                break;
+                            case PackageStatus::DELIVERED:
+                                // Handle delivered notification if needed
+                                break;
+                        }
+                    } else {
+                        $errorCount++;
+                    }
+                }
+            } catch (\Exception $e) {
+                $errorCount++;
+                Log::error('Failed to update package status in bulk action', [
+                    'package_id' => $id,
+                    'status' => $status->value,
+                    'error' => $e->getMessage()
+                ]);
             }
         });
 
-        // $this->clearSelected();
-        $this->dispatchBrowserEvent('notify', [
-            'type' => 'success',
-            'message' => "Status updated to {$status} successfully.",
-        ]);
+        // Show results
+        if ($successCount > 0) {
+            $this->dispatchBrowserEvent('notify', [
+                'type' => 'success',
+                'message' => "Status updated to {$status->getLabel()} for {$successCount} package(s) successfully.",
+            ]);
+        }
+
+        if ($errorCount > 0) {
+            $this->dispatchBrowserEvent('notify', [
+                'type' => 'error',
+                'message' => "Failed to update {$errorCount} package(s).",
+            ]);
+        }
     }
 
     public function columns(): array

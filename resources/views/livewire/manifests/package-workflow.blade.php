@@ -40,9 +40,24 @@
                 <div class="p-5">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
-                            <x-badges.{{ $stats['badge_class'] }}>
-                                {{ $stats['count'] }}
-                            </x-badges.{{ $stats['badge_class'] }}>
+                            @php
+                                $badgeClass = $stats['badge_class'] ?? 'default';
+                            @endphp
+                            @if($badgeClass === 'default')
+                                <x-badges.default>{{ $stats['count'] }}</x-badges.default>
+                            @elseif($badgeClass === 'primary')
+                                <x-badges.primary>{{ $stats['count'] }}</x-badges.primary>
+                            @elseif($badgeClass === 'success')
+                                <x-badges.success>{{ $stats['count'] }}</x-badges.success>
+                            @elseif($badgeClass === 'warning')
+                                <x-badges.warning>{{ $stats['count'] }}</x-badges.warning>
+                            @elseif($badgeClass === 'danger')
+                                <x-badges.danger>{{ $stats['count'] }}</x-badges.danger>
+                            @elseif($badgeClass === 'shs')
+                                <x-badges.shs>{{ $stats['count'] }}</x-badges.shs>
+                            @else
+                                <x-badges.default>{{ $stats['count'] }}</x-badges.default>
+                            @endif
                         </div>
                         <div class="ml-3 w-0 flex-1">
                             <dl>
@@ -196,15 +211,31 @@
                                         <p class="text-sm font-medium text-gray-900 truncate">
                                             {{ $package->tracking_number }}
                                         </p>
-                                        <x-badges.{{ $package->status_badge_class }}>
-                                            {{ $package->status_label }}
-                                        </x-badges.{{ $package->status_badge_class }}>
+                                        @php
+                                            $badgeClass = $package->status_badge_class ?? 'default';
+                                            $statusLabel = $package->status_label ?? 'Unknown';
+                                        @endphp
+                                        @if($badgeClass === 'default')
+                                            <x-badges.default>{{ $statusLabel }}</x-badges.default>
+                                        @elseif($badgeClass === 'primary')
+                                            <x-badges.primary>{{ $statusLabel }}</x-badges.primary>
+                                        @elseif($badgeClass === 'success')
+                                            <x-badges.success>{{ $statusLabel }}</x-badges.success>
+                                        @elseif($badgeClass === 'warning')
+                                            <x-badges.warning>{{ $statusLabel }}</x-badges.warning>
+                                        @elseif($badgeClass === 'danger')
+                                            <x-badges.danger>{{ $statusLabel }}</x-badges.danger>
+                                        @elseif($badgeClass === 'shs')
+                                            <x-badges.shs>{{ $statusLabel }}</x-badges.shs>
+                                        @else
+                                            <x-badges.default>{{ $statusLabel }}</x-badges.default>
+                                        @endif
                                     </div>
                                     
                                     <div class="mt-1 flex items-center space-x-4 text-sm text-gray-500">
                                         <span>Customer: {{ $package->user->full_name ?? 'N/A' }}</span>
                                         <span>•</span>
-                                        <span>Weight: {{ $package->formatted_weight }} lbs</span>
+                                        <span>Weight: {{ number_format($package->weight, 2) }} lbs</span>
                                         @if($package->total_cost > 0)
                                             <span>•</span>
                                             <span>Cost: ${{ number_format($package->total_cost, 2) }}</span>
@@ -226,10 +257,10 @@
                                     class="text-sm border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500"
                                 >
                                     <option value="">Change Status...</option>
-                                    @foreach($package->getValidStatusTransitions() as $transition)
-                                        <option value="{{ $transition->value }}">
-                                            {{ $transition->getLabel() }}
-                                        </option>
+                                    @foreach($statusOptions as $value => $label)
+                                        @if($value !== $package->status)
+                                            <option value="{{ $value }}">{{ $label }}</option>
+                                        @endif
                                     @endforeach
                                 </select>
 
@@ -298,7 +329,7 @@
                     <div class="mt-2 px-7 py-3">
                         <p class="text-sm text-gray-500">
                             Are you sure you want to update {{ count($confirmingPackages) }} package(s) to 
-                            <strong>{{ $confirmingStatus?->getLabel() }}</strong>?
+                            <strong>{{ $confirmingStatusLabel ?: 'Unknown' }}</strong>?
                         </p>
                         
                         <!-- Optional Notes -->

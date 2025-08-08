@@ -198,8 +198,8 @@
                                 </div>
                                 <div class="flex justify-between border-t border-gray-200 pt-2">
                                     <span class="text-gray-600">Payment Status:</span>
-                                    <span class="font-medium {{ $this->paymentStatusColor }}">
-                                        {{ $this->paymentStatusLabel }}
+                                    <span class="font-medium {{ $this->getPaymentStatusColor() }}">
+                                        {{ $this->getPaymentStatusLabel() }}
                                     </span>
                                 </div>
                                 @if($paymentStatus !== 'paid')
@@ -261,15 +261,37 @@
 
                     <!-- Customer Information -->
                     <div class="mt-4 bg-gray-50 p-4 rounded-lg">
-                        <h4 class="text-sm font-medium text-gray-900 mb-2">Customer Information</h4>
-                        <div class="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                                <span class="text-gray-600">Name:</span>
-                                <span class="ml-2 font-medium">{{ $distributionSummary['customer']['name'] ?? 'N/A' }}</span>
+                        <h4 class="text-sm font-medium text-gray-900 mb-3">Customer Information</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div class="space-y-2">
+                                <div>
+                                    <span class="text-gray-600">Name:</span>
+                                    <span class="ml-2 font-medium">{{ $distributionSummary['customer']['name'] ?? 'N/A' }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Email:</span>
+                                    <span class="ml-2 font-medium">{{ $distributionSummary['customer']['email'] ?? 'N/A' }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Phone:</span>
+                                    <span class="ml-2 font-medium">{{ $distributionSummary['customer']['phone'] ?? 'N/A' }}</span>
+                                </div>
                             </div>
-                            <div>
-                                <span class="text-gray-600">Email:</span>
-                                <span class="ml-2 font-medium">{{ $distributionSummary['customer']['email'] ?? 'N/A' }}</span>
+                            <div class="space-y-2">
+                                <div>
+                                    <span class="text-gray-600">Account Number:</span>
+                                    <span class="ml-2 font-medium">{{ $distributionSummary['customer']['account_number'] ?? 'N/A' }}</span>
+                                </div>
+                                @if(!empty($distributionSummary['customer']['tax_number']))
+                                    <div>
+                                        <span class="text-gray-600">Tax Number:</span>
+                                        <span class="ml-2 font-medium">{{ $distributionSummary['customer']['tax_number'] }}</span>
+                                    </div>
+                                @endif
+                                <div>
+                                    <span class="text-gray-600">Address:</span>
+                                    <span class="ml-2 font-medium">{{ $distributionSummary['customer']['address'] ?? 'N/A' }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>

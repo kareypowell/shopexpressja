@@ -75,15 +75,11 @@ class DashboardFilters extends Component
             'new_low_value' => 'New/Low Value'
         ];
 
-        $this->packageStatuses = [
-            'pending' => 'Pending',
-            'processing' => 'Processing',
-            'in_transit' => 'In Transit',
-            'shipped' => 'Shipped',
-            'ready_for_pickup' => 'Ready for Pickup',
-            'delivered' => 'Delivered',
-            'delayed' => 'Delayed'
-        ];
+        $this->packageStatuses = collect(\App\Enums\PackageStatus::cases())
+            ->mapWithKeys(function ($status) {
+                return [$status->value => $status->getLabel()];
+            })
+            ->toArray();
 
         // Load offices from database
         $this->offices = \App\Models\Office::select('id', 'name')

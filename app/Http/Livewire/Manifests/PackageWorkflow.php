@@ -17,7 +17,8 @@ class PackageWorkflow extends Component
     public $selectAll = false;
     public $bulkStatus = '';
     public $showConfirmModal = false;
-    public $confirmingStatus = null;
+    public $confirmingStatus = '';
+    public $confirmingStatusLabel = '';
     public $confirmingPackages = [];
     public $statusFilter = '';
     public $search = '';
@@ -36,9 +37,13 @@ class PackageWorkflow extends Component
         $this->packageStatusService = $packageStatusService;
     }
 
-    public function mount($manifestId = null)
+    public function mount($manifest = null)
     {
-        $this->manifestId = $manifestId;
+        if ($manifest instanceof \App\Models\Manifest) {
+            $this->manifestId = $manifest->id;
+        } else {
+            $this->manifestId = $manifest;
+        }
     }
 
     public function render()
@@ -146,25 +151,29 @@ class PackageWorkflow extends Component
                 return;
             }
 
-            $this->confirmingStatus = $newStatus;
+            $this->confirmingStatus = $newStatus->value;
+            $this->confirmingStatusLabel = $newStatus->getLabel();
             $this->confirmingPackages = $packages->toArray();
             $this->showConfirmModal = true;
 
-        } catch (\ValueError $e) {
+
+
+        } catch (\InvalidArgumentException $e) {
             $this->addError('bulkStatus', 'Invalid status selected.');
         }
     }
 
     public function executeBulkStatusUpdate()
     {
-        if (!$this->confirmingStatus || empty($this->confirmingPackages)) {
+        if (empty($this->confirmingStatus) || empty($this->confirmingPackages)) {
             return;
         }
 
         $packageIds = collect($this->confirmingPackages)->pluck('id')->toArray();
+        $statusEnum = PackageStatus::from($this->confirmingStatus);
         $results = $this->packageStatusService->bulkUpdateStatus(
             $packageIds,
-            $this->confirmingStatus,
+            $statusEnum,
             Auth::user(),
             $this->notes ?: null
         );
@@ -174,7 +183,8 @@ class PackageWorkflow extends Component
         $this->selectAll = false;
         $this->bulkStatus = '';
         $this->notes = '';
-        $this->confirmingStatus = null;
+        $this->confirmingStatus = '';
+        $this->confirmingStatusLabel = '';
         $this->confirmingPackages = [];
 
         if (count($results['success']) > 0) {
@@ -195,7 +205,8 @@ class PackageWorkflow extends Component
     public function cancelBulkUpdate()
     {
         $this->showConfirmModal = false;
-        $this->confirmingStatus = null;
+        $this->confirmingStatus = '';
+        $this->confirmingStatusLabel = '';
         $this->confirmingPackages = [];
         $this->notes = '';
     }
@@ -276,14 +287,42 @@ class PackageWorkflow extends Component
         });
     }
 
-    public function initiateDistribution()
+    public function initiateDistribution($packageIds = null)
     {
-        if (!$this->canDistributeSelected()) {
+        // If specific package IDs are provided, use those; otherwise use selected packages
+        $packagesToDistribute = $packageIds ?: $this->selectedPackages;
+        
+        if (empty($packagesToDistribute)) {
+            session()->flash('error', 'Please select packages to distribute.');
+            return;
+        }
+
+        // Validate that all packages can be distributed
+        $packages = Package::whereIn('id', $packagesToDistribute)->get();
+        $invalidPackages = $packages->filter(function ($package) {
+            return !$package->canBeDistributed();
+        });
+
+        if ($invalidPackages->count() > 0) {
             session()->flash('error', 'Only packages with "Ready for Pickup" status can be distributed.');
             return;
         }
 
-        // Emit event to parent component or redirect to distribution page
-        $this->emit('initiatePackageDistribution', $this->selectedPackages);
+        // Store selected packages in session for the distribution page
+        session(['distribution_packages' => $packagesToDistribute]);
+        
+        // Redirect to distribution page
+        $manifestParam = $this->manifestId ?: 'all';
+        
+        try {
+            return redirect()->route('admin.manifests.distribution', $manifestParam);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Unable to navigate to distribution page. Please try again.');
+            \Log::error('Distribution redirect error', [
+                'error' => $e->getMessage(),
+                'manifest_param' => $manifestParam,
+                'packages' => $packagesToDistribute
+            ]);
+        }
     }
 }

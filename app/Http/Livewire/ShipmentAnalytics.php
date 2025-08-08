@@ -92,15 +92,23 @@ class ShipmentAnalytics extends Component
             ->groupBy('date')
             ->map(function ($dayData, $date) {
                 $statusCounts = $dayData->pluck('count', 'status')->toArray();
+                $pendingValue = \App\Enums\PackageStatus::PENDING;
+                $processingValue = \App\Enums\PackageStatus::PROCESSING;
+                $shippedValue = \App\Enums\PackageStatus::SHIPPED;
+                $customsValue = \App\Enums\PackageStatus::CUSTOMS;
+                $readyValue = \App\Enums\PackageStatus::READY;
+                $deliveredValue = \App\Enums\PackageStatus::DELIVERED;
+                $delayedValue = \App\Enums\PackageStatus::DELAYED;
+                
                 return [
                     'date' => $date,
-                    'pending' => $statusCounts['pending'] ?? 0,
-                    'processing' => $statusCounts['processing'] ?? 0,
-                    'in_transit' => $statusCounts['in_transit'] ?? 0,
-                    'shipped' => $statusCounts['shipped'] ?? 0,
-                    'ready_for_pickup' => $statusCounts['ready_for_pickup'] ?? 0,
-                    'delivered' => $statusCounts['delivered'] ?? 0,
-                    'delayed' => $statusCounts['delayed'] ?? 0,
+                    'pending' => $statusCounts[$pendingValue] ?? 0,
+                    'processing' => $statusCounts[$processingValue] ?? 0,
+                    'shipped' => $statusCounts[$shippedValue] ?? 0,
+                    'customs' => $statusCounts[$customsValue] ?? 0,
+                    'ready' => $statusCounts[$readyValue] ?? 0,
+                    'delivered' => $statusCounts[$deliveredValue] ?? 0,
+                    'delayed' => $statusCounts[$delayedValue] ?? 0,
                 ];
             })
             ->values()
@@ -117,7 +125,7 @@ class ShipmentAnalytics extends Component
         $dateRange = $this->getDateRange();
         
         $processingData = Package::whereBetween('created_at', $dateRange)
-            ->whereIn('status', ['ready_for_pickup', 'delivered'])
+            ->whereIn('status', [\App\Enums\PackageStatus::READY, \App\Enums\PackageStatus::DELIVERED])
             ->select('created_at', 'updated_at', 'status')
             ->get()
             ->map(function ($package) {
@@ -187,10 +195,10 @@ class ShipmentAnalytics extends Component
         
         $totalPackages = Package::whereBetween('created_at', $dateRange)->count();
         $deliveredPackages = Package::whereBetween('created_at', $dateRange)
-            ->whereIn('status', ['delivered', 'ready_for_pickup'])
+            ->whereIn('status', [\App\Enums\PackageStatus::DELIVERED, \App\Enums\PackageStatus::READY])
             ->count();
         $delayedPackages = Package::whereBetween('created_at', $dateRange)
-            ->where('status', 'delayed')
+            ->where('status', \App\Enums\PackageStatus::DELAYED)
             ->count();
         
         $onTimeDeliveryRate = $totalPackages > 0 
@@ -219,7 +227,7 @@ class ShipmentAnalytics extends Component
         
         $methodTimes = Package::whereBetween('packages.created_at', $dateRange)
             ->join('manifests', 'packages.manifest_id', '=', 'manifests.id')
-            ->whereIn('packages.status', ['ready_for_pickup', 'delivered'])
+            ->whereIn('packages.status', [\App\Enums\PackageStatus::READY, \App\Enums\PackageStatus::DELIVERED])
             ->select(
                 'manifests.type',
                 'packages.created_at',

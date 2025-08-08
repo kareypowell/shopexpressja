@@ -116,22 +116,22 @@
   - Create responsive email design for various email clients
   - _Requirements: 6.2, 6.3_
 
-- [ ] 7. Update existing manifest components for new workflow
-- [ ] 7.1 Update manifest routes for new navigation structure
+- [x] 7. Update existing manifest components for new workflow
+- [x] 7.1 Update manifest routes for new navigation structure
   - Add new routes for manifest index and create pages
   - Update existing manifest routes to follow new naming convention
   - Implement route model binding for manifest resources
   - Add middleware for proper authorization
   - _Requirements: 1.3, 1.4_
 
-- [ ] 7.2 Update ManifestPackage component for workflow integration
+- [x] 7.2 Update ManifestPackage component for workflow integration
   - Integrate package status workflow into existing manifest package view using normalized status values
   - Add package selection functionality for bulk status updates
   - Implement distribution button for ready packages using enum status checking
   - Update package display to show status and workflow actions with consistent styling
   - _Requirements: 2.1, 2.2, 4.1, 7.4_
 
-- [ ] 7.3 Update all existing components to use normalized status
+- [x] 7.3 Update all existing components to use normalized status
   - Update all Livewire components that display package status to use PackageStatus enum methods
   - Ensure consistent status badge styling across all components using getBadgeClass method
   - Update search and filtering functionality to work with normalized status values

@@ -70,6 +70,16 @@ class RouteServiceProvider extends ServiceProvider
                 ->where('role_id', $customerRole->id)
                 ->firstOrFail();
         });
+
+        // Bind 'manifest' parameter to Manifest model
+        Route::bind('manifest', function ($value) {
+            return \App\Models\Manifest::findOrFail($value);
+        });
+
+        // Bind 'package' parameter to Package model
+        Route::bind('package', function ($value) {
+            return \App\Models\Package::findOrFail($value);
+        });
     }
 
     /**

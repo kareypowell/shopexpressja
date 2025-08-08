@@ -160,7 +160,7 @@ class PackageStatusService
      */
     public function getDistributablePackages(): \Illuminate\Database\Eloquent\Collection
     {
-        return Package::where('status', PackageStatus::READY->value)
+        return Package::where('status', PackageStatus::READY)
             ->with(['user', 'manifest', 'office'])
             ->get();
     }

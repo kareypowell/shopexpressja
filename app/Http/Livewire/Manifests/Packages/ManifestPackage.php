@@ -18,9 +18,14 @@ use App\Services\SeaRateCalculator;
 use App\Rules\ValidContainerDimensions;
 use App\Rules\ValidPackageItems;
 use App\Exceptions\SeaRateNotFoundException;
+use App\Enums\PackageStatus;
+use App\Services\PackageStatusService;
+use Livewire\WithPagination;
 
 class ManifestPackage extends Component
 {
+    use WithPagination;
+
     public bool $isOpen = false;
     public int $user_id = 0;
     public $manifest_id = 0;
@@ -36,6 +41,19 @@ class ManifestPackage extends Component
     public $shipperList = [];
     public $officeList = [];
     public $isSeaManifest = null;
+
+    // Package workflow properties
+    public array $selectedPackages = [];
+    public bool $selectAll = false;
+    public string $bulkStatus = '';
+    public string $statusFilter = '';
+    public string $searchTerm = '';
+    public bool $showBulkActions = false;
+    public bool $showStatusUpdateModal = false;
+    public string $confirmationMessage = '';
+
+    // Services
+    protected PackageStatusService $packageStatusService;
     
     // Customer search properties
     public string $customerSearch = '';
@@ -52,7 +70,7 @@ class ManifestPackage extends Component
     public array $items = [];
 
 
-    public function mount()
+    public function mount($manifest = null)
     {
         $this->customerList = User::where('role_id', 3)
                                   ->where('email_verified_at', '!=', '')
@@ -62,19 +80,26 @@ class ManifestPackage extends Component
 
         $this->shipperList = Shipper::orderBy('name', 'asc')->get();
 
-        // Get manifest_id from route if not already set (for testing)
-        if (!$this->manifest_id) {
-            $this->manifest_id = request()->route('manifest_id');
+        // Handle manifest parameter from route model binding or fallback to route parameter
+        if ($manifest instanceof Manifest) {
+            $this->manifest_id = $manifest->id;
+            $manifestModel = $manifest;
+        } else {
+            // Fallback for testing or when manifest is not bound
+            $this->manifest_id = $manifest ?? request()->route('manifest_id') ?? request()->route('manifest');
+            $manifestModel = Manifest::find($this->manifest_id);
         }
 
-        $manifest = Manifest::find($this->manifest_id);
-        $this->isSeaManifest = $manifest && $manifest->type === 'sea';
+        $this->isSeaManifest = $manifestModel && $manifestModel->type === 'sea';
         
         // Initialize items array for sea manifests
         $this->initializeItems();
         
         // Initialize filtered customers as empty
         $this->filteredCustomers = collect();
+
+        // Initialize package status service
+        $this->packageStatusService = app(PackageStatusService::class);
     }
 
     public function create()
@@ -241,9 +266,11 @@ class ManifestPackage extends Component
      */
     public function updatedManifestId()
     {
-        $manifest = Manifest::find($this->manifest_id);
-        $this->isSeaManifest = $manifest && $manifest->type === 'sea';
-        $this->initializeItems();
+        if ($this->manifest_id) {
+            $manifest = Manifest::find($this->manifest_id);
+            $this->isSeaManifest = $manifest && $manifest->type === 'sea';
+            $this->initializeItems();
+        }
     }
 
     /**
@@ -319,6 +346,257 @@ class ManifestPackage extends Component
         $this->selectedCustomerDisplay = '';
         $this->filteredCustomers = collect();
         $this->showCustomerDropdown = false;
+    }
+
+    // Package Workflow Methods
+
+    /**
+     * Get packages for the current manifest with filtering and search
+     */
+    public function getPackagesProperty()
+    {
+        $query = Package::where('manifest_id', $this->manifest_id)
+            ->with(['user.profile', 'shipper', 'office']);
+
+        // Apply status filter
+        if (!empty($this->statusFilter)) {
+            $query->where('status', $this->statusFilter);
+        }
+
+        // Apply search filter
+        if (!empty($this->searchTerm)) {
+            $query->where(function ($q) {
+                $q->where('tracking_number', 'like', '%' . $this->searchTerm . '%')
+                  ->orWhere('description', 'like', '%' . $this->searchTerm . '%')
+                  ->orWhere('warehouse_receipt_no', 'like', '%' . $this->searchTerm . '%')
+                  ->orWhereHas('user', function ($userQuery) {
+                      $userQuery->where('first_name', 'like', '%' . $this->searchTerm . '%')
+                               ->orWhere('last_name', 'like', '%' . $this->searchTerm . '%');
+                  });
+            });
+        }
+
+        return $query->orderBy('created_at', 'desc')->paginate(20);
+    }
+
+    /**
+     * Toggle package selection
+     */
+    public function togglePackageSelection($packageId)
+    {
+        if (in_array($packageId, $this->selectedPackages)) {
+            $this->selectedPackages = array_diff($this->selectedPackages, [$packageId]);
+        } else {
+            $this->selectedPackages[] = $packageId;
+        }
+
+        $this->updateBulkActionsVisibility();
+        $this->updateSelectAllState();
+    }
+
+    /**
+     * Toggle select all packages
+     */
+    public function toggleSelectAll()
+    {
+        if ($this->selectAll) {
+            $this->selectedPackages = $this->packages->pluck('id')->toArray();
+        } else {
+            $this->selectedPackages = [];
+        }
+
+        $this->updateBulkActionsVisibility();
+    }
+
+    /**
+     * Update bulk actions visibility
+     */
+    private function updateBulkActionsVisibility()
+    {
+        $this->showBulkActions = count($this->selectedPackages) > 0;
+    }
+
+    /**
+     * Update select all state based on selected packages
+     */
+    private function updateSelectAllState()
+    {
+        $totalPackages = $this->packages->count();
+        $selectedCount = count($this->selectedPackages);
+        
+        $this->selectAll = $totalPackages > 0 && $selectedCount === $totalPackages;
+    }
+
+    /**
+     * Clear all selections
+     */
+    public function clearSelections()
+    {
+        $this->selectedPackages = [];
+        $this->selectAll = false;
+        $this->showBulkActions = false;
+    }
+
+    /**
+     * Show bulk status update modal
+     */
+    public function showBulkStatusUpdate()
+    {
+        if (empty($this->selectedPackages)) {
+            $this->dispatchBrowserEvent('toastr:warning', [
+                'message' => 'Please select packages to update.',
+            ]);
+            return;
+        }
+
+        $this->showStatusUpdateModal = true;
+        $this->confirmationMessage = 'Update status for ' . count($this->selectedPackages) . ' selected package(s)?';
+    }
+
+    /**
+     * Cancel status update
+     */
+    public function cancelStatusUpdate()
+    {
+        $this->showStatusUpdateModal = false;
+        $this->bulkStatus = '';
+        $this->confirmationMessage = '';
+    }
+
+    /**
+     * Confirm bulk status update
+     */
+    public function confirmBulkStatusUpdate()
+    {
+        if (empty($this->bulkStatus)) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Please select a status to update to.',
+            ]);
+            return;
+        }
+
+        $successCount = 0;
+        $errorCount = 0;
+
+        foreach ($this->selectedPackages as $packageId) {
+            try {
+                $package = Package::find($packageId);
+                if ($package) {
+                    $result = $this->packageStatusService->updateStatus(
+                        $package,
+                        PackageStatus::from($this->bulkStatus),
+                        auth()->user(),
+                        'Bulk status update from manifest package view'
+                    );
+
+                    if ($result['success']) {
+                        $successCount++;
+                    } else {
+                        $errorCount++;
+                    }
+                }
+            } catch (\Exception $e) {
+                $errorCount++;
+                Log::error('Failed to update package status', [
+                    'package_id' => $packageId,
+                    'status' => $this->bulkStatus,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        // Show results
+        if ($successCount > 0) {
+            $this->dispatchBrowserEvent('toastr:success', [
+                'message' => "Successfully updated {$successCount} package(s).",
+            ]);
+        }
+
+        if ($errorCount > 0) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => "Failed to update {$errorCount} package(s).",
+            ]);
+        }
+
+        // Reset state
+        $this->cancelStatusUpdate();
+        $this->clearSelections();
+    }
+
+    /**
+     * Get ready packages for distribution
+     */
+    public function getReadyPackagesProperty()
+    {
+        return Package::where('manifest_id', $this->manifest_id)
+            ->where('status', PackageStatus::READY)
+            ->with(['user.profile'])
+            ->get();
+    }
+
+    /**
+     * Navigate to distribution page
+     */
+    public function goToDistribution()
+    {
+        $readyPackagesCount = $this->readyPackages->count();
+        
+        if ($readyPackagesCount === 0) {
+            $this->dispatchBrowserEvent('toastr:warning', [
+                'message' => 'No packages are ready for distribution.',
+            ]);
+            return;
+        }
+
+        return redirect()->route('admin.manifests.distribution', ['manifest' => $this->manifest_id]);
+    }
+
+    /**
+     * Navigate to workflow page
+     */
+    public function goToWorkflow()
+    {
+        return redirect()->route('admin.manifests.workflow', ['manifest' => $this->manifest_id]);
+    }
+
+    /**
+     * Get available status options for bulk update
+     */
+    public function getStatusOptionsProperty()
+    {
+        return collect(PackageStatus::cases())->map(function ($status) {
+            return [
+                'value' => $status->value,
+                'label' => $status->getLabel(),
+                'badge_class' => $status->getBadgeClass()
+            ];
+        });
+    }
+
+    /**
+     * Reset filters
+     */
+    public function resetFilters()
+    {
+        $this->statusFilter = '';
+        $this->searchTerm = '';
+        $this->resetPage();
+    }
+
+    /**
+     * Updated search term
+     */
+    public function updatedSearchTerm()
+    {
+        $this->resetPage();
+    }
+
+    /**
+     * Updated status filter
+     */
+    public function updatedStatusFilter()
+    {
+        $this->resetPage();
     }
 
     /**
@@ -530,14 +808,12 @@ class ManifestPackage extends Component
     /**
      * Determine package status based on Pre-Alerts and notify customer if needed.
      * 
-     * @return string The package status ('Processing' or 'Pending')
+     * @return string The package status using normalized PackageStatus enum
      */
     private function updatePackageStatus($preAlert): string
     {
-        // $preAlert = PreAlert::where('tracking_number', $this->tracking_number)->first();
-        $status = $preAlert ? 'processing' : 'pending';
-
-        return $status;
+        $status = $preAlert ? PackageStatus::PROCESSING : PackageStatus::PENDING;
+        return $status->value;
     }
 
     /**

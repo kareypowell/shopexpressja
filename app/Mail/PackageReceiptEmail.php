@@ -101,12 +101,16 @@ class PackageReceiptEmail extends Mailable implements ShouldQueue
      */
     private function getPaymentStatusLabel(): string
     {
-        return match($this->distribution->payment_status) {
-            'paid' => 'Paid in Full',
-            'partial' => 'Partially Paid',
-            'unpaid' => 'Unpaid',
-            default => 'Unknown'
-        };
+        switch ($this->distribution->payment_status) {
+            case 'paid':
+                return 'Paid in Full';
+            case 'partial':
+                return 'Partially Paid';
+            case 'unpaid':
+                return 'Unpaid';
+            default:
+                return 'Unknown';
+        }
     }
 
     /**
