@@ -62,7 +62,7 @@ class DashboardAnalyticsServiceTest extends TestCase
         ]);
         
         Package::factory()->count(2)->create([
-            'status' => 'in_transit',
+            'status' => 'shipped',
             'created_at' => now()->subDays(5),
         ]);
 
@@ -71,12 +71,12 @@ class DashboardAnalyticsServiceTest extends TestCase
 
         $this->assertIsArray($metrics);
         $this->assertArrayHasKey('total', $metrics);
-        $this->assertArrayHasKey('in_transit', $metrics);
+        $this->assertArrayHasKey('shipped', $metrics);
         $this->assertArrayHasKey('pending', $metrics);
         $this->assertArrayHasKey('processing_time_avg', $metrics);
         
         $this->assertEquals(5, $metrics['total']);
-        $this->assertEquals(2, $metrics['in_transit']);
+        $this->assertEquals(2, $metrics['shipped']);
         $this->assertEquals(3, $metrics['pending']);
     }
 

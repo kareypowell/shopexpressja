@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Package Ready for Pickup</title>
+    <title>Package at Customs</title>
     <style>
         /* Reset styles */
         * {
@@ -32,7 +32,7 @@
 
         /* Header */
         .email-header {
-            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
             color: white;
             padding: 30px 20px;
             text-align: center;
@@ -57,19 +57,19 @@
         .greeting {
             font-size: 18px;
             margin-bottom: 20px;
-            color: #16a34a;
+            color: #8b5cf6;
         }
 
         .package-info {
-            background-color: #f0fdf4;
-            border-left: 4px solid #22c55e;
+            background-color: #faf5ff;
+            border-left: 4px solid #a78bfa;
             padding: 20px;
             margin: 20px 0;
             border-radius: 0 8px 8px 0;
         }
 
         .package-info h3 {
-            color: #16a34a;
+            color: #8b5cf6;
             margin-bottom: 15px;
             font-size: 18px;
         }
@@ -78,7 +78,6 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
-            margin-bottom: 20px;
         }
 
         .info-item {
@@ -100,47 +99,10 @@
             color: #1e293b;
         }
 
-        /* Cost breakdown table */
-        .cost-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            background-color: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .cost-table th {
-            background-color: #16a34a;
-            color: white;
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .cost-table td {
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 14px;
-        }
-
-        .cost-table tr:last-child td {
-            border-bottom: none;
-            font-weight: bold;
-            background-color: #f0fdf4;
-        }
-
-        .amount {
-            text-align: right;
-            font-weight: 600;
-        }
-
         /* Button */
         .cta-button {
             display: inline-block;
-            background-color: #16a34a;
+            background-color: #8b5cf6;
             color: white;
             padding: 12px 24px;
             text-decoration: none;
@@ -150,27 +112,7 @@
         }
 
         .cta-button:hover {
-            background-color: #15803d;
-        }
-
-        /* Important notice */
-        .important-notice {
-            background-color: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .important-notice p {
-            color: #92400e;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .important-notice .notice-text {
-            color: #92400e;
-            font-size: 14px;
+            background-color: #7c3aed;
         }
 
         /* Footer */
@@ -188,7 +130,7 @@
         }
 
         .contact-info {
-            color: #16a34a;
+            color: #8b5cf6;
             font-weight: 600;
             font-size: 14px;
         }
@@ -220,7 +162,7 @@
         <!-- Header -->
         <div class="email-header">
             <div class="company-logo">{{ config('app.name') }}</div>
-            <div class="header-subtitle">Package Ready for Pickup</div>
+            <div class="header-subtitle">Package at Customs</div>
         </div>
 
         <!-- Content -->
@@ -230,8 +172,8 @@
             </div>
 
             <p style="margin-bottom: 20px; color: #64748b; line-height: 1.6;">
-                Great news! Your package is <strong>ready for pickup</strong> at our office. 
-                Please ensure you bring valid proof of identification along with you.
+                This is to inform you that your package has arrived in Jamaica and is currently being processed at 
+                <strong>customs</strong>. This is a normal part of the international shipping process.
             </p>
 
             <!-- Package Information -->
@@ -257,53 +199,10 @@
                 </div>
             </div>
 
-            @if($package)
-            <!-- Cost Breakdown -->
-            <h3 style="color: #16a34a; margin: 20px 0 15px 0;">Cost Breakdown</h3>
-            <table class="cost-table">
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th class="amount">Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Freight Price</td>
-                        <td class="amount">${{ number_format($package->freight_price ?? 0, 2) }}</td>
-                    </tr>
-                    @if($package->customs_duty > 0)
-                    <tr>
-                        <td>Customs Duty</td>
-                        <td class="amount">${{ number_format($package->customs_duty, 2) }}</td>
-                    </tr>
-                    @endif
-                    @if($package->storage_fee > 0)
-                    <tr>
-                        <td>Storage Fee</td>
-                        <td class="amount">${{ number_format($package->storage_fee, 2) }}</td>
-                    </tr>
-                    @endif
-                    @if($package->delivery_fee > 0)
-                    <tr>
-                        <td>Delivery Fee</td>
-                        <td class="amount">${{ number_format($package->delivery_fee, 2) }}</td>
-                    </tr>
-                    @endif
-                    <tr>
-                        <td><strong>Total Amount Due</strong></td>
-                        <td class="amount"><strong>${{ number_format(($package->freight_price ?? 0) + ($package->customs_duty ?? 0) + ($package->storage_fee ?? 0) + ($package->delivery_fee ?? 0), 2) }}</strong></td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="important-notice">
-                <p>Payment Required</p>
-                <div class="notice-text">
-                    Please have the total amount ready for payment upon pickup. We accept cash and card payments.
-                </div>
-            </div>
-            @endif
+            <p style="margin: 20px 0; color: #64748b; line-height: 1.6;">
+                Please note that customs processing times may vary. We will notify you as soon as your package 
+                clears customs and is ready for pickup.
+            </p>
 
             <div style="text-align: center; margin: 30px 0;">
                 <a href="{{ config('app.url') }}" class="cta-button">Track Your Package</a>
@@ -311,7 +210,8 @@
 
             <div style="margin-top: 30px; padding: 20px; background-color: #f0f9ff; border-radius: 8px; border-left: 4px solid #0ea5e9;">
                 <p style="color: #0c4a6e; font-size: 14px; line-height: 1.6;">
-                    <strong>Pickup Hours:</strong> Monday - Friday: 9:00 AM - 5:00 PM, Saturday: 9:00 AM - 1:00 PM
+                    <strong>Processing Time:</strong> Customs processing typically takes 1-3 business days. 
+                    We'll notify you immediately once your package is cleared and ready for pickup.
                 </p>
             </div>
         </div>
@@ -319,7 +219,7 @@
         <!-- Footer -->
         <div class="email-footer">
             <div class="footer-text">
-                Thank you for choosing {{ config('app.name') }} for your shipping needs.
+                Thank you for your patience and for choosing {{ config('app.name') }}.
             </div>
             <div class="contact-info">
                 For questions about your package, please contact our customer service team.

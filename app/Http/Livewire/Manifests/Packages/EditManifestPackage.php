@@ -19,10 +19,10 @@ use Illuminate\Support\Facades\Log;
 class EditManifestPackage extends Component
 {
     public int $user_id = 0;
-    public int $manifest_id = 0;
+    public ?int $manifest_id = null;
     public int $shipper_id = 0;
     public int $office_id = 0;
-    public int $package_id = 0;
+    public ?int $package_id = null;
     public string $warehouse_receipt_no = '';
     public string $tracking_number = '';
     public string $description = '';
@@ -59,9 +59,17 @@ class EditManifestPackage extends Component
 
         $this->shipperList = Shipper::orderBy('name', 'asc')->get();
 
-        $this->manifest_id = request()->route('manifest_id');
+        // Handle route model binding - extract IDs from model instances
+        $manifestParam = request()->route('manifest');
+        $this->manifest_id = $manifestParam instanceof Manifest ? $manifestParam->id : (int) $manifestParam;
 
-        $this->package_id = request()->route('package_id');
+        $packageParam = request()->route('package');
+        $this->package_id = $packageParam instanceof Package ? $packageParam->id : (int) $packageParam;
+
+        // Validate required parameters
+        if (!$this->manifest_id || !$this->package_id) {
+            abort(404, 'Invalid manifest or package ID');
+        }
 
         // Determine if this is a sea manifest
         $manifest = Manifest::find($this->manifest_id);
@@ -416,7 +424,7 @@ class EditManifestPackage extends Component
             }
         }
 
-        return redirect(route('admin.manifests.packages', ['manifest_id' => $this->manifest_id]))
+        return redirect(route('admin.manifests.packages', ['manifest' => $this->manifest_id]))
             ->with('message', __('Package updated successfully.'));
     }
 

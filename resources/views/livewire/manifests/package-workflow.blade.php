@@ -278,7 +278,11 @@
                                 <div class="flex items-center space-x-1">
                                     @php
                                         $currentStatus = \App\Enums\PackageStatus::from($package->status);
-                                        $validTransitions = $currentStatus->getValidTransitions();
+                                        $allValidTransitions = $currentStatus->getValidTransitions();
+                                        // Filter out DELIVERED status from manual updates
+                                        $validTransitions = collect($allValidTransitions)->filter(function($transition) {
+                                            return $transition->value !== \App\Enums\PackageStatus::DELIVERED;
+                                        })->toArray();
                                         $nextStatus = $this->getNextLogicalStatus($package->status);
                                     @endphp
                                     

@@ -28,7 +28,7 @@ class ManifestPackagesTable extends DataTableComponent
         'setStatusToShipped' => 'Change to Shipped',
         'setStatusToCustoms' => 'Change to Customs',
         'setStatusToReady' => 'Change to Ready',
-        'setStatusToDelivered' => 'Change to Delivered',
+        // 'setStatusToDelivered' => 'Change to Delivered', // Removed - only available through distribution process
         'setStatusToDelayed' => 'Change to Delayed',
     ];
 
@@ -68,10 +68,7 @@ class ManifestPackagesTable extends DataTableComponent
         $this->setStatus(PackageStatus::READY);
     }
 
-    public function setStatusToDelivered()
-    {
-        $this->setStatus(PackageStatus::DELIVERED);
-    }
+    // setStatusToDelivered method removed - packages can only be delivered through distribution process
 
     public function setStatusToDelayed()
     {
@@ -101,28 +98,7 @@ class ManifestPackagesTable extends DataTableComponent
                         // Update PackagePreAlert status as well for backward compatibility
                         PackagePreAlert::where('package_id', $id)->update(['status' => $status->value]);
 
-                        // Send notifications based on status
-                        $user = $package->user;
-                        $trackingNumber = $package->tracking_number;
-                        $description = $package->description;
-
-                        switch ($status) {
-                            case PackageStatus::PROCESSING:
-                                $user->notify(new \App\Notifications\ProcessingPreAlertNotification($user, $trackingNumber, $description));
-                                break;
-                            case PackageStatus::SHIPPED:
-                                $user->notify(new \App\Notifications\PackageShippedNotification($user, $trackingNumber, $description));
-                                break;
-                            case PackageStatus::DELAYED:
-                                $user->notify(new \App\Notifications\PackageDelayedNotification($user, $trackingNumber, $description));
-                                break;
-                            case PackageStatus::READY:
-                                $user->notify(new \App\Notifications\PackageReadyNotification($user, $trackingNumber, $description));
-                                break;
-                            case PackageStatus::DELIVERED:
-                                // Handle delivered notification if needed
-                                break;
-                        }
+                        // Note: Email notifications are now handled automatically by PackageStatusService
                     } else {
                         $errorCount++;
                     }
@@ -141,7 +117,7 @@ class ManifestPackagesTable extends DataTableComponent
         if ($successCount > 0) {
             $this->dispatchBrowserEvent('notify', [
                 'type' => 'success',
-                'message' => "Status updated to {$status->getLabel()} for {$successCount} package(s) successfully.",
+                'message' => "Status updated to {$status->getLabel()} for {$successCount} package(s) successfully. Email notifications sent to customers.",
             ]);
         }
 

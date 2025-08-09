@@ -130,7 +130,7 @@ class ShipmentAnalyticsTest extends TestCase
                 $this->assertArrayHasKey('date', $data);
                 $this->assertArrayHasKey('pending', $data);
                 $this->assertArrayHasKey('processing', $data);
-                $this->assertArrayHasKey('in_transit', $data);
+                $this->assertArrayHasKey('shipped', $data);
                 $this->assertArrayHasKey('delivered', $data);
                 $this->assertArrayHasKey('delayed', $data);
             }

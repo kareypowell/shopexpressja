@@ -84,7 +84,8 @@ class PackageWorkflow extends Component
     public function getStatusOptions()
     {
         $options = [];
-        foreach (PackageStatus::cases() as $status) {
+        // Use manualUpdateCases to exclude DELIVERED status from manual updates
+        foreach (PackageStatus::manualUpdateCases() as $status) {
             $options[$status->value] = $status->getLabel();
         }
         return $options;
@@ -169,6 +170,13 @@ class PackageWorkflow extends Component
             return;
         }
 
+        // Prevent manual updates to DELIVERED status
+        if ($this->confirmingStatus === PackageStatus::DELIVERED) {
+            session()->flash('error', 'Packages can only be marked as delivered through the distribution process.');
+            $this->showConfirmModal = false;
+            return;
+        }
+
         $packageIds = collect($this->confirmingPackages)->pluck('id')->toArray();
         $statusEnum = PackageStatus::from($this->confirmingStatus);
         $results = $this->packageStatusService->bulkUpdateStatus(
@@ -216,6 +224,14 @@ class PackageWorkflow extends Component
         try {
             $package = Package::findOrFail($packageId);
             $newStatus = PackageStatus::from($newStatusValue);
+
+            // Prevent manual updates to DELIVERED status
+            if ($newStatus->value === PackageStatus::DELIVERED) {
+                session()->flash('error', 
+                    "Packages can only be marked as delivered through the distribution process."
+                );
+                return;
+            }
 
             if (!$package->canTransitionTo($newStatus)) {
                 session()->flash('error', 
@@ -292,27 +308,32 @@ class PackageWorkflow extends Component
         $currentStatus = PackageStatus::from($currentStatusValue);
         $validTransitions = $currentStatus->getValidTransitions();
         
-        // Define the logical progression order
+        // Define the logical progression order (excluding DELIVERED for manual updates)
         $progressionOrder = [
             PackageStatus::PENDING => PackageStatus::PROCESSING(),
             PackageStatus::PROCESSING => PackageStatus::SHIPPED(),
             PackageStatus::SHIPPED => PackageStatus::CUSTOMS(),
             PackageStatus::CUSTOMS => PackageStatus::READY(),
-            PackageStatus::READY => PackageStatus::DELIVERED(),
+            // PackageStatus::READY => PackageStatus::DELIVERED(), // Removed - only through distribution
         ];
         
-        // Return the next logical status if it's a valid transition
+        // Return the next logical status if it's a valid transition and not DELIVERED
         if (isset($progressionOrder[$currentStatus->value])) {
             $nextStatus = $progressionOrder[$currentStatus->value];
             foreach ($validTransitions as $transition) {
-                if ($transition->value === $nextStatus->value) {
+                if ($transition->value === $nextStatus->value && $nextStatus->value !== PackageStatus::DELIVERED) {
                     return $nextStatus;
                 }
             }
         }
         
-        // If no logical next status, return the first valid transition
-        return !empty($validTransitions) ? $validTransitions[0] : null;
+        // If no logical next status, return the first valid transition (excluding DELIVERED)
+        foreach ($validTransitions as $transition) {
+            if ($transition->value !== PackageStatus::DELIVERED) {
+                return $transition;
+            }
+        }
+        return null;
     }
 
     public function getCommonNextStatus()

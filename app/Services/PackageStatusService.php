@@ -6,18 +6,37 @@ use App\Enums\PackageStatus;
 use App\Models\Package;
 use App\Models\PackageStatusHistory;
 use App\Models\User;
+use App\Services\PackageNotificationService;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
 class PackageStatusService
 {
+    protected $notificationService;
+
+    public function __construct(PackageNotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Update package status with validation and logging
      */
-    public function updateStatus(Package $package, PackageStatus $newStatus, User $user, ?string $notes = null): bool
+    public function updateStatus(Package $package, PackageStatus $newStatus, User $user, ?string $notes = null, bool $allowDeliveredStatus = false): bool
     {
         try {
             $oldStatus = $package->status; // Already cast to enum by model
+            
+            // Prevent manual updates to DELIVERED status (only allowed through distribution process)
+            if ($newStatus->value === PackageStatus::DELIVERED && !$allowDeliveredStatus) {
+                Log::warning('Manual update to DELIVERED status blocked - use distribution process instead', [
+                    'package_id' => $package->id,
+                    'old_status' => $oldStatus->value,
+                    'new_status' => $newStatus->value,
+                    'user_id' => $user->id,
+                ]);
+                return false;
+            }
             
             // Validate status transition
             if (!$this->canTransitionTo($oldStatus, $newStatus)) {
@@ -36,6 +55,9 @@ class PackageStatusService
 
             // Log status change
             $this->logStatusChange($package, $oldStatus, $newStatus, $user, $notes);
+
+            // Send email notification to customer
+            $this->notificationService->sendStatusNotification($package, $newStatus);
 
             Log::info('Package status updated successfully', [
                 'package_id' => $package->id,
@@ -110,6 +132,15 @@ class PackageStatusService
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Update package status to DELIVERED through distribution process
+     * This bypasses the manual update restriction for DELIVERED status
+     */
+    public function markAsDeliveredThroughDistribution(Package $package, User $user, ?string $notes = null): bool
+    {
+        return $this->updateStatus($package, PackageStatus::DELIVERED(), $user, $notes, true);
     }
 
     /**

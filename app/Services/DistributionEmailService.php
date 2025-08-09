@@ -34,8 +34,8 @@ class DistributionEmailService
                 throw new Exception("Invalid email address: {$customer->email}");
             }
 
-            // Check if receipt file exists
-            if (!Storage::exists($distribution->receipt_path)) {
+            // Check if receipt file exists on public disk
+            if (!Storage::disk('public')->exists($distribution->receipt_path)) {
                 throw new Exception("Receipt file not found: {$distribution->receipt_path}");
             }
 
@@ -135,7 +135,7 @@ class DistributionEmailService
                 'receipt_number' => $distribution->receipt_number,
                 'customer_email' => $distribution->customer->email,
                 'email_sent' => $distribution->email_sent,
-                'email_sent_at' => $distribution->email_sent_at?->format('Y-m-d H:i:s'),
+                'email_sent_at' => $distribution->email_sent_at->format('Y-m-d H:i:s'),
                 'distributed_at' => $distribution->distributed_at->format('Y-m-d H:i:s')
             ];
 

@@ -30,6 +30,9 @@ class PackageReceiptEmail extends Mailable implements ShouldQueue
         $this->distribution = $distribution;
         $this->customer = $customer;
         
+        // Ensure customer profile is loaded
+        $customer->load('profile');
+        
         // Load distribution items with package details
         $this->packages = $distribution->items()
             ->with('package')
@@ -83,9 +86,9 @@ class PackageReceiptEmail extends Mailable implements ShouldQueue
                 'company_name' => config('app.name', 'ShipShark Ltd'),
             ]);
 
-        // Attach PDF receipt if it exists
-        if (Storage::exists($this->distribution->receipt_path)) {
-            $email->attach(Storage::path($this->distribution->receipt_path), [
+        // Attach PDF receipt if it exists on public disk
+        if (Storage::disk('public')->exists($this->distribution->receipt_path)) {
+            $email->attach(Storage::disk('public')->path($this->distribution->receipt_path), [
                 'as' => 'Receipt-' . $this->distribution->receipt_number . '.pdf',
                 'mime' => 'application/pdf',
             ]);

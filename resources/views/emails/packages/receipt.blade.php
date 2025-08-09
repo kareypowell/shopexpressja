@@ -80,6 +80,12 @@
             gap: 15px;
         }
 
+        @media only screen and (min-width: 600px) {
+            .info-grid {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
         .info-item {
             display: flex;
             flex-direction: column;
@@ -276,7 +282,7 @@
         <!-- Content -->
         <div class="email-content">
             <div class="greeting">
-                Hello {{ $customer->name }},
+                Hello {{ $customer->first_name }},
             </div>
 
             <p style="margin-bottom: 20px; color: #64748b; line-height: 1.6;">
@@ -297,8 +303,16 @@
                         <div class="info-value">{{ $distributed_at }}</div>
                     </div>
                     <div class="info-item">
-                        <div class="info-label">Customer</div>
-                        <div class="info-value">{{ $customer->name }}</div>
+                        <div class="info-label">Customer Name</div>
+                        <div class="info-value">{{ $customer->full_name }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Account Number</div>
+                        <div class="info-value">{{ $customer->profile->account_number ?? 'N/A' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Phone Number</div>
+                        <div class="info-value">{{ $customer->profile->telephone_number ?? 'N/A' }}</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Payment Status</div>

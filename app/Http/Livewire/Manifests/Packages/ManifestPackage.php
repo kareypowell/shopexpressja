@@ -451,7 +451,7 @@ class ManifestPackage extends Component
         }
 
         $this->showStatusUpdateModal = true;
-        $this->confirmationMessage = 'Update status for ' . count($this->selectedPackages) . ' selected package(s)?';
+        $this->confirmationMessage = 'Update status for ' . count($this->selectedPackages) . ' selected package(s)? Email notifications will be sent to customers automatically.';
     }
 
     /**
@@ -472,6 +472,14 @@ class ManifestPackage extends Component
         if (empty($this->bulkStatus)) {
             $this->dispatchBrowserEvent('toastr:error', [
                 'message' => 'Please select a status to update to.',
+            ]);
+            return;
+        }
+
+        // Prevent manual updates to DELIVERED status
+        if ($this->bulkStatus === PackageStatus::DELIVERED) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Packages can only be marked as delivered through the distribution process.',
             ]);
             return;
         }
@@ -516,7 +524,7 @@ class ManifestPackage extends Component
         // Show results
         if ($successCount > 0) {
             $this->dispatchBrowserEvent('toastr:success', [
-                'message' => "Successfully updated {$successCount} package(s).",
+                'message' => "Successfully updated {$successCount} package(s). Email notifications have been sent to customers.",
             ]);
         }
 
@@ -569,10 +577,11 @@ class ManifestPackage extends Component
 
     /**
      * Get available status options for bulk update
+     * Excludes 'DELIVERED' status as it can only be set through distribution process
      */
     public function getStatusOptionsProperty()
     {
-        return collect(PackageStatus::cases())->map(function ($status) {
+        return collect(PackageStatus::manualUpdateCases())->map(function ($status) {
             return [
                 'value' => $status->value,
                 'label' => $status->getLabel(),

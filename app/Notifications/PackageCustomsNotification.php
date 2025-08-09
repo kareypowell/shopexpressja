@@ -8,26 +8,24 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use MailerSend\LaravelDriver\MailerSendTrait;
 
-class PackageReadyNotification extends Notification
+class PackageCustomsNotification extends Notification
 {
     use Queueable, MailerSendTrait;
 
     public $user;
     public $tracking_number;
     public $description;
-    public $package;
 
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct($user, $tracking_number, $description, $package = null)
+    public function __construct($user, $tracking_number, $description)
     {
         $this->user = $user;
         $this->tracking_number = $tracking_number;
         $this->description = $description;
-        $this->package = $package;
     }
 
     /**
@@ -50,12 +48,11 @@ class PackageReadyNotification extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-                    ->subject('Package Ready for Pickup')
-                    ->markdown('emails.packages.package-ready', [
+                    ->subject('Package at Customs')
+                    ->markdown('emails.packages.package-customs', [
                         'user' => $this->user,
                         'trackingNumber' => $this->tracking_number,
                         'description' => $this->description,
-                        'package' => $this->package,
                     ]);
     }
 

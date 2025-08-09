@@ -76,6 +76,22 @@ class PackageStatus
     }
 
     /**
+     * Get status cases available for manual updates (excludes DELIVERED)
+     */
+    public static function manualUpdateCases(): array
+    {
+        return [
+            self::PENDING(),
+            self::PROCESSING(),
+            self::SHIPPED(),
+            self::CUSTOMS(),
+            self::READY(),
+            // self::DELIVERED(), // Excluded - only available through distribution process
+            self::DELAYED(),
+        ];
+    }
+
+    /**
      * Map legacy status values to normalized format
      */
     public static function fromLegacyStatus(string $legacyStatus): self

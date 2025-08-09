@@ -57,7 +57,7 @@ class CustomerStatisticsServiceTest extends TestCase
 
         Package::factory()->create([
             'user_id' => $this->customer->id,
-            'status' => 'in_transit',
+            'status' => 'shipped',
             'weight' => 5.0,
             'cubic_feet' => 1.2,
             'freight_price' => 50.00,
@@ -79,7 +79,7 @@ class CustomerStatisticsServiceTest extends TestCase
         // Test package metrics
         $this->assertEquals(2, $statistics['packages']['total_count']);
         $this->assertEquals(1, $statistics['packages']['status_breakdown']['delivered']);
-        $this->assertEquals(1, $statistics['packages']['status_breakdown']['in_transit']);
+        $this->assertEquals(1, $statistics['packages']['status_breakdown']['shipped']);
         
         // Test financial data
         $this->assertEquals(225.00, $statistics['financial']['total_spent']); // Total of both packages
@@ -105,7 +105,7 @@ class CustomerStatisticsServiceTest extends TestCase
 
         Package::factory()->create([
             'user_id' => $this->customer->id,
-            'status' => 'in_transit',
+            'status' => 'shipped',
             'weight' => 15.0,
             'cubic_feet' => 3.0
         ]);
@@ -114,7 +114,7 @@ class CustomerStatisticsServiceTest extends TestCase
 
         $this->assertEquals(3, $metrics['total_count']);
         $this->assertEquals(2, $metrics['status_breakdown']['delivered']);
-        $this->assertEquals(1, $metrics['status_breakdown']['in_transit']);
+        $this->assertEquals(1, $metrics['status_breakdown']['shipped']);
         $this->assertEquals(45.0, $metrics['weight_statistics']['total_weight']);
         $this->assertEquals(15.0, $metrics['weight_statistics']['average_weight']);
         $this->assertEquals(20.0, $metrics['weight_statistics']['max_weight']);

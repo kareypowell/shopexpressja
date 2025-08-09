@@ -8,6 +8,7 @@ use App\Models\PackageDistributionItem;
 use App\Models\User;
 use App\Enums\PackageStatus;
 use App\Services\ReceiptGeneratorService;
+use App\Services\DistributionEmailService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Exception;
@@ -15,10 +16,12 @@ use Exception;
 class PackageDistributionService
 {
     protected $receiptGenerator;
+    protected $emailService;
 
-    public function __construct(ReceiptGeneratorService $receiptGenerator)
+    public function __construct(ReceiptGeneratorService $receiptGenerator, DistributionEmailService $emailService)
     {
         $this->receiptGenerator = $receiptGenerator;
+        $this->emailService = $emailService;
     }
     /**
      * Distribute packages to a customer
@@ -84,13 +87,39 @@ class PackageDistributionService
                     'total_cost' => $package->total_cost ?? 0,
                 ]);
 
-                // Update package status to delivered
-                $package->update(['status' => PackageStatus::DELIVERED]);
+                // Update package status to delivered through proper distribution process
+                $packageStatusService = app(PackageStatusService::class);
+                $packageStatusService->markAsDeliveredThroughDistribution(
+                    $package, 
+                    $user, 
+                    'Package delivered through distribution process'
+                );
             }
 
             // Generate receipt PDF
             try {
                 $receiptPath = $this->receiptGenerator->generatePDF($distribution);
+                
+                // Update distribution with receipt path
+                $distribution->update(['receipt_path' => $receiptPath]);
+                
+                // Send receipt email to customer
+                $emailResult = $this->emailService->sendReceiptEmail($distribution, $customer);
+                
+                if ($emailResult['success']) {
+                    Log::info('Distribution receipt email sent successfully', [
+                        'distribution_id' => $distribution->id,
+                        'customer_email' => $customer->email,
+                        'receipt_number' => $distribution->receipt_number
+                    ]);
+                } else {
+                    Log::warning('Distribution receipt email failed', [
+                        'distribution_id' => $distribution->id,
+                        'customer_email' => $customer->email,
+                        'error' => $emailResult['message']
+                    ]);
+                }
+                
             } catch (Exception $e) {
                 Log::warning('Receipt generation failed', [
                     'distribution_id' => $distribution->id,
