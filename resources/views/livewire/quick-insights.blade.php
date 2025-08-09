@@ -57,16 +57,33 @@
     <div class="px-4 py-5 sm:p-6">
       <dt class="text-base font-bold text-gray-900">Account Balance</dt>
       <dd class="mt-1 flex items-baseline justify-between md:block lg:flex">
-        <div class="flex items-baseline text-2xl font-semibold text-green-600">
-          ${{ number_format($accountBalance, 2) }}
+        <div class="space-y-2">
+          <!-- Account Balance -->
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-600">Account:</span>
+            <span class="text-lg font-semibold {{ $accountBalance >= 0 ? 'text-green-600' : 'text-red-600' }}">
+              ${{ number_format($accountBalance, 2) }}
+            </span>
+          </div>
+          
+          <!-- Credit Balance -->
+          @if($creditBalance > 0)
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-600">Credit:</span>
+            <span class="text-lg font-semibold text-blue-600">
+              ${{ number_format($creditBalance, 2) }}
+            </span>
+          </div>
+          @endif
+          
+          <!-- Total Available -->
+          <div class="flex items-center justify-between border-t pt-2">
+            <span class="text-sm font-medium text-gray-900">Total Available:</span>
+            <span class="text-xl font-bold text-purple-600">
+              ${{ number_format($totalAvailableBalance, 2) }}
+            </span>
+          </div>
         </div>
-        <!-- <div class="inline-flex items-baseline rounded-full bg-red-100 px-2.5 py-0.5 text-sm font-medium text-red-800 md:mt-2 lg:mt-0">
-          <svg class="-ml-1 mr-0.5 size-5 shrink-0 self-center text-red-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
-            <path fill-rule="evenodd" d="M10 3a.75.75 0 0 1 .75.75v10.638l3.96-4.158a.75.75 0 1 1 1.08 1.04l-5.25 5.5a.75.75 0 0 1-1.08 0l-5.25-5.5a.75.75 0 1 1 1.08-1.04l3.96 4.158V3.75A.75.75 0 0 1 10 3Z" clip-rule="evenodd" />
-          </svg>
-          <span class="sr-only"> Decreased by </span>
-          0.0%
-        </div> -->
       </dd>
     </div>
   </dl>

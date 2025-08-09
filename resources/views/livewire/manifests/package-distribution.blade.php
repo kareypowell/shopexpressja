@@ -180,6 +180,29 @@
                             @enderror
                         </div>
 
+                        <!-- Credit Balance Option -->
+                        @if($customer && $customer->credit_balance > 0)
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <input 
+                                        type="checkbox" 
+                                        id="apply-credit"
+                                        wire:model="applyCreditBalance"
+                                        class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                    >
+                                    <label for="apply-credit" class="ml-2 block text-sm text-gray-900">
+                                        Apply available credit balance
+                                    </label>
+                                </div>
+                                <div class="mt-2 text-sm text-gray-600">
+                                    Available credit: <span class="font-medium text-blue-600">${{ number_format($customer->credit_balance, 2) }}</span>
+                                    @if($applyCreditBalance)
+                                        <br>Credit to apply: <span class="font-medium text-green-600">${{ number_format($creditApplied, 2) }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
                         <!-- Cost Summary -->
                         <div class="bg-white p-4 rounded-lg border border-gray-200">
                             <h5 class="text-sm font-medium text-gray-900 mb-3">Distribution Summary</h5>
@@ -196,6 +219,16 @@
                                     <span class="text-gray-600">Amount Collected:</span>
                                     <span class="font-medium">${{ number_format($amountCollected, 2) }}</span>
                                 </div>
+                                @if($creditApplied > 0)
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Credit Applied:</span>
+                                        <span class="font-medium text-green-600">${{ number_format($creditApplied, 2) }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Total Received:</span>
+                                        <span class="font-medium">${{ number_format($amountCollected + $creditApplied, 2) }}</span>
+                                    </div>
+                                @endif
                                 <div class="flex justify-between border-t border-gray-200 pt-2">
                                     <span class="text-gray-600">Payment Status:</span>
                                     <span class="font-medium {{ $this->getPaymentStatusColor() }}">
@@ -206,7 +239,7 @@
                                     <div class="flex justify-between">
                                         <span class="text-gray-600">Outstanding Balance:</span>
                                         <span class="font-medium text-red-600">
-                                            ${{ number_format(max(0, $totalCost - $amountCollected), 2) }}
+                                            ${{ number_format(max(0, $totalCost - $amountCollected - $creditApplied), 2) }}
                                         </span>
                                     </div>
                                 @endif

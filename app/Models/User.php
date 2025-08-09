@@ -26,6 +26,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'role_id',
+        'account_balance',
+        'credit_balance',
     ];
 
     /**
@@ -46,6 +48,8 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
         'deleted_at' => 'datetime',
+        'account_balance' => 'decimal:2',
+        'credit_balance' => 'decimal:2',
     ];
 
     /**
@@ -951,5 +955,223 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return null;
+    }
+
+    /**
+     * Customer account balance and transaction methods
+     */
+    public function transactions()
+    {
+        return $this->hasMany(CustomerTransaction::class);
+    }
+
+    /**
+     * Get formatted account balance
+     */
+    public function getFormattedAccountBalanceAttribute()
+    {
+        return number_format($this->account_balance, 2);
+    }
+
+    /**
+     * Get formatted credit balance
+     */
+    public function getFormattedCreditBalanceAttribute()
+    {
+        return number_format($this->credit_balance, 2);
+    }
+
+    /**
+     * Get total available balance (account + credit)
+     */
+    public function getTotalAvailableBalanceAttribute()
+    {
+        return $this->account_balance + $this->credit_balance;
+    }
+
+    /**
+     * Get formatted total available balance
+     */
+    public function getFormattedTotalAvailableBalanceAttribute()
+    {
+        return number_format($this->total_available_balance, 2);
+    }
+
+    /**
+     * Check if customer has sufficient balance for a given amount
+     */
+    public function hasSufficientBalance($amount)
+    {
+        return $this->total_available_balance >= $amount;
+    }
+
+    /**
+     * Add credit to customer account
+     */
+    public function addCredit($amount, $description, $createdBy = null, $referenceType = null, $referenceId = null, $metadata = null)
+    {
+        $balanceBefore = $this->account_balance;
+        $this->account_balance += $amount;
+        $this->save();
+
+        return $this->transactions()->create([
+            'type' => CustomerTransaction::TYPE_CREDIT,
+            'amount' => $amount,
+            'balance_before' => $balanceBefore,
+            'balance_after' => $this->account_balance,
+            'description' => $description,
+            'reference_type' => $referenceType,
+            'reference_id' => $referenceId,
+            'created_by' => $createdBy,
+            'metadata' => $metadata,
+        ]);
+    }
+
+    /**
+     * Add overpayment credit to customer credit balance
+     */
+    public function addOverpaymentCredit($amount, $description, $createdBy = null, $referenceType = null, $referenceId = null, $metadata = null)
+    {
+        $creditBalanceBefore = $this->credit_balance;
+        $this->credit_balance += $amount;
+        $this->save();
+
+        return $this->transactions()->create([
+            'type' => CustomerTransaction::TYPE_CREDIT,
+            'amount' => $amount,
+            'balance_before' => $creditBalanceBefore,
+            'balance_after' => $this->credit_balance,
+            'description' => $description,
+            'reference_type' => $referenceType,
+            'reference_id' => $referenceId,
+            'created_by' => $createdBy,
+            'metadata' => $metadata,
+        ]);
+    }
+
+    /**
+     * Deduct amount from customer account
+     */
+    public function deductBalance($amount, $description, $createdBy = null, $referenceType = null, $referenceId = null, $metadata = null)
+    {
+        $balanceBefore = $this->account_balance;
+        $this->account_balance -= $amount;
+        $this->save();
+
+        return $this->transactions()->create([
+            'type' => CustomerTransaction::TYPE_DEBIT,
+            'amount' => $amount,
+            'balance_before' => $balanceBefore,
+            'balance_after' => $this->account_balance,
+            'description' => $description,
+            'reference_type' => $referenceType,
+            'reference_id' => $referenceId,
+            'created_by' => $createdBy,
+            'metadata' => $metadata,
+        ]);
+    }
+
+    /**
+     * Apply credit balance to a charge
+     */
+    public function applyCreditBalance($amount, $description, $createdBy = null, $referenceType = null, $referenceId = null, $metadata = null)
+    {
+        $creditToApply = min($amount, $this->credit_balance);
+        
+        if ($creditToApply > 0) {
+            $balanceBefore = $this->credit_balance;
+            $this->credit_balance -= $creditToApply;
+            $this->save();
+
+            $this->transactions()->create([
+                'type' => CustomerTransaction::TYPE_DEBIT,
+                'amount' => $creditToApply,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $this->credit_balance,
+                'description' => $description,
+                'reference_type' => $referenceType,
+                'reference_id' => $referenceId,
+                'created_by' => $createdBy,
+                'metadata' => $metadata,
+            ]);
+        }
+
+        return $creditToApply;
+    }
+
+    /**
+     * Record a payment transaction
+     */
+    public function recordPayment($amount, $description, $createdBy = null, $referenceType = null, $referenceId = null, $metadata = null)
+    {
+        $balanceBefore = $this->account_balance;
+        $this->account_balance += $amount;
+        $this->save();
+
+        return $this->transactions()->create([
+            'type' => CustomerTransaction::TYPE_PAYMENT,
+            'amount' => $amount,
+            'balance_before' => $balanceBefore,
+            'balance_after' => $this->account_balance,
+            'description' => $description,
+            'reference_type' => $referenceType,
+            'reference_id' => $referenceId,
+            'created_by' => $createdBy,
+            'metadata' => $metadata,
+        ]);
+    }
+
+    /**
+     * Record a charge transaction
+     */
+    public function recordCharge($amount, $description, $createdBy = null, $referenceType = null, $referenceId = null, $metadata = null)
+    {
+        $balanceBefore = $this->account_balance;
+        $this->account_balance -= $amount;
+        $this->save();
+
+        return $this->transactions()->create([
+            'type' => CustomerTransaction::TYPE_CHARGE,
+            'amount' => $amount,
+            'balance_before' => $balanceBefore,
+            'balance_after' => $this->account_balance,
+            'description' => $description,
+            'reference_type' => $referenceType,
+            'reference_id' => $referenceId,
+            'created_by' => $createdBy,
+            'metadata' => $metadata,
+        ]);
+    }
+
+    /**
+     * Get recent transactions
+     */
+    public function getRecentTransactions($limit = 10)
+    {
+        return $this->transactions()
+            ->with('createdBy')
+            ->latest()
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Get account balance summary
+     */
+    public function getAccountBalanceSummary()
+    {
+        $recentTransactions = $this->getRecentTransactions(5);
+        
+        return [
+            'account_balance' => $this->account_balance,
+            'credit_balance' => $this->credit_balance,
+            'total_available' => $this->total_available_balance,
+            'formatted' => [
+                'account_balance' => $this->formatted_account_balance,
+                'credit_balance' => $this->formatted_credit_balance,
+                'total_available' => $this->formatted_total_available_balance,
+            ],
+            'recent_transactions' => $recentTransactions,
+        ];
     }
 }

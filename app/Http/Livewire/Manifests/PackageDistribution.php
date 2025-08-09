@@ -23,6 +23,8 @@ class PackageDistribution extends Component
     public $successMessage = '';
     public $errorMessage = '';
     public $isProcessing = false;
+    public $applyCreditBalance = false;
+    public $creditApplied = 0;
 
     protected $rules = [
         'amountCollected' => 'required|numeric|min:0',
@@ -105,6 +107,12 @@ class PackageDistribution extends Component
         $this->updatePaymentStatus();
     }
 
+    public function updatedApplyCreditBalance()
+    {
+        $this->calculateCreditApplication();
+        $this->updatePaymentStatus();
+    }
+
     public function calculateTotals()
     {
         if (empty($this->selectedPackages)) {
@@ -116,6 +124,16 @@ class PackageDistribution extends Component
         $this->totalCost = $selectedPackageModels->sum('total_cost');
     }
 
+    public function calculateCreditApplication()
+    {
+        if (!$this->customer || !$this->applyCreditBalance) {
+            $this->creditApplied = 0;
+            return;
+        }
+
+        $this->creditApplied = min($this->totalCost, $this->customer->credit_balance);
+    }
+
     public function updatePaymentStatus()
     {
         if ($this->totalCost == 0) {
@@ -123,9 +141,11 @@ class PackageDistribution extends Component
             return;
         }
 
-        if ($this->amountCollected >= $this->totalCost) {
+        $totalReceived = $this->amountCollected + $this->creditApplied;
+
+        if ($totalReceived >= $this->totalCost) {
             $this->paymentStatus = 'paid';
-        } elseif ($this->amountCollected > 0) {
+        } elseif ($totalReceived > 0) {
             $this->paymentStatus = 'partial';
         } else {
             $this->paymentStatus = 'unpaid';
@@ -217,7 +237,8 @@ class PackageDistribution extends Component
             $result = $distributionService->distributePackages(
                 $this->selectedPackages,
                 $this->amountCollected,
-                Auth::user()
+                Auth::user(),
+                $this->applyCreditBalance
             );
 
             if ($result['success']) {

@@ -18,6 +18,7 @@ class PackageDistribution extends Model
         'distributed_at',
         'total_amount',
         'amount_collected',
+        'credit_applied',
         'payment_status',
         'receipt_path',
         'email_sent',
@@ -29,6 +30,7 @@ class PackageDistribution extends Model
         'email_sent_at' => 'datetime',
         'total_amount' => 'decimal:2',
         'amount_collected' => 'decimal:2',
+        'credit_applied' => 'decimal:2',
         'email_sent' => 'boolean',
     ];
 
@@ -76,9 +78,12 @@ class PackageDistribution extends Model
      */
     public function calculatePaymentStatus(): string
     {
-        if ($this->amount_collected >= $this->total_amount) {
+        $creditApplied = $this->credit_applied ? $this->credit_applied : 0;
+        $totalReceived = $this->amount_collected + $creditApplied;
+        
+        if ($totalReceived >= $this->total_amount) {
             return 'paid';
-        } elseif ($this->amount_collected > 0) {
+        } elseif ($totalReceived > 0) {
             return 'partial';
         } else {
             return 'unpaid';
@@ -90,7 +95,18 @@ class PackageDistribution extends Model
      */
     public function getOutstandingBalanceAttribute(): float
     {
-        return max(0, $this->total_amount - $this->amount_collected);
+        $creditApplied = $this->credit_applied ? $this->credit_applied : 0;
+        $totalReceived = $this->amount_collected + $creditApplied;
+        return max(0, $this->total_amount - $totalReceived);
+    }
+
+    /**
+     * Get the total amount received (cash + credit)
+     */
+    public function getTotalReceivedAttribute(): float
+    {
+        $creditApplied = $this->credit_applied ? $this->credit_applied : 0;
+        return $this->amount_collected + $creditApplied;
     }
 
     /**

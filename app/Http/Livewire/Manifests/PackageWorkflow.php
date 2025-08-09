@@ -5,6 +5,7 @@ namespace App\Http\Livewire\Manifests;
 use App\Enums\PackageStatus;
 use App\Models\Package;
 use App\Services\PackageStatusService;
+use App\Services\PackageFeeService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -25,11 +26,27 @@ class PackageWorkflow extends Component
     public $notes = '';
     public $manifestId = null;
 
+    // Fee entry modal properties
+    public $showFeeModal = false;
+    public $feePackageId = null;
+    public $feePackage = null;
+    public $customsDuty = 0;
+    public $storageFee = 0;
+    public $deliveryFee = 0;
+    public $applyCreditBalance = false;
+    public $feePreview = null;
+
     protected $packageStatusService;
 
     protected $listeners = [
         'refreshPackages' => '$refresh',
         'packageStatusUpdated' => 'handleStatusUpdate'
+    ];
+
+    protected $rules = [
+        'customsDuty' => 'required|numeric|min:0',
+        'storageFee' => 'required|numeric|min:0',
+        'deliveryFee' => 'required|numeric|min:0',
     ];
 
     public function boot(PackageStatusService $packageStatusService)
@@ -172,7 +189,9 @@ class PackageWorkflow extends Component
 
         // Prevent manual updates to DELIVERED status
         if ($this->confirmingStatus === PackageStatus::DELIVERED) {
-            session()->flash('error', 'Packages can only be marked as delivered through the distribution process.');
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Packages can only be marked as delivered through the distribution process.'
+            ]);
             $this->showConfirmModal = false;
             return;
         }
@@ -196,15 +215,15 @@ class PackageWorkflow extends Component
         $this->confirmingPackages = [];
 
         if (count($results['success']) > 0) {
-            session()->flash('success', 
-                count($results['success']) . ' package(s) updated successfully.'
-            );
+            $this->dispatchBrowserEvent('toastr:success', [
+                'message' => count($results['success']) . ' package(s) updated successfully.'
+            ]);
         }
 
         if (count($results['failed']) > 0) {
-            session()->flash('error', 
-                count($results['failed']) . ' package(s) failed to update. Please check the logs.'
-            );
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => count($results['failed']) . ' package(s) failed to update. Please check the logs.'
+            ]);
         }
 
         $this->emit('packageStatusUpdated');
@@ -227,32 +246,40 @@ class PackageWorkflow extends Component
 
             // Prevent manual updates to DELIVERED status
             if ($newStatus->value === PackageStatus::DELIVERED) {
-                session()->flash('error', 
-                    "Packages can only be marked as delivered through the distribution process."
-                );
+                $this->dispatchBrowserEvent('toastr:error', [
+                    'message' => "Packages can only be marked as delivered through the distribution process."
+                ]);
+                return;
+            }
+
+            // Check if transitioning to READY status - show fee modal
+            if ($newStatus->value === PackageStatus::READY) {
+                $this->showFeeEntryModal($packageId);
                 return;
             }
 
             if (!$package->canTransitionTo($newStatus)) {
-                session()->flash('error', 
-                    "Cannot transition package {$package->tracking_number} from {$package->status->getLabel()} to {$newStatus->getLabel()}."
-                );
+                $this->dispatchBrowserEvent('toastr:error', [
+                    'message' => "Cannot transition package {$package->tracking_number} from {$package->status->getLabel()} to {$newStatus->getLabel()}."
+                ]);
                 return;
             }
 
             if ($this->packageStatusService->updateStatus($package, $newStatus, Auth::user())) {
-                session()->flash('success', 
-                    "Package {$package->tracking_number} status updated to {$newStatus->getLabel()}."
-                );
+                $this->dispatchBrowserEvent('toastr:success', [
+                    'message' => "Package {$package->tracking_number} status updated to {$newStatus->getLabel()}."
+                ]);
                 $this->emit('packageStatusUpdated');
             } else {
-                session()->flash('error', 
-                    "Failed to update package {$package->tracking_number} status."
-                );
+                $this->dispatchBrowserEvent('toastr:error', [
+                    'message' => "Failed to update package {$package->tracking_number} status."
+                ]);
             }
 
         } catch (\Exception $e) {
-            session()->flash('error', 'An error occurred while updating the package status.');
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'An error occurred while updating the package status.'
+            ]);
         }
     }
 
@@ -379,7 +406,9 @@ class PackageWorkflow extends Component
         $packagesToDistribute = $packageIds ?: $this->selectedPackages;
         
         if (empty($packagesToDistribute)) {
-            session()->flash('error', 'Please select packages to distribute.');
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Please select packages to distribute.'
+            ]);
             return;
         }
 
@@ -390,7 +419,9 @@ class PackageWorkflow extends Component
         });
 
         if ($invalidPackages->count() > 0) {
-            session()->flash('error', 'Only packages with "Ready for Pickup" status can be distributed.');
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Only packages with "Ready for Pickup" status can be distributed.'
+            ]);
             return;
         }
 
@@ -401,11 +432,138 @@ class PackageWorkflow extends Component
         try {
             return redirect()->route('package-distribution');
         } catch (\Exception $e) {
-            session()->flash('error', 'Unable to navigate to distribution page. Please try again.');
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Unable to navigate to distribution page. Please try again.'
+            ]);
             \Log::error('Distribution redirect error', [
                 'error' => $e->getMessage(),
                 'packages' => $packagesToDistribute
             ]);
         }
+    }
+
+    /**
+     * Show fee entry modal for transitioning to ready status
+     */
+    public function showFeeEntryModal($packageId)
+    {
+        $this->feePackageId = $packageId;
+        $this->feePackage = Package::with('user.profile')->findOrFail($packageId);
+        
+        // Reset form fields
+        $this->customsDuty = $this->feePackage->customs_duty ?? 0;
+        $this->storageFee = $this->feePackage->storage_fee ?? 0;
+        $this->deliveryFee = $this->feePackage->delivery_fee ?? 0;
+        $this->applyCreditBalance = false;
+        $this->feePreview = null;
+        
+        $this->showFeeModal = true;
+        
+        // Generate initial preview
+        $this->updateFeePreview();
+    }
+
+    /**
+     * Update fee preview when values change
+     */
+    public function updateFeePreview()
+    {
+        if (!$this->feePackage) {
+            return;
+        }
+
+        $fees = [
+            'customs_duty' => $this->customsDuty,
+            'storage_fee' => $this->storageFee,
+            'delivery_fee' => $this->deliveryFee,
+        ];
+
+        $feeService = app(PackageFeeService::class);
+        $this->feePreview = $feeService->getFeeUpdatePreview(
+            $this->feePackage,
+            $fees,
+            $this->applyCreditBalance
+        );
+    }
+
+    /**
+     * Update fees when form values change
+     */
+    public function updatedCustomsDuty()
+    {
+        $this->updateFeePreview();
+    }
+
+    public function updatedStorageFee()
+    {
+        $this->updateFeePreview();
+    }
+
+    public function updatedDeliveryFee()
+    {
+        $this->updateFeePreview();
+    }
+
+    public function updatedApplyCreditBalance()
+    {
+        $this->updateFeePreview();
+    }
+
+    /**
+     * Process fee update and set package to ready
+     */
+    public function processFeeUpdate()
+    {
+        $this->validate();
+
+        if (!$this->feePackage) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Package not found.'
+            ]);
+            return;
+        }
+
+        $fees = [
+            'customs_duty' => $this->customsDuty,
+            'storage_fee' => $this->storageFee,
+            'delivery_fee' => $this->deliveryFee,
+        ];
+
+        $feeService = app(PackageFeeService::class);
+        $result = $feeService->updatePackageFeesAndSetReady(
+            $this->feePackage,
+            $fees,
+            Auth::user(),
+            $this->applyCreditBalance
+        );
+
+        if ($result['success']) {
+            $this->dispatchBrowserEvent('toastr:success', [
+                'message' => $result['message']
+            ]);
+            
+            $this->closeFeeModal();
+            $this->emit('packageStatusUpdated');
+        } else {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => $result['message']
+            ]);
+        }
+    }
+
+    /**
+     * Close fee entry modal
+     */
+    public function closeFeeModal()
+    {
+        $this->showFeeModal = false;
+        $this->feePackageId = null;
+        $this->feePackage = null;
+        $this->customsDuty = 0;
+        $this->storageFee = 0;
+        $this->deliveryFee = 0;
+        $this->applyCreditBalance = false;
+        $this->feePreview = null;
+        $this->resetErrorBag();
     }
 }

@@ -13,6 +13,8 @@ class Dashboard extends Component
     public int $availableAir = 0;
     public int $availableSea = 0;
     public float $accountBalance = 0;
+    public float $creditBalance = 0;
+    public float $totalAvailableBalance = 0;
     public int $delayedPackages = 0;
 
     public function mount()
@@ -45,11 +47,11 @@ class Dashboard extends Component
                                     ->whereIn('status', ['ready'])
                                     ->count();
 
-        $total = Package::where('user_id', auth()->id())
-                                        ->whereIn('status', ['ready'])
-                                        ->selectRaw('SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total')
-                                        ->value('total');
-        $this->accountBalance = $total ? $total : 0;
+        // Get user account balance information
+        $user = auth()->user();
+        $this->accountBalance = $user->account_balance;
+        $this->creditBalance = $user->credit_balance;
+        $this->totalAvailableBalance = $user->total_available_balance;
 
         $this->delayedPackages = Package::where('user_id', auth()->id())
                                         ->where('status', 'delayed')->count();

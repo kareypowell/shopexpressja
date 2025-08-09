@@ -8,12 +8,19 @@
             'availableAir' => $availableAir,
             'availableSea' => $availableSea,
             'accountBalance' => $accountBalance,
+            'creditBalance' => $creditBalance,
+            'totalAvailableBalance' => $totalAvailableBalance,
             'delayedPackages' => $delayedPackages
         ])
 
         <hr class="my-10">
 
         @if(auth()->user()->isCustomer())
+            <!-- Detailed Account Balance for Customers -->
+            <div class="mt-10">
+                <livewire:customers.customer-account-balance />
+            </div>
+            
             <div class="mt-10">
                 <h3 class="mb-5 text-base font-semibold text-gray-900">Packages</h3>
                 <livewire:customers.customer-packages-with-modal :customer="auth()->user()" />

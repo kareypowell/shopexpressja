@@ -1,16 +1,5 @@
 <div x-data="{}">
-    <!-- Flash Messages -->
-    @if (session()->has('success'))
-        <div class="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50" role="alert">
-            <span class="block sm:inline">{{ session('success') }}</span>
-        </div>
-    @endif
-
-    @if (session()->has('error'))
-        <div class="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50" role="alert">
-            <span class="block sm:inline">{{ session('error') }}</span>
-        </div>
-    @endif
+    <!-- Toastr notifications will be handled by JavaScript -->
 
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
@@ -431,6 +420,204 @@
                             Cancel
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Fee Entry Modal -->
+    @if($showFeeModal)
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" id="fee-modal">
+            <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">
+                            Update Package Fees - {{ $feePackage->tracking_number ?? '' }}
+                        </h3>
+                        <button wire:click="closeFeeModal" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    @if($feePackage)
+                        <!-- Package Info -->
+                        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                            <h4 class="font-medium text-gray-900 mb-2">Package Information</h4>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-500">Customer:</span>
+                                    <span class="ml-2 font-medium">{{ $feePackage->user->full_name ?? 'N/A' }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Description:</span>
+                                    <span class="ml-2">{{ $feePackage->description }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Weight:</span>
+                                    <span class="ml-2">{{ number_format($feePackage->weight, 2) }} lbs</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Freight Price:</span>
+                                    <span class="ml-2">${{ number_format($feePackage->freight_price ?? 0, 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fee Entry Form -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div>
+                                <label for="customs-duty" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Customs Duty
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                    <input 
+                                        type="number" 
+                                        id="customs-duty"
+                                        wire:model.lazy="customsDuty"
+                                        step="0.01"
+                                        min="0"
+                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                        placeholder="0.00"
+                                    >
+                                </div>
+                                @error('customsDuty')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="storage-fee" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Storage Fee
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                    <input 
+                                        type="number" 
+                                        id="storage-fee"
+                                        wire:model.lazy="storageFee"
+                                        step="0.01"
+                                        min="0"
+                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                        placeholder="0.00"
+                                    >
+                                </div>
+                                @error('storageFee')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="delivery-fee" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Delivery Fee
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                    <input 
+                                        type="number" 
+                                        id="delivery-fee"
+                                        wire:model.lazy="deliveryFee"
+                                        step="0.01"
+                                        min="0"
+                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                        placeholder="0.00"
+                                    >
+                                </div>
+                                @error('deliveryFee')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <!-- Credit Balance Option -->
+                        @if($feePackage->user->credit_balance > 0)
+                            <div class="mb-6">
+                                <div class="flex items-center">
+                                    <input 
+                                        type="checkbox" 
+                                        id="apply-credit"
+                                        wire:model="applyCreditBalance"
+                                        class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                    >
+                                    <label for="apply-credit" class="ml-2 block text-sm text-gray-900">
+                                        Apply available credit balance (${{ number_format($feePackage->user->credit_balance, 2) }})
+                                    </label>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Fee Preview -->
+                        @if($feePreview && $feePreview['valid'])
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                                <h4 class="font-medium text-blue-900 mb-3">Cost Summary</h4>
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Freight Price:</span>
+                                            <span>${{ number_format($feePreview['fees']['freight_price'], 2) }}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Customs Duty:</span>
+                                            <span>${{ number_format($feePreview['fees']['customs_duty'], 2) }}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Storage Fee:</span>
+                                            <span>${{ number_format($feePreview['fees']['storage_fee'], 2) }}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Delivery Fee:</span>
+                                            <span>${{ number_format($feePreview['fees']['delivery_fee'], 2) }}</span>
+                                        </div>
+                                        <div class="flex justify-between font-medium border-t pt-2">
+                                            <span>Total Cost:</span>
+                                            <span>${{ $feePreview['formatted']['new_total_cost'] }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        @if($applyCreditBalance && $feePreview['cost_summary']['credit_to_apply'] > 0)
+                                            <div class="flex justify-between text-green-600">
+                                                <span>Credit Applied:</span>
+                                                <span>-${{ $feePreview['formatted']['credit_to_apply'] }}</span>
+                                            </div>
+                                        @endif
+                                        <div class="flex justify-between font-medium">
+                                            <span>Net Charge:</span>
+                                            <span>${{ $feePreview['formatted']['net_charge'] }}</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm text-gray-600">
+                                            <span>Customer Balance After:</span>
+                                            <span>${{ $feePreview['formatted']['customer_balance_after'] }}</span>
+                                        </div>
+                                        @if($applyCreditBalance)
+                                            <div class="flex justify-between text-sm text-gray-600">
+                                                <span>Credit Balance After:</span>
+                                                <span>${{ $feePreview['formatted']['customer_credit_after'] }}</span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center justify-end space-x-3">
+                            <button 
+                                wire:click="closeFeeModal" 
+                                class="px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                wire:click="processFeeUpdate" 
+                                class="px-4 py-2 bg-wax-flower-600 text-white text-sm font-medium rounded-md hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-wax-flower-500"
+                                @if(!$feePreview || !$feePreview['valid']) disabled @endif
+                            >
+                                Update Fees & Set Ready
+                            </button>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

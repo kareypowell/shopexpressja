@@ -29,9 +29,10 @@ class PackageDistributionService
      * @param array $packageIds
      * @param float $amountCollected
      * @param User $user
+     * @param bool $applyCreditBalance
      * @return array
      */
-    public function distributePackages(array $packageIds, float $amountCollected, User $user): array
+    public function distributePackages(array $packageIds, float $amountCollected, User $user, bool $applyCreditBalance = false): array
     {
         try {
             DB::beginTransaction();
@@ -59,8 +60,26 @@ class PackageDistributionService
             // Calculate total cost
             $totalAmount = $this->calculatePackageTotals($packages->toArray());
 
+            // Apply credit balance if requested
+            $creditApplied = 0;
+            if ($applyCreditBalance && $customer->credit_balance > 0) {
+                $creditApplied = $customer->applyCreditBalance(
+                    $totalAmount,
+                    "Credit applied to package distribution - Receipt #TBD",
+                    $user->id,
+                    'package_distribution',
+                    null, // Will be updated after distribution is created
+                    [
+                        'package_ids' => $packageIds,
+                        'total_amount' => $totalAmount,
+                        'amount_collected' => $amountCollected,
+                    ]
+                );
+            }
+
             // Determine payment status
-            $paymentStatus = $this->validatePaymentAmount($totalAmount, $amountCollected);
+            $totalReceived = $amountCollected + $creditApplied;
+            $paymentStatus = $this->validatePaymentAmount($totalAmount, $totalReceived);
 
             // Create distribution record
             $distribution = PackageDistribution::create([
@@ -70,21 +89,55 @@ class PackageDistributionService
                 'distributed_at' => now(),
                 'total_amount' => $totalAmount,
                 'amount_collected' => $amountCollected,
+                'credit_applied' => $creditApplied,
                 'payment_status' => $paymentStatus,
                 'receipt_path' => '', // Will be set after PDF generation
                 'email_sent' => false,
             ]);
+
+            // Update credit transaction with distribution reference
+            if ($creditApplied > 0) {
+                $creditTransaction = $customer->transactions()
+                    ->where('reference_type', 'package_distribution')
+                    ->whereNull('reference_id')
+                    ->where('amount', $creditApplied)
+                    ->latest()
+                    ->first();
+                
+                if ($creditTransaction) {
+                    $creditTransaction->update(['reference_id' => $distribution->id]);
+                }
+            }
+
+            // Handle overpayment - add excess to customer credit balance
+            $overpayment = $amountCollected - $totalAmount;
+            if ($overpayment > 0) {
+                $customer->addOverpaymentCredit(
+                    $overpayment,
+                    "Overpayment credit from package distribution - Receipt #{$distribution->receipt_number}",
+                    $user->id,
+                    'package_distribution',
+                    $distribution->id,
+                    [
+                        'distribution_id' => $distribution->id,
+                        'total_amount' => $totalAmount,
+                        'amount_collected' => $amountCollected,
+                        'overpayment' => $overpayment,
+                        'package_ids' => $packageIds,
+                    ]
+                );
+            }
 
             // Create distribution items
             foreach ($packages as $package) {
                 PackageDistributionItem::create([
                     'distribution_id' => $distribution->id,
                     'package_id' => $package->id,
-                    'freight_price' => $package->freight_price ?? 0,
-                    'customs_duty' => $package->customs_duty ?? 0,
-                    'storage_fee' => $package->storage_fee ?? 0,
-                    'delivery_fee' => $package->delivery_fee ?? 0,
-                    'total_cost' => $package->total_cost ?? 0,
+                    'freight_price' => $package->freight_price ? $package->freight_price : 0,
+                    'customs_duty' => $package->customs_duty ? $package->customs_duty : 0,
+                    'storage_fee' => $package->storage_fee ? $package->storage_fee : 0,
+                    'delivery_fee' => $package->delivery_fee ? $package->delivery_fee : 0,
+                    'total_cost' => $package->total_cost ? $package->total_cost : 0,
                 ]);
 
                 // Update package status to delivered through proper distribution process
@@ -169,15 +222,15 @@ class PackageDistributionService
             $packageTotal = 0;
             
             if (is_array($package)) {
-                $packageTotal += $package['freight_price'] ?? 0;
-                $packageTotal += $package['customs_duty'] ?? 0;
-                $packageTotal += $package['storage_fee'] ?? 0;
-                $packageTotal += $package['delivery_fee'] ?? 0;
+                $packageTotal += isset($package['freight_price']) ? $package['freight_price'] : 0;
+                $packageTotal += isset($package['customs_duty']) ? $package['customs_duty'] : 0;
+                $packageTotal += isset($package['storage_fee']) ? $package['storage_fee'] : 0;
+                $packageTotal += isset($package['delivery_fee']) ? $package['delivery_fee'] : 0;
             } else {
-                $packageTotal += $package->freight_price ?? 0;
-                $packageTotal += $package->customs_duty ?? 0;
-                $packageTotal += $package->storage_fee ?? 0;
-                $packageTotal += $package->delivery_fee ?? 0;
+                $packageTotal += $package->freight_price ? $package->freight_price : 0;
+                $packageTotal += $package->customs_duty ? $package->customs_duty : 0;
+                $packageTotal += $package->storage_fee ? $package->storage_fee : 0;
+                $packageTotal += $package->delivery_fee ? $package->delivery_fee : 0;
             }
 
             $total += $packageTotal;
