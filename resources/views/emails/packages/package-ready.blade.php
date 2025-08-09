@@ -226,7 +226,7 @@
         <!-- Content -->
         <div class="email-content">
             <div class="greeting">
-                Hello {{ $user->first_name }},
+                Hi {{ $user->first_name }},
             </div>
 
             <p style="margin-bottom: 20px; color: #64748b; line-height: 1.6;">
@@ -257,61 +257,13 @@
                 </div>
             </div>
 
-            @if($package)
-            <!-- Cost Breakdown -->
-            <h3 style="color: #16a34a; margin: 20px 0 15px 0;">Cost Breakdown</h3>
-            <table class="cost-table">
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th class="amount">Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Freight Price</td>
-                        <td class="amount">${{ number_format($package->freight_price ?? 0, 2) }}</td>
-                    </tr>
-                    @if($package->customs_duty > 0)
-                    <tr>
-                        <td>Customs Duty</td>
-                        <td class="amount">${{ number_format($package->customs_duty, 2) }}</td>
-                    </tr>
-                    @endif
-                    @if($package->storage_fee > 0)
-                    <tr>
-                        <td>Storage Fee</td>
-                        <td class="amount">${{ number_format($package->storage_fee, 2) }}</td>
-                    </tr>
-                    @endif
-                    @if($package->delivery_fee > 0)
-                    <tr>
-                        <td>Delivery Fee</td>
-                        <td class="amount">${{ number_format($package->delivery_fee, 2) }}</td>
-                    </tr>
-                    @endif
-                    <tr>
-                        <td><strong>Total Amount Due</strong></td>
-                        <td class="amount"><strong>${{ number_format(($package->freight_price ?? 0) + ($package->customs_duty ?? 0) + ($package->storage_fee ?? 0) + ($package->delivery_fee ?? 0), 2) }}</strong></td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="important-notice">
-                <p>Payment Required</p>
-                <div class="notice-text">
-                    Please have the total amount ready for payment upon pickup. We accept cash and card payments.
-                </div>
-            </div>
-            @endif
-
             <div style="text-align: center; margin: 30px 0;">
                 <a href="{{ config('app.url') }}" class="cta-button">Track Your Package</a>
             </div>
 
             <div style="margin-top: 30px; padding: 20px; background-color: #f0f9ff; border-radius: 8px; border-left: 4px solid #0ea5e9;">
                 <p style="color: #0c4a6e; font-size: 14px; line-height: 1.6;">
-                    <strong>Pickup Hours:</strong> Monday - Friday: 9:00 AM - 5:00 PM, Saturday: 9:00 AM - 1:00 PM
+                    <strong>Pickup Hours:</strong> Monday - Friday: 9:00 AM - 5:00 PM, Saturday: 10:00 AM - 3:00 PM
                 </p>
             </div>
         </div>

@@ -168,7 +168,7 @@
         <!-- Content -->
         <div class="email-content">
             <div class="greeting">
-                Hello {{ $user->first_name }},
+                Hi {{ $user->first_name }},
             </div>
 
             <p style="margin-bottom: 20px; color: #64748b; line-height: 1.6;">
@@ -210,7 +210,7 @@
 
             <div style="margin-top: 30px; padding: 20px; background-color: #f0f9ff; border-radius: 8px; border-left: 4px solid #0ea5e9;">
                 <p style="color: #0c4a6e; font-size: 14px; line-height: 1.6;">
-                    <strong>Next Steps:</strong> Your package will be shipped within 1-2 business days. 
+                    <strong>Next Steps:</strong> Your package will be shipped within 24-48 hours. 
                     You'll receive another notification once it's on its way.
                 </p>
             </div>

@@ -282,7 +282,7 @@
         <!-- Content -->
         <div class="email-content">
             <div class="greeting">
-                Hello {{ $customer->first_name }},
+                Hi {{ $customer->first_name }},
             </div>
 
             <p style="margin-bottom: 20px; color: #64748b; line-height: 1.6;">

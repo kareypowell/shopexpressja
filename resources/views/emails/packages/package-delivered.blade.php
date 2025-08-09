@@ -180,7 +180,7 @@
         <!-- Content -->
         <div class="email-content">
             <div class="greeting">
-                Hello {{ $user->first_name }},
+                Hi {{ $user->first_name }},
             </div>
 
             <div class="status-success">

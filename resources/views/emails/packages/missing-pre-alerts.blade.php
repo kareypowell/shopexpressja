@@ -217,7 +217,7 @@
         <!-- Content -->
         <div class="email-content">
             <div class="greeting">
-                Hello {{ $user->first_name }},
+                Hi {{ $user->first_name }},
             </div>
 
             <div class="status-warning">
@@ -284,7 +284,7 @@
 
             <div style="margin-top: 30px; padding: 20px; background-color: #f0f9ff; border-radius: 8px; border-left: 4px solid #0ea5e9;">
                 <p style="color: #0c4a6e; font-size: 14px; line-height: 1.6;">
-                    <strong>Why Pre-Alerts Matter:</strong> Pre-alerts provide us with essential information about your package contents, value, and any special handling requirements, allowing us to process your shipment faster and more accurately.
+                    <strong>Why Pre-Alerts Matter:</strong> Pre-alerts provide us with essential information about your package contents, value, and any special handling requirements, allowing us to process your shipment faster, more accurately and to avoid any delays with customs. If we don't get the invoice for your item, then you are likely to pay exorbitant fees applied by customs.
                 </p>
             </div>
 
