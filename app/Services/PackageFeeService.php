@@ -54,21 +54,8 @@ class PackageFeeService
                 );
             }
 
-            // Record the fee update transaction
-            $customer->recordCharge(
-                $totalCost - $appliedCredit,
-                "Package fees for {$package->tracking_number} - Ready for pickup",
-                $updatedBy->id,
-                'package_fee_update',
-                $package->id,
-                [
-                    'package_tracking' => $package->tracking_number,
-                    'fees' => $fees,
-                    'total_cost' => $totalCost,
-                    'credit_applied' => $appliedCredit,
-                    'net_charge' => $totalCost - $appliedCredit,
-                ]
-            );
+            // Note: Customer will be charged when package is distributed, not when set to ready
+            // This follows the business logic of charging only when package is actually delivered
 
             // Update package status history
             $package->statusHistory()->create([

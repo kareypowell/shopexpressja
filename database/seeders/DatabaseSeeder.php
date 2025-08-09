@@ -22,5 +22,8 @@ class DatabaseSeeder extends Seeder
         $this->call(RatesTableSeeder::class);
         $this->call(RolesTableSeeder::class);
         $this->call(CustomerAnalyticsTestDataSeeder::class);
+        
+        // Comprehensive package distribution and account balance test data
+        $this->call(ComprehensiveTestDataSeeder::class);
     }
 }

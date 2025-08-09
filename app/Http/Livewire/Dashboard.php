@@ -15,6 +15,8 @@ class Dashboard extends Component
     public float $accountBalance = 0;
     public float $creditBalance = 0;
     public float $totalAvailableBalance = 0;
+    public float $pendingPackageCharges = 0;
+    public float $totalAmountNeeded = 0;
     public int $delayedPackages = 0;
 
     public function mount()
@@ -23,14 +25,14 @@ class Dashboard extends Component
                                         $query->where('type', 'air');
                                     })
                                     ->where('user_id', auth()->id())
-                                    ->whereIn('status', ['processing', 'shipped'])
+                                    ->whereIn('status', ['processing', 'shipped', 'customs'])
                                     ->count();
 
         $this->inComingSea = Package::whereHas('manifest', function (Builder $query) {
                                         $query->where('type', 'sea');
                                     })
                                     ->where('user_id', auth()->id())
-                                    ->whereIn('status', ['processing', 'shipped'])
+                                    ->whereIn('status', ['processing', 'shipped', 'customs'])
                                     ->count();
 
         $this->availableAir = Package::whereHas('manifest', function (Builder $query) {
@@ -52,6 +54,8 @@ class Dashboard extends Component
         $this->accountBalance = $user->account_balance;
         $this->creditBalance = $user->credit_balance;
         $this->totalAvailableBalance = $user->total_available_balance;
+        $this->pendingPackageCharges = $user->pending_package_charges;
+        $this->totalAmountNeeded = $user->total_amount_needed;
 
         $this->delayedPackages = Package::where('user_id', auth()->id())
                                         ->where('status', 'delayed')->count();

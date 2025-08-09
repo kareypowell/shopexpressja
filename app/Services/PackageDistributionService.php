@@ -109,11 +109,52 @@ class PackageDistributionService
                 }
             }
 
-            // Handle overpayment - add excess to customer credit balance
-            $overpayment = $amountCollected - $totalAmount;
-            if ($overpayment > 0) {
+            // Charge customer account for the distribution cost
+            $netChargeAmount = $totalAmount - $creditApplied;
+            if ($netChargeAmount > 0) {
+                $customer->recordCharge(
+                    $netChargeAmount,
+                    "Package distribution charge - Receipt #{$distribution->receipt_number}",
+                    $user->id,
+                    'package_distribution',
+                    $distribution->id,
+                    [
+                        'distribution_id' => $distribution->id,
+                        'total_amount' => $totalAmount,
+                        'credit_applied' => $creditApplied,
+                        'net_charge' => $netChargeAmount,
+                        'package_ids' => $packageIds,
+                    ]
+                );
+            }
+
+            // Record payment received from customer
+            if ($amountCollected > 0) {
+                $customer->recordPayment(
+                    $amountCollected,
+                    "Payment received for package distribution - Receipt #{$distribution->receipt_number}",
+                    $user->id,
+                    'package_distribution',
+                    $distribution->id,
+                    [
+                        'distribution_id' => $distribution->id,
+                        'total_amount' => $totalAmount,
+                        'amount_collected' => $amountCollected,
+                        'package_ids' => $packageIds,
+                    ]
+                );
+            }
+
+            // Handle true overpayment - only when customer's final balance would be positive
+            // After all transactions are processed, check if account balance is positive
+            $customer->refresh(); // Get latest balance after all transactions
+            
+            if ($customer->account_balance > 0) {
+                // Customer has positive balance - this is true overpayment
+                $overpaymentAmount = $customer->account_balance;
+                
                 $customer->addOverpaymentCredit(
-                    $overpayment,
+                    $overpaymentAmount,
                     "Overpayment credit from package distribution - Receipt #{$distribution->receipt_number}",
                     $user->id,
                     'package_distribution',
@@ -122,8 +163,21 @@ class PackageDistributionService
                         'distribution_id' => $distribution->id,
                         'total_amount' => $totalAmount,
                         'amount_collected' => $amountCollected,
-                        'overpayment' => $overpayment,
+                        'overpayment' => $overpaymentAmount,
                         'package_ids' => $packageIds,
+                    ]
+                );
+                
+                // Zero out the account balance since we moved it to credit
+                $customer->recordCharge(
+                    $overpaymentAmount,
+                    "Transfer positive balance to credit - Receipt #{$distribution->receipt_number}",
+                    $user->id,
+                    'package_distribution',
+                    $distribution->id,
+                    [
+                        'distribution_id' => $distribution->id,
+                        'transferred_to_credit' => $overpaymentAmount,
                     ]
                 );
             }

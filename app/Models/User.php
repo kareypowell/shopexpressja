@@ -998,6 +998,48 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get total cost of ready packages (pending charges)
+     */
+    public function getPendingPackageChargesAttribute()
+    {
+        return $this->packages()
+            ->where('status', 'ready')
+            ->sum(\DB::raw('freight_price + customs_duty + storage_fee + delivery_fee'));
+    }
+
+    /**
+     * Get formatted pending package charges
+     */
+    public function getFormattedPendingPackageChargesAttribute()
+    {
+        return number_format($this->pending_package_charges, 2);
+    }
+
+    /**
+     * Get total amount customer needs to pay to collect all ready packages
+     * This includes current debt minus available balance plus pending charges
+     */
+    public function getTotalAmountNeededAttribute()
+    {
+        $currentDebt = $this->account_balance < 0 ? abs($this->account_balance) : 0;
+        $availableCredit = $this->credit_balance;
+        $pendingCharges = $this->pending_package_charges;
+        
+        // Total needed = current debt + pending charges - available credit
+        $totalNeeded = $currentDebt + $pendingCharges - $availableCredit;
+        
+        return max(0, $totalNeeded); // Never show negative amount needed
+    }
+
+    /**
+     * Get formatted total amount needed
+     */
+    public function getFormattedTotalAmountNeededAttribute()
+    {
+        return number_format($this->total_amount_needed, 2);
+    }
+
+    /**
      * Check if customer has sufficient balance for a given amount
      */
     public function hasSufficientBalance($amount)

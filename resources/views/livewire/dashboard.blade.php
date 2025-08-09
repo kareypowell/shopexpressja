@@ -10,6 +10,8 @@
             'accountBalance' => $accountBalance,
             'creditBalance' => $creditBalance,
             'totalAvailableBalance' => $totalAvailableBalance,
+            'pendingPackageCharges' => $pendingPackageCharges,
+            'totalAmountNeeded' => $totalAmountNeeded,
             'delayedPackages' => $delayedPackages
         ])
 
