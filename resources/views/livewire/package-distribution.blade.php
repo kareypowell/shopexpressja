@@ -303,6 +303,120 @@
                                 @error('amountCollected')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
+                                
+                                @if(($amountCollected ?: 0) == 0)
+                                    <p class="mt-1 text-xs text-gray-500">
+                                        💡 Enter the amount collected from the customer to proceed with distribution.
+                                    </p>
+                                @endif
+
+                                <!-- Advanced Options Toggle -->
+                                <div class="mt-4">
+                                    <button 
+                                        type="button"
+                                        wire:click="toggleAdvancedOptions"
+                                        class="inline-flex items-center text-sm text-wax-flower-600 hover:text-wax-flower-800 font-medium"
+                                    >
+                                        <svg class="w-4 h-4 mr-1 transform {{ $showAdvancedOptions ? 'rotate-90' : '' }} transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                        {{ $showAdvancedOptions ? 'Hide' : 'Show' }} Advanced Options
+                                    </button>
+                                </div>
+
+                                <!-- Advanced Options Panel -->
+                                @if($showAdvancedOptions)
+                                    <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-4">
+                                        <!-- Apply Available Balance -->
+                                        @if($this->customerTotalAvailableBalance > 0)
+                                            <div class="flex items-center">
+                                                <input 
+                                                    type="checkbox" 
+                                                    id="apply-credit"
+                                                    wire:model="applyCreditBalance"
+                                                    class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                                >
+                                                <label for="apply-credit" class="ml-2 block text-sm text-gray-900">
+                                                    Apply customer available balance (${{ number_format($this->customerTotalAvailableBalance, 2) }})
+                                                    @if($this->customerAccountBalance > 0 && $this->customerCreditBalance > 0)
+                                                        <span class="text-xs text-gray-500 block">
+                                                            Account: ${{ number_format($this->customerAccountBalance, 2) }} + Credit: ${{ number_format($this->customerCreditBalance, 2) }}
+                                                        </span>
+                                                    @elseif($this->customerAccountBalance > 0)
+                                                        <span class="text-xs text-gray-500 block">
+                                                            Account Balance: ${{ number_format($this->customerAccountBalance, 2) }}
+                                                        </span>
+                                                    @elseif($this->customerCreditBalance > 0)
+                                                        <span class="text-xs text-gray-500 block">
+                                                            Credit Balance: ${{ number_format($this->customerCreditBalance, 2) }}
+                                                        </span>
+                                                    @endif
+                                                </label>
+                                            </div>
+                                        @endif
+
+                                        <!-- Write-off/Discount -->
+                                        <div>
+                                            <label for="write-off-amount" class="block text-sm font-medium text-gray-700 mb-1">
+                                                Write-off/Discount Amount
+                                            </label>
+                                            <div class="relative">
+                                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                    <span class="text-gray-500 sm:text-sm">$</span>
+                                                </div>
+                                                <input 
+                                                    type="number" 
+                                                    id="write-off-amount"
+                                                    wire:model="writeOffAmount"
+                                                    step="0.01"
+                                                    min="0"
+                                                    max="{{ $totalCost }}"
+                                                    placeholder="0.00"
+                                                    class="block w-full pl-7 pr-12 border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                                >
+                                            </div>
+                                            @error('writeOffAmount')
+                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+
+                                        <!-- Write-off Reason -->
+                                        @if($writeOffAmount > 0)
+                                            <div>
+                                                <label for="write-off-reason" class="block text-sm font-medium text-gray-700 mb-1">
+                                                    Write-off Reason <span class="text-red-500">*</span>
+                                                </label>
+                                                <input 
+                                                    type="text" 
+                                                    id="write-off-reason"
+                                                    wire:model="writeOffReason"
+                                                    placeholder="e.g., Customer loyalty discount, damaged package compensation"
+                                                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                                >
+                                                @error('writeOffReason')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                        @endif
+
+                                        <!-- Distribution Notes -->
+                                        <div>
+                                            <label for="distribution-notes" class="block text-sm font-medium text-gray-700 mb-1">
+                                                Distribution Notes (Optional)
+                                            </label>
+                                            <textarea 
+                                                id="distribution-notes"
+                                                wire:model="distributionNotes"
+                                                rows="2"
+                                                placeholder="Add any notes about this distribution..."
+                                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                            ></textarea>
+                                            @error('distributionNotes')
+                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
 
                             <!-- Cost Summary -->
@@ -314,13 +428,35 @@
                                         <span class="font-medium">{{ count($selectedPackages) }}</span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class="text-gray-600">Total Cost:</span>
+                                        <span class="text-gray-600">Original Total:</span>
                                         <span class="font-medium">${{ number_format($totalCost, 2) }}</span>
                                     </div>
+                                    
+                                    @if($writeOffAmount > 0)
+                                        <div class="flex justify-between text-yellow-600">
+                                            <span>Write-off/Discount:</span>
+                                            <span class="font-medium">-${{ number_format($writeOffAmount, 2) }}</span>
+                                        </div>
+                                    @endif
+                                    
+                                    @if($writeOffAmount > 0)
+                                        <div class="flex justify-between border-t border-gray-200 pt-2">
+                                            <span class="text-gray-600">Net Total:</span>
+                                            <span class="font-medium">${{ number_format($totalCost - $writeOffAmount, 2) }}</span>
+                                        </div>
+                                    @endif
+                                    
                                     <div class="flex justify-between">
-                                        <span class="text-gray-600">Amount Collected:</span>
+                                        <span class="text-gray-600">Cash Collected:</span>
                                         <span class="font-medium">${{ number_format($amountCollected, 2) }}</span>
                                     </div>
+                                    
+                                    @if($applyCreditBalance && $this->customerTotalAvailableBalance > 0)
+                                        <div class="flex justify-between text-blue-600">
+                                            <span>Balance Applied:</span>
+                                            <span class="font-medium">${{ number_format(min($this->customerTotalAvailableBalance, max(0, ($totalCost - ($writeOffAmount ?: 0)) - ($amountCollected ?: 0))), 2) }}</span>
+                                        </div>
+                                    @endif
                                     <div class="flex justify-between border-t border-gray-200 pt-2">
                                         <span class="text-gray-600">Payment Status:</span>
                                         <span class="font-medium {{ $this->getPaymentStatusColor() }}">
@@ -328,10 +464,23 @@
                                         </span>
                                     </div>
                                     @if($paymentStatus !== 'paid')
+                                        @php
+                                            $amountCollectedNum = (float) ($amountCollected ?: 0);
+                                            $writeOffAmountNum = (float) ($writeOffAmount ?: 0);
+                                            $totalCostNum = (float) ($totalCost ?: 0);
+                                            
+                                            $netTotal = $totalCostNum - $writeOffAmountNum;
+                                            $balanceApplied = 0;
+                                            if ($applyCreditBalance && $this->customerTotalAvailableBalance > 0) {
+                                                $balanceApplied = min($this->customerTotalAvailableBalance, max(0, $netTotal - $amountCollectedNum));
+                                            }
+                                            $totalReceived = $amountCollectedNum + $balanceApplied;
+                                            $outstanding = max(0, $netTotal - $totalReceived);
+                                        @endphp
                                         <div class="flex justify-between">
                                             <span class="text-gray-600">Outstanding Balance:</span>
                                             <span class="font-medium text-red-600">
-                                                ${{ number_format(max(0, $totalCost - $amountCollected), 2) }}
+                                                ${{ number_format($outstanding, 2) }}
                                             </span>
                                         </div>
                                     @endif
@@ -353,7 +502,7 @@
                                 wire:click="showDistributionConfirmation"
                                 type="button"
                                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-wax-flower-600 hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
-                                @if(count($selectedPackages) === 0 || $amountCollected < 0) disabled @endif
+                                @if(count($selectedPackages) === 0 || ($amountCollected ?: 0) < 0) disabled @endif
                             >
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -512,33 +661,122 @@
                     <!-- Payment Summary -->
                     <div class="mt-4 bg-gray-50 p-4 rounded-lg">
                         <h4 class="text-sm font-medium text-gray-900 mb-3">Payment Summary</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="space-y-2">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Payment Breakdown -->
+                            <div class="space-y-3">
                                 <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Total Cost:</span>
+                                    <span class="text-gray-600">Original Total:</span>
                                     <span class="font-medium">${{ number_format($distributionSummary['total_cost'], 2) }}</span>
                                 </div>
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Amount Collected:</span>
-                                    <span class="font-medium">${{ number_format($distributionSummary['amount_collected'], 2) }}</span>
-                                </div>
-                                @if($distributionSummary['outstanding_balance'] > 0)
+                                
+                                @if($distributionSummary['write_off_amount'] > 0)
+                                    <div class="flex justify-between text-sm text-yellow-600">
+                                        <span>Write-off/Discount:</span>
+                                        <span class="font-medium">-${{ number_format($distributionSummary['write_off_amount'], 2) }}</span>
+                                    </div>
+                                    @if($distributionSummary['write_off_reason'])
+                                        <div class="text-xs text-gray-500 italic pl-4">
+                                            Reason: {{ $distributionSummary['write_off_reason'] }}
+                                        </div>
+                                    @endif
+                                @endif
+                                
+                                @if($distributionSummary['write_off_amount'] > 0)
+                                    <div class="flex justify-between text-sm border-t border-gray-300 pt-2">
+                                        <span class="text-gray-900 font-medium">Net Total:</span>
+                                        <span class="font-bold">${{ number_format($distributionSummary['net_total'], 2) }}</span>
+                                    </div>
+                                @endif
+                                
+                                <div class="border-t border-gray-300 pt-2 space-y-2">
                                     <div class="flex justify-between text-sm">
-                                        <span class="text-gray-600">Outstanding Balance:</span>
-                                        <span class="font-medium text-red-600">${{ number_format($distributionSummary['outstanding_balance'], 2) }}</span>
+                                        <span class="text-gray-600">Cash Collected:</span>
+                                        <span class="font-medium">${{ number_format($distributionSummary['amount_collected'], 2) }}</span>
+                                    </div>
+                                    
+                                    @if($distributionSummary['balance_applied'] > 0)
+                                        <div class="flex justify-between text-sm text-blue-600">
+                                            <span>Balance Applied:</span>
+                                            <span class="font-medium">${{ number_format($distributionSummary['balance_applied'], 2) }}</span>
+                                        </div>
+                                    @endif
+                                    
+                                    <div class="flex justify-between text-sm border-t border-gray-300 pt-2">
+                                        <span class="text-gray-900 font-medium">Total Received:</span>
+                                        <span class="font-bold">${{ number_format($distributionSummary['total_received'], 2) }}</span>
+                                    </div>
+                                </div>
+                                
+                                @if($distributionSummary['outstanding_balance'] > 0)
+                                    <div class="flex justify-between text-sm bg-red-50 p-2 rounded">
+                                        <span class="text-red-700 font-medium">Outstanding Balance:</span>
+                                        <span class="font-bold text-red-700">${{ number_format($distributionSummary['outstanding_balance'], 2) }}</span>
                                     </div>
                                 @endif
                             </div>
-                            <div class="flex items-center justify-center">
+                            
+                            <!-- Status and Notes -->
+                            <div class="space-y-4">
+                                <!-- Payment Status -->
                                 <div class="text-center">
-                                    <div class="text-sm text-gray-600 mb-1">Payment Status</div>
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                                    <div class="text-sm text-gray-600 mb-2">Payment Status</div>
+                                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium
                                         @if($distributionSummary['payment_status'] === 'paid') bg-green-100 text-green-800
                                         @elseif($distributionSummary['payment_status'] === 'partial') bg-yellow-100 text-yellow-800
                                         @else bg-red-100 text-red-800 @endif">
+                                        @if($distributionSummary['payment_status'] === 'paid')
+                                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                            </svg>
+                                        @elseif($distributionSummary['payment_status'] === 'partial')
+                                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                                            </svg>
+                                        @else
+                                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                            </svg>
+                                        @endif
                                         {{ ucfirst($distributionSummary['payment_status']) }}
                                     </span>
                                 </div>
+                                
+                                <!-- Customer Balance Info -->
+                                @if($distributionSummary['customer']['total_available_balance'] > 0)
+                                    <div class="bg-blue-50 p-3 rounded-lg">
+                                        <div class="text-xs text-blue-600 font-medium mb-1">Customer Available Balance</div>
+                                        <div class="text-sm text-blue-800">
+                                            ${{ number_format($distributionSummary['customer']['total_available_balance'], 2) }}
+                                            @if($distributionSummary['balance_applied'] > 0)
+                                                <span class="text-xs text-blue-600">
+                                                    (${{ number_format($distributionSummary['balance_applied'], 2) }} applied)
+                                                </span>
+                                            @endif
+                                        </div>
+                                        @if($distributionSummary['customer']['account_balance'] > 0 && $distributionSummary['customer']['credit_balance'] > 0)
+                                            <div class="text-xs text-blue-600 mt-1">
+                                                Account: ${{ number_format($distributionSummary['customer']['account_balance'], 2) }} + 
+                                                Credit: ${{ number_format($distributionSummary['customer']['credit_balance'], 2) }}
+                                            </div>
+                                        @elseif($distributionSummary['customer']['account_balance'] > 0)
+                                            <div class="text-xs text-blue-600 mt-1">
+                                                Account Balance: ${{ number_format($distributionSummary['customer']['account_balance'], 2) }}
+                                            </div>
+                                        @elseif($distributionSummary['customer']['credit_balance'] > 0)
+                                            <div class="text-xs text-blue-600 mt-1">
+                                                Credit Balance: ${{ number_format($distributionSummary['customer']['credit_balance'], 2) }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
+                                
+                                <!-- Distribution Notes -->
+                                @if($distributionSummary['distribution_notes'])
+                                    <div class="bg-gray-100 p-3 rounded-lg">
+                                        <div class="text-xs text-gray-600 font-medium mb-1">Distribution Notes</div>
+                                        <div class="text-sm text-gray-800">{{ $distributionSummary['distribution_notes'] }}</div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>

@@ -82,7 +82,8 @@ class ReceiptGeneratorService
             $totalDelivery += $item->delivery_fee;
         }
 
-        $outstandingBalance = max(0, $distribution->total_amount - $distribution->amount_collected);
+        $totalPaid = $distribution->amount_collected + $distribution->credit_applied + ($distribution->account_balance_applied ?? 0);
+        $outstandingBalance = max(0, $distribution->total_amount - $totalPaid);
 
         return [
             'subtotal' => number_format($subtotal, 2),
@@ -92,6 +93,10 @@ class ReceiptGeneratorService
             'total_delivery' => number_format($totalDelivery, 2),
             'total_amount' => number_format($distribution->total_amount, 2),
             'amount_collected' => number_format($distribution->amount_collected, 2),
+            'credit_applied' => number_format($distribution->credit_applied, 2),
+            'account_balance_applied' => number_format($distribution->account_balance_applied ?? 0, 2),
+            'write_off_amount' => number_format($distribution->write_off_amount, 2),
+            'total_paid' => number_format($totalPaid, 2),
             'outstanding_balance' => number_format($outstandingBalance, 2),
             'payment_status' => ucfirst($distribution->payment_status),
         ];

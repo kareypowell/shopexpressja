@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Models\PackageDistribution;
 use App\Models\User;
+use App\Services\ReceiptGeneratorService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -33,6 +34,9 @@ class PackageReceiptEmail extends Mailable implements ShouldQueue
         // Ensure customer profile is loaded
         $customer->load('profile');
         
+        // Use ReceiptGeneratorService for consistent data formatting
+        $receiptGenerator = app(ReceiptGeneratorService::class);
+        
         // Load distribution items with package details
         $this->packages = $distribution->items()
             ->with('package')
@@ -50,16 +54,8 @@ class PackageReceiptEmail extends Mailable implements ShouldQueue
             })
             ->toArray();
 
-        // Calculate totals
-        $this->totals = [
-            'freight_total' => collect($this->packages)->sum('freight_price'),
-            'customs_total' => collect($this->packages)->sum('customs_duty'),
-            'storage_total' => collect($this->packages)->sum('storage_fee'),
-            'delivery_total' => collect($this->packages)->sum('delivery_fee'),
-            'grand_total' => $distribution->total_amount,
-            'amount_collected' => $distribution->amount_collected,
-            'balance' => $distribution->total_amount - $distribution->amount_collected,
-        ];
+        // Get totals from ReceiptGeneratorService for consistency
+        $this->totals = $receiptGenerator->calculateTotals($distribution);
 
         // Set queue configuration
         $this->onQueue('emails');

@@ -19,7 +19,13 @@ class PackageDistribution extends Model
         'total_amount',
         'amount_collected',
         'credit_applied',
+        'account_balance_applied',
+        'write_off_amount',
         'payment_status',
+        'notes',
+        'disputed',
+        'dispute_reason',
+        'disputed_at',
         'receipt_path',
         'email_sent',
         'email_sent_at',
@@ -28,10 +34,13 @@ class PackageDistribution extends Model
     protected $casts = [
         'distributed_at' => 'datetime',
         'email_sent_at' => 'datetime',
+        'disputed_at' => 'datetime',
         'total_amount' => 'decimal:2',
         'amount_collected' => 'decimal:2',
         'credit_applied' => 'decimal:2',
+        'write_off_amount' => 'decimal:2',
         'email_sent' => 'boolean',
+        'disputed' => 'boolean',
     ];
 
     /**
@@ -131,6 +140,38 @@ class PackageDistribution extends Model
     public function isUnpaid(): bool
     {
         return $this->payment_status === 'unpaid';
+    }
+
+    /**
+     * Dispute this distribution
+     */
+    public function dispute(string $reason): bool
+    {
+        return $this->update([
+            'disputed' => true,
+            'dispute_reason' => $reason,
+            'disputed_at' => now(),
+        ]);
+    }
+
+    /**
+     * Resolve dispute
+     */
+    public function resolveDispute(): bool
+    {
+        return $this->update([
+            'disputed' => false,
+            'dispute_reason' => null,
+            'disputed_at' => null,
+        ]);
+    }
+
+    /**
+     * Check if distribution is disputed
+     */
+    public function isDisputed(): bool
+    {
+        return $this->disputed;
     }
 
     /**

@@ -24,15 +24,16 @@ class PackageDistributionService
         $this->emailService = $emailService;
     }
     /**
-     * Distribute packages to a customer
+     * Distribute packages to a customer with enhanced options
      *
      * @param array $packageIds
      * @param float $amountCollected
      * @param User $user
      * @param bool $applyCreditBalance
+     * @param array $options Additional options: writeOff, feeAdjustments, notes
      * @return array
      */
-    public function distributePackages(array $packageIds, float $amountCollected, User $user, bool $applyCreditBalance = false): array
+    public function distributePackages(array $packageIds, float $amountCollected, User $user, bool $applyCreditBalance = false, array $options = []): array
     {
         try {
             DB::beginTransaction();
@@ -57,28 +58,82 @@ class PackageDistributionService
                 throw new Exception('Customer not found');
             }
 
-            // Calculate total cost
+            // Calculate total cost with potential fee adjustments
             $totalAmount = $this->calculatePackageTotals($packages->toArray());
-
-            // Apply credit balance if requested
-            $creditApplied = 0;
-            if ($applyCreditBalance && $customer->credit_balance > 0) {
-                $creditApplied = $customer->applyCreditBalance(
-                    $totalAmount,
-                    "Credit applied to package distribution - Receipt #TBD",
-                    $user->id,
-                    'package_distribution',
-                    null, // Will be updated after distribution is created
-                    [
-                        'package_ids' => $packageIds,
-                        'total_amount' => $totalAmount,
-                        'amount_collected' => $amountCollected,
-                    ]
-                );
+            
+            // Apply fee adjustments if provided
+            if (isset($options['feeAdjustments']) && is_array($options['feeAdjustments'])) {
+                foreach ($options['feeAdjustments'] as $packageId => $adjustments) {
+                    $package = $packages->firstWhere('id', $packageId);
+                    if ($package && is_array($adjustments)) {
+                        // Update package fees before distribution
+                        $package->update([
+                            'freight_price' => $adjustments['freight_price'] ?? $package->freight_price,
+                            'customs_duty' => $adjustments['customs_duty'] ?? $package->customs_duty,
+                            'storage_fee' => $adjustments['storage_fee'] ?? $package->storage_fee,
+                            'delivery_fee' => $adjustments['delivery_fee'] ?? $package->delivery_fee,
+                        ]);
+                    }
+                }
+                // Recalculate total after adjustments
+                $packages = $packages->fresh(); // Reload packages with updated fees
+                $totalAmount = $this->calculatePackageTotals($packages->toArray());
+            }
+            
+            // Apply write-off/discount if provided
+            $writeOffAmount = 0;
+            if (isset($options['writeOff']) && $options['writeOff'] > 0) {
+                $writeOffAmount = min($options['writeOff'], $totalAmount); // Can't write off more than total
+                $totalAmount -= $writeOffAmount;
             }
 
+            // Apply available balance if requested (credit balance + account balance)
+            $creditApplied = 0;
+            $accountBalanceApplied = 0;
+            
+            if ($applyCreditBalance) {
+                // First apply credit balance if available
+                if ($customer->credit_balance > 0) {
+                    $creditApplied = $customer->applyCreditBalance(
+                        $totalAmount,
+                        "Credit applied to package distribution - Receipt #TBD",
+                        $user->id,
+                        'package_distribution',
+                        null, // Will be updated after distribution is created
+                        [
+                            'package_ids' => $packageIds,
+                            'total_amount' => $totalAmount,
+                            'amount_collected' => $amountCollected,
+                        ]
+                    );
+                }
+                
+                // Then apply account balance if there's still amount to cover and customer has positive account balance
+                $remainingAmount = $totalAmount - $creditApplied;
+                if ($remainingAmount > 0 && $customer->account_balance > 0) {
+                    $accountBalanceApplied = min($customer->account_balance, $remainingAmount);
+                    
+                    // Record the account balance application as a charge (deduction from account)
+                    $customer->recordCharge(
+                        $accountBalanceApplied,
+                        "Account balance applied to package distribution - Receipt #TBD",
+                        $user->id,
+                        'package_distribution',
+                        null, // Will be updated after distribution is created
+                        [
+                            'package_ids' => $packageIds,
+                            'total_amount' => $totalAmount,
+                            'amount_collected' => $amountCollected,
+                            'account_balance_applied' => $accountBalanceApplied,
+                        ]
+                    );
+                }
+            }
+            
+            $totalBalanceApplied = $creditApplied + $accountBalanceApplied;
+
             // Determine payment status
-            $totalReceived = $amountCollected + $creditApplied;
+            $totalReceived = $amountCollected + $totalBalanceApplied;
             $paymentStatus = $this->validatePaymentAmount($totalAmount, $totalReceived);
 
             // Create distribution record
@@ -87,15 +142,18 @@ class PackageDistributionService
                 'customer_id' => $customer->id,
                 'distributed_by' => $user->id,
                 'distributed_at' => now(),
-                'total_amount' => $totalAmount,
+                'total_amount' => $totalAmount + $writeOffAmount, // Original total before write-off
                 'amount_collected' => $amountCollected,
                 'credit_applied' => $creditApplied,
+                'account_balance_applied' => $accountBalanceApplied,
+                'write_off_amount' => $writeOffAmount,
                 'payment_status' => $paymentStatus,
+                'notes' => $options['notes'] ?? null,
                 'receipt_path' => '', // Will be set after PDF generation
                 'email_sent' => false,
             ]);
 
-            // Update credit transaction with distribution reference
+            // Update transaction references with distribution ID
             if ($creditApplied > 0) {
                 $creditTransaction = $customer->transactions()
                     ->where('reference_type', 'package_distribution')
@@ -105,12 +163,32 @@ class PackageDistributionService
                     ->first();
                 
                 if ($creditTransaction) {
-                    $creditTransaction->update(['reference_id' => $distribution->id]);
+                    $creditTransaction->update([
+                        'reference_id' => $distribution->id,
+                        'description' => str_replace('Receipt #TBD', "Receipt #{$distribution->receipt_number}", $creditTransaction->description)
+                    ]);
+                }
+            }
+            
+            if ($accountBalanceApplied > 0) {
+                $accountTransaction = $customer->transactions()
+                    ->where('reference_type', 'package_distribution')
+                    ->whereNull('reference_id')
+                    ->where('amount', $accountBalanceApplied)
+                    ->where('type', 'charge')
+                    ->latest()
+                    ->first();
+                
+                if ($accountTransaction) {
+                    $accountTransaction->update([
+                        'reference_id' => $distribution->id,
+                        'description' => str_replace('Receipt #TBD', "Receipt #{$distribution->receipt_number}", $accountTransaction->description)
+                    ]);
                 }
             }
 
-            // Charge customer account for the distribution cost
-            $netChargeAmount = $totalAmount - $creditApplied;
+            // Charge customer account for any remaining distribution cost
+            $netChargeAmount = $totalAmount - $totalBalanceApplied;
             if ($netChargeAmount > 0) {
                 $customer->recordCharge(
                     $netChargeAmount,
@@ -122,6 +200,8 @@ class PackageDistributionService
                         'distribution_id' => $distribution->id,
                         'total_amount' => $totalAmount,
                         'credit_applied' => $creditApplied,
+                        'account_balance_applied' => $accountBalanceApplied,
+                        'total_balance_applied' => $totalBalanceApplied,
                         'net_charge' => $netChargeAmount,
                         'package_ids' => $packageIds,
                     ]
@@ -138,8 +218,28 @@ class PackageDistributionService
                     $distribution->id,
                     [
                         'distribution_id' => $distribution->id,
-                        'total_amount' => $totalAmount,
+                        'total_amount' => $totalAmount + $writeOffAmount,
                         'amount_collected' => $amountCollected,
+                        'write_off_amount' => $writeOffAmount,
+                        'package_ids' => $packageIds,
+                    ]
+                );
+            }
+
+            // Record write-off if provided
+            if ($writeOffAmount > 0) {
+                $customer->recordWriteOff(
+                    $writeOffAmount,
+                    "Write-off/discount applied - Receipt #{$distribution->receipt_number}" . 
+                    (isset($options['writeOffReason']) ? " - {$options['writeOffReason']}" : ""),
+                    $user->id,
+                    'package_distribution',
+                    $distribution->id,
+                    [
+                        'distribution_id' => $distribution->id,
+                        'original_total' => $totalAmount + $writeOffAmount,
+                        'write_off_amount' => $writeOffAmount,
+                        'write_off_reason' => $options['writeOffReason'] ?? 'Discount applied',
                         'package_ids' => $packageIds,
                     ]
                 );

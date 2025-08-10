@@ -11,6 +11,7 @@ use App\Models\PackageItem;
 use App\Models\Rate;
 use App\Models\Manifest;
 use App\Services\SeaRateCalculator;
+use App\Services\PackageFeeService;
 use App\Rules\ValidContainerDimensions;
 use App\Rules\ValidPackageItems;
 use App\Exceptions\SeaRateNotFoundException;
@@ -29,6 +30,10 @@ class EditManifestPackage extends Component
     public string $weight = '';
     public string $status = '';
     public string $estimated_value = '';
+    public float $freight_price = 0;
+    public float $customs_duty = 0;
+    public float $storage_fee = 0;
+    public float $delivery_fee = 0;
     public $customerList = [];
     public $shipperList = [];
     public $officeList = [];
@@ -90,6 +95,10 @@ class EditManifestPackage extends Component
             $this->weight = $package->weight;
             $this->status = $package->status;
             $this->estimated_value = $package->estimated_value;
+            $this->freight_price = $package->freight_price ?? 0;
+            $this->customs_duty = $package->customs_duty ?? 0;
+            $this->storage_fee = $package->storage_fee ?? 0;
+            $this->delivery_fee = $package->delivery_fee ?? 0;
             
             // Set customer search display
             $customer = User::find($this->user_id);
@@ -293,7 +302,19 @@ class EditManifestPackage extends Component
             'weight' => 'required|numeric',
             'status' => 'required|string|max:255',
             'estimated_value' => 'nullable|numeric',
+            'freight_price' => 'nullable|numeric|min:0',
+            'customs_duty' => 'nullable|numeric|min:0',
+            'storage_fee' => 'nullable|numeric|min:0',
+            'delivery_fee' => 'nullable|numeric|min:0',
         ];
+
+        // Add specific validation for ready status
+        if ($this->status === 'ready') {
+            $rules['freight_price'] = 'required|numeric|min:0';
+            $rules['customs_duty'] = 'required|numeric|min:0';
+            $rules['storage_fee'] = 'required|numeric|min:0';
+            $rules['delivery_fee'] = 'required|numeric|min:0';
+        }
 
         // Add sea-specific validation rules
         if ($this->isSeaManifest()) {
@@ -337,6 +358,52 @@ class EditManifestPackage extends Component
         // Update the package in the database
         $package = Package::with('items')->where('id', $this->package_id)->where('manifest_id', $this->manifest_id)->first();
         if ($package) {
+            $oldStatus = $package->status;
+            $newStatus = $this->status;
+            
+            // Check if status is changing to 'ready' - this requires fee entry
+            if ($oldStatus !== 'ready' && $newStatus === 'ready') {
+                // Validate that required fees are set (use form values, not database values)
+                if (!$this->freight_price || !$this->customs_duty || !$this->storage_fee || !$this->delivery_fee) {
+                    $this->dispatchBrowserEvent('toastr:error', [
+                        'message' => 'Cannot set package to ready status. Please ensure all fees (freight, customs, storage, delivery) are properly set before marking as ready.',
+                    ]);
+                    return;
+                }
+                
+                // Update package with fees first
+                $package->update([
+                    'freight_price' => $this->freight_price,
+                    'customs_duty' => $this->customs_duty,
+                    'storage_fee' => $this->storage_fee,
+                    'delivery_fee' => $this->delivery_fee,
+                ]);
+                
+                // Use PackageFeeService to handle the status change properly
+                $packageFeeService = app(\App\Services\PackageFeeService::class);
+                $user = auth()->user();
+                
+                try {
+                    $packageFeeService->setPackageReady(
+                        $package->fresh(), // Get fresh instance with updated fees
+                        [
+                            'freight_price' => $this->freight_price,
+                            'customs_duty' => $this->customs_duty,
+                            'storage_fee' => $this->storage_fee,
+                            'delivery_fee' => $this->delivery_fee,
+                        ],
+                        $user
+                    );
+                    
+                    return redirect(route('admin.manifests.packages', ['manifest' => $this->manifest_id]))
+                        ->with('message', __('Package updated successfully and set to ready for pickup.'));
+                } catch (\Exception $e) {
+                    $this->dispatchBrowserEvent('toastr:error', [
+                        'message' => 'Error setting package to ready: ' . $e->getMessage(),
+                    ]);
+                    return;
+                }
+            }
             // Prepare base package data
             $packageData = [
                 'user_id' => $this->user_id,
@@ -348,6 +415,10 @@ class EditManifestPackage extends Component
                 'weight' => $this->weight,
                 'status' => $this->status,
                 'estimated_value' => $this->estimated_value,
+                'freight_price' => $this->freight_price,
+                'customs_duty' => $this->customs_duty,
+                'storage_fee' => $this->storage_fee,
+                'delivery_fee' => $this->delivery_fee,
             ];
 
             // Add sea-specific fields if this is a sea manifest

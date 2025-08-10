@@ -1092,6 +1092,26 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Record a write-off/discount transaction
+     */
+    public function recordWriteOff($amount, $description, $createdBy = null, $referenceType = null, $referenceId = null, $metadata = null)
+    {
+        // Write-offs are recorded as credits but don't affect account balance
+        // They represent forgiven debt or discounts given
+        return $this->transactions()->create([
+            'type' => 'write_off',
+            'amount' => $amount,
+            'balance_before' => $this->account_balance,
+            'balance_after' => $this->account_balance, // Balance doesn't change for write-offs
+            'description' => $description,
+            'reference_type' => $referenceType,
+            'reference_id' => $referenceId,
+            'created_by' => $createdBy,
+            'metadata' => $metadata,
+        ]);
+    }
+
+    /**
      * Deduct amount from customer account
      */
     public function deductBalance($amount, $description, $createdBy = null, $referenceType = null, $referenceId = null, $metadata = null)

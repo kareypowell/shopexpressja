@@ -157,6 +157,54 @@
                                 @error('estimated_value') <span class="text-red-500">{{ $message }}</span>@enderror
                             </div>
 
+                            <!-- Package Status -->
+                            <div class="mb-4">
+                                <label for="status" class="block text-gray-700 text-sm font-bold mb-2">Package Status</label>
+                                <select wire:model="status" id="status" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('status') border-red-300 text-red-900 @enderror">
+                                    <option value="">--- Select Status ---</option>
+                                    <option value="processing">Processing</option>
+                                    <option value="shipped">Shipped</option>
+                                    <option value="in_customs">In Customs</option>
+                                    <option value="ready">Ready for Pickup</option>
+                                    <option value="delivered">Delivered</option>
+                                    <option value="delayed">Delayed</option>
+                                </select>
+                                @error('status') <span class="text-red-500">{{ $message }}</span>@enderror
+                            </div>
+
+                            <!-- Package Fees Section -->
+                            @if($status === 'ready' || $status === 'delivered')
+                            <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <h3 class="text-sm font-bold text-gray-900 mb-3">Package Fees (Required for Ready/Delivered Status)</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="freight_price" class="block text-gray-700 text-sm font-bold mb-2">Freight Price (JMD)</label>
+                                        <input type="number" step="0.01" min="0" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="freight_price" placeholder="0.00" wire:model="freight_price" autocomplete="off">
+                                    </div>
+                                    <div>
+                                        <label for="customs_duty" class="block text-gray-700 text-sm font-bold mb-2">Customs Duty (JMD)</label>
+                                        <input type="number" step="0.01" min="0" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="customs_duty" placeholder="0.00" wire:model="customs_duty" autocomplete="off">
+                                    </div>
+                                    <div>
+                                        <label for="storage_fee" class="block text-gray-700 text-sm font-bold mb-2">Storage Fee (JMD)</label>
+                                        <input type="number" step="0.01" min="0" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="storage_fee" placeholder="0.00" wire:model="storage_fee" autocomplete="off">
+                                    </div>
+                                    <div>
+                                        <label for="delivery_fee" class="block text-gray-700 text-sm font-bold mb-2">Delivery Fee (JMD)</label>
+                                        <input type="number" step="0.01" min="0" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="delivery_fee" placeholder="0.00" wire:model="delivery_fee" autocomplete="off">
+                                    </div>
+                                </div>
+                                @if($status === 'ready')
+                                <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
+                                    <p class="text-sm text-blue-800">
+                                        <strong>Note:</strong> All fees must be set before changing status to "Ready for Pickup". 
+                                        The customer will be able to see the total amount needed to collect their package.
+                                    </p>
+                                </div>
+                                @endif
+                            </div>
+                            @endif
+
                             @if($isSeaManifest)
                               <!-- Container Type Selection -->
                               <div class="mb-4">

@@ -20,6 +20,11 @@ class PackageDistribution extends Component
     public $selectedCustomerDisplay = '';
     public $selectedPackages = [];
     public $amountCollected = 0;
+    public $applyCreditBalance = false;
+    public $writeOffAmount = 0;
+    public $writeOffReason = '';
+    public $distributionNotes = '';
+    public $showAdvancedOptions = false;
     public $showConfirmation = false;
     public $distributionSummary = [];
     public $totalCost = 0;
@@ -29,6 +34,7 @@ class PackageDistribution extends Component
     public $isProcessing = false;
     public $search = '';
     public $statusFilter = '';
+    public $feeAdjustments = [];
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -40,15 +46,40 @@ class PackageDistribution extends Component
         'selectedPackages' => 'required|array|min:1',
         'selectedPackages.*' => 'exists:packages,id',
         'selectedCustomerId' => 'required|exists:users,id',
+        'writeOffAmount' => 'nullable|numeric|min:0',
+        'writeOffReason' => 'nullable|string|max:500',
+        'distributionNotes' => 'nullable|string|max:1000',
     ];
+
+    public function rules()
+    {
+        $rules = [
+            'amountCollected' => 'required|numeric|min:0',
+            'selectedPackages' => 'required|array|min:1',
+            'selectedPackages.*' => 'exists:packages,id',
+            'selectedCustomerId' => 'required|exists:users,id',
+            'writeOffAmount' => 'nullable|numeric|min:0',
+            'writeOffReason' => 'nullable|string|max:500',
+            'distributionNotes' => 'nullable|string|max:1000',
+        ];
+        
+        // Only require write-off reason if write-off amount is greater than 0
+        $writeOffAmount = (float) ($this->writeOffAmount ?: 0);
+        if ($writeOffAmount > 0) {
+            $rules['writeOffReason'] = 'required|string|max:500';
+        }
+        
+        return $rules;
+    }
 
     protected $messages = [
         'selectedPackages.required' => 'Please select at least one package for distribution.',
         'selectedPackages.min' => 'Please select at least one package for distribution.',
-        'amountCollected.required' => 'Please enter the amount collected.',
+        'amountCollected.required' => 'Please enter the amount collected from the customer.',
         'amountCollected.numeric' => 'Amount collected must be a valid number.',
         'amountCollected.min' => 'Amount collected cannot be negative.',
         'selectedCustomerId.required' => 'Please select a customer.',
+        'writeOffReason.required_with' => 'Please provide a reason when applying a write-off amount.',
     ];
 
     public function mount()
@@ -121,6 +152,26 @@ class PackageDistribution extends Component
     }
 
     public function updatedAmountCollected()
+    {
+        // Ensure amountCollected is always numeric
+        $this->amountCollected = (float) ($this->amountCollected ?: 0);
+        $this->updatePaymentStatus();
+    }
+
+    public function updatedWriteOffAmount()
+    {
+        // Ensure writeOffAmount is always numeric
+        $this->writeOffAmount = (float) ($this->writeOffAmount ?: 0);
+        
+        // Clear write-off reason if amount is 0
+        if ($this->writeOffAmount == 0) {
+            $this->writeOffReason = '';
+        }
+        
+        $this->updatePaymentStatus();
+    }
+
+    public function updatedApplyCreditBalance()
     {
         $this->updatePaymentStatus();
     }
@@ -232,9 +283,25 @@ class PackageDistribution extends Component
             return;
         }
 
-        if ($this->amountCollected >= $this->totalCost) {
+        // Ensure numeric values
+        $amountCollected = (float) ($this->amountCollected ?: 0);
+        $writeOffAmount = (float) ($this->writeOffAmount ?: 0);
+        $totalCost = (float) ($this->totalCost ?: 0);
+
+        // Calculate net total after write-off
+        $netTotal = $totalCost - $writeOffAmount;
+        
+        // Calculate total received (cash + available balance applied)
+        $balanceApplied = 0;
+        if ($this->applyCreditBalance && $this->getCustomerTotalAvailableBalanceProperty() > 0) {
+            $balanceApplied = min($this->getCustomerTotalAvailableBalanceProperty(), max(0, $netTotal - $amountCollected));
+        }
+        
+        $totalReceived = $amountCollected + $balanceApplied;
+
+        if ($totalReceived >= $netTotal) {
             $this->paymentStatus = 'paid';
-        } elseif ($this->amountCollected > 0) {
+        } elseif ($totalReceived > 0) {
             $this->paymentStatus = 'partial';
         } else {
             $this->paymentStatus = 'unpaid';
@@ -243,7 +310,8 @@ class PackageDistribution extends Component
 
     public function showDistributionConfirmation()
     {
-        $this->validate();
+        // Custom validation with better error handling
+        $this->validateDistribution();
 
         $this->calculateTotals();
         $this->updatePaymentStatus();
@@ -253,6 +321,19 @@ class PackageDistribution extends Component
             ->get();
 
         $customer = $this->selectedCustomer;
+
+        // Calculate advanced payment details
+        $amountCollected = (float) ($this->amountCollected ?: 0);
+        $writeOffAmount = (float) ($this->writeOffAmount ?: 0);
+        $totalCost = (float) ($this->totalCost ?: 0);
+        
+        $netTotal = $totalCost - $writeOffAmount;
+        $balanceApplied = 0;
+        if ($this->applyCreditBalance && $this->getCustomerTotalAvailableBalanceProperty() > 0) {
+            $balanceApplied = min($this->getCustomerTotalAvailableBalanceProperty(), max(0, $netTotal - $amountCollected));
+        }
+        $totalReceived = $amountCollected + $balanceApplied;
+        $outstandingBalance = max(0, $netTotal - $totalReceived);
 
         $this->distributionSummary = [
             'packages' => $packages->map(function ($package) {
@@ -267,10 +348,17 @@ class PackageDistribution extends Component
                     'total_cost' => $package->total_cost,
                 ];
             })->toArray(),
-            'total_cost' => $this->totalCost,
-            'amount_collected' => $this->amountCollected,
+            'total_cost' => $totalCost,
+            'write_off_amount' => $writeOffAmount,
+            'write_off_reason' => $this->writeOffReason,
+            'net_total' => $netTotal,
+            'amount_collected' => $amountCollected,
+            'balance_applied' => $balanceApplied,
+            'apply_credit_balance' => $this->applyCreditBalance,
+            'total_received' => $totalReceived,
             'payment_status' => $this->paymentStatus,
-            'outstanding_balance' => max(0, $this->totalCost - $this->amountCollected),
+            'outstanding_balance' => $outstandingBalance,
+            'distribution_notes' => $this->distributionNotes,
             'customer' => [
                 'name' => $customer->full_name ?? $customer->name,
                 'email' => $customer->email,
@@ -278,6 +366,9 @@ class PackageDistribution extends Component
                 'account_number' => $customer->profile->account_number ?? 'N/A',
                 'tax_number' => $customer->profile->tax_number ?? null,
                 'address' => $this->getCustomerAddress($customer),
+                'account_balance' => $this->getCustomerAccountBalanceProperty(),
+                'credit_balance' => $this->getCustomerCreditBalanceProperty(),
+                'total_available_balance' => $this->getCustomerTotalAvailableBalanceProperty(),
             ],
         ];
 
@@ -303,10 +394,28 @@ class PackageDistribution extends Component
         try {
             $distributionService = app(PackageDistributionService::class);
             
+            // Prepare distribution options
+            $options = [];
+            
+            if ($this->writeOffAmount > 0) {
+                $options['writeOff'] = $this->writeOffAmount;
+                $options['writeOffReason'] = $this->writeOffReason;
+            }
+            
+            if ($this->distributionNotes) {
+                $options['notes'] = $this->distributionNotes;
+            }
+            
+            if (!empty($this->feeAdjustments)) {
+                $options['feeAdjustments'] = $this->feeAdjustments;
+            }
+            
             $result = $distributionService->distributePackages(
                 $this->selectedPackages,
                 $this->amountCollected,
-                Auth::user()
+                Auth::user(),
+                $this->applyCreditBalance,
+                $options
             );
 
             if ($result['success']) {
@@ -340,10 +449,51 @@ class PackageDistribution extends Component
     {
         $this->selectedPackages = [];
         $this->amountCollected = 0;
+        $this->applyCreditBalance = false;
+        $this->writeOffAmount = 0;
+        $this->writeOffReason = '';
+        $this->distributionNotes = '';
+        $this->showAdvancedOptions = false;
+        $this->feeAdjustments = [];
         $this->totalCost = 0;
         $this->paymentStatus = 'unpaid';
         $this->distributionSummary = [];
         $this->showConfirmation = false;
+    }
+
+    public function toggleAdvancedOptions()
+    {
+        $this->showAdvancedOptions = !$this->showAdvancedOptions;
+    }
+
+    public function getCustomerCreditBalanceProperty()
+    {
+        if ($this->selectedCustomer) {
+            return $this->selectedCustomer->credit_balance;
+        }
+        return 0;
+    }
+
+    public function getCustomerAccountBalanceProperty()
+    {
+        if ($this->selectedCustomer) {
+            return $this->selectedCustomer->account_balance;
+        }
+        return 0;
+    }
+
+    public function getCustomerTotalAvailableBalanceProperty()
+    {
+        if ($this->selectedCustomer) {
+            return $this->selectedCustomer->total_available_balance;
+        }
+        return 0;
+    }
+
+    protected function validateDistribution()
+    {
+        // Use the dynamic validation rules
+        $this->validate($this->rules());
     }
 
     public function clearSelection()
