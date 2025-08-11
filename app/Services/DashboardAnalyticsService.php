@@ -66,14 +66,21 @@ class DashboardAnalyticsService
             $totalPackages = Package::whereBetween('created_at', $dateRange)->count();
             
             $packagesByStatus = Package::whereBetween('created_at', $dateRange)
-                ->select('status', DB::raw('count(*) as count'))
-                ->groupBy('status')
-                ->pluck('count', 'status')
+                ->selectRaw('
+                    COUNT(CASE WHEN status = ? THEN 1 END) as shipped,
+                    COUNT(CASE WHEN status = ? THEN 1 END) as delivered,
+                    COUNT(CASE WHEN status = ? THEN 1 END) as delayed_count,
+                    COUNT(CASE WHEN status = ? THEN 1 END) as pending,
+                    COUNT(CASE WHEN status = ? THEN 1 END) as processing,
+                    COUNT(CASE WHEN status = ? THEN 1 END) as ready,
+                    COUNT(CASE WHEN status = ? THEN 1 END) as customs
+                ', ['shipped', 'delivered', 'delayed', 'pending', 'processing', 'ready', 'customs'])
+                ->first()
                 ->toArray();
 
             // Calculate average processing time (using updated_at as proxy for completion)
             $completedPackages = Package::whereBetween('created_at', $dateRange)
-                ->where('status', 'ready_for_pickup')
+                ->where('status', 'ready')
                 ->select('created_at', 'updated_at')
                 ->get();
                 
@@ -87,10 +94,13 @@ class DashboardAnalyticsService
 
             return [
                 'total' => $totalPackages,
-                'in_transit' => $packagesByStatus['in_transit'] ?? 0,
+                'shipped' => $packagesByStatus['shipped'] ?? 0,
                 'delivered' => $packagesByStatus['delivered'] ?? 0,
-                'delayed' => $packagesByStatus['delayed'] ?? 0,
+                'delayed' => $packagesByStatus['delayed_count'] ?? 0,
                 'pending' => $packagesByStatus['pending'] ?? 0,
+                'processing' => $packagesByStatus['processing'] ?? 0,
+                'ready' => $packagesByStatus['ready'] ?? 0,
+                'customs' => $packagesByStatus['customs'] ?? 0,
                 'processing_time_avg' => round($avgProcessingTime, 1),
                 'status_distribution' => $packagesByStatus,
             ];

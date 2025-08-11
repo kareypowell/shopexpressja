@@ -58,7 +58,7 @@ class CustomerCostVisibilityTest extends TestCase
                 'manifest_id' => $manifest->id,
                 'shipper_id' => $shipper->id,
                 'office_id' => $office->id,
-                'status' => 'ready_for_pickup',
+                'status' => 'ready',
                 'freight_price' => 200.00,
                 'customs_duty' => 50.00,
                 'storage_fee' => 20.00,
@@ -80,7 +80,7 @@ class CustomerCostVisibilityTest extends TestCase
                 'manifest_id' => $manifest->id,
                 'shipper_id' => $shipper->id,
                 'office_id' => $office->id,
-                'status' => 'ready',
+                'status' => 'shipped',
                 'freight_price' => 120.00,
                 'customs_duty' => 35.00,
                 'storage_fee' => 12.00,
@@ -116,22 +116,22 @@ class CustomerCostVisibilityTest extends TestCase
         $this->assertTrue($component->instance()->shouldShowCosts());
 
         // Check individual package cost visibility
-        $processingPackage = $this->packages->where('status', 'processing')->first();
-        $readyForPickupPackage = $this->packages->where('status', 'ready_for_pickup')->first();
-        $deliveredPackage = $this->packages->where('status', 'delivered')->first();
-        $readyPackage = $this->packages->where('status', 'ready')->first();
+        $processingPackage = $this->packages->filter(fn($p) => $p->status->value === 'processing')->first();
+        $readyPackage = $this->packages->filter(fn($p) => $p->status->value === 'ready')->first();
+        $deliveredPackage = $this->packages->filter(fn($p) => $p->status->value === 'delivered')->first();
+        $shippedPackage = $this->packages->filter(fn($p) => $p->status->value === 'shipped')->first();
 
         // Customer should NOT see costs for processing packages
         $this->assertFalse($component->instance()->shouldShowCostForPackage($processingPackage));
 
-        // Customer SHOULD see costs for ready_for_pickup packages
-        $this->assertTrue($component->instance()->shouldShowCostForPackage($readyForPickupPackage));
-
-        // Customer SHOULD see costs for delivered packages
-        $this->assertTrue($component->instance()->shouldShowCostForPackage($deliveredPackage));
+        // Customer should NOT see costs for shipped packages (in transit)
+        $this->assertFalse($component->instance()->shouldShowCostForPackage($shippedPackage));
 
         // Customer SHOULD see costs for ready packages
         $this->assertTrue($component->instance()->shouldShowCostForPackage($readyPackage));
+
+        // Customer SHOULD see costs for delivered packages
+        $this->assertTrue($component->instance()->shouldShowCostForPackage($deliveredPackage));
     }
 
     /** @test */
@@ -163,15 +163,14 @@ class CustomerCostVisibilityTest extends TestCase
         // Should count all packages
         $this->assertEquals(4, $stats['total_packages']);
 
-        // Should only include costs from ready, ready_for_pickup and delivered packages
-        // ready_for_pickup: 200 + 50 + 20 + 30 = 300
+        // Should only include costs from ready and delivered packages
+        // ready: 200 + 50 + 20 + 30 = 300
         // delivered: 150 + 30 + 15 + 20 = 215
-        // ready: 120 + 35 + 12 + 18 = 185
-        // Total: 700
-        $this->assertEquals(700.00, $stats['total_spent']);
+        // Total: 515
+        $this->assertEquals(515.00, $stats['total_spent']);
 
-        // Average should be based on packages with visible costs (3 packages)
-        $this->assertEquals(233.33, round($stats['average_cost'], 2));
+        // Average should be based on packages with visible costs (2 packages)
+        $this->assertEquals(257.50, round($stats['average_cost'], 2));
     }
 
     /** @test */
@@ -188,9 +187,9 @@ class CustomerCostVisibilityTest extends TestCase
 
         // Should include costs from all packages
         // processing: 100 + 25 + 10 + 15 = 150
-        // ready_for_pickup: 200 + 50 + 20 + 30 = 300
+        // ready: 200 + 50 + 20 + 30 = 300
         // delivered: 150 + 30 + 15 + 20 = 215
-        // ready: 120 + 35 + 12 + 18 = 185
+        // shipped: 120 + 35 + 12 + 18 = 185
         // Total: 850
         $this->assertEquals(850.00, $stats['total_spent']);
 

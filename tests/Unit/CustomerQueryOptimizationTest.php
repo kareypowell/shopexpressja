@@ -134,7 +134,7 @@ class CustomerQueryOptimizationTest extends TestCase
         
         Package::factory()->create([
             'user_id' => $customer->id,
-            'status' => 'in_transit',
+            'status' => 'shipped',
             'freight_price' => 150.00,
             'customs_duty' => 30.00,
             'storage_fee' => 15.00,

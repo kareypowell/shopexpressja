@@ -241,7 +241,7 @@ class UserModelEnhancementsTest extends TestCase
         
         Package::factory()->create([
             'user_id' => $user->id,
-            'status' => 'in_transit',
+            'status' => 'shipped',
             'weight' => 15.0,
         ]);
         

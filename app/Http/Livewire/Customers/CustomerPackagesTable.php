@@ -157,6 +157,11 @@ class CustomerPackagesTable extends DataTableComponent
      */
     public function shouldShowCostForPackage($package): bool
     {
+        // Handle null package
+        if (!$package) {
+            return false;
+        }
+        
         $currentUser = auth()->user();
         
         // Admins and superadmins can always see costs
@@ -166,7 +171,7 @@ class CustomerPackagesTable extends DataTableComponent
         
         // For customers, only show costs when package is ready for pickup or delivered
         if ($currentUser->role_id == 3 && $currentUser->id === $this->customer->id) { // customer = 3
-            return in_array($package->status, ['ready', 'ready_for_pickup', 'delivered']);
+            return in_array($package->status->value, ['ready', 'ready_for_pickup', 'delivered']);
         }
         
         return false;
@@ -236,7 +241,7 @@ class CustomerPackagesTable extends DataTableComponent
             'total_packages' => $packages->count(),
             'total_spent' => $totalSpent,
             'average_cost' => $packagesWithVisibleCosts > 0 ? $totalSpent / $packagesWithVisibleCosts : 0,
-            'status_breakdown' => $packages->groupBy('status')->map->count(),
+            'status_breakdown' => $packages->filter(fn($package) => $package->status !== null)->groupBy(fn($package) => $package->status->value)->map->count(),
         ];
     }
 }

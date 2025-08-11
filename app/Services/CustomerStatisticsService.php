@@ -185,10 +185,14 @@ class CustomerStatisticsService
 
         return [
             'total_packages' => $totalPackages,
+            'total_count' => $totalPackages, // Alias for backward compatibility
             'status_breakdown' => [
                 'delivered' => $deliveredPackages,
+                'shipped' => $packageStats->shipped_packages ?? 0,
+                'customs' => $packageStats->customs_packages ?? 0,
                 'in_transit' => ($packageStats->shipped_packages ?? 0) + ($packageStats->customs_packages ?? 0),
                 'ready_for_pickup' => $packageStats->ready_packages ?? 0,
+                'ready' => $packageStats->ready_packages ?? 0, // Alias for backward compatibility
                 'delayed' => $packageStats->delayed_packages ?? 0,
                 'processing' => $packageStats->processing_packages ?? 0,
                 'pending' => $packageStats->pending_packages ?? 0,

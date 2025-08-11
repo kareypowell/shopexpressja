@@ -49,13 +49,24 @@ class PackageDistributionEmailTest extends TestCase
             'delivery_fee' => 0.00,
         ]);
 
+        // Set up storage fake first
+        Storage::fake('public');
+        
         // Mock the receipt generator to avoid file system operations
         $this->mock(ReceiptGeneratorService::class, function ($mock) {
+            $mock->shouldReceive('calculateTotals')->andReturn([
+                'freight_total' => 100.00, // 2 * 50
+                'customs_total' => 20.00,  // 2 * 10
+                'storage_total' => 10.00,  // 2 * 5
+                'delivery_total' => 0.00,  // 2 * 0
+                'grand_total' => 130.00,
+                'amount_collected' => 130.00,
+                'balance' => 0.00,
+            ]);
             $mock->shouldReceive('generatePDF')->andReturnUsing(function ($distribution) {
                 // Create a mock file for testing on public disk
                 $path = 'receipts/test-receipt-' . $distribution->id . '.pdf';
-                \Storage::fake('public');
-                \Storage::disk('public')->put($path, 'mock pdf content');
+                Storage::disk('public')->put($path, 'mock pdf content');
                 return $path;
             });
         });
@@ -67,7 +78,6 @@ class PackageDistributionEmailTest extends TestCase
     public function it_sends_receipt_email_after_successful_distribution()
     {
         Mail::fake();
-        Storage::fake('public');
 
         $packageIds = $this->packages->pluck('id')->toArray();
         $amountCollected = 130.00; // Total for 2 packages
@@ -84,6 +94,8 @@ class PackageDistributionEmailTest extends TestCase
         $this->assertArrayHasKey('distribution', $result);
         $distribution = $result['distribution'];
         $this->assertInstanceOf(PackageDistribution::class, $distribution);
+        
+
 
         // Verify email was queued
         Mail::assertQueued(PackageReceiptEmail::class, function ($mail) {

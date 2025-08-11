@@ -51,11 +51,11 @@ class Dashboard extends Component
 
         // Get user account balance information
         $user = auth()->user();
-        $this->accountBalance = $user->account_balance;
-        $this->creditBalance = $user->credit_balance;
-        $this->totalAvailableBalance = $user->total_available_balance;
-        $this->pendingPackageCharges = $user->pending_package_charges;
-        $this->totalAmountNeeded = $user->total_amount_needed;
+        $this->accountBalance = $user->account_balance ?? 0.0;
+        $this->creditBalance = $user->credit_balance ?? 0.0;
+        $this->totalAvailableBalance = $user->total_available_balance ?? 0.0;
+        $this->pendingPackageCharges = $user->pending_package_charges ?? 0.0;
+        $this->totalAmountNeeded = $user->total_amount_needed ?? 0.0;
 
         $this->delayedPackages = Package::where('user_id', auth()->id())
                                         ->where('status', 'delayed')->count();

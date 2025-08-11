@@ -693,8 +693,8 @@ class User extends Authenticatable implements MustVerifyEmail
             ->selectRaw('
                 COUNT(*) as total_packages,
                 COUNT(CASE WHEN status = "delivered" THEN 1 END) as delivered_packages,
-                COUNT(CASE WHEN status = "in_transit" THEN 1 END) as in_transit_packages,
-                COUNT(CASE WHEN status = "ready_for_pickup" THEN 1 END) as ready_packages,
+                COUNT(CASE WHEN status = "shipped" THEN 1 END) as in_transit_packages,
+                COUNT(CASE WHEN status = "ready" THEN 1 END) as ready_packages,
                 COUNT(CASE WHEN status = "delayed" THEN 1 END) as delayed_packages,
                 COALESCE(AVG(weight), 0) as avg_weight,
                 COALESCE(SUM(weight), 0) as total_weight
@@ -710,6 +710,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         return [
             'total_packages' => $stats->total_packages ?? 0,
+            'total_count' => $stats->total_packages ?? 0, // Alias for backward compatibility
             'status_breakdown' => [
                 'delivered' => $stats->delivered_packages ?? 0,
                 'in_transit' => $stats->in_transit_packages ?? 0,

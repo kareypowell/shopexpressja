@@ -108,12 +108,15 @@ class PackageDistributionOverpaymentTest extends TestCase
         $this->assertEquals(0.00, $distribution->credit_applied);
         $this->assertEquals('paid', $distribution->payment_status);
         
-        // Check transaction was created
-        $transaction = $this->customer->transactions()->latest()->first();
-        $this->assertNotNull($transaction);
-        $this->assertEquals('credit', $transaction->type);
-        $this->assertEquals(7.00, $transaction->amount);
-        $this->assertStringContainsString('Overpayment credit', $transaction->description);
+        // Check transactions were created (charge, payment, credit, charge for overpayment transfer)
+        $transactions = $this->customer->transactions()->orderBy('created_at')->get();
+        $this->assertCount(4, $transactions);
+        
+        // Check that overpayment credit transaction exists
+        $creditTransaction = $transactions->where('type', 'credit')->first();
+        $this->assertNotNull($creditTransaction);
+        $this->assertEquals(7.00, $creditTransaction->amount);
+        $this->assertStringContainsString('Overpayment credit', $creditTransaction->description);
     }
 
     /** @test */
@@ -128,9 +131,10 @@ class PackageDistributionOverpaymentTest extends TestCase
         
         $this->assertTrue($result['success']);
         
-        // Check customer balances remain zero (no credit for underpayment)
+        // Check customer balances after underpayment
         $this->customer->refresh();
-        $this->assertEquals(0.00, $this->customer->account_balance);
+        // Account balance: 0 - 43 + 30 = -13 (customer owes money)
+        $this->assertEquals(-13.00, $this->customer->account_balance);
         $this->assertEquals(0.00, $this->customer->credit_balance);
         
         // Check distribution record shows partial payment
