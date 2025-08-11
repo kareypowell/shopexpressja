@@ -23,7 +23,7 @@ class CustomerCacheInvalidationService
      */
     public function handleCustomerProfileUpdate(User $customer): void
     {
-        Log::info("Invalidating cache for customer profile update: {$customer->id}");
+        Log::debug("Invalidating cache for customer profile update: {$customer->id}");
         
         // Clear all customer cache since profile changes might affect calculations
         $this->statisticsService->clearCustomerCache($customer);
@@ -80,7 +80,7 @@ class CustomerCacheInvalidationService
     public function handlePackageCreation(Package $package): void
     {
         if ($package->user_id) {
-            Log::info("Invalidating cache for package creation - customer: {$package->user_id}");
+            Log::debug("Invalidating cache for package creation - customer: {$package->user_id}");
             
             // Clear customer cache since package stats will change
             $customer = User::find($package->user_id);
@@ -100,7 +100,7 @@ class CustomerCacheInvalidationService
     public function handlePackageUpdate(Package $package, array $changes = []): void
     {
         if ($package->user_id) {
-            Log::info("Invalidating cache for package update - customer: {$package->user_id}");
+            Log::debug("Invalidating cache for package update - customer: {$package->user_id}");
             
             // Check if the update affects financial calculations
             $financialFields = ['freight_price', 'customs_duty', 'storage_fee', 'delivery_fee', 'status'];
@@ -128,7 +128,7 @@ class CustomerCacheInvalidationService
     public function handlePackageDeletion(Package $package): void
     {
         if ($package->user_id) {
-            Log::info("Invalidating cache for package deletion - customer: {$package->user_id}");
+            Log::debug("Invalidating cache for package deletion - customer: {$package->user_id}");
             
             // Clear customer cache since package stats will change
             $customer = User::find($package->user_id);

@@ -62,7 +62,7 @@ class CustomerStatisticsService
         }
         
         return Cache::remember($cacheKey, self::CACHE_DURATION, function () use ($customer) {
-            Log::info("Calculating customer statistics for customer {$customer->id}");
+            Log::debug("Calculating customer statistics for customer {$customer->id}");
             return $this->calculateCustomerStatistics($customer);
         });
     }
@@ -83,7 +83,7 @@ class CustomerStatisticsService
         }
         
         return Cache::remember($cacheKey, self::FINANCIAL_CACHE_DURATION, function () use ($customer) {
-            Log::info("Calculating financial summary for customer {$customer->id}");
+            Log::debug("Calculating financial summary for customer {$customer->id}");
             return $this->calculateFinancialSummary($customer);
         });
     }
@@ -104,7 +104,7 @@ class CustomerStatisticsService
         }
         
         return Cache::remember($cacheKey, self::PATTERNS_CACHE_DURATION, function () use ($customer) {
-            Log::info("Analyzing shipping patterns for customer {$customer->id}");
+            Log::debug("Analyzing shipping patterns for customer {$customer->id}");
             return $this->analyzeShippingPatterns($customer);
         });
     }
@@ -125,7 +125,7 @@ class CustomerStatisticsService
         }
         
         return Cache::remember($cacheKey, self::PACKAGE_CACHE_DURATION, function () use ($customer) {
-            Log::info("Calculating package metrics for customer {$customer->id}");
+            Log::debug("Calculating package metrics for customer {$customer->id}");
             return $this->calculatePackageMetrics($customer);
         });
     }
@@ -489,10 +489,10 @@ class CustomerStatisticsService
 
         foreach ($cacheKeys as $key) {
             Cache::forget($key);
-            Log::info("Cleared cache key: {$key}");
+            Log::debug("Cleared cache key: {$key}");
         }
         
-        Log::info("Cleared all cache for customer {$customer->id}");
+        Log::debug("Cleared all cache for customer {$customer->id}");
     }
 
     /**
@@ -506,7 +506,7 @@ class CustomerStatisticsService
     {
         $cacheKey = $this->getCacheKey($type, $customer->id);
         Cache::forget($cacheKey);
-        Log::info("Cleared {$type} cache for customer {$customer->id}");
+        Log::debug("Cleared {$type} cache for customer {$customer->id}");
     }
 
     /**
@@ -607,7 +607,7 @@ class CustomerStatisticsService
      */
     public function warmUpCustomerCache(User $customer): void
     {
-        Log::info("Warming up cache for customer {$customer->id}");
+        Log::debug("Warming up cache for customer {$customer->id}");
         
         // Pre-load all customer statistics
         $this->getCustomerStatistics($customer);
@@ -615,7 +615,7 @@ class CustomerStatisticsService
         $this->getShippingPatterns($customer);
         $this->getPackageMetrics($customer);
         
-        Log::info("Cache warmed up for customer {$customer->id}");
+        Log::debug("Cache warmed up for customer {$customer->id}");
     }
 
     /**
