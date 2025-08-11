@@ -162,19 +162,19 @@ class PackageStatus
     {
         switch ($this->value) {
             case self::PENDING:
-                return 'default';
+                return 'default';        // Gray - Neutral/waiting state
             case self::PROCESSING:
-                return 'primary';
+                return 'primary';        // Wax flower - Active processing
             case self::SHIPPED:
-                return 'shs';
+                return 'shs';           // Brand color - In transit
             case self::CUSTOMS:
-                return 'warning';
+                return 'warning';       // Yellow - Attention needed
             case self::READY:
-                return 'success';
+                return 'success';       // Green - Ready for customer
             case self::DELIVERED:
-                return 'success';
+                return 'success';       // Green - Completed successfully
             case self::DELAYED:
-                return 'danger';
+                return 'danger';        // Red - Problem/issue
             default:
                 return 'default';
         }

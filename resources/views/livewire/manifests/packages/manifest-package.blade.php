@@ -54,6 +54,11 @@
         </div>
     </div>
 
+    <!-- Package Status Legend -->
+    <div class="mb-6">
+        <x-package-status-legend :compact="true" />
+    </div>
+
     <!-- Bulk Actions Bar -->
     @if($showBulkActions)
     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -133,12 +138,7 @@
                                         {{ Str::limit($package->description, 50) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        @php
-                                            $status = \App\Enums\PackageStatus::from($package->status);
-                                        @endphp
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $status->getBadgeClass() }}">
-                                            {{ $status->getLabel() }}
-                                        </span>
+                                        <x-package-status-badge :package="$package" />
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {{ $package->weight }} lbs

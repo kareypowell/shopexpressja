@@ -56,7 +56,7 @@ class CustomerPackagesTable extends DataTableComponent
                     'shipped' => 'Shipped',
                     'delayed' => 'Delayed',
                     'ready' => 'Ready for Pickup',
-                    'ready_for_pickup' => 'Ready for Pickup',
+                    'delivered' => 'Delivered',
                 ]),
             'date_range' => Filter::make('Date Range')
                 ->select([
@@ -181,6 +181,7 @@ class CustomerPackagesTable extends DataTableComponent
     public function query(): Builder
     {
         return Package::query()
+            ->orderBy('id', 'desc')
             ->with(['manifest', 'items', 'shipper', 'office'])
             ->where('user_id', $this->customer->id)
             ->when($this->getFilter('search'), fn($query, $search) => $query->search($search))
