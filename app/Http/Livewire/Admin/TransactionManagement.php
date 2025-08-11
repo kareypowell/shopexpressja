@@ -19,6 +19,9 @@ class TransactionManagement extends Component
     public $filterDateFrom = '';
     public $filterDateTo = '';
     public $filterCustomer = '';
+    public $customerSearch = '';
+    public $showCustomerDropdown = false;
+    public $selectedCustomerName = '';
     public $selectedTransaction = null;
     public $showTransactionModal = false;
     public $showDisputeModal = false;
@@ -51,6 +54,59 @@ class TransactionManagement extends Component
         $this->resetPage();
     }
 
+    public function updatingCustomerSearch()
+    {
+        $this->showCustomerDropdown = true;
+    }
+
+    public function selectCustomer($customerId, $customerName)
+    {
+        $this->filterCustomer = $customerId;
+        $this->selectedCustomerName = $customerName;
+        $this->customerSearch = '';
+        $this->showCustomerDropdown = false;
+        $this->resetPage();
+    }
+
+    public function clearCustomerFilter()
+    {
+        $this->filterCustomer = '';
+        $this->selectedCustomerName = '';
+        $this->customerSearch = '';
+        $this->showCustomerDropdown = false;
+        $this->resetPage();
+    }
+
+    public function showCustomerDropdown()
+    {
+        $this->showCustomerDropdown = true;
+    }
+
+    public function hideCustomerDropdown()
+    {
+        $this->showCustomerDropdown = false;
+    }
+
+    public function selectFirstCustomer()
+    {
+        $customers = $this->customers;
+        if ($customers->count() > 0) {
+            $firstCustomer = $customers->first();
+            $this->selectCustomer($firstCustomer->id, $firstCustomer->full_name);
+        }
+    }
+
+    public function mount()
+    {
+        // Initialize selected customer name if filterCustomer is set
+        if ($this->filterCustomer) {
+            $customer = User::find($this->filterCustomer);
+            if ($customer) {
+                $this->selectedCustomerName = $customer->full_name;
+            }
+        }
+    }
+
     public function clearFilters()
     {
         $this->search = '';
@@ -58,6 +114,9 @@ class TransactionManagement extends Component
         $this->filterDateFrom = '';
         $this->filterDateTo = '';
         $this->filterCustomer = '';
+        $this->customerSearch = '';
+        $this->selectedCustomerName = '';
+        $this->showCustomerDropdown = false;
         $this->filterReviewStatus = '';
         $this->resetPage();
     }
@@ -192,9 +251,24 @@ class TransactionManagement extends Component
 
     public function getCustomersProperty()
     {
-        return User::where('role_id', 3)
-            ->orderBy('first_name')
+        $query = User::where('role_id', 3);
+        
+        if ($this->customerSearch) {
+            $searchTerm = trim($this->customerSearch);
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('first_name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('email', 'like', '%' . $searchTerm . '%')
+                  ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $searchTerm . '%'])
+                  ->orWhereHas('profile', function ($profileQuery) use ($searchTerm) {
+                      $profileQuery->where('account_number', 'like', '%' . $searchTerm . '%');
+                  });
+            });
+        }
+        
+        return $query->orderBy('first_name')
             ->orderBy('last_name')
+            ->limit(15)
             ->get();
     }
 
