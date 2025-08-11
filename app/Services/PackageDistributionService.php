@@ -109,7 +109,8 @@ class PackageDistributionService
                 }
                 
                 // Then apply account balance if there's still amount to cover and customer has positive account balance
-                $remainingAmount = $totalAmount - $creditApplied;
+                // Calculate remaining amount after credit applied AND cash collected
+                $remainingAmount = $totalAmount - $creditApplied - $amountCollected;
                 if ($remainingAmount > 0 && $customer->account_balance > 0) {
                     $accountBalanceApplied = min($customer->account_balance, $remainingAmount);
                     
@@ -245,16 +246,15 @@ class PackageDistributionService
                 );
             }
 
-            // Handle true overpayment - only when customer's final balance would be positive
-            // After all transactions are processed, check if account balance is positive
-            $customer->refresh(); // Get latest balance after all transactions
+            // Handle true overpayment - only when customer paid more cash than needed
+            // Calculate if there's actual overpayment from cash payment
+            $totalCovered = $totalBalanceApplied + $amountCollected;
+            $actualOverpayment = $totalCovered - $totalAmount;
             
-            if ($customer->account_balance > 0) {
-                // Customer has positive balance - this is true overpayment
-                $overpaymentAmount = $customer->account_balance;
-                
+            if ($actualOverpayment > 0) {
+                // Customer paid more cash than needed - convert overpayment to credit
                 $customer->addOverpaymentCredit(
-                    $overpaymentAmount,
+                    $actualOverpayment,
                     "Overpayment credit from package distribution - Receipt #{$distribution->receipt_number}",
                     $user->id,
                     'package_distribution',
@@ -263,24 +263,28 @@ class PackageDistributionService
                         'distribution_id' => $distribution->id,
                         'total_amount' => $totalAmount,
                         'amount_collected' => $amountCollected,
-                        'overpayment' => $overpaymentAmount,
+                        'total_balance_applied' => $totalBalanceApplied,
+                        'overpayment' => $actualOverpayment,
                         'package_ids' => $packageIds,
                     ]
                 );
                 
-                // Zero out the account balance since we moved it to credit
+                // Reduce the account balance by the overpayment amount (since it came from cash)
                 $customer->recordCharge(
-                    $overpaymentAmount,
-                    "Transfer positive balance to credit - Receipt #{$distribution->receipt_number}",
+                    $actualOverpayment,
+                    "Transfer cash overpayment to credit - Receipt #{$distribution->receipt_number}",
                     $user->id,
                     'package_distribution',
                     $distribution->id,
                     [
                         'distribution_id' => $distribution->id,
-                        'transferred_to_credit' => $overpaymentAmount,
+                        'cash_overpayment_to_credit' => $actualOverpayment,
                     ]
                 );
             }
+            
+            // Note: Customer's remaining account balance should stay as account balance
+            // Only cash overpayments should be converted to credit
 
             // Create distribution items
             foreach ($packages as $package) {
