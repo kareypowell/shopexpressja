@@ -54,8 +54,8 @@ class PackageReceiptEmail extends Mailable implements ShouldQueue
             })
             ->toArray();
 
-        // Get totals from ReceiptGeneratorService for consistency
-        $this->totals = $receiptGenerator->calculateTotals($distribution);
+        // Get raw numeric totals for email template (will be formatted in template)
+        $this->totals = $this->calculateRawTotals($distribution);
 
         // Set queue configuration
         $this->onQueue('emails');
@@ -91,6 +91,48 @@ class PackageReceiptEmail extends Mailable implements ShouldQueue
         }
 
         return $email;
+    }
+
+    /**
+     * Calculate raw numeric totals for email template formatting
+     *
+     * @param PackageDistribution $distribution
+     * @return array
+     */
+    private function calculateRawTotals(PackageDistribution $distribution): array
+    {
+        $subtotal = 0;
+        $totalFreight = 0;
+        $totalCustoms = 0;
+        $totalStorage = 0;
+        $totalDelivery = 0;
+
+        foreach ($distribution->items as $item) {
+            $subtotal += $item->total_cost;
+            $totalFreight += $item->freight_price;
+            $totalCustoms += $item->customs_duty;
+            $totalStorage += $item->storage_fee;
+            $totalDelivery += $item->delivery_fee;
+        }
+
+        $totalPaid = $distribution->amount_collected + $distribution->credit_applied + ($distribution->account_balance_applied ?? 0);
+        $outstandingBalance = max(0, $distribution->total_amount - $totalPaid);
+
+        return [
+            'subtotal' => $subtotal,
+            'total_freight' => $totalFreight,
+            'total_customs' => $totalCustoms,
+            'total_storage' => $totalStorage,
+            'total_delivery' => $totalDelivery,
+            'total_amount' => $distribution->total_amount,
+            'amount_collected' => $distribution->amount_collected,
+            'credit_applied' => $distribution->credit_applied,
+            'account_balance_applied' => $distribution->account_balance_applied ?? 0,
+            'write_off_amount' => $distribution->write_off_amount,
+            'total_paid' => $totalPaid,
+            'outstanding_balance' => $outstandingBalance,
+            'payment_status' => ucfirst($distribution->payment_status),
+        ];
     }
 
     /**

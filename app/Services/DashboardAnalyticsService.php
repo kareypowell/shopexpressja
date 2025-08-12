@@ -140,27 +140,22 @@ class DashboardAnalyticsService
             $dateRange = $this->getDateRange($filters);
             $previousRange = $this->getPreviousDateRange($filters);
 
-            // Current period revenue from actual payments and charges
-            // Revenue = payments received + charges made (both represent money flow to the business)
+            // Current period revenue from service charges only
+            // Revenue = charges made for services (what the business actually earned)
+            // Note: We don't count payments as they just cover the charges
             $currentRevenue = DB::table('customer_transactions')
                 ->join('users', 'customer_transactions.user_id', '=', 'users.id')
                 ->where('users.role_id', 3) // Only customers, not admins
                 ->whereBetween('customer_transactions.created_at', $dateRange)
-                ->whereIn('customer_transactions.type', [
-                    \App\Models\CustomerTransaction::TYPE_PAYMENT,
-                    \App\Models\CustomerTransaction::TYPE_CHARGE
-                ])
+                ->where('customer_transactions.type', \App\Models\CustomerTransaction::TYPE_CHARGE)
                 ->sum('customer_transactions.amount') ?? 0;
 
-            // Previous period revenue
+            // Previous period revenue from service charges only
             $previousRevenue = DB::table('customer_transactions')
                 ->join('users', 'customer_transactions.user_id', '=', 'users.id')
                 ->where('users.role_id', 3) // Only customers, not admins
                 ->whereBetween('customer_transactions.created_at', $previousRange)
-                ->whereIn('customer_transactions.type', [
-                    \App\Models\CustomerTransaction::TYPE_PAYMENT,
-                    \App\Models\CustomerTransaction::TYPE_CHARGE
-                ])
+                ->where('customer_transactions.type', \App\Models\CustomerTransaction::TYPE_CHARGE)
                 ->sum('customer_transactions.amount') ?? 0;
 
             $growthPercentage = $previousRevenue > 0 
@@ -168,15 +163,13 @@ class DashboardAnalyticsService
                 : 0;
 
             // Count unique orders (package distributions) for average order value
+            // Use charges only to avoid double counting
             $totalOrders = DB::table('customer_transactions')
                 ->join('users', 'customer_transactions.user_id', '=', 'users.id')
                 ->where('users.role_id', 3) // Only customers, not admins
                 ->whereBetween('customer_transactions.created_at', $dateRange)
                 ->where('customer_transactions.reference_type', 'package_distribution')
-                ->whereIn('customer_transactions.type', [
-                    \App\Models\CustomerTransaction::TYPE_PAYMENT,
-                    \App\Models\CustomerTransaction::TYPE_CHARGE
-                ])
+                ->where('customer_transactions.type', \App\Models\CustomerTransaction::TYPE_CHARGE)
                 ->distinct('customer_transactions.reference_id')
                 ->count('customer_transactions.reference_id');
             

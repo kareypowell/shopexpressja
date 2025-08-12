@@ -115,12 +115,12 @@ class ReceiptGeneratorService
             'distribution_date' => $distribution->distributed_at->format('F j, Y'),
             'distribution_time' => $distribution->distributed_at->format('g:i A'),
             'customer' => [
-                'name' => $distribution->customer->name,
+                'name' => $distribution->customer->full_name,
                 'email' => $distribution->customer->email,
                 'account_number' => $distribution->customer->profile->account_number ?? 'N/A',
             ],
             'distributed_by' => [
-                'name' => $distribution->distributedBy->name,
+                'name' => $distribution->distributedBy->full_name,
                 'role' => $distribution->distributedBy->role->name ?? 'Staff',
             ],
             'packages' => $distribution->items->map(function ($item) {
@@ -382,8 +382,30 @@ class ReceiptGeneratorService
                 <td class="amount">${{ $total_amount }}</td>
             </tr>
             <tr>
-                <td class="label">Amount Collected:</td>
+                <td class="label">Cash Collected:</td>
                 <td class="amount">${{ $amount_collected }}</td>
+            </tr>
+            @if($credit_applied > 0)
+            <tr>
+                <td class="label">Credit Applied:</td>
+                <td class="amount">${{ $credit_applied }}</td>
+            </tr>
+            @endif
+            @if($account_balance_applied > 0)
+            <tr>
+                <td class="label">Account Balance Applied:</td>
+                <td class="amount">${{ $account_balance_applied }}</td>
+            </tr>
+            @endif
+            @if($write_off_amount > 0)
+            <tr>
+                <td class="label">Discount/Write-off:</td>
+                <td class="amount">-${{ $write_off_amount }}</td>
+            </tr>
+            @endif
+            <tr>
+                <td class="label">Total Paid:</td>
+                <td class="amount">${{ $total_paid }}</td>
             </tr>
             @if($outstanding_balance > 0)
             <tr>

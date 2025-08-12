@@ -207,8 +207,30 @@
                 <td class="amount">${{ $total_amount }}</td>
             </tr>
             <tr>
-                <td class="label">Amount Collected:</td>
+                <td class="label">Cash Collected:</td>
                 <td class="amount">${{ $amount_collected }}</td>
+            </tr>
+            @if($credit_applied > 0)
+            <tr>
+                <td class="label">Credit Applied:</td>
+                <td class="amount">${{ $credit_applied }}</td>
+            </tr>
+            @endif
+            @if($account_balance_applied > 0)
+            <tr>
+                <td class="label">Account Balance Applied:</td>
+                <td class="amount">${{ $account_balance_applied }}</td>
+            </tr>
+            @endif
+            @if($write_off_amount > 0)
+            <tr>
+                <td class="label">Discount/Write-off:</td>
+                <td class="amount">-${{ $write_off_amount }}</td>
+            </tr>
+            @endif
+            <tr>
+                <td class="label">Total Paid:</td>
+                <td class="amount">${{ $total_paid }}</td>
             </tr>
             @if($outstanding_balance > 0)
             <tr>

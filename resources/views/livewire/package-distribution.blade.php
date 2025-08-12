@@ -329,29 +329,42 @@
                                     <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-4">
                                         <!-- Apply Available Balance -->
                                         @if($this->customerTotalAvailableBalance > 0)
-                                            <div class="flex items-center">
-                                                <input 
-                                                    type="checkbox" 
-                                                    id="apply-credit"
-                                                    wire:model="applyCreditBalance"
-                                                    class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
-                                                >
-                                                <label for="apply-credit" class="ml-2 block text-sm text-gray-900">
-                                                    Apply customer available balance (${{ number_format($this->customerTotalAvailableBalance, 2) }})
-                                                    @if($this->customerAccountBalance > 0 && $this->customerCreditBalance > 0)
-                                                        <span class="text-xs text-gray-500 block">
-                                                            Account: ${{ number_format($this->customerAccountBalance, 2) }} + Credit: ${{ number_format($this->customerCreditBalance, 2) }}
-                                                        </span>
-                                                    @elseif($this->customerAccountBalance > 0)
-                                                        <span class="text-xs text-gray-500 block">
-                                                            Account Balance: ${{ number_format($this->customerAccountBalance, 2) }}
-                                                        </span>
-                                                    @elseif($this->customerCreditBalance > 0)
-                                                        <span class="text-xs text-gray-500 block">
-                                                            Credit Balance: ${{ number_format($this->customerCreditBalance, 2) }}
-                                                        </span>
-                                                    @endif
-                                                </label>
+                                            <div class="space-y-3">
+                                                <h5 class="text-sm font-medium text-gray-900">Apply Customer Balance</h5>
+                                                
+                                                @if($this->customerCreditBalance > 0)
+                                                    <div class="flex items-center">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            id="apply-credit"
+                                                            wire:model="applyCreditBalance"
+                                                            class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                                        >
+                                                        <label for="apply-credit" class="ml-2 block text-sm text-gray-900">
+                                                            Apply credit balance (${{ number_format($this->customerCreditBalance, 2) }})
+                                                        </label>
+                                                    </div>
+                                                @endif
+                                                
+                                                @if($this->customerAccountBalance > 0)
+                                                    <div class="flex items-center">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            id="apply-account"
+                                                            wire:model="applyAccountBalance"
+                                                            class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                                        >
+                                                        <label for="apply-account" class="ml-2 block text-sm text-gray-900">
+                                                            Apply account balance (${{ number_format($this->customerAccountBalance, 2) }})
+                                                        </label>
+                                                    </div>
+                                                @endif
+                                                
+                                                @if($this->customerCreditBalance > 0 && $this->customerAccountBalance > 0)
+                                                    <div class="text-xs text-gray-500 pl-6">
+                                                        Total available: ${{ number_format($this->customerTotalAvailableBalance, 2) }}
+                                                    </div>
+                                                @endif
                                             </div>
                                         @endif
 
@@ -451,10 +464,33 @@
                                         <span class="font-medium">${{ number_format($amountCollected, 2) }}</span>
                                     </div>
                                     
-                                    @if($applyCreditBalance && $this->customerTotalAvailableBalance > 0)
+                                    @php
+                                        $netTotal = $totalCost - ($writeOffAmount ?: 0);
+                                        $remainingAfterCash = max(0, $netTotal - ($amountCollected ?: 0));
+                                        $creditApplied = 0;
+                                        $accountApplied = 0;
+                                        
+                                        if ($applyCreditBalance && $this->customerCreditBalance > 0) {
+                                            $creditApplied = min($this->customerCreditBalance, $remainingAfterCash);
+                                            $remainingAfterCash -= $creditApplied;
+                                        }
+                                        
+                                        if ($applyAccountBalance && $this->customerAccountBalance > 0 && $remainingAfterCash > 0) {
+                                            $accountApplied = min($this->customerAccountBalance, $remainingAfterCash);
+                                        }
+                                    @endphp
+                                    
+                                    @if($creditApplied > 0)
                                         <div class="flex justify-between text-blue-600">
-                                            <span>Balance Applied:</span>
-                                            <span class="font-medium">${{ number_format(min($this->customerTotalAvailableBalance, max(0, ($totalCost - ($writeOffAmount ?: 0)) - ($amountCollected ?: 0))), 2) }}</span>
+                                            <span>Credit Applied:</span>
+                                            <span class="font-medium">${{ number_format($creditApplied, 2) }}</span>
+                                        </div>
+                                    @endif
+                                    
+                                    @if($accountApplied > 0)
+                                        <div class="flex justify-between text-green-600">
+                                            <span>Account Balance Applied:</span>
+                                            <span class="font-medium">${{ number_format($accountApplied, 2) }}</span>
                                         </div>
                                     @endif
                                     <div class="flex justify-between border-t border-gray-200 pt-2">

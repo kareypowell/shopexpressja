@@ -29,11 +29,11 @@ class PackageDistributionService
      * @param array $packageIds
      * @param float $amountCollected
      * @param User $user
-     * @param bool $applyCreditBalance
+     * @param array $balanceOptions Balance application options: ['credit' => bool, 'account' => bool]
      * @param array $options Additional options: writeOff, feeAdjustments, notes
      * @return array
      */
-    public function distributePackages(array $packageIds, float $amountCollected, User $user, bool $applyCreditBalance = false, array $options = []): array
+    public function distributePackages(array $packageIds, float $amountCollected, User $user, array $balanceOptions = [], array $options = []): array
     {
         try {
             DB::beginTransaction();
@@ -87,48 +87,53 @@ class PackageDistributionService
                 $totalAmount -= $writeOffAmount;
             }
 
-            // Apply available balance if requested (credit balance + account balance)
+            // Parse balance options - support both old and new format for backward compatibility
+            $applyCreditBalance = $balanceOptions['credit'] ?? $balanceOptions['applyCreditBalance'] ?? false;
+            $applyAccountBalance = $balanceOptions['account'] ?? $balanceOptions['applyCreditBalance'] ?? false;
+            
+            // Apply available balances based on user selection
             $creditApplied = 0;
             $accountBalanceApplied = 0;
+            $remainingAmount = $totalAmount;
             
-            if ($applyCreditBalance) {
-                // First apply credit balance if available
-                if ($customer->credit_balance > 0) {
-                    $creditApplied = $customer->applyCreditBalance(
-                        $totalAmount,
-                        "Credit applied to package distribution - Receipt #TBD",
-                        $user->id,
-                        'package_distribution',
-                        null, // Will be updated after distribution is created
-                        [
-                            'package_ids' => $packageIds,
-                            'total_amount' => $totalAmount,
-                            'amount_collected' => $amountCollected,
-                        ]
-                    );
-                }
+            // Apply credit balance if requested and available
+            if ($applyCreditBalance && $customer->credit_balance > 0) {
+                $creditToApply = min($customer->credit_balance, $remainingAmount);
+                $creditApplied = $customer->applyCreditBalance(
+                    $creditToApply,
+                    "Credit applied to package distribution - Receipt #TBD",
+                    $user->id,
+                    'package_distribution',
+                    null, // Will be updated after distribution is created
+                    [
+                        'package_ids' => $packageIds,
+                        'total_amount' => $totalAmount,
+                        'amount_collected' => $amountCollected,
+                    ]
+                );
+                $remainingAmount -= $creditApplied;
+            }
+            
+            // Apply account balance if requested and available
+            // Calculate remaining amount after credit applied AND cash collected
+            $remainingAfterCash = $remainingAmount - $amountCollected;
+            if ($applyAccountBalance && $remainingAfterCash > 0 && $customer->account_balance > 0) {
+                $accountBalanceApplied = min($customer->account_balance, $remainingAfterCash);
                 
-                // Then apply account balance if there's still amount to cover and customer has positive account balance
-                // Calculate remaining amount after credit applied AND cash collected
-                $remainingAmount = $totalAmount - $creditApplied - $amountCollected;
-                if ($remainingAmount > 0 && $customer->account_balance > 0) {
-                    $accountBalanceApplied = min($customer->account_balance, $remainingAmount);
-                    
-                    // Record the account balance application as a charge (deduction from account)
-                    $customer->recordCharge(
-                        $accountBalanceApplied,
-                        "Account balance applied to package distribution - Receipt #TBD",
-                        $user->id,
-                        'package_distribution',
-                        null, // Will be updated after distribution is created
-                        [
-                            'package_ids' => $packageIds,
-                            'total_amount' => $totalAmount,
-                            'amount_collected' => $amountCollected,
-                            'account_balance_applied' => $accountBalanceApplied,
-                        ]
-                    );
-                }
+                // Record the account balance application as a charge (deduction from account)
+                $customer->recordCharge(
+                    $accountBalanceApplied,
+                    "Account balance applied to package distribution - Receipt #TBD",
+                    $user->id,
+                    'package_distribution',
+                    null, // Will be updated after distribution is created
+                    [
+                        'package_ids' => $packageIds,
+                        'total_amount' => $totalAmount,
+                        'amount_collected' => $amountCollected,
+                        'account_balance_applied' => $accountBalanceApplied,
+                    ]
+                );
             }
             
             $totalBalanceApplied = $creditApplied + $accountBalanceApplied;
@@ -188,44 +193,99 @@ class PackageDistributionService
                 }
             }
 
-            // Charge customer account for any remaining distribution cost
+            // Handle cash payments and account charges differently
+            $totalPaid = $amountCollected + $totalBalanceApplied;
+            
+            // Calculate what needs to be charged vs paid
+            $totalPaid = $amountCollected + $totalBalanceApplied;
             $netChargeAmount = $totalAmount - $totalBalanceApplied;
-            if ($netChargeAmount > 0) {
-                $customer->recordCharge(
-                    $netChargeAmount,
-                    "Package distribution charge - Receipt #{$distribution->receipt_number}",
-                    $user->id,
-                    'package_distribution',
-                    $distribution->id,
-                    [
-                        'distribution_id' => $distribution->id,
-                        'total_amount' => $totalAmount,
-                        'credit_applied' => $creditApplied,
-                        'account_balance_applied' => $accountBalanceApplied,
-                        'total_balance_applied' => $totalBalanceApplied,
-                        'net_charge' => $netChargeAmount,
-                        'package_ids' => $packageIds,
-                    ]
-                );
+            
+            if ($totalPaid >= $totalAmount) {
+                // Customer paid enough - record charge and payment for audit trail
+                // but ensure net effect on account balance is zero for cash portion
+                
+                if ($netChargeAmount > 0) {
+                    // Record the charge
+                    $customer->recordCharge(
+                        $netChargeAmount,
+                        "Package distribution charge - Receipt #{$distribution->receipt_number}",
+                        $user->id,
+                        'package_distribution',
+                        $distribution->id,
+                        [
+                            'distribution_id' => $distribution->id,
+                            'total_amount' => $totalAmount,
+                            'credit_applied' => $creditApplied,
+                            'account_balance_applied' => $accountBalanceApplied,
+                            'total_balance_applied' => $totalBalanceApplied,
+                            'net_charge' => $netChargeAmount,
+                            'package_ids' => $packageIds,
+                        ]
+                    );
+                }
+                
+                // Record cash payment if provided
+                if ($amountCollected > 0) {
+                    // Calculate how much of the cash payment covers the service vs overpayment
+                    $servicePaymentAmount = min($amountCollected, $netChargeAmount);
+                    
+                    if ($servicePaymentAmount > 0) {
+                        $customer->recordPayment(
+                            $servicePaymentAmount,
+                            "Payment received for package distribution - Receipt #{$distribution->receipt_number}",
+                            $user->id,
+                            'package_distribution',
+                            $distribution->id,
+                            [
+                                'distribution_id' => $distribution->id,
+                                'total_amount' => $totalAmount,
+                                'amount_collected' => $amountCollected,
+                                'service_payment_portion' => $servicePaymentAmount,
+                                'package_ids' => $packageIds,
+                            ]
+                        );
+                    }
+                }
+            } else {
+                // Customer didn't pay enough - charge account for full amount and record payment
+                if ($netChargeAmount > 0) {
+                    $customer->recordCharge(
+                        $netChargeAmount,
+                        "Package distribution charge - Receipt #{$distribution->receipt_number}",
+                        $user->id,
+                        'package_distribution',
+                        $distribution->id,
+                        [
+                            'distribution_id' => $distribution->id,
+                            'total_amount' => $totalAmount,
+                            'credit_applied' => $creditApplied,
+                            'account_balance_applied' => $accountBalanceApplied,
+                            'total_balance_applied' => $totalBalanceApplied,
+                            'net_charge' => $netChargeAmount,
+                            'package_ids' => $packageIds,
+                        ]
+                    );
+                }
+                
+                if ($amountCollected > 0) {
+                    $customer->recordPayment(
+                        $amountCollected,
+                        "Payment received for package distribution - Receipt #{$distribution->receipt_number}",
+                        $user->id,
+                        'package_distribution',
+                        $distribution->id,
+                        [
+                            'distribution_id' => $distribution->id,
+                            'total_amount' => $totalAmount,
+                            'amount_collected' => $amountCollected,
+                            'package_ids' => $packageIds,
+                        ]
+                    );
+                }
             }
-
-            // Record payment received from customer
-            if ($amountCollected > 0) {
-                $customer->recordPayment(
-                    $amountCollected,
-                    "Payment received for package distribution - Receipt #{$distribution->receipt_number}",
-                    $user->id,
-                    'package_distribution',
-                    $distribution->id,
-                    [
-                        'distribution_id' => $distribution->id,
-                        'total_amount' => $totalAmount + $writeOffAmount,
-                        'amount_collected' => $amountCollected,
-                        'write_off_amount' => $writeOffAmount,
-                        'package_ids' => $packageIds,
-                    ]
-                );
-            }
+            
+            // Note: The charge and payment transactions above handle the full transaction flow
+            // No additional logic needed here as balances are already properly managed
 
             // Record write-off if provided
             if ($writeOffAmount > 0) {
@@ -269,18 +329,9 @@ class PackageDistributionService
                     ]
                 );
                 
-                // Reduce the account balance by the overpayment amount (since it came from cash)
-                $customer->recordCharge(
-                    $actualOverpayment,
-                    "Transfer cash overpayment to credit - Receipt #{$distribution->receipt_number}",
-                    $user->id,
-                    'package_distribution',
-                    $distribution->id,
-                    [
-                        'distribution_id' => $distribution->id,
-                        'cash_overpayment_to_credit' => $actualOverpayment,
-                    ]
-                );
+                // Note: Do NOT reduce account balance for cash overpayments
+                // The overpayment came from cash, not from the customer's account balance
+                // Only the credit balance should be affected
             }
             
             // Note: Customer's remaining account balance should stay as account balance
@@ -466,5 +517,26 @@ class PackageDistributionService
             ->with(['items.package', 'distributedBy'])
             ->orderBy('distributed_at', 'desc')
             ->get();
+    }
+
+    /**
+     * Backward compatibility method for the old interface
+     * 
+     * @param array $packageIds
+     * @param float $amountCollected
+     * @param User $user
+     * @param bool $applyCreditBalance
+     * @param array $options
+     * @return array
+     */
+    public function distributePackagesLegacy(array $packageIds, float $amountCollected, User $user, bool $applyCreditBalance = false, array $options = []): array
+    {
+        $balanceOptions = [];
+        if ($applyCreditBalance) {
+            $balanceOptions['credit'] = true;
+            $balanceOptions['account'] = true;
+        }
+        
+        return $this->distributePackages($packageIds, $amountCollected, $user, $balanceOptions, $options);
     }
 }

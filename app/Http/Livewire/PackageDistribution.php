@@ -21,6 +21,7 @@ class PackageDistribution extends Component
     public $selectedPackages = [];
     public $amountCollected = 0;
     public $applyCreditBalance = false;
+    public $applyAccountBalance = false;
     public $writeOffAmount = 0;
     public $writeOffReason = '';
     public $distributionNotes = '';
@@ -291,13 +292,23 @@ class PackageDistribution extends Component
         // Calculate net total after write-off
         $netTotal = $totalCost - $writeOffAmount;
         
-        // Calculate total received (cash + available balance applied)
-        $balanceApplied = 0;
-        if ($this->applyCreditBalance && $this->getCustomerTotalAvailableBalanceProperty() > 0) {
-            $balanceApplied = min($this->getCustomerTotalAvailableBalanceProperty(), max(0, $netTotal - $amountCollected));
+        // Calculate total received (cash + balances applied)
+        $remainingAfterCash = max(0, $netTotal - $amountCollected);
+        $creditApplied = 0;
+        $accountApplied = 0;
+        
+        // Apply credit balance first if selected
+        if ($this->applyCreditBalance && $this->getCustomerCreditBalanceProperty() > 0) {
+            $creditApplied = min($this->getCustomerCreditBalanceProperty(), $remainingAfterCash);
+            $remainingAfterCash -= $creditApplied;
         }
         
-        $totalReceived = $amountCollected + $balanceApplied;
+        // Apply account balance if selected and there's still remaining amount
+        if ($this->applyAccountBalance && $this->getCustomerAccountBalanceProperty() > 0 && $remainingAfterCash > 0) {
+            $accountApplied = min($this->getCustomerAccountBalanceProperty(), $remainingAfterCash);
+        }
+        
+        $totalReceived = $amountCollected + $creditApplied + $accountApplied;
 
         if ($totalReceived >= $netTotal) {
             $this->paymentStatus = 'paid';
@@ -410,11 +421,20 @@ class PackageDistribution extends Component
                 $options['feeAdjustments'] = $this->feeAdjustments;
             }
             
+            // Prepare balance options
+            $balanceOptions = [];
+            if ($this->applyCreditBalance) {
+                $balanceOptions['credit'] = true;
+            }
+            if ($this->applyAccountBalance) {
+                $balanceOptions['account'] = true;
+            }
+            
             $result = $distributionService->distributePackages(
                 $this->selectedPackages,
                 $this->amountCollected,
                 Auth::user(),
-                $this->applyCreditBalance,
+                $balanceOptions,
                 $options
             );
 
@@ -450,6 +470,7 @@ class PackageDistribution extends Component
         $this->selectedPackages = [];
         $this->amountCollected = 0;
         $this->applyCreditBalance = false;
+        $this->applyAccountBalance = false;
         $this->writeOffAmount = 0;
         $this->writeOffReason = '';
         $this->distributionNotes = '';
