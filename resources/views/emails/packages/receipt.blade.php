@@ -89,6 +89,7 @@
         .info-item {
             display: flex;
             flex-direction: column;
+            margin-bottom: 15px;
         }
 
         .info-label {
@@ -97,12 +98,18 @@
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
+            line-height: 1.4;
+            display: block;
         }
 
         .info-value {
-            font-size: 14px;
+            font-size: 15px;
             color: #1e293b;
+            line-height: 1.5;
+            font-weight: 600;
+            display: block;
+            padding-top: 2px;
         }
 
         /* Payment status badge */
@@ -293,36 +300,40 @@
             <!-- Receipt Information -->
             <div class="receipt-info">
                 <h3>Receipt Information</h3>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">Receipt Number</div>
-                        <div class="info-value">{{ $receipt_number }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Distribution Date</div>
-                        <div class="info-value">{{ $distributed_at }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Customer Name</div>
-                        <div class="info-value">{{ $customer->full_name }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Account Number</div>
-                        <div class="info-value">{{ $customer->profile->account_number ?? 'N/A' }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Phone Number</div>
-                        <div class="info-value">{{ $customer->profile->telephone_number ?? 'N/A' }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Payment Status</div>
-                        <div class="info-value">
-                            <span class="payment-status {{ strtolower($distribution->payment_status) }}">
-                                {{ $payment_status }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 33.33%; vertical-align: top; padding: 10px 15px 10px 0;">
+                            <div style="font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; line-height: 1.4;">Receipt Number</div>
+                            <div style="font-size: 15px; color: #1e293b; line-height: 1.5; font-weight: 600;">{{ $receipt_number }}</div>
+                        </td>
+                        <td style="width: 33.33%; vertical-align: top; padding: 10px 15px;">
+                            <div style="font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; line-height: 1.4;">Distribution Date</div>
+                            <div style="font-size: 15px; color: #1e293b; line-height: 1.5; font-weight: 600;">{{ $distributed_at }}</div>
+                        </td>
+                        <td style="width: 33.33%; vertical-align: top; padding: 10px 0 10px 15px;">
+                            <div style="font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; line-height: 1.4;">Customer Name</div>
+                            <div style="font-size: 15px; color: #1e293b; line-height: 1.5; font-weight: 600;">{{ $customer->full_name }}</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 33.33%; vertical-align: top; padding: 10px 15px 10px 0;">
+                            <div style="font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; line-height: 1.4;">Account Number</div>
+                            <div style="font-size: 15px; color: #1e293b; line-height: 1.5; font-weight: 600;">{{ $customer->profile->account_number ?? 'N/A' }}</div>
+                        </td>
+                        <td style="width: 33.33%; vertical-align: top; padding: 10px 15px;">
+                            <div style="font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; line-height: 1.4;">Phone Number</div>
+                            <div style="font-size: 15px; color: #1e293b; line-height: 1.5; font-weight: 600;">{{ $customer->profile->telephone_number ?? 'N/A' }}</div>
+                        </td>
+                        <td style="width: 33.33%; vertical-align: top; padding: 10px 0 10px 15px;">
+                            <div style="font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; line-height: 1.4;">Payment Status</div>
+                            <div style="font-size: 15px; color: #1e293b; line-height: 1.5; font-weight: 600;">
+                                <span class="payment-status {{ strtolower($distribution->payment_status) }}">
+                                    {{ $payment_status }}
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
             </div>
 
             <!-- Package Details -->

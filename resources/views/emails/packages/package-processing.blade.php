@@ -83,6 +83,7 @@
         .info-item {
             display: flex;
             flex-direction: column;
+            margin-bottom: 15px;
         }
 
         .info-label {
@@ -91,12 +92,18 @@
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
+            line-height: 1.4;
+            display: block;
         }
 
         .info-value {
-            font-size: 14px;
+            font-size: 15px;
             color: #1e293b;
+            line-height: 1.5;
+            font-weight: 600;
+            display: block;
+            padding-top: 2px;
         }
 
         /* Button */
@@ -179,24 +186,28 @@
             <!-- Package Information -->
             <div class="package-info">
                 <h3>Package Information</h3>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">Tracking Number</div>
-                        <div class="info-value">{{ $trackingNumber }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Description</div>
-                        <div class="info-value">{{ $description }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Customer Name</div>
-                        <div class="info-value">{{ $user->full_name }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Account Number</div>
-                        <div class="info-value">{{ $user->profile->account_number ?? 'N/A' }}</div>
-                    </div>
-                </div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 50%; vertical-align: top; padding: 10px 15px 10px 0;">
+                            <div style="font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; line-height: 1.4;">Tracking Number</div>
+                            <div style="font-size: 15px; color: #1e293b; line-height: 1.5; font-weight: 600;">{{ $trackingNumber }}</div>
+                        </td>
+                        <td style="width: 50%; vertical-align: top; padding: 10px 0 10px 15px;">
+                            <div style="font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; line-height: 1.4;">Description</div>
+                            <div style="font-size: 15px; color: #1e293b; line-height: 1.5; font-weight: 600;">{{ $description }}</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; vertical-align: top; padding: 10px 15px 10px 0;">
+                            <div style="font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; line-height: 1.4;">Customer Name</div>
+                            <div style="font-size: 15px; color: #1e293b; line-height: 1.5; font-weight: 600;">{{ $user->full_name }}</div>
+                        </td>
+                        <td style="width: 50%; vertical-align: top; padding: 10px 0 10px 15px;">
+                            <div style="font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; line-height: 1.4;">Account Number</div>
+                            <div style="font-size: 15px; color: #1e293b; line-height: 1.5; font-weight: 600;">{{ $user->profile->account_number ?? 'N/A' }}</div>
+                        </td>
+                    </tr>
+                </table>
             </div>
 
             <p style="margin: 20px 0; color: #64748b; line-height: 1.6;">

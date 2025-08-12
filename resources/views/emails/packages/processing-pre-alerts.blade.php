@@ -97,6 +97,7 @@
         .info-item {
             display: flex;
             flex-direction: column;
+            margin-bottom: 15px;
         }
 
         .info-label {
@@ -105,12 +106,18 @@
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
+            line-height: 1.4;
+            display: block;
         }
 
         .info-value {
-            font-size: 14px;
+            font-size: 15px;
             color: #1e293b;
+            line-height: 1.5;
+            font-weight: 600;
+            display: block;
+            padding-top: 2px;
         }
 
         /* Customer info section */
