@@ -90,66 +90,36 @@ class DashboardMetricsFixTest extends TestCase
         $customer = $this->customers->first();
 
         // create manifest
-        $manifest = Manifest::create([
-            'user_id' => 1,
-            'manifest_number' => 'MAN001',
-            'description' => 'Test manifest',
-            'office_id' => 1,
-        ]);
+        $manifest = Manifest::factory()->create();
         
         // Create packages with different statuses using correct enum values
-        Package::create([
+        Package::factory()->create([
             'user_id' => $customer->id,
-            'tracking_number' => 'TEST001',
-            'description' => 'Test package 1',
-            'weight' => 1.0,
-            'manifest_id' => 1,
-            'shipper_id' => 1,
-            'office_id' => 1,
+            'manifest_id' => $manifest->id,
             'status' => PackageStatus::PENDING
         ]);
         
-        Package::create([
+        Package::factory()->create([
             'user_id' => $customer->id,
-            'tracking_number' => 'TEST002',
-            'description' => 'Test package 2',
-            'weight' => 1.0,
-            'manifest_id' => 1,
-            'shipper_id' => 1,
-            'office_id' => 1,
+            'manifest_id' => $manifest->id,
             'status' => PackageStatus::PROCESSING
         ]);
         
-        Package::create([
+        Package::factory()->create([
             'user_id' => $customer->id,
-            'tracking_number' => 'TEST003',
-            'description' => 'Test package 3',
-            'weight' => 1.0,
-            'manifest_id' => 1,
-            'shipper_id' => 1,
-            'office_id' => 1,
+            'manifest_id' => $manifest->id,
             'status' => PackageStatus::SHIPPED
         ]);
         
-        Package::create([
+        Package::factory()->create([
             'user_id' => $customer->id,
-            'tracking_number' => 'TEST004',
-            'description' => 'Test package 4',
-            'weight' => 1.0,
-            'manifest_id' => 1,
-            'shipper_id' => 1,
-            'office_id' => 1,
+            'manifest_id' => $manifest->id,
             'status' => PackageStatus::DELIVERED
         ]);
         
-        Package::create([
+        Package::factory()->create([
             'user_id' => $customer->id,
-            'tracking_number' => 'TEST005',
-            'description' => 'Test package 5',
-            'weight' => 1.0,
-            'manifest_id' => 1,
-            'shipper_id' => 2,
-            'office_id' => 1,
+            'manifest_id' => $manifest->id,
             'status' => PackageStatus::DELAYED
         ]);
         
