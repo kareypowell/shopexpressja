@@ -82,7 +82,7 @@ class ReceiptGeneratorService
             $totalDelivery += $item->delivery_fee;
         }
 
-        $totalPaid = $distribution->amount_collected + $distribution->credit_applied + ($distribution->account_balance_applied ?? 0);
+        $totalPaid = $distribution->amount_collected + $distribution->credit_applied + ($distribution->account_balance_applied ?? 0) + $distribution->write_off_amount;
         $outstandingBalance = max(0, $distribution->total_amount - $totalPaid);
 
         return [
@@ -124,10 +124,17 @@ class ReceiptGeneratorService
                 'role' => $distribution->distributedBy->role->name ?? 'Staff',
             ],
             'packages' => $distribution->items->map(function ($item) {
+                $package = $item->package;
+                $isSeaPackage = $package->isSeaPackage();
+                
                 return [
-                    'tracking_number' => $item->package->tracking_number,
-                    'description' => $item->package->description ?? 'Package',
-                    'weight' => $item->package->weight ?? 0,
+                    'tracking_number' => $package->tracking_number,
+                    'description' => $package->description ?? 'Package',
+                    'weight_display' => $isSeaPackage 
+                        ? number_format($package->cubic_feet ?? 0, 2) . ' ft³'
+                        : number_format($package->weight ?? 0, 1) . ' lbs',
+                    'weight_label' => $isSeaPackage ? 'Cubic Feet' : 'Weight',
+                    'is_sea_package' => $isSeaPackage,
                     'freight_price' => number_format($item->freight_price, 2),
                     'customs_duty' => number_format($item->customs_duty, 2),
                     'storage_fee' => number_format($item->storage_fee, 2),
@@ -189,14 +196,14 @@ class ReceiptGeneratorService
         }
         .header {
             text-align: center;
-            border-bottom: 2px solid #007bff;
+            border-bottom: 2px solid #0a274c;
             padding-bottom: 20px;
             margin-bottom: 30px;
         }
         .company-name {
             font-size: 24px;
             font-weight: bold;
-            color: #007bff;
+            color: #0a274c;
             margin-bottom: 5px;
         }
         .company-info {
@@ -249,7 +256,7 @@ class ReceiptGeneratorService
         }
         .totals-section {
             margin-top: 30px;
-            border-top: 2px solid #007bff;
+            border-top: 2px solid #0a274c;
             padding-top: 15px;
         }
         .totals-table {

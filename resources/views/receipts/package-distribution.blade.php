@@ -1,254 +1,469 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Package Distribution Receipt</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ $company['name'] }} - Package Distribution Receipt</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            font-size: 12px;
-            line-height: 1.4;
-            color: #333;
-            margin: 0;
+            line-height: 1.6;
+            color: #374151;
+            background-color: white;
             padding: 20px;
         }
+
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+        }
+
+        /* Header Section */
         .header {
-            text-align: center;
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 20px;
+            width: 100%;
             margin-bottom: 30px;
         }
-        .company-name {
-            font-size: 24px;
-            font-weight: bold;
-            color: #007bff;
-            margin-bottom: 5px;
-        }
-        .company-info {
-            font-size: 10px;
-            color: #666;
-        }
-        .receipt-title {
-            font-size: 18px;
-            font-weight: bold;
-            text-align: center;
-            margin: 20px 0;
-            color: #333;
-        }
-        .receipt-info {
-            display: table;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        .receipt-info-left,
-        .receipt-info-right {
-            display: table-cell;
-            width: 50%;
-            vertical-align: top;
-        }
-        .info-section {
-            margin-bottom: 15px;
-        }
-        .info-label {
-            font-weight: bold;
-            color: #555;
-        }
-        .packages-table {
+
+        .header-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
         }
-        .packages-table th,
-        .packages-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+
+        .header-left {
+            width: 60%;
+            vertical-align: top;
         }
-        .packages-table th {
-            background-color: #f8f9fa;
-            font-weight: bold;
-            color: #333;
-        }
-        .packages-table .number-cell {
+
+        .header-right {
+            width: 40%;
+            vertical-align: top;
             text-align: right;
         }
-        .totals-section {
-            margin-top: 30px;
-            border-top: 2px solid #007bff;
-            padding-top: 15px;
+
+        .logo {
+            height: 60px;
+            width: auto;
+            margin-right: 15px;
+            vertical-align: middle;
         }
-        .totals-table {
-            width: 100%;
-            max-width: 400px;
-            margin-left: auto;
+
+        .header-title {
+            display: inline-block;
+            vertical-align: middle;
         }
-        .totals-table td {
-            padding: 5px 10px;
-            border: none;
+
+        .header-title h1 {
+            font-weight: 900;
+            font-size: 30px;
+            color: #111827;
+            margin-bottom: 5px;
         }
-        .totals-table .label {
-            font-weight: bold;
-            text-align: right;
+
+        .header-title p {
+            font-size: 14px;
+            color: #6b7280;
         }
-        .totals-table .amount {
-            text-align: right;
-            width: 100px;
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 8px;
+            text-transform: uppercase;
         }
-        .total-row {
-            border-top: 1px solid #333;
-            font-weight: bold;
+
+        .status-badge.paid {
+            background-color: #059669;
+            color: white;
+        }
+
+        .status-badge.partial {
+            background-color: #d97706;
+            color: white;
+        }
+
+        .status-badge.unpaid {
+            background-color: #dc2626;
+            color: white;
+        }
+
+        /* Company Info */
+        .company-info {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+        }
+
+        .company-info p {
+            color: #374151;
             font-size: 14px;
         }
-        .payment-status {
+
+        /* Receipt Details */
+        .receipt-details {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .details-column {
+            width: 33.33%;
+            vertical-align: top;
+            padding-right: 20px;
+        }
+
+        .details-section h3 {
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .details-section p {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .details-section .label {
+            font-weight: 600;
+        }
+
+        .total-highlight {
+            background-color: #fef3c7;
+            padding: 15px;
+            border-radius: 8px;
             text-align: center;
-            margin: 20px 0;
-            padding: 10px;
-            border-radius: 5px;
         }
-        .payment-status.paid {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+
+        .total-amount {
+            font-weight: 900;
+            font-size: 24px;
+            color: #d97706;
+            margin-bottom: 4px;
         }
-        .payment-status.partial {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
+
+        .total-label {
+            font-size: 14px;
+            color: #d97706;
         }
-        .payment-status.unpaid {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+
+        .receipt-number {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: #0891b2;
+            background: #f0f9ff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #e0f2fe;
         }
+
+        /* Items Section */
+        .items-section h3 {
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+
+        .items-table thead {
+            background-color: #0891b2;
+            color: white;
+        }
+
+        .items-table th,
+        .items-table td {
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .items-table th {
+            font-weight: 600;
+        }
+
+        .items-table .text-right {
+            text-align: right;
+        }
+
+        .tracking-number {
+            color: #0891b2;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Payment Summary */
+        .payment-summary {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .summary-spacer {
+            width: 60%;
+        }
+
+        .summary-box {
+            width: 40%;
+            vertical-align: top;
+        }
+
+        .summary-row {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+        }
+
+        .summary-row td {
+            padding: 8px 0;
+            font-size: 14px;
+        }
+
+        .summary-label {
+            text-align: right;
+            padding-right: 20px;
+        }
+
+        .summary-amount {
+            text-align: right;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        .summary-total {
+            border-top: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .summary-total td {
+            padding: 12px 0;
+        }
+
+        .summary-paid {
+            color: #059669;
+            font-weight: 600;
+        }
+
+        /* Footer */
         .footer {
-            margin-top: 40px;
             text-align: center;
-            font-size: 10px;
-            color: #666;
-            border-top: 1px solid #ddd;
-            padding-top: 15px;
+            padding-top: 25px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer h4 {
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .footer p {
+            font-size: 14px;
+            color: #6b7280;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="company-name">{{ $company['name'] }}</div>
+    <div class="invoice-container">
+        <!-- Header Section -->
+        <div class="header">
+            <table class="header-table">
+                <tr>
+                    <td class="header-left">
+                        <img src="{{ asset('img/shipsharkltd-logo.png') }}" alt="{{ $company['name'] }}" class="logo">
+                        <div class="header-title">
+                            <h1>RECEIPT</h1>
+                            <p>Package Distribution Receipt</p>
+                        </div>
+                    </td>
+                    <td class="header-right">
+                        <div class="status-badge {{ strtolower($payment_status) }}">{{ $payment_status }}</div><br>
+                        <span style="font-size: 14px; color: #6b7280;">Generated {{ date('F j, Y \a\t g:i A') }}</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Company Info -->
         <div class="company-info">
-            {{ $company['address'] }}<br>
-            Phone: {{ $company['phone'] }} | Email: {{ $company['email'] }}<br>
-            Website: {{ $company['website'] }}
+            <p>{{ $company['address'] }} • {{ $company['phone'] }} • {{ $company['email'] }}</p>
         </div>
-    </div>
 
-    <div class="receipt-title">PACKAGE DISTRIBUTION RECEIPT</div>
-
-    <div class="receipt-info">
-        <div class="receipt-info-left">
-            <div class="info-section">
-                <div class="info-label">Receipt Number:</div>
-                <div>{{ $receipt_number }}</div>
-            </div>
-            <div class="info-section">
-                <div class="info-label">Distribution Date:</div>
-                <div>{{ $distribution_date }} at {{ $distribution_time }}</div>
-            </div>
-            <div class="info-section">
-                <div class="info-label">Distributed By:</div>
-                <div>{{ $distributed_by['name'] }} ({{ $distributed_by['role'] }})</div>
-            </div>
+        <!-- Receipt Details -->
+        <div class="receipt-details">
+            <table class="details-table">
+                <tr>
+                    <td class="details-column">
+                        <div class="details-section">
+                            <h3>Receipt Details</h3>
+                            <p><span class="label">Receipt #:</span><br><span class="receipt-number">{{ $receipt_number }}</span></p>
+                            <p><span class="label">Date:</span> {{ $distribution_date }} at {{ $distribution_time }}</p>
+                            <p><span class="label">Processed by:</span> {{ $distributed_by['name'] }}</p>
+                        </div>
+                    </td>
+                    <td class="details-column">
+                        <div class="details-section">
+                            <h3>Customer Information</h3>
+                            <p><span class="label">Name:</span> {{ $customer['name'] }}</p>
+                            <p><span class="label">Email:</span> {{ $customer['email'] }}</p>
+                            <p><span class="label">Account:</span> {{ $customer['account_number'] }}</p>
+                        </div>
+                    </td>
+                    <td class="details-column">
+                        <div class="total-highlight">
+                            <div class="total-amount">${{ $total_amount }}</div>
+                            <div class="total-label">Total Amount</div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
         </div>
-        <div class="receipt-info-right">
-            <div class="info-section">
-                <div class="info-label">Customer Information:</div>
-                <div>{{ $customer['name'] }}</div>
-                <div>{{ $customer['email'] }}</div>
-                <div>Account: {{ $customer['account_number'] }}</div>
-            </div>
+
+        <!-- Items Table -->
+        <div class="items-section">
+            <h3>Package Details</h3>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Tracking</th>
+                        <th>Description</th>
+                        <th>
+                            @php
+                                $hasSeaPackages = collect($packages)->contains('is_sea_package', true);
+                                $hasAirPackages = collect($packages)->contains('is_sea_package', false);
+                            @endphp
+                            @if($hasSeaPackages && $hasAirPackages)
+                                Weight/Volume
+                            @elseif($hasSeaPackages)
+                                Cubic Feet
+                            @else
+                                Weight
+                            @endif
+                        </th>
+                        <th class="text-right">Freight</th>
+                        <th class="text-right">Customs</th>
+                        <th class="text-right">Storage</th>
+                        <th class="text-right">Delivery</th>
+                        <th class="text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($packages as $package)
+                    <tr>
+                        <td class="tracking-number">{{ $package['tracking_number'] }}</td>
+                        <td>{{ $package['description'] }}</td>
+                        <td>{{ $package['weight_display'] }}</td>
+                        <td class="text-right">${{ $package['freight_price'] }}</td>
+                        <td class="text-right">${{ $package['customs_duty'] }}</td>
+                        <td class="text-right">${{ $package['storage_fee'] }}</td>
+                        <td class="text-right">${{ $package['delivery_fee'] }}</td>
+                        <td class="text-right">${{ $package['total_cost'] }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
-    </div>
 
-    <table class="packages-table">
-        <thead>
-            <tr>
-                <th>Tracking Number</th>
-                <th>Description</th>
-                <th>Weight</th>
-                <th>Freight</th>
-                <th>Customs</th>
-                <th>Storage</th>
-                <th>Delivery</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($packages as $package)
-            <tr>
-                <td>{{ $package['tracking_number'] }}</td>
-                <td>{{ $package['description'] }}</td>
-                <td class="number-cell">{{ $package['weight'] }} lbs</td>
-                <td class="number-cell">${{ $package['freight_price'] }}</td>
-                <td class="number-cell">${{ $package['customs_duty'] }}</td>
-                <td class="number-cell">${{ $package['storage_fee'] }}</td>
-                <td class="number-cell">${{ $package['delivery_fee'] }}</td>
-                <td class="number-cell">${{ $package['total_cost'] }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+        <!-- Payment Summary -->
+        <div class="payment-summary">
+            <table class="summary-table">
+                <tr>
+                    <td class="summary-spacer"></td>
+                    <td class="summary-box">
+                        <table class="summary-row">
+                            <tr>
+                                <td class="summary-label">Subtotal:</td>
+                                <td class="summary-amount">${{ $subtotal }}</td>
+                            </tr>
+                        </table>
+                        <table class="summary-row summary-total">
+                            <tr>
+                                <td class="summary-label">Total Amount:</td>
+                                <td class="summary-amount">${{ $total_amount }}</td>
+                            </tr>
+                        </table>
+                        <table class="summary-row">
+                            <tr>
+                                <td class="summary-label">Cash Collected:</td>
+                                <td class="summary-amount">${{ $amount_collected }}</td>
+                            </tr>
+                        </table>
+                        @if($credit_applied > 0)
+                        <table class="summary-row">
+                            <tr>
+                                <td class="summary-label">Credit Applied:</td>
+                                <td class="summary-amount">${{ $credit_applied }}</td>
+                            </tr>
+                        </table>
+                        @endif
+                        @if($account_balance_applied > 0)
+                        <table class="summary-row">
+                            <tr>
+                                <td class="summary-label">Account Balance Applied:</td>
+                                <td class="summary-amount">${{ $account_balance_applied }}</td>
+                            </tr>
+                        </table>
+                        @endif
+                        @if($write_off_amount > 0)
+                        <table class="summary-row">
+                            <tr>
+                                <td class="summary-label">Discount/Write-off:</td>
+                                <td class="summary-amount">-${{ $write_off_amount }}</td>
+                            </tr>
+                        </table>
+                        @endif
+                        <table class="summary-row summary-paid">
+                            <tr>
+                                <td class="summary-label">Total Paid:</td>
+                                <td class="summary-amount">${{ $total_paid }}</td>
+                            </tr>
+                        </table>
+                        @if($outstanding_balance > 0)
+                        <table class="summary-row">
+                            <tr>
+                                <td class="summary-label">Outstanding Balance:</td>
+                                <td class="summary-amount">${{ $outstanding_balance }}</td>
+                            </tr>
+                        </table>
+                        @endif
+                    </td>
+                </tr>
+            </table>
+        </div>
 
-    <div class="totals-section">
-        <table class="totals-table">
-            <tr>
-                <td class="label">Subtotal:</td>
-                <td class="amount">${{ $subtotal }}</td>
-            </tr>
-            <tr class="total-row">
-                <td class="label">Total Amount:</td>
-                <td class="amount">${{ $total_amount }}</td>
-            </tr>
-            <tr>
-                <td class="label">Cash Collected:</td>
-                <td class="amount">${{ $amount_collected }}</td>
-            </tr>
-            @if($credit_applied > 0)
-            <tr>
-                <td class="label">Credit Applied:</td>
-                <td class="amount">${{ $credit_applied }}</td>
-            </tr>
-            @endif
-            @if($account_balance_applied > 0)
-            <tr>
-                <td class="label">Account Balance Applied:</td>
-                <td class="amount">${{ $account_balance_applied }}</td>
-            </tr>
-            @endif
-            @if($write_off_amount > 0)
-            <tr>
-                <td class="label">Discount/Write-off:</td>
-                <td class="amount">-${{ $write_off_amount }}</td>
-            </tr>
-            @endif
-            <tr>
-                <td class="label">Total Paid:</td>
-                <td class="amount">${{ $total_paid }}</td>
-            </tr>
-            @if($outstanding_balance > 0)
-            <tr>
-                <td class="label">Outstanding Balance:</td>
-                <td class="amount">${{ $outstanding_balance }}</td>
-            </tr>
-            @endif
-        </table>
-    </div>
-
-    <div class="payment-status {{ strtolower($payment_status) }}">
-        <strong>Payment Status: {{ $payment_status }}</strong>
-    </div>
-
-    <div class="footer">
-        <p>Thank you for choosing {{ $company['name'] }}!</p>
-        <p>This receipt was generated on {{ date('F j, Y \at g:i A') }}</p>
-        <p>For inquiries, please contact us at {{ $company['email'] }} or {{ $company['phone'] }}</p>
+        <!-- Footer -->
+        <div class="footer">
+            <h4>Thank you for choosing {{ $company['name'] }}</h4>
+            <p>Keep this receipt for your records</p>
+        </div>
     </div>
 </body>
 </html>

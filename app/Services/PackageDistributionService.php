@@ -38,6 +38,11 @@ class PackageDistributionService
         try {
             DB::beginTransaction();
 
+            // Check if package IDs are provided
+            if (empty($packageIds)) {
+                throw new Exception('No packages provided for distribution');
+            }
+
             // Validate packages are ready for distribution
             $packages = Package::whereIn('id', $packageIds)
                 ->where('status', PackageStatus::READY)

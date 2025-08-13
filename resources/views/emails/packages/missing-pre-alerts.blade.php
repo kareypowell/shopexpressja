@@ -261,29 +261,6 @@
                 </table>
             </div>
 
-            <!-- Customer Information -->
-            <div class="customer-info">
-                <h4>Your Contact Information</h4>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">Customer Name</div>
-                        <div class="info-value">{{ $user->full_name }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Account Number</div>
-                        <div class="info-value">{{ $user->profile->account_number ?? 'N/A' }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Phone Number</div>
-                        <div class="info-value">{{ $user->profile->telephone_number ?? 'N/A' }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Email Address</div>
-                        <div class="info-value">{{ $user->email }}</div>
-                    </div>
-                </div>
-            </div>
-
             <div style="margin: 20px 0; padding: 20px; background-color: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
                 <p style="color: #92400e; font-size: 14px; line-height: 1.6;">
                     <strong>Action Required:</strong> Your package has been set to "Pending" status. To expedite processing, please submit a pre-alert using the button below.

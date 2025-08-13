@@ -102,7 +102,19 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <button wire:click="sortBy('weight')" class="flex items-center space-x-1 hover:text-gray-700">
-                                        <span>Weight</span>
+                                        <span>
+                                            @php
+                                                $hasSeaPackages = $packages->contains(function($package) { return $package->isSeaPackage(); });
+                                                $hasAirPackages = $packages->contains(function($package) { return !$package->isSeaPackage(); });
+                                            @endphp
+                                            @if($hasSeaPackages && $hasAirPackages)
+                                                Weight/Volume
+                                            @elseif($hasSeaPackages)
+                                                Cubic Feet
+                                            @else
+                                                Weight
+                                            @endif
+                                        </span>
                                         @if($sortBy === 'weight')
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 @if($sortDirection === 'asc')
@@ -180,7 +192,11 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ number_format($package->weight, 1) }} lbs
+                                        @if($package->isSeaPackage())
+                                            {{ number_format($package->cubic_feet, 2) }} ft³
+                                        @else
+                                            {{ number_format($package->weight, 1) }} lbs
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ $package->created_at->format('M j, Y') }}
@@ -243,7 +259,13 @@
                                         </div>
                                         <p class="text-sm font-medium text-gray-900 mb-1">{{ $package->description }}</p>
                                         <div class="flex items-center space-x-4 text-xs text-gray-500">
-                                            <span>{{ number_format($package->weight, 1) }} lbs</span>
+                                            <span>
+                                                @if($package->isSeaPackage())
+                                                    {{ number_format($package->cubic_feet, 2) }} ft³
+                                                @else
+                                                    {{ number_format($package->weight, 1) }} lbs
+                                                @endif
+                                            </span>
                                             <span>{{ $package->created_at->format('M j, Y') }}</span>
                                         </div>
                                     </div>

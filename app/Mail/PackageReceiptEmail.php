@@ -115,7 +115,7 @@ class PackageReceiptEmail extends Mailable implements ShouldQueue
             $totalDelivery += $item->delivery_fee;
         }
 
-        $totalPaid = $distribution->amount_collected + $distribution->credit_applied + ($distribution->account_balance_applied ?? 0);
+        $totalPaid = $distribution->amount_collected + $distribution->credit_applied + ($distribution->account_balance_applied ?? 0) + $distribution->write_off_amount;
         $outstandingBalance = max(0, $distribution->total_amount - $totalPaid);
 
         return [

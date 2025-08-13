@@ -47,7 +47,13 @@
                                 </div>
                                 <p class="text-sm font-medium text-gray-900 mb-1">{{ $package->description }}</p>
                                 <div class="flex items-center space-x-4 text-xs text-gray-500">
-                                    <span>{{ number_format($package->weight, 1) }} lbs</span>
+                                    <span>
+                                        @if($package->isSeaPackage())
+                                            {{ number_format($package->cubic_feet, 2) }} ft³
+                                        @else
+                                            {{ number_format($package->weight, 1) }} lbs
+                                        @endif
+                                    </span>
                                     <span>{{ $package->created_at->format('M j, Y') }}</span>
                                     @if($package->shipper)
                                         <span>via {{ $package->shipper->name }}</span>
@@ -125,7 +131,11 @@
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16l-3-3m3 3l3-3"></path>
                                             </svg>
-                                            {{ $package->manifest->type === 'air' ? number_format($package->weight, 1) . ' lbs' : number_format($package->cubic_feet, 3) . ' ft³' }} 
+                                            @if($package->isSeaPackage())
+                                                {{ number_format($package->cubic_feet, 2) }} ft³
+                                            @else
+                                                {{ number_format($package->weight, 1) }} lbs
+                                            @endif 
                                         </span>
                                         <span class="flex items-center">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
