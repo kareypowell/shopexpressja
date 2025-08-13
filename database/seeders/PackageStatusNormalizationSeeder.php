@@ -66,11 +66,11 @@ class PackageStatusNormalizationSeeder extends Seeder
             } catch (\Exception $e) {
                 $unmappable[] = $legacyStatus;
                 // Default to pending for unmappable statuses
-                $mappings[$legacyStatus] = PackageStatus::PENDING->value;
+                $mappings[$legacyStatus] = PackageStatus::PENDING;
                 
                 Log::warning('Unmappable status found during normalization', [
                     'legacy_status' => $legacyStatus,
-                    'defaulted_to' => PackageStatus::PENDING->value,
+                    'defaulted_to' => PackageStatus::PENDING,
                     'error' => $e->getMessage(),
                 ]);
             }
