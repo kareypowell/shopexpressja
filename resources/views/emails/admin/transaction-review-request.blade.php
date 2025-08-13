@@ -127,7 +127,7 @@
             </div>
             <div class="info-item">
                 <span class="info-label">Phone:</span>
-                <span class="info-value">{{ $customer->profile->phone ?? 'N/A' }}</span>
+                <span class="info-value">{{ $customer->profile->telephone_number ?? 'N/A' }}</span>
             </div>
             <div class="info-item">
                 <span class="info-label">Account Number:</span>
