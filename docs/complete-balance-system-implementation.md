@@ -105,7 +105,7 @@ php artisan db:seed --class=TestDataSeeder
 ### Unit Tests Created
 - `PackageDistributionOverpaymentTest`: 4 tests for overpayment scenarios
 - `PackageDistributionBalanceTest`: 5 tests for balance update scenarios
-- `CustomerAccountBalanceTest`: 3 tests for dashboard component
+- `CustomerTransactionHistoryTest`: 3 tests for transaction history component
 
 ### Test Scenarios Covered
 - ✅ Exact payment handling

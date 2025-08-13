@@ -20,7 +20,7 @@
         @if(auth()->user()->isCustomer())
             <!-- Detailed Account Balance for Customers -->
             <div class="mt-10">
-                <livewire:customers.customer-account-balance />
+                <livewire:customers.customer-transaction-history />
             </div>
             
             <div class="mt-10">

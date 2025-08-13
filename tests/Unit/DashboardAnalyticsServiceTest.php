@@ -27,14 +27,23 @@ class DashboardAnalyticsServiceTest extends TestCase
     /** @test */
     public function it_can_get_customer_metrics()
     {
-        // Create test users
+        // Create test customers (role_id = 3)
         User::factory()->count(5)->create([
+            'role_id' => 3, // Customer role
             'created_at' => now()->subDays(15),
             'email_verified_at' => now(),
         ]);
         
         User::factory()->count(3)->create([
+            'role_id' => 3, // Customer role
             'created_at' => now()->subDays(5),
+            'email_verified_at' => now(),
+        ]);
+
+        // Create some admin users (should be excluded)
+        User::factory()->count(2)->create([
+            'role_id' => 1, // Admin role
+            'created_at' => now()->subDays(10),
             'email_verified_at' => now(),
         ]);
 
@@ -83,13 +92,35 @@ class DashboardAnalyticsServiceTest extends TestCase
     /** @test */
     public function it_can_get_financial_metrics()
     {
-        // Create test packages with costs
-        Package::factory()->count(2)->create([
-            'freight_price' => 100.00,
-            'customs_duty' => 20.00,
-            'storage_fee' => 10.00,
-            'delivery_fee' => 15.00,
+        // Create test customer and admin
+        $customer = User::factory()->create(['role_id' => 3]);
+        $admin = User::factory()->create(['role_id' => 1]);
+        
+        // Create customer transactions (charges) - this is what the service actually looks for
+        \App\Models\CustomerTransaction::create([
+            'user_id' => $customer->id,
+            'type' => \App\Models\CustomerTransaction::TYPE_CHARGE,
+            'amount' => 145.00,
+            'balance_before' => 0.00,
+            'balance_after' => -145.00,
+            'description' => 'Package distribution charge',
+            'reference_type' => 'package_distribution',
+            'reference_id' => 1,
+            'created_by' => $admin->id,
             'created_at' => now()->subDays(10),
+        ]);
+        
+        \App\Models\CustomerTransaction::create([
+            'user_id' => $customer->id,
+            'type' => \App\Models\CustomerTransaction::TYPE_CHARGE,
+            'amount' => 145.00,
+            'balance_before' => -145.00,
+            'balance_after' => -290.00,
+            'description' => 'Package distribution charge',
+            'reference_type' => 'package_distribution',
+            'reference_id' => 2,
+            'created_by' => $admin->id,
+            'created_at' => now()->subDays(5),
         ]);
 
         $filters = ['date_range' => 30];
@@ -100,9 +131,11 @@ class DashboardAnalyticsServiceTest extends TestCase
         $this->assertArrayHasKey('previous_period', $metrics);
         $this->assertArrayHasKey('growth_percentage', $metrics);
         $this->assertArrayHasKey('average_order_value', $metrics);
+        $this->assertArrayHasKey('total_orders', $metrics);
         
-        $this->assertEquals(290.00, $metrics['current_period']); // (100+20+10+15) * 2
-        $this->assertEquals(145.00, $metrics['average_order_value']); // 290 / 2
+        $this->assertEquals(290.0, $metrics['current_period']); // 145 + 145
+        $this->assertEquals(2, $metrics['total_orders']); // 2 package distributions
+        $this->assertEquals(145.0, $metrics['average_order_value']); // 290 / 2
     }
 
     /** @test */

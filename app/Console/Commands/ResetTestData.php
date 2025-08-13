@@ -128,7 +128,7 @@ class ResetTestData extends Command
         $this->info('🧪 Run Tests:');
         $this->info('  php artisan test tests/Unit/PackageDistributionBalanceTest.php');
         $this->info('  php artisan test tests/Unit/PackageDistributionOverpaymentTest.php');
-        $this->info('  php artisan test tests/Unit/CustomerAccountBalanceTest.php');
+        $this->info('  php artisan test tests/Unit/CustomerTransactionHistoryTest.php');
         $this->info('');
         
         $this->info('🔍 Check Customer Balances:');

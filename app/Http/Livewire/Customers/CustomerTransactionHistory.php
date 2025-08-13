@@ -8,7 +8,7 @@ use App\Services\TransactionReviewService;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 
-class CustomerAccountBalance extends Component
+class CustomerTransactionHistory extends Component
 {
     public $customer;
     public $showTransactions = false;
@@ -89,7 +89,7 @@ class CustomerAccountBalance extends Component
     {
         $accountSummary = $this->customer->getAccountBalanceSummary();
         
-        return view('livewire.customers.customer-account-balance', [
+        return view('livewire.customers.customer-transaction-history', [
             'accountSummary' => $accountSummary,
         ]);
     }

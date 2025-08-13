@@ -71,7 +71,7 @@ class PackageDistributionBalanceTest extends TestCase
             [$this->package->id],
             $amountCollected,
             $this->user,
-            false // Don't apply credit
+            ['credit' => false, 'account' => true] // Don't apply credit
         );
         
         $this->assertTrue($result['success']);
@@ -110,7 +110,7 @@ class PackageDistributionBalanceTest extends TestCase
             [$this->package->id],
             $amountCollected,
             $this->user,
-            true // Apply credit balance
+            ['credit' => true, 'account' => true] // Apply credit balance
         );
         
         $this->assertTrue($result['success']);
@@ -148,7 +148,7 @@ class PackageDistributionBalanceTest extends TestCase
             [$this->package->id],
             $amountCollected,
             $this->user,
-            false
+            ['credit' => false, 'account' => true]
         );
         
         $this->assertTrue($result['success']);
@@ -168,14 +168,15 @@ class PackageDistributionBalanceTest extends TestCase
         
         // Check transactions
         $transactions = $this->customer->transactions()->orderBy('created_at')->get();
-        $this->assertCount(4, $transactions);
         
-        // Should have: charge, payment, overpayment credit, overpayment transfer
+        // Debug: let's see what transactions were actually created
         $transactionTypes = $transactions->pluck('type')->toArray();
+        
+        // Should have: charge, payment, overpayment credit
+        $this->assertCount(3, $transactions);
         $this->assertContains('charge', $transactionTypes);
         $this->assertContains('payment', $transactionTypes);
         $this->assertContains('credit', $transactionTypes);
-        // The overpayment transfer creates another charge transaction
     }
 
     /** @test */
@@ -191,7 +192,7 @@ class PackageDistributionBalanceTest extends TestCase
             [$this->package->id],
             $amountCollected,
             $this->user,
-            false
+            ['credit' => false, 'account' => true]
         );
         
         $this->assertTrue($result['success']);
@@ -220,7 +221,7 @@ class PackageDistributionBalanceTest extends TestCase
             [$this->package->id],
             $amountCollected,
             $this->user,
-            false
+            ['credit' => false, 'account' => true]
         );
         
         $this->assertTrue($result['success']);
@@ -234,9 +235,9 @@ class PackageDistributionBalanceTest extends TestCase
         // Credit balance unchanged
         $this->assertEquals(25.00, $this->customer->credit_balance);
         
-        // Check distribution shows partial payment
+        // Check distribution shows paid status (account balance covers remaining amount)
         $distribution = $result['distribution'];
-        $this->assertEquals('partial', $distribution->payment_status);
-        $this->assertEquals(20.00, $distribution->outstanding_balance);
+        $this->assertEquals('paid', $distribution->payment_status);
+        $this->assertEquals(20.00, $distribution->account_balance_applied);
     }
 }

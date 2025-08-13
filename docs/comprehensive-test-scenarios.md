@@ -149,7 +149,7 @@ php artisan demo:package-distribution "David OwesMoneyCustomer" --amount=300
 ### Unit Tests
 - `PackageDistributionBalanceTest`: 5 tests for balance scenarios
 - `PackageDistributionOverpaymentTest`: 4 tests for overpayment handling
-- `CustomerAccountBalanceTest`: 3 tests for dashboard component
+- `CustomerTransactionHistoryTest`: 3 tests for transaction history component
 
 ### Test Commands
 ```bash
@@ -159,7 +159,7 @@ php artisan test tests/Unit/PackageDistribution*
 # Run specific test suites
 php artisan test tests/Unit/PackageDistributionBalanceTest.php
 php artisan test tests/Unit/PackageDistributionOverpaymentTest.php
-php artisan test tests/Unit/CustomerAccountBalanceTest.php
+php artisan test tests/Unit/CustomerTransactionHistoryTest.php
 ```
 
 ## Data Reset and Management

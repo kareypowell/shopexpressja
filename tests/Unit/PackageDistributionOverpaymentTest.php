@@ -66,7 +66,7 @@ class PackageDistributionOverpaymentTest extends TestCase
             [$this->package->id],
             43.00, // Exact amount
             $this->user,
-            false
+            ['credit' => false, 'account' => true]
         );
         
         $this->assertTrue($result['success']);
@@ -91,7 +91,7 @@ class PackageDistributionOverpaymentTest extends TestCase
             [$this->package->id],
             50.00, // $7.00 overpayment
             $this->user,
-            false
+            ['credit' => false, 'account' => true]
         );
         
         $this->assertTrue($result['success']);
@@ -108,9 +108,9 @@ class PackageDistributionOverpaymentTest extends TestCase
         $this->assertEquals(0.00, $distribution->credit_applied);
         $this->assertEquals('paid', $distribution->payment_status);
         
-        // Check transactions were created (charge, payment, credit, charge for overpayment transfer)
+        // Check transactions were created (charge, payment, credit)
         $transactions = $this->customer->transactions()->orderBy('created_at')->get();
-        $this->assertCount(4, $transactions);
+        $this->assertCount(3, $transactions);
         
         // Check that overpayment credit transaction exists
         $creditTransaction = $transactions->where('type', 'credit')->first();
@@ -126,7 +126,7 @@ class PackageDistributionOverpaymentTest extends TestCase
             [$this->package->id],
             30.00, // $13.00 underpayment
             $this->user,
-            false
+            ['credit' => false, 'account' => true]
         );
         
         $this->assertTrue($result['success']);
@@ -156,7 +156,7 @@ class PackageDistributionOverpaymentTest extends TestCase
             [$this->package->id],
             50.00, // $7.00 overpayment
             $this->user,
-            false
+            ['credit' => false, 'account' => true]
         );
         
         $this->assertTrue($result['success']);

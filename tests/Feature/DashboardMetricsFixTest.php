@@ -178,10 +178,10 @@ class DashboardMetricsFixTest extends TestCase
         $filters = ['period' => 'month'];
         $metrics = $this->analyticsService->getFinancialMetrics($filters);
         
-        // Revenue should be payment + charge = 175.50
-        $this->assertEquals(175.50, $metrics['current_period']);
+        // Revenue should only be charges (actual service revenue), not payments
+        $this->assertEquals(75.50, $metrics['current_period']);
         $this->assertEquals(1, $metrics['total_orders']); // One package distribution
-        $this->assertEquals(175.50, $metrics['average_order_value']); // 175.50 / 1 order
+        $this->assertEquals(75.50, $metrics['average_order_value']); // 75.50 / 1 order
     }
 
     /** @test */
@@ -189,25 +189,29 @@ class DashboardMetricsFixTest extends TestCase
     {
         $customer = $this->customers->first();
         
-        // Create customer transaction
+        // Create customer transaction (charge for service)
         CustomerTransaction::create([
             'user_id' => $customer->id,
-            'type' => CustomerTransaction::TYPE_PAYMENT,
+            'type' => CustomerTransaction::TYPE_CHARGE,
             'amount' => 100.00,
-            'balance_before' => 0.00,
-            'balance_after' => 100.00,
-            'description' => 'Customer payment',
+            'balance_before' => 100.00,
+            'balance_after' => 0.00,
+            'description' => 'Customer service charge',
+            'reference_type' => 'package_distribution',
+            'reference_id' => 1,
             'created_by' => $this->admin->id
         ]);
         
         // Create admin transaction (should be excluded)
         CustomerTransaction::create([
             'user_id' => $this->admin->id,
-            'type' => CustomerTransaction::TYPE_PAYMENT,
+            'type' => CustomerTransaction::TYPE_CHARGE,
             'amount' => 500.00,
-            'balance_before' => 0.00,
-            'balance_after' => 500.00,
-            'description' => 'Admin payment',
+            'balance_before' => 500.00,
+            'balance_after' => 0.00,
+            'description' => 'Admin service charge',
+            'reference_type' => 'package_distribution',
+            'reference_id' => 2,
             'created_by' => $this->admin->id
         ]);
         

@@ -185,8 +185,21 @@ class RateModelTest extends TestCase
     /** @test */
     public function it_can_search_rates_by_weight()
     {
-        $rate1 = Rate::factory()->create(['weight' => 10, 'type' => 'air']);
-        $rate2 = Rate::factory()->create(['weight' => 25, 'type' => 'air']);
+        $rate1 = Rate::factory()->create([
+            'weight' => 10, 
+            'type' => 'air',
+            'price' => 20.00, // Ensure price doesn't contain '10'
+            'min_cubic_feet' => null,
+            'max_cubic_feet' => null
+        ]);
+        
+        $rate2 = Rate::factory()->create([
+            'weight' => 25, 
+            'type' => 'air',
+            'price' => 30.00, // Ensure price doesn't contain '10'
+            'min_cubic_feet' => null,
+            'max_cubic_feet' => null
+        ]);
 
         $results = Rate::search('10')->get();
         
@@ -197,8 +210,21 @@ class RateModelTest extends TestCase
     /** @test */
     public function it_can_search_rates_by_price()
     {
-        $rate1 = Rate::factory()->create(['price' => 15.50]);
-        $rate2 = Rate::factory()->create(['price' => 25.75]);
+        $rate1 = Rate::factory()->create([
+            'price' => 15.50,
+            'weight' => 20, // Ensure weight doesn't contain '15'
+            'type' => 'air',
+            'min_cubic_feet' => null,
+            'max_cubic_feet' => null
+        ]);
+        
+        $rate2 = Rate::factory()->create([
+            'price' => 25.75,
+            'weight' => 30, // Ensure weight doesn't contain '15'
+            'type' => 'air',
+            'min_cubic_feet' => null,
+            'max_cubic_feet' => null
+        ]);
 
         $results = Rate::search('15')->get();
         
@@ -344,5 +370,35 @@ class RateModelTest extends TestCase
         
         // All three rates should match cubic feet of 5.0
         $this->assertCount(3, $results);
+    }
+
+    /** @test */
+    public function search_supports_partial_matching()
+    {
+        $rate1 = Rate::factory()->create([
+            'weight' => 105,
+            'type' => 'air',
+            'price' => 20.00
+        ]);
+        
+        $rate2 = Rate::factory()->create([
+            'weight' => 50,
+            'type' => 'air', 
+            'price' => 10.75 // Contains '10'
+        ]);
+        
+        $rate3 = Rate::factory()->create([
+            'weight' => 75,
+            'type' => 'air',
+            'price' => 30.00
+        ]);
+
+        // Search for '10' should find both rate1 (weight 105 contains '10') and rate2 (price 10.75 contains '10')
+        $results = Rate::search('10')->get();
+        
+        $this->assertCount(2, $results);
+        $this->assertTrue($results->contains('id', $rate1->id));
+        $this->assertTrue($results->contains('id', $rate2->id));
+        $this->assertFalse($results->contains('id', $rate3->id));
     }
 }

@@ -85,7 +85,8 @@ class PackageDistributionEmailTest extends TestCase
         $result = $this->distributionService->distributePackages(
             $packageIds,
             $amountCollected,
-            $this->admin
+            $this->admin,
+            ['credit' => false, 'account' => true]
         );
 
         $this->assertTrue($result['success']);
@@ -115,7 +116,8 @@ class PackageDistributionEmailTest extends TestCase
         $result = $this->distributionService->distributePackages(
             $packageIds,
             $amountCollected,
-            $this->admin
+            $this->admin,
+            ['credit' => false, 'account' => true]
         );
 
         Mail::assertQueued(PackageReceiptEmail::class, function ($mail) {
@@ -123,13 +125,13 @@ class PackageDistributionEmailTest extends TestCase
             $this->assertCount(2, $mail->packages);
             
             // Check totals calculation
-            $this->assertEquals(100.00, $mail->totals['freight_total']); // 2 * 50
-            $this->assertEquals(20.00, $mail->totals['customs_total']); // 2 * 10
-            $this->assertEquals(10.00, $mail->totals['storage_total']); // 2 * 5
-            $this->assertEquals(0.00, $mail->totals['delivery_total']); // 2 * 0
-            $this->assertEquals(130.00, $mail->totals['grand_total']);
+            $this->assertEquals(100.00, $mail->totals['total_freight']); // 2 * 50
+            $this->assertEquals(20.00, $mail->totals['total_customs']); // 2 * 10
+            $this->assertEquals(10.00, $mail->totals['total_storage']); // 2 * 5
+            $this->assertEquals(0.00, $mail->totals['total_delivery']); // 2 * 0
+            $this->assertEquals(130.00, $mail->totals['total_amount']);
             $this->assertEquals(130.00, $mail->totals['amount_collected']);
-            $this->assertEquals(0.00, $mail->totals['balance']);
+            $this->assertEquals(0.00, $mail->totals['outstanding_balance']);
             
             return true;
         });
@@ -146,7 +148,8 @@ class PackageDistributionEmailTest extends TestCase
         $result = $this->distributionService->distributePackages(
             $packageIds,
             $amountCollected,
-            $this->admin
+            $this->admin,
+            ['credit' => false, 'account' => true]
         );
 
         $distribution = $result['distribution'];

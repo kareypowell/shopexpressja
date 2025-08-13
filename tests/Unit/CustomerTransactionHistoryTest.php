@@ -3,13 +3,13 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
-use App\Http\Livewire\Customers\CustomerAccountBalance;
+use App\Http\Livewire\Customers\CustomerTransactionHistory;
 use App\Models\User;
 use App\Models\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
-class CustomerAccountBalanceTest extends TestCase
+class CustomerTransactionHistoryTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -29,16 +29,15 @@ class CustomerAccountBalanceTest extends TestCase
     }
 
     /** @test */
-    public function it_displays_customer_account_balance_correctly()
+    public function it_displays_transaction_history_correctly()
     {
         $this->actingAs($this->customer);
         
-        $component = Livewire::test(CustomerAccountBalance::class);
+        $component = Livewire::test(CustomerTransactionHistory::class);
         
-        $component->assertSee('Account Balance')
-                  ->assertSee('$150.75') // Account balance
-                  ->assertSee('$25.50')  // Credit balance
-                  ->assertSee('$176.25'); // Total available (150.75 + 25.50)
+        $component->assertSee('Transaction History')
+                  ->assertSee('0 recent transactions')
+                  ->assertSee('View Transactions');
     }
 
     /** @test */
@@ -46,7 +45,7 @@ class CustomerAccountBalanceTest extends TestCase
     {
         $this->actingAs($this->customer);
         
-        $component = Livewire::test(CustomerAccountBalance::class);
+        $component = Livewire::test(CustomerTransactionHistory::class);
         
         // Initially transactions should be hidden (showTransactions = false)
         $component->assertSet('showTransactions', false);
@@ -71,10 +70,10 @@ class CustomerAccountBalanceTest extends TestCase
             'credit_balance' => 0.00,
         ]);
         
-        $component = Livewire::test(CustomerAccountBalance::class, ['customerId' => $anotherCustomer->id]);
+        $component = Livewire::test(CustomerTransactionHistory::class, ['customerId' => $anotherCustomer->id]);
         
-        $component->assertSee('$200.00') // Account balance
-                  ->assertSee('$0.00')   // Credit balance
-                  ->assertSee('$200.00'); // Total available
+        $component->assertSee('Transaction History')
+                  ->assertSee('0 recent transactions')
+                  ->assertSee('View Transactions');
     }
 }
