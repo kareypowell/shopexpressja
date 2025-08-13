@@ -7,6 +7,9 @@ module.exports = {
             fontFamily: {
                 sans: ['Inter var', ...defaultTheme.fontFamily.sans],
             },
+            screens: {
+                'xs': '475px',
+            },
             colors: {
                 'wax-flower': {
                     '50': '#fef6f2',

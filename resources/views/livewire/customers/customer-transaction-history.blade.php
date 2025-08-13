@@ -20,12 +20,13 @@
                 <div class="flex items-center space-x-2">
                     <button 
                         wire:click="toggleTransactions"
-                        class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                        class="inline-flex items-center px-3 py-2 sm:px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
                     >
-                        <svg class="w-4 h-4 mr-2 {{ $showTransactions ? 'rotate-180' : '' }} transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 mr-1 sm:mr-2 {{ $showTransactions ? 'rotate-180' : '' }} transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
-                        {{ $showTransactions ? 'Hide' : 'View' }} Transactions
+                        <span class="hidden xs:inline">{{ $showTransactions ? 'Hide' : 'View' }} Transactions</span>
+                        <span class="xs:hidden">{{ $showTransactions ? 'Hide' : 'View' }}</span>
                     </button>
                 </div>
             </div>

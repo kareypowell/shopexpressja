@@ -8,27 +8,11 @@
                     <div class="block sm:hidden p-4">
                         <div class="flex items-start justify-between mb-3">
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center space-x-2 mb-2">
+                                <!-- First row: Tracking number and status -->
+                                <div class="flex items-center justify-between mb-2">
                                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                         {{ $package->tracking_number }}
                                     </span>
-                                    @if($package->manifest)
-                                        @if($package->manifest->type === 'air')
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-sky-100 text-sky-800">
-                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                                                </svg>
-                                                Air
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
-                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h8a2 2 0 002-2V8m-9 4h4"></path>
-                                                </svg>
-                                                Sea
-                                            </span>
-                                        @endif
-                                    @endif
                                     @php
                                         $badgeClass = $package->status_badge_class ?? 'default';
                                         $statusLabel = $package->status_label ?? 'Unknown';
@@ -45,6 +29,26 @@
                                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{{ $statusLabel }}</span>
                                     @endif
                                 </div>
+                                <!-- Second row: Shipping type -->
+                                @if($package->manifest)
+                                    <div class="mb-2">
+                                        @if($package->manifest->type === 'air')
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-sky-100 text-sky-800">
+                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                                </svg>
+                                                Air
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
+                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h8a2 2 0 002-2V8m-9 4h4"></path>
+                                                </svg>
+                                                Sea
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endif
                                 <p class="text-sm font-medium text-gray-900 mb-1">{{ $package->description }}</p>
                                 <div class="flex items-center space-x-4 text-xs text-gray-500">
                                     <span>

@@ -11,48 +11,48 @@
     </div>
 
     <!-- Stats Overview Bar -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
         <!-- In Transit -->
         <div class="text-center">
-          <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-3">
-            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg mx-auto mb-2 sm:mb-3">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
             </svg>
           </div>
-          <div class="text-2xl font-bold text-gray-900">{{ $inComingAir + $inComingSea }}</div>
-          <div class="text-sm text-gray-500">In Transit</div>
+          <div class="text-xl sm:text-2xl font-bold text-gray-900">{{ $inComingAir + $inComingSea }}</div>
+          <div class="text-xs sm:text-sm text-gray-500">In Transit</div>
         </div>
 
         <!-- Ready -->
         <div class="text-center">
-          <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mx-auto mb-3">
-            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg mx-auto mb-2 sm:mb-3">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
           </div>
-          <div class="text-2xl font-bold text-gray-900">{{ $availableAir + $availableSea }}</div>
-          <div class="text-sm text-gray-500">Ready</div>
+          <div class="text-xl sm:text-2xl font-bold text-gray-900">{{ $availableAir + $availableSea }}</div>
+          <div class="text-xs sm:text-sm text-gray-500">Ready</div>
         </div>
 
         <!-- Delayed -->
         <div class="text-center">
-          <div class="flex items-center justify-center w-12 h-12 {{ $delayedPackages > 0 ? 'bg-red-100' : 'bg-gray-100' }} rounded-lg mx-auto mb-3">
-            <x-timer class="w-6 h-6 {{ $delayedPackages > 0 ? 'text-red-600' : 'text-gray-400' }}" />
+          <div class="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 {{ $delayedPackages > 0 ? 'bg-red-100' : 'bg-gray-100' }} rounded-lg mx-auto mb-2 sm:mb-3">
+            <x-timer class="w-5 h-5 sm:w-6 sm:h-6 {{ $delayedPackages > 0 ? 'text-red-600' : 'text-gray-400' }}" />
           </div>
-          <div class="text-2xl font-bold {{ $delayedPackages > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ $delayedPackages }}</div>
-          <div class="text-sm text-gray-500">Delayed</div>
+          <div class="text-xl sm:text-2xl font-bold {{ $delayedPackages > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ $delayedPackages }}</div>
+          <div class="text-xs sm:text-sm text-gray-500">Delayed</div>
         </div>
 
         <!-- Balance -->
         <div class="text-center">
-          <div class="flex items-center justify-center w-12 h-12 {{ $accountBalance >= 0 ? 'bg-green-100' : 'bg-red-100' }} rounded-lg mx-auto mb-3">
-            <svg class="w-6 h-6 {{ $accountBalance >= 0 ? 'text-green-600' : 'text-red-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 {{ $accountBalance >= 0 ? 'bg-green-100' : 'bg-red-100' }} rounded-lg mx-auto mb-2 sm:mb-3">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6 {{ $accountBalance >= 0 ? 'text-green-600' : 'text-red-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
             </svg>
           </div>
-          <div class="text-2xl font-bold {{ $accountBalance >= 0 ? 'text-green-600' : 'text-red-600' }}">${{ number_format(abs($accountBalance), 0) }}</div>
-          <div class="text-sm text-gray-500">Balance</div>
+          <div class="text-xl sm:text-2xl font-bold {{ $accountBalance >= 0 ? 'text-green-600' : 'text-red-600' }}">${{ number_format(abs($accountBalance), 0) }}</div>
+          <div class="text-xs sm:text-sm text-gray-500">Balance</div>
         </div>
       </div>
     </div>
@@ -62,12 +62,12 @@
       
       <!-- Package Status Section -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-b border-gray-100">
-          <h4 class="text-lg font-semibold text-gray-900">Package Status</h4>
-          <p class="text-sm text-gray-600 mt-1">Track your shipments</p>
+        <div class="bg-gradient-to-r from-slate-50 to-slate-100 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+          <h4 class="text-base sm:text-lg font-semibold text-gray-900">Package Status</h4>
+          <p class="text-xs sm:text-sm text-gray-600 mt-1">Track your shipments</p>
         </div>
         
-        <div class="p-6 space-y-4">
+        <div class="p-4 sm:p-6 space-y-4">
           <!-- In Transit Section -->
           <div class="space-y-3">
             <div class="flex items-center justify-between">
@@ -186,12 +186,12 @@
 
       <!-- Financial Overview Section -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-b border-gray-100">
-          <h4 class="text-lg font-semibold text-gray-900">Financial Overview</h4>
-          <p class="text-sm text-gray-600 mt-1">Account balance and charges</p>
+        <div class="bg-gradient-to-r from-slate-50 to-slate-100 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+          <h4 class="text-base sm:text-lg font-semibold text-gray-900">Financial Overview</h4>
+          <p class="text-xs sm:text-sm text-gray-600 mt-1">Account balance and charges</p>
         </div>
         
-        <div class="p-6 space-y-4">
+        <div class="p-4 sm:p-6 space-y-4">
           <!-- Account Balance -->
           <div class="bg-gradient-to-r {{ $accountBalance >= 0 ? 'from-green-50 to-green-100 border-green-200' : 'from-red-50 to-red-100 border-red-200' }} border rounded-lg p-4">
             <div class="flex items-center justify-between">

@@ -24,45 +24,62 @@
             </div>
             
             <div class="mt-10">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
-                        <div class="flex items-center justify-between">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative">
+                    <!-- Dropdown backdrop for mobile -->
+                    @if($showFilterDropdown)
+                        <div class="fixed inset-0 z-40 sm:hidden" wire:click="toggleFilterDropdown"></div>
+                    @endif
+                    
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 relative">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                             <div class="flex items-center space-x-3">
                                 <div class="flex-shrink-0">
-                                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2M4 13h2m13-8V4a1 1 0 00-1-1H7a1 1 0 00-1 1v1m8 0V4.5"></path>
                                     </svg>
                                 </div>
                                 <div>
-                                    <h3 class="text-lg font-semibold text-gray-900">My Packages</h3>
-                                    <p class="text-sm text-gray-600">Track and manage your shipments</p>
+                                    <h3 class="text-base sm:text-lg font-semibold text-gray-900">My Packages</h3>
+                                    <p class="text-xs sm:text-sm text-gray-600">Track and manage your shipments</p>
                                 </div>
                             </div>
-                            <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-2 flex-wrap sm:flex-nowrap relative">
                                 <!-- Filter Dropdown -->
-                                <div class="relative">
+                                <div class="relative w-full sm:w-auto">
                                     <button 
                                         wire:click="toggleFilterDropdown"
-                                        class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                        class="inline-flex items-center justify-center w-full sm:w-auto px-2 py-1.5 sm:px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                     >
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"></path>
                                         </svg>
-                                        @switch($packageFilter)
-                                            @case('air') Air Packages @break
-                                            @case('sea') Sea Packages @break
-                                            @case('ready') Ready @break
-                                            @case('in-transit') In Transit @break
-                                            @case('delivered') Delivered @break
-                                            @default All Packages
-                                        @endswitch
+                                        <span class="hidden sm:inline">
+                                            @switch($packageFilter)
+                                                @case('air') Air Packages @break
+                                                @case('sea') Sea Packages @break
+                                                @case('ready') Ready @break
+                                                @case('in-transit') In Transit @break
+                                                @case('delivered') Delivered @break
+                                                @default All Packages
+                                            @endswitch
+                                        </span>
+                                        <span class="sm:hidden">
+                                            @switch($packageFilter)
+                                                @case('air') Air @break
+                                                @case('sea') Sea @break
+                                                @case('ready') Ready @break
+                                                @case('in-transit') Transit @break
+                                                @case('delivered') Delivered @break
+                                                @default All
+                                            @endswitch
+                                        </span>
                                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                         </svg>
                                     </button>
                                     
                                     @if($showFilterDropdown)
-                                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                                        <div class="absolute left-0 right-0 sm:right-0 sm:left-auto mt-2 w-full sm:w-48 bg-white rounded-md shadow-xl z-50 border border-gray-200 max-h-64 overflow-y-auto">
                                             <div class="py-1">
                                                 <button wire:click="setPackageFilter('all')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ $packageFilter === 'all' ? 'bg-blue-50 text-blue-700' : '' }}">
                                                     All Packages
@@ -94,16 +111,17 @@
                                     @endif
                                 </div>
                                 
-                                <a href="{{ route('packages.index') }}" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <a href="{{ route('packages.index') }}" class="inline-flex items-center px-2 py-1.5 sm:px-3 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mt-2 sm:mt-0 w-full sm:w-auto justify-center">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
                                     </svg>
-                                    View All
+                                    <span class="hidden xs:inline">View All</span>
+                                    <span class="xs:hidden">All</span>
                                 </a>
                             </div>
                         </div>
                     </div>
-                    <div class="p-6">
+                    <div class="p-4 sm:p-6">
                         @include('livewire.customers.customer-packages-compact', [
                             'packages' => $this->filteredPackages
                         ])
