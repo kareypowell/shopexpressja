@@ -6,11 +6,11 @@
                 <div class="bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-200 overflow-hidden">
                     <!-- Mobile Layout -->
                     <div class="block sm:hidden p-4">
-                        <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-start justify-between">
                             <div class="flex-1 min-w-0">
-                                <!-- First row: Tracking number and status -->
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <!-- Header: Tracking number with status badge -->
+                                <div class="flex items-center space-x-2 mb-3">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
                                         {{ $package->tracking_number }}
                                     </span>
                                     @php
@@ -18,55 +18,62 @@
                                         $statusLabel = $package->status_label ?? 'Unknown';
                                     @endphp
                                     @if($badgeClass === 'success')
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ $statusLabel }}</span>
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">{{ $statusLabel }}</span>
                                     @elseif($badgeClass === 'warning')
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">{{ $statusLabel }}</span>
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">{{ $statusLabel }}</span>
                                     @elseif($badgeClass === 'danger')
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">{{ $statusLabel }}</span>
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">{{ $statusLabel }}</span>
                                     @elseif($badgeClass === 'primary')
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{{ $statusLabel }}</span>
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">{{ $statusLabel }}</span>
                                     @else
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{{ $statusLabel }}</span>
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">{{ $statusLabel }}</span>
                                     @endif
                                 </div>
-                                <!-- Second row: Shipping type -->
-                                @if($package->manifest)
-                                    <div class="mb-2">
-                                        @if($package->manifest->type === 'air')
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-sky-100 text-sky-800">
-                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                                                </svg>
-                                                Air
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
-                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h8a2 2 0 002-2V8m-9 4h4"></path>
-                                                </svg>
-                                                Sea
+                                
+                                <!-- Package description -->
+                                <p class="text-sm font-medium text-gray-900 mb-2">{{ $package->description }}</p>
+                                
+                                <!-- Package details row -->
+                                <div class="flex items-center justify-between text-xs text-gray-500">
+                                    <div class="flex items-center space-x-3">
+                                        @if($package->manifest)
+                                            <span class="inline-flex items-center">
+                                                @if($package->manifest->type === 'air')
+                                                    <svg class="w-3 h-3 mr-1 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                                    </svg>
+                                                    <span class="text-sky-700 font-medium">Air</span>
+                                                @else
+                                                    <svg class="w-3 h-3 mr-1 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h8a2 2 0 002-2V8m-9 4h4"></path>
+                                                    </svg>
+                                                    <span class="text-teal-700 font-medium">Sea</span>
+                                                @endif
                                             </span>
                                         @endif
+                                        <span>
+                                            @if($package->isSeaPackage())
+                                                {{ number_format($package->cubic_feet, 2) }} ft³
+                                            @else
+                                                {{ number_format($package->weight, 1) }} lbs
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <span>{{ $package->created_at->format('M j, Y') }}</span>
+                                </div>
+                                
+                                <!-- Shipper info -->
+                                @if($package->shipper)
+                                    <div class="mt-1 text-xs text-gray-500">
+                                        via {{ $package->shipper->name }}
                                     </div>
                                 @endif
-                                <p class="text-sm font-medium text-gray-900 mb-1">{{ $package->description }}</p>
-                                <div class="flex items-center space-x-4 text-xs text-gray-500">
-                                    <span>
-                                        @if($package->isSeaPackage())
-                                            {{ number_format($package->cubic_feet, 2) }} ft³
-                                        @else
-                                            {{ number_format($package->weight, 1) }} lbs
-                                        @endif
-                                    </span>
-                                    <span>{{ $package->created_at->format('M j, Y') }}</span>
-                                    @if($package->shipper)
-                                        <span>via {{ $package->shipper->name }}</span>
-                                    @endif
-                                </div>
                             </div>
+                            
+                            <!-- View details button -->
                             <button 
                                 wire:click="showPackageDetails({{ $package->id }})"
-                                class="ml-3 p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors duration-150"
+                                class="ml-3 p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors duration-150 flex-shrink-0"
                                 title="View details"
                             >
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
