@@ -1,7 +1,4 @@
 <div>
-    {{-- Include the CustomerPackagesTable component --}}
-    @livewire('customers.customer-packages-table', ['customer' => $customer])
-
     {{-- Package Detail Modal --}}
     @if($showModal && $selectedPackage)
         <div class="fixed inset-0 z-50 overflow-y-auto" wire:key="package-modal-{{ $selectedPackage->id }}">

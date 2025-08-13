@@ -1,226 +1,277 @@
-<div class="bg-white shadow rounded-lg">
-    <div class="px-4 py-5 sm:p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
-                Account Balance
-            </h3>
-            <div class="flex items-center space-x-3">
-                <button 
-                    wire:click="refreshData"
-                    class="text-sm text-gray-600 hover:text-gray-800 font-medium flex items-center"
-                    title="Refresh account data"
-                >
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    Refresh
-                </button>
-                <button 
-                    wire:click="toggleTransactions"
-                    class="text-sm text-wax-flower-600 hover:text-wax-flower-800 font-medium"
-                >
-                    {{ $showTransactions ? 'Hide' : 'View' }} Transactions
-                </button>
-            </div>
-        </div>
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="px-6 py-4">
 
-        <!-- Balance Summary -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <!-- Account Balance -->
-            <div class="bg-blue-50 rounded-lg p-4">
-                <div class="flex items-center">
+
+
+        <!-- Transaction Summary - Compact View -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center space-x-3">
                     <div class="flex-shrink-0">
-                        <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
                     </div>
-                    <div class="ml-4">
-                        <dt class="text-sm font-medium text-gray-500">Account Balance</dt>
-                        <dd class="text-2xl font-semibold text-gray-900">
-                            ${{ $accountSummary['formatted']['account_balance'] }}
-                        </dd>
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900">Transaction History</h4>
+                        <p class="text-sm text-gray-600">{{ $recentTransactions->count() }} recent transactions</p>
                     </div>
                 </div>
-            </div>
-
-            <!-- Credit Balance -->
-            <div class="bg-green-50 rounded-lg p-4">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <div class="flex items-center space-x-2">
+                    <button 
+                        wire:click="toggleTransactions"
+                        class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                    >
+                        <svg class="w-4 h-4 mr-2 {{ $showTransactions ? 'rotate-180' : '' }} transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
-                    </div>
-                    <div class="ml-4">
-                        <dt class="text-sm font-medium text-gray-500">Credit Balance</dt>
-                        <dd class="text-2xl font-semibold text-green-600">
-                            ${{ $accountSummary['formatted']['credit_balance'] }}
-                        </dd>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Total Available -->
-            <div class="bg-purple-50 rounded-lg p-4">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <svg class="h-8 w-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                    </div>
-                    <div class="ml-4">
-                        <dt class="text-sm font-medium text-gray-500">Total Available</dt>
-                        <dd class="text-2xl font-semibold text-purple-600">
-                            ${{ $accountSummary['formatted']['total_available'] }}
-                        </dd>
-                    </div>
+                        {{ $showTransactions ? 'Hide' : 'View' }} Transactions
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Balance Explanation -->
-        <div class="bg-gray-50 rounded-lg p-4 mb-4">
-            <h4 class="text-sm font-medium text-gray-900 mb-2">Balance Information</h4>
-            <div class="text-sm text-gray-600 space-y-1">
-                <p><strong>Account Balance:</strong> Your running account balance from package charges and payments. Positive means you have funds available, negative means you owe money.</p>
-                <p><strong>Credit Balance:</strong> Available credit from overpayments that can be applied to reduce future package charges.</p>
-                <p><strong>Total Available:</strong> Combined funds available to cover package distribution costs (Account Balance + Credit Balance).</p>
-            </div>
-        </div>
-
-        <!-- Recent Transactions -->
-        @if($showTransactions)
-            <div class="border-t border-gray-200 pt-4">
-                <h4 class="text-sm font-medium text-gray-900 mb-3">Recent Transactions</h4>
-                
-                @if($recentTransactions->count() > 0)
-                    <div class="bg-gray-50 rounded-lg border">
-                        <!-- Transaction Header -->
-                        <div class="px-4 py-3 border-b border-gray-200 bg-gray-100 rounded-t-lg">
-                            <div class="flex items-center justify-between">
-                                <h5 class="text-sm font-medium text-gray-900">Transaction History</h5>
-                                <span class="text-xs text-gray-500">{{ $recentTransactions->count() }} transactions</span>
-                            </div>
+        <!-- Transaction List - Hidden by Default -->
+        @if($showTransactions && $recentTransactions->count() > 0)
+            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <!-- Transaction Header -->
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-lg font-medium text-gray-900">Recent Transactions</h4>
+                        <div class="flex items-center space-x-4">
+                            <span class="text-sm text-gray-500">{{ $recentTransactions->count() }} transactions</span>
                         </div>
-                        
-                        <!-- Scrollable Transaction List -->
-                        <div class="max-h-96 overflow-y-auto">
-                            <div class="divide-y divide-gray-200">
-                                @foreach($recentTransactions as $transaction)
-                                    <div class="px-4 py-3 hover:bg-gray-50 transition-colors duration-150">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex-1 min-w-0">
-                                                <div class="flex items-center space-x-3">
-                                                    <!-- Transaction Type Badge -->
-                                                    @if($transaction->type === 'payment')
-                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                                                            </svg>
-                                                            Payment
-                                                        </span>
-                                                    @elseif($transaction->type === 'charge')
-                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                                                            </svg>
-                                                            Charge
-                                                        </span>
-                                                    @elseif($transaction->type === 'credit')
-                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                                            </svg>
-                                                            Credit
-                                                        </span>
-                                                    @elseif($transaction->type === 'write_off')
-                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                            </svg>
-                                                            Write-off
-                                                        </span>
-                                                    @else
-                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                            {{ ucfirst($transaction->type) }}
-                                                        </span>
-                                                    @endif
-                                                    
-                                                    <!-- Transaction Description -->
-                                                    <div class="flex-1 min-w-0">
-                                                        <p class="text-sm text-gray-900 truncate">{{ $transaction->description }}</p>
-                                                        <div class="flex items-center space-x-2 text-xs text-gray-500 mt-1">
-                                                            <span>{{ $transaction->created_at->format('M j, Y g:i A') }}</span>
-                                                            @if($transaction->createdBy)
-                                                                <span>•</span>
-                                                                <span>by {{ $transaction->createdBy->full_name }}</span>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Transaction Amount and Actions -->
-                                            <div class="text-right ml-4">
-                                                <div class="flex items-center justify-end space-x-2">
-                                                    <div>
-                                                        <div class="text-sm font-semibold {{ $transaction->isCredit() ? 'text-green-600' : 'text-red-600' }}">
-                                                            {{ $transaction->isCredit() ? '+' : '-' }}${{ $transaction->formatted_amount }}
-                                                        </div>
-                                                        <div class="text-xs text-gray-500">
-                                                            Balance: ${{ $transaction->formatted_balance_after }}
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <!-- Review Flag Button -->
-                                                    @if(!$transaction->flagged_for_review)
-                                                        <button 
-                                                            wire:click="openReviewModal({{ $transaction->id }})"
-                                                            class="text-gray-400 hover:text-yellow-600 transition-colors duration-150"
-                                                            title="Flag for review"
-                                                        >
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
-                                                            </svg>
-                                                        </button>
-                                                    @else
-                                                        <div class="flex items-center text-yellow-600" title="Flagged for review">
-                                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                                                <path d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
-                                                            </svg>
-                                                        </div>
-                                                    @endif
-                                                </div>
-                                                
-                                                <!-- Review Status -->
+                    </div>
+                </div>
+                
+                <!-- Transaction List -->
+                <div class="divide-y divide-gray-200">
+                    @foreach($recentTransactions as $transaction)
+                        <div class="px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors duration-150">
+                            <!-- Mobile Layout -->
+                            <div class="block sm:hidden">
+                                <div class="flex items-start justify-between mb-3">
+                                    <!-- Transaction Type Badge -->
+                                    @if($transaction->type === 'payment')
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                            </svg>
+                                            Payment
+                                        </span>
+                                    @elseif($transaction->type === 'charge')
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                            </svg>
+                                            Charge
+                                        </span>
+                                    @elseif($transaction->type === 'credit')
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                            </svg>
+                                            Credit
+                                        </span>
+                                    @elseif($transaction->type === 'write_off')
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            Write-off
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            {{ ucfirst($transaction->type) }}
+                                        </span>
+                                    @endif
+                                    
+                                    <!-- Amount -->
+                                    <div class="text-right">
+                                        <div class="text-lg font-bold {{ $transaction->isCredit() ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ $transaction->isCredit() ? '+' : '-' }}${{ $transaction->formatted_amount }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Description -->
+                                <div class="mb-2">
+                                    <p class="text-sm font-medium text-gray-900 mb-1">{{ $transaction->description }}</p>
+                                    <p class="text-xs text-gray-500">{{ $transaction->created_at->format('M j, Y g:i A') }}</p>
+                                </div>
+                                
+                                <!-- Bottom Row -->
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-xs text-gray-500">Balance: ${{ $transaction->formatted_balance_after }}</span>
+                                        @if($transaction->flagged_for_review)
+                                            @if($transaction->review_resolved)
+                                                <span class="inline-flex items-center text-xs text-green-600">
+                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                    Resolved
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center text-xs text-yellow-600">
+                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                    Under Review
+                                                </span>
+                                            @endif
+                                        @endif
+                                    </div>
+                                    
+                                    <!-- Review Flag Button -->
+                                    @if(!$transaction->flagged_for_review)
+                                        <button 
+                                            wire:click="openReviewModal({{ $transaction->id }})"
+                                            class="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-full transition-colors duration-150"
+                                            title="Flag for review"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                                            </svg>
+                                        </button>
+                                    @else
+                                        <div class="p-1.5 text-yellow-600" title="Flagged for review">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                                            </svg>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            
+                            <!-- Desktop Layout -->
+                            <div class="hidden sm:flex items-center justify-between">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center space-x-4">
+                                        <!-- Transaction Type Badge -->
+                                        @if($transaction->type === 'payment')
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                                </svg>
+                                                Payment
+                                            </span>
+                                        @elseif($transaction->type === 'charge')
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                                </svg>
+                                                Charge
+                                            </span>
+                                        @elseif($transaction->type === 'credit')
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                                </svg>
+                                                Credit
+                                            </span>
+                                        @elseif($transaction->type === 'write_off')
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                Write-off
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                                                {{ ucfirst($transaction->type) }}
+                                            </span>
+                                        @endif
+                                        
+                                        <!-- Transaction Description -->
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium text-gray-900">{{ $transaction->description }}</p>
+                                            <div class="flex items-center space-x-2 text-sm text-gray-500 mt-1">
+                                                <span>{{ $transaction->created_at->format('M j, Y g:i A') }}</span>
+                                                @if($transaction->createdBy)
+                                                    <span>•</span>
+                                                    <span>by {{ $transaction->createdBy->full_name }}</span>
+                                                @endif
                                                 @if($transaction->flagged_for_review)
-                                                    <div class="text-xs mt-1">
-                                                        @if($transaction->review_resolved)
-                                                            <span class="text-green-600">✓ Resolved</span>
-                                                        @else
-                                                            <span class="text-yellow-600">⏳ Under Review</span>
-                                                        @endif
-                                                    </div>
+                                                    <span>•</span>
+                                                    @if($transaction->review_resolved)
+                                                        <span class="inline-flex items-center text-green-600">
+                                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                                            </svg>
+                                                            Review Resolved
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center text-yellow-600">
+                                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                                            </svg>
+                                                            Under Review
+                                                        </span>
+                                                    @endif
                                                 @endif
                                             </div>
                                         </div>
                                     </div>
-                                @endforeach
+                                </div>
+                                
+                                <!-- Transaction Amount and Actions -->
+                                <div class="text-right ml-6">
+                                    <div class="flex items-center justify-end space-x-3">
+                                        <div>
+                                            <div class="text-lg font-bold {{ $transaction->isCredit() ? 'text-green-600' : 'text-red-600' }}">
+                                                {{ $transaction->isCredit() ? '+' : '-' }}${{ $transaction->formatted_amount }}
+                                            </div>
+                                            <div class="text-sm text-gray-500">
+                                                Balance: ${{ $transaction->formatted_balance_after }}
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Review Flag Button -->
+                                        @if(!$transaction->flagged_for_review)
+                                            <button 
+                                                wire:click="openReviewModal({{ $transaction->id }})"
+                                                class="p-2 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-full transition-colors duration-150"
+                                                title="Flag for review"
+                                            >
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                                                </svg>
+                                            </button>
+                                        @else
+                                            <div class="p-2 text-yellow-600" title="Flagged for review">
+                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                                                </svg>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        
-                        <!-- Transaction Footer -->
-                        @if($recentTransactions->count() >= 10)
-                        <div class="px-4 py-2 border-t border-gray-200 bg-gray-50 rounded-b-lg">
-                            <p class="text-xs text-gray-500 text-center">
-                                Showing recent transactions. Contact support for complete transaction history.
-                            </p>
-                        </div>
-                        @endif
-                    </div>
-                @else
-                    <p class="text-sm text-gray-500 italic">No recent transactions found.</p>
+                    @endforeach
+                </div>
+                
+                <!-- Transaction Footer -->
+                @if($recentTransactions->count() >= 10)
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                    <p class="text-sm text-gray-500 text-center">
+                        Showing recent transactions. Contact support for complete transaction history.
+                    </p>
+                </div>
                 @endif
+            </div>
+        @elseif($showTransactions)
+            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <div class="px-6 py-8 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No transactions found</h3>
+                    <p class="mt-1 text-sm text-gray-500">
+                        Your transaction history will appear here once you start using our services.
+                    </p>
+                </div>
             </div>
         @endif
     </div>

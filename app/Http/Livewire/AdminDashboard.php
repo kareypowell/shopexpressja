@@ -412,10 +412,16 @@ class AdminDashboard extends Component
     {
         try {
             DB::connection()->getPdo();
-            $count = DB::table('users')->count();
+            $activeCount = DB::table('users')->whereNull('deleted_at')->count();
+            $totalCount = DB::table('users')->count();
+            
+            $message = $activeCount === $totalCount 
+                ? "Connected ({$activeCount} users)" 
+                : "Connected ({$activeCount} active, {$totalCount} total)";
+                
             return [
                 'status' => 'healthy',
-                'message' => "Connected ({$count} users)",
+                'message' => $message,
                 'response_time' => 'Fast'
             ];
         } catch (\Exception $e) {

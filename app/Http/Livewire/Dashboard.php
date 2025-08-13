@@ -19,6 +19,10 @@ class Dashboard extends Component
     public float $totalAmountNeeded = 0;
     public int $delayedPackages = 0;
 
+    // Package filtering
+    public $packageFilter = 'all';
+    public $showFilterDropdown = false;
+
     public function mount()
     {
         $this->inComingAir = Package::whereHas('manifest', function (Builder $query) {
@@ -59,6 +63,55 @@ class Dashboard extends Component
 
         $this->delayedPackages = Package::where('user_id', auth()->id())
                                         ->where('status', 'delayed')->count();
+    }
+
+    public function showPackageDetails($packageId)
+    {
+        // Emit event to show package details modal
+        $this->emit('showPackageDetails', $packageId);
+    }
+
+    public function setPackageFilter($filter)
+    {
+        $this->packageFilter = $filter;
+        $this->showFilterDropdown = false;
+    }
+
+    public function toggleFilterDropdown()
+    {
+        $this->showFilterDropdown = !$this->showFilterDropdown;
+    }
+
+    public function getFilteredPackagesProperty()
+    {
+        $query = auth()->user()->packages()->with(['shipper', 'office', 'manifest'])->latest();
+
+        switch ($this->packageFilter) {
+            case 'air':
+                $query->whereHas('manifest', function (Builder $q) {
+                    $q->where('type', 'air');
+                });
+                break;
+            case 'sea':
+                $query->whereHas('manifest', function (Builder $q) {
+                    $q->where('type', 'sea');
+                });
+                break;
+            case 'ready':
+                $query->where('status', 'ready');
+                break;
+            case 'in-transit':
+                $query->whereIn('status', ['processing', 'shipped', 'customs']);
+                break;
+            case 'delivered':
+                $query->where('status', 'delivered');
+                break;
+            default:
+                // 'all' - no additional filtering
+                break;
+        }
+
+        return $query->take(5)->get();
     }
 
     public function render()

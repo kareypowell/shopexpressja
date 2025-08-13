@@ -75,7 +75,7 @@
                 <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-2"></div>
                 In Transit
               </h5>
-              <span class="text-sm text-gray-500">{{ $inComingAir + $inComingSea }} packages</span>
+              <span class="text-sm text-gray-500">{{ $inComingAir + $inComingSea }} {{ Str::plural('package', $inComingAir + $inComingSea) }}</span>
             </div>
             
             <div class="grid grid-cols-2 gap-3">
@@ -110,7 +110,7 @@
                 <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                 Ready for Pickup
               </h5>
-              <span class="text-sm text-gray-500">{{ $availableAir + $availableSea }} packages</span>
+              <span class="text-sm text-gray-500">{{ $availableAir + $availableSea }} {{ Str::plural('package', $availableAir + $availableSea) }}</span>
             </div>
             
             @if(($availableAir + $availableSea) > 0)

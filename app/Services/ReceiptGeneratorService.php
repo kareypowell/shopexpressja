@@ -137,10 +137,10 @@ class ReceiptGeneratorService
             })->toArray(),
             'company' => [
                 'name' => config('app.name', 'ShipShark Ltd'),
-                'address' => 'Your Company Address',
-                'phone' => 'Your Phone Number',
-                'email' => 'info@shipshark.com',
-                'website' => 'www.shipshark.com',
+                'address' => 'Shop #24b Reliance Plaza, Mandeville, Manchester',
+                'phone' => '876-237-1191',
+                'email' => 'support@shipsharkltd.com',
+                'website' => 'www.shipsharkltd.com',
             ],
         ];
     }

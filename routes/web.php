@@ -114,6 +114,7 @@ Route::middleware(['auth', 'verified', 'customer.management'])->prefix('admin')-
 
 // Customer routes
 Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
+    Route::get('/packages', \App\Http\Livewire\Customers\CustomerPackages::class)->name('packages.index');
     Route::get('/invoices', Invoice::class)->name('invoices');
     Route::get('/my-profile', Profile::class)->name('my-profile');
     Route::get('/shipping-information', ShippingInformation::class)->name('shipping-information');
