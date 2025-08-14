@@ -6,6 +6,7 @@ use App\Http\Livewire\Auth\{Login, Register, Verify};
 use App\Http\Livewire\Auth\Passwords\{Confirm, Email, Reset};
 use App\Http\Livewire\Customers\AdminCustomer;
 use App\Http\Livewire\Customers\{CustomerCreate, CustomerProfile, CustomerEdit};
+use App\Http\Livewire\Admin\CustomerBalanceManager;
 use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\{Dashboard, Invoice};
 use App\Http\Livewire\Manifests\Manifest;
@@ -110,6 +111,9 @@ Route::middleware(['auth', 'verified', 'customer.management'])->prefix('admin')-
     
     // Customer editing with route model binding
     Route::get('/customers/{customer}/edit', CustomerEdit::class)->name('customers.edit');
+    
+    // Customer balance management
+    Route::get('/customers/{customer}/balance', CustomerBalanceManager::class)->name('customers.balance');
 });
 
 // Customer routes
