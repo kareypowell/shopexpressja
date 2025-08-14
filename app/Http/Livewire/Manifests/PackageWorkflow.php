@@ -566,4 +566,32 @@ class PackageWorkflow extends Component
         $this->feePreview = null;
         $this->resetErrorBag();
     }
+
+    public function showPackageDetails($packageId)
+    {
+        $package = Package::find($packageId);
+        
+        if (!$package) {
+            session()->flash('error', 'Package not found.');
+            return;
+        }
+
+        // If we have a manifest context, redirect to the manifest packages page
+        if ($this->manifestId && $package->manifest_id == $this->manifestId) {
+            return redirect()->route('admin.manifests.packages', $package->manifest_id);
+        }
+        
+        // Otherwise, emit an event or show a notification
+        $this->dispatchBrowserEvent('show-package-details', [
+            'package' => [
+                'id' => $package->id,
+                'tracking_number' => $package->tracking_number,
+                'status' => $package->status,
+                'customer' => $package->user->full_name ?? 'N/A',
+                'weight' => $package->weight,
+                'description' => $package->description,
+                'total_cost' => $package->total_cost,
+            ]
+        ]);
+    }
 }

@@ -302,52 +302,56 @@
                                     @endif
                                 </div>
 
-                                <!-- More Options Dropdown -->
-                                <div class="relative" x-data="{ open: false }">
-                                    <button 
-                                        @click="open = !open"
-                                        class="inline-flex items-center p-1 border border-gray-300 rounded-full shadow-sm text-gray-400 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
-                                        title="More Options"
-                                    >
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
-                                        </svg>
-                                    </button>
-                                    
-                                    <div 
-                                        x-show="open" 
-                                        @click.away="open = false"
-                                        x-transition:enter="transition ease-out duration-100"
-                                        x-transition:enter-start="transform opacity-0 scale-95"
-                                        x-transition:enter-end="transform opacity-100 scale-100"
-                                        x-transition:leave="transition ease-in duration-75"
-                                        x-transition:leave-start="transform opacity-100 scale-100"
-                                        x-transition:leave-end="transform opacity-0 scale-95"
-                                        class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200"
-                                    >
-                                        <div class="py-1">
-                                            @foreach($validTransitions as $transition)
-                                                @if(!$nextStatus || $transition->value !== $nextStatus->value)
-                                                    <button 
-                                                        wire:click="updateSinglePackageStatus({{ $package->id }}, '{{ $transition->value }}')"
-                                                        @click="open = false"
-                                                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                                    >
-                                                        {{ $transition->getLabel() }}
-                                                    </button>
-                                                @endif
-                                            @endforeach
-                                            
-                                            <div class="border-t border-gray-100"></div>
-                                            <button 
-                                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                                title="View Package Details"
-                                            >
-                                                View Details
-                                            </button>
+                                <!-- More Options Dropdown - Only show when not in bulk selection mode -->
+                                @if(!$selectAll && count($selectedPackages) === 0)
+                                    <div class="relative" x-data="{ open: false }">
+                                        <button 
+                                            @click="open = !open"
+                                            class="inline-flex items-center p-1 border border-gray-300 rounded-full shadow-sm text-gray-400 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
+                                            title="More Options"
+                                        >
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                                            </svg>
+                                        </button>
+                                        
+                                        <div 
+                                            x-show="open" 
+                                            @click.away="open = false"
+                                            x-transition:enter="transition ease-out duration-100"
+                                            x-transition:enter-start="transform opacity-0 scale-95"
+                                            x-transition:enter-end="transform opacity-100 scale-100"
+                                            x-transition:leave="transition ease-in duration-75"
+                                            x-transition:leave-start="transform opacity-100 scale-100"
+                                            x-transition:leave-end="transform opacity-0 scale-95"
+                                            class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200"
+                                        >
+                                            <div class="py-1">
+                                                @foreach($validTransitions as $transition)
+                                                    @if(!$nextStatus || $transition->value !== $nextStatus->value)
+                                                        <button 
+                                                            wire:click="updateSinglePackageStatus({{ $package->id }}, '{{ $transition->value }}')"
+                                                            @click="open = false"
+                                                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                        >
+                                                            {{ $transition->getLabel() }}
+                                                        </button>
+                                                    @endif
+                                                @endforeach
+                                                
+                                                <div class="border-t border-gray-100"></div>
+                                                <button 
+                                                    wire:click="showPackageDetails({{ $package->id }})"
+                                                    @click="open = false"
+                                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                    title="View Package Details"
+                                                >
+                                                    View Details
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                @endif
                             </div>
                         </div>
                     </li>

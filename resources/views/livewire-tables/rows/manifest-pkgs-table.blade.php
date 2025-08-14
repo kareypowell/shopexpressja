@@ -29,7 +29,19 @@
 
 <x-livewire-tables::table.cell>
   <div>
-    {{ $row->weight }}
+    @if($row->isSeaPackage())
+      @if($row->cubic_feet)
+        <x-badges.info>{{ number_format($row->cubic_feet, 2) }} ft³</x-badges.info>
+      @else
+        <span class="text-gray-500">-</span>
+      @endif
+    @else
+      @if($row->weight)
+        <x-badges.primary>{{ number_format($row->weight, 1) }} lbs</x-badges.primary>
+      @else
+        <span class="text-gray-500">-</span>
+      @endif
+    @endif
   </div>
 </x-livewire-tables::table.cell>
 
@@ -55,15 +67,7 @@
   </div>
 </x-livewire-tables::table.cell>
 
-<x-livewire-tables::table.cell>
-  <div>
-    @if($row->isSeaPackage() && $row->cubic_feet)
-      <x-badges.success>{{ number_format($row->cubic_feet, 3) }} ft³</x-badges.success>
-    @else
-      -
-    @endif
-  </div>
-</x-livewire-tables::table.cell>
+
 
 <x-livewire-tables::table.cell>
   <div>

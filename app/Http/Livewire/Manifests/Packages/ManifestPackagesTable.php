@@ -141,16 +141,13 @@ class ManifestPackagesTable extends DataTableComponent
             Column::make("Description", "description")
                 ->sortable()
                 ->searchable(),
-            Column::make("Weight (lbs)", "weight")
+            Column::make("Weight/Volume", "weight")
                 ->sortable()
                 ->searchable(),
             Column::make("Container Type", "container_type")
                 ->sortable()
                 ->searchable(),
             Column::make("Dimensions", ""),
-            Column::make("Cubic Feet", "cubic_feet")
-                ->sortable()
-                ->searchable(),
             Column::make("Status", "status")
                 ->sortable()
                 ->searchable(),
