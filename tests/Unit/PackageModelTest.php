@@ -185,7 +185,10 @@ class PackageModelTest extends TestCase
             'length_inches',
             'width_inches',
             'height_inches',
-            'cubic_feet'
+            'cubic_feet',
+            'consolidated_package_id',
+            'is_consolidated',
+            'consolidated_at'
         ];
 
         $package = new Package();

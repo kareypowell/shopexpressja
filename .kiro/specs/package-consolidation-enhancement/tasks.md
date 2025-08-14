@@ -14,7 +14,7 @@
   - Write unit tests for ConsolidatedPackage model methods and relationships
   - _Requirements: 1.1, 1.4, 3.1, 3.2, 3.3, 4.1, 4.2_
 
-- [ ] 3. Enhance Package model with consolidation support
+- [x] 3. Enhance Package model with consolidation support
   - Add consolidation-related fields to Package model fillable array
   - Implement consolidation relationship methods (belongsTo ConsolidatedPackage)
   - Add consolidation status check methods (isConsolidated, canBeConsolidated)

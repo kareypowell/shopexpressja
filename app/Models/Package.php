@@ -97,6 +97,11 @@ class Package extends Model
         return $this->hasMany(PackageStatusHistory::class);
     }
 
+    public function consolidatedPackage()
+    {
+        return $this->belongsTo(ConsolidatedPackage::class);
+    }
+
     /**
      * Get status attribute as PackageStatus instance
      */
@@ -345,5 +350,81 @@ class Package extends Model
     public function scopeDelivered($query)
     {
         return $query->where('status', PackageStatus::DELIVERED);
+    }
+
+    /**
+     * Check if package is consolidated
+     */
+    public function isConsolidated(): bool
+    {
+        return $this->is_consolidated && $this->consolidated_package_id !== null;
+    }
+
+    /**
+     * Check if package can be consolidated
+     */
+    public function canBeConsolidated(): bool
+    {
+        // Package cannot be consolidated if it's already consolidated
+        if ($this->isConsolidated()) {
+            return false;
+        }
+
+        // Package must be in a status that allows consolidation
+        $allowedStatuses = [
+            PackageStatus::PENDING,
+            PackageStatus::PROCESSING,
+            PackageStatus::READY,
+            PackageStatus::SHIPPED,
+            PackageStatus::CUSTOMS
+        ];
+
+        try {
+            return in_array($this->status, $allowedStatuses);
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Get the consolidated group this package belongs to
+     */
+    public function getConsolidatedGroup()
+    {
+        return $this->consolidatedPackage;
+    }
+
+    /**
+     * Scope to filter consolidated packages
+     */
+    public function scopeConsolidated($query)
+    {
+        return $query->where('is_consolidated', true)
+                    ->whereNotNull('consolidated_package_id');
+    }
+
+    /**
+     * Scope to filter individual (non-consolidated) packages
+     */
+    public function scopeIndividual($query)
+    {
+        return $query->where('is_consolidated', false)
+                    ->whereNull('consolidated_package_id');
+    }
+
+    /**
+     * Scope to get packages available for consolidation
+     */
+    public function scopeAvailableForConsolidation($query)
+    {
+        return $query->where('is_consolidated', false)
+                    ->whereNull('consolidated_package_id')
+                    ->whereIn('status', [
+                        PackageStatus::PENDING,
+                        PackageStatus::PROCESSING,
+                        PackageStatus::READY,
+                        PackageStatus::SHIPPED,
+                        PackageStatus::CUSTOMS
+                    ]);
     }
 }
