@@ -3,6 +3,8 @@
 namespace App\Http\Livewire\Profile;
 
 use App\Models\Office;
+use App\Models\Package;
+use App\Enums\PackageStatus;
 use Livewire\Component;
 use Illuminate\Support\Facades\Hash;
 
@@ -37,6 +39,11 @@ class Profile extends Component
     public $pickupLocation = '';
 
     public $pickupLocations = [];
+
+    // Dashboard data
+    public $packageStats = [];
+    public $recentPackages = [];
+    public $accountSummary = [];
 
     /**
      * Load all the default values.
