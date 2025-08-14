@@ -35,6 +35,9 @@ class PackageFactory extends Factory
             'width_inches' => $this->faker->randomFloat(2, 1.0, 48.0),
             'height_inches' => $this->faker->randomFloat(2, 1.0, 48.0),
             'cubic_feet' => $this->faker->randomFloat(3, 0.1, 10.0),
+            'consolidated_package_id' => null,
+            'is_consolidated' => false,
+            'consolidated_at' => null,
         ];
     }
 

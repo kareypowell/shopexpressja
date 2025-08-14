@@ -29,7 +29,10 @@ class Package extends Model
         'length_inches',
         'width_inches',
         'height_inches',
-        'cubic_feet'
+        'cubic_feet',
+        'consolidated_package_id',
+        'is_consolidated',
+        'consolidated_at'
     ];
 
     protected $casts = [
@@ -38,7 +41,9 @@ class Package extends Model
         'estimated_value' => 'decimal:2',
         'length_inches' => 'decimal:2',
         'width_inches' => 'decimal:2',
-        'height_inches' => 'decimal:2'
+        'height_inches' => 'decimal:2',
+        'is_consolidated' => 'boolean',
+        'consolidated_at' => 'datetime'
     ];
 
     public function scopeSearch($query, $term)

@@ -6,7 +6,7 @@
   - Create migration for consolidation_history table for audit trail
   - _Requirements: 1.5, 1.6, 9.1, 9.2_
 
-- [ ] 2. Implement ConsolidatedPackage model with core functionality
+- [x] 2. Implement ConsolidatedPackage model with core functionality
   - Create ConsolidatedPackage model with fillable fields and relationships
   - Implement calculated properties for totals (weight, quantity, costs)
   - Add methods for generating consolidated tracking numbers
