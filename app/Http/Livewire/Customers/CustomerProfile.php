@@ -23,20 +23,25 @@ class CustomerProfile extends Component
     public $isLoadingStats = false;
 
     protected $paginationTheme = 'bootstrap';
-    
-    protected CustomerStatisticsService $statisticsService;
 
-    public function mount(User $customer, CustomerStatisticsService $statisticsService)
+    public function mount(User $customer)
     {
         // Use customer-specific authorization
         $this->authorize('customer.view', $customer);
         
         $this->customer = $customer->load('profile', 'role');
-        $this->statisticsService = $statisticsService;
         $this->setCustomerProfileBreadcrumbs($customer);
         
         // Load data with caching
         $this->loadAllData();
+    }
+
+    /**
+     * Get the statistics service instance
+     */
+    protected function getStatisticsService(): CustomerStatisticsService
+    {
+        return app(CustomerStatisticsService::class);
     }
 
     /**
@@ -59,14 +64,14 @@ class CustomerProfile extends Component
 
     public function loadPackageStats($forceRefresh = false)
     {
-        $this->packageStats = $this->statisticsService->getPackageMetrics($this->customer, $forceRefresh);
+        $this->packageStats = $this->getStatisticsService()->getPackageMetrics($this->customer, $forceRefresh);
     }
 
     public function loadFinancialSummary($forceRefresh = false)
     {
         // Check if user can view financial information
         if (auth()->user()->can('customer.viewFinancials', $this->customer)) {
-            $this->financialSummary = $this->statisticsService->getFinancialSummary($this->customer, $forceRefresh);
+            $this->financialSummary = $this->getStatisticsService()->getFinancialSummary($this->customer, $forceRefresh);
         } else {
             $this->financialSummary = [];
         }
@@ -76,7 +81,7 @@ class CustomerProfile extends Component
     {
         // Check if user can view shipping patterns
         if (auth()->user()->can('customer.viewPackages', $this->customer)) {
-            $this->shippingPatterns = $this->statisticsService->getShippingPatterns($this->customer, $forceRefresh);
+            $this->shippingPatterns = $this->getStatisticsService()->getShippingPatterns($this->customer, $forceRefresh);
         } else {
             $this->shippingPatterns = [];
         }
@@ -98,7 +103,7 @@ class CustomerProfile extends Component
 
     public function loadCacheStatus()
     {
-        $this->cacheStatus = $this->statisticsService->getCacheStatus($this->customer);
+        $this->cacheStatus = $this->getStatisticsService()->getCacheStatus($this->customer);
     }
 
     public function togglePackageView()
@@ -115,7 +120,7 @@ class CustomerProfile extends Component
      */
     public function refreshData()
     {
-        $this->statisticsService->clearCustomerCache($this->customer);
+        $this->getStatisticsService()->clearCustomerCache($this->customer);
         $this->loadAllData(true);
         
         $this->dispatchBrowserEvent('show-alert', [
@@ -129,7 +134,7 @@ class CustomerProfile extends Component
      */
     public function refreshDataType($type)
     {
-        $this->statisticsService->clearCustomerCacheType($this->customer, $type);
+        $this->getStatisticsService()->clearCustomerCacheType($this->customer, $type);
         
         switch ($type) {
             case 'packages':
@@ -156,7 +161,7 @@ class CustomerProfile extends Component
      */
     public function warmUpCache()
     {
-        $this->statisticsService->warmUpCustomerCache($this->customer);
+        $this->getStatisticsService()->warmUpCustomerCache($this->customer);
         $this->loadCacheStatus();
         
         $this->dispatchBrowserEvent('show-alert', [
@@ -196,7 +201,7 @@ class CustomerProfile extends Component
             'canViewFinancials' => auth()->user()->can('customer.viewFinancials', $this->customer),
             'canViewPackages' => auth()->user()->can('customer.viewPackages', $this->customer),
             'canExport' => auth()->user()->can('customer.export'),
-            'cacheMetrics' => isset($this->statisticsService) ? $this->statisticsService->getCachePerformanceMetrics() : [],
+            'cacheMetrics' => $this->getStatisticsService()->getCachePerformanceMetrics(),
         ]);
     }
 }
