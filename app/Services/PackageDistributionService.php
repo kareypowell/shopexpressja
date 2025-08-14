@@ -3,12 +3,14 @@
 namespace App\Services;
 
 use App\Models\Package;
+use App\Models\ConsolidatedPackage;
 use App\Models\PackageDistribution;
 use App\Models\PackageDistributionItem;
 use App\Models\User;
 use App\Enums\PackageStatus;
 use App\Services\ReceiptGeneratorService;
 use App\Services\DistributionEmailService;
+use App\Services\PackageStatusService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Exception;
@@ -23,6 +25,227 @@ class PackageDistributionService
         $this->receiptGenerator = $receiptGenerator;
         $this->emailService = $emailService;
     }
+    /**
+     * Distribute consolidated packages to a customer
+     *
+     * @param ConsolidatedPackage $consolidatedPackage
+     * @param float $amountCollected
+     * @param User $user
+     * @param array $balanceOptions Balance application options: ['credit' => bool, 'account' => bool]
+     * @param array $options Additional options: writeOff, feeAdjustments, notes
+     * @return array
+     */
+    public function distributeConsolidatedPackages(ConsolidatedPackage $consolidatedPackage, float $amountCollected, User $user, array $balanceOptions = [], array $options = []): array
+    {
+        try {
+            DB::beginTransaction();
+
+            // Validate consolidated package is ready for distribution
+            if ($consolidatedPackage->status !== PackageStatus::READY) {
+                throw new Exception('Consolidated package is not ready for distribution');
+            }
+
+            // Get all packages in the consolidation
+            $packages = $consolidatedPackage->packages()
+                ->where('status', PackageStatus::READY)
+                ->get();
+
+            if ($packages->isEmpty()) {
+                throw new Exception('No packages ready for distribution in this consolidation');
+            }
+
+            $customer = $consolidatedPackage->customer;
+            if (!$customer) {
+                throw new Exception('Customer not found');
+            }
+
+            // Use consolidated totals for distribution
+            $totalAmount = $consolidatedPackage->total_cost;
+            
+            // Apply fee adjustments if provided
+            if (isset($options['feeAdjustments']) && is_array($options['feeAdjustments'])) {
+                // For consolidated packages, adjustments apply to the consolidated totals
+                if (isset($options['feeAdjustments']['consolidated'])) {
+                    $adjustments = $options['feeAdjustments']['consolidated'];
+                    $consolidatedPackage->update([
+                        'total_freight_price' => $adjustments['total_freight_price'] ?? $consolidatedPackage->total_freight_price,
+                        'total_customs_duty' => $adjustments['total_customs_duty'] ?? $consolidatedPackage->total_customs_duty,
+                        'total_storage_fee' => $adjustments['total_storage_fee'] ?? $consolidatedPackage->total_storage_fee,
+                        'total_delivery_fee' => $adjustments['total_delivery_fee'] ?? $consolidatedPackage->total_delivery_fee,
+                    ]);
+                    $totalAmount = $consolidatedPackage->fresh()->total_cost;
+                }
+            }
+            
+            // Apply write-off/discount if provided
+            $writeOffAmount = 0;
+            if (isset($options['writeOff']) && $options['writeOff'] > 0) {
+                $writeOffAmount = min($options['writeOff'], $totalAmount);
+                $totalAmount -= $writeOffAmount;
+            }
+
+            // Parse balance options
+            $applyCreditBalance = $balanceOptions['credit'] ?? $balanceOptions['applyCreditBalance'] ?? false;
+            $applyAccountBalance = $balanceOptions['account'] ?? $balanceOptions['applyCreditBalance'] ?? false;
+            
+            // Apply available balances
+            $creditApplied = 0;
+            $accountBalanceApplied = 0;
+            $remainingAmount = $totalAmount;
+            
+            // Apply credit balance if requested and available
+            if ($applyCreditBalance && $customer->credit_balance > 0) {
+                $creditToApply = min($customer->credit_balance, $remainingAmount);
+                $creditApplied = $customer->applyCreditBalance(
+                    $creditToApply,
+                    "Credit applied to consolidated package distribution - Receipt #TBD",
+                    $user->id,
+                    'consolidated_package_distribution',
+                    null,
+                    [
+                        'consolidated_package_id' => $consolidatedPackage->id,
+                        'consolidated_tracking_number' => $consolidatedPackage->consolidated_tracking_number,
+                        'package_ids' => $packages->pluck('id')->toArray(),
+                        'total_amount' => $totalAmount,
+                        'amount_collected' => $amountCollected,
+                    ]
+                );
+                $remainingAmount -= $creditApplied;
+            }
+            
+            // Apply account balance if requested and available
+            $remainingAfterCash = $remainingAmount - $amountCollected;
+            if ($applyAccountBalance && $remainingAfterCash > 0 && $customer->account_balance > 0) {
+                $accountBalanceApplied = min($customer->account_balance, $remainingAfterCash);
+                
+                $customer->recordCharge(
+                    $accountBalanceApplied,
+                    "Account balance applied to consolidated package distribution - Receipt #TBD",
+                    $user->id,
+                    'consolidated_package_distribution',
+                    null,
+                    [
+                        'consolidated_package_id' => $consolidatedPackage->id,
+                        'consolidated_tracking_number' => $consolidatedPackage->consolidated_tracking_number,
+                        'package_ids' => $packages->pluck('id')->toArray(),
+                        'total_amount' => $totalAmount,
+                        'amount_collected' => $amountCollected,
+                        'account_balance_applied' => $accountBalanceApplied,
+                    ]
+                );
+            }
+            
+            $totalBalanceApplied = $creditApplied + $accountBalanceApplied;
+            $totalReceived = $amountCollected + $totalBalanceApplied;
+            $paymentStatus = $this->validatePaymentAmount($totalAmount, $totalReceived);
+
+            // Create distribution record
+            $distribution = PackageDistribution::create([
+                'receipt_number' => PackageDistribution::generateReceiptNumber(),
+                'customer_id' => $customer->id,
+                'distributed_by' => $user->id,
+                'distributed_at' => now(),
+                'total_amount' => $totalAmount + $writeOffAmount,
+                'amount_collected' => $amountCollected,
+                'credit_applied' => $creditApplied,
+                'account_balance_applied' => $accountBalanceApplied,
+                'write_off_amount' => $writeOffAmount,
+                'payment_status' => $paymentStatus,
+                'notes' => ($options['notes'] ?? '') . " [Consolidated Package: {$consolidatedPackage->consolidated_tracking_number}]",
+                'receipt_path' => '',
+                'email_sent' => false,
+            ]);
+
+            // Update transaction references with distribution ID
+            $this->updateTransactionReferences($customer, $distribution, $creditApplied, $accountBalanceApplied);
+
+            // Handle payment transactions
+            $this->handleConsolidatedPaymentTransactions($customer, $distribution, $consolidatedPackage, $packages, $user, $totalAmount, $amountCollected, $totalBalanceApplied, $writeOffAmount);
+
+            // Create distribution items for each package in the consolidation
+            foreach ($packages as $package) {
+                PackageDistributionItem::create([
+                    'distribution_id' => $distribution->id,
+                    'package_id' => $package->id,
+                    'freight_price' => $package->freight_price ?? 0,
+                    'customs_duty' => $package->customs_duty ?? 0,
+                    'storage_fee' => $package->storage_fee ?? 0,
+                    'delivery_fee' => $package->delivery_fee ?? 0,
+                    'total_cost' => $package->total_cost ?? 0,
+                ]);
+
+                // Update package status to delivered
+                $packageStatusService = app(PackageStatusService::class);
+                $packageStatusService->markAsDeliveredThroughDistribution(
+                    $package, 
+                    $user, 
+                    'Package delivered through consolidated distribution process'
+                );
+            }
+
+            // Update consolidated package status
+            $consolidatedPackage->syncPackageStatuses(PackageStatus::DELIVERED);
+
+            // Generate consolidated receipt PDF
+            try {
+                $receiptPath = $this->generateConsolidatedReceipt($consolidatedPackage, $distribution);
+                $distribution->update(['receipt_path' => $receiptPath]);
+                
+                // Send receipt email
+                $emailResult = $this->emailService->sendReceiptEmail($distribution, $customer);
+                
+                if ($emailResult['success']) {
+                    Log::info('Consolidated distribution receipt email sent successfully', [
+                        'distribution_id' => $distribution->id,
+                        'consolidated_package_id' => $consolidatedPackage->id,
+                        'customer_email' => $customer->email,
+                        'receipt_number' => $distribution->receipt_number
+                    ]);
+                } else {
+                    Log::warning('Consolidated distribution receipt email failed', [
+                        'distribution_id' => $distribution->id,
+                        'consolidated_package_id' => $consolidatedPackage->id,
+                        'customer_email' => $customer->email,
+                        'error' => $emailResult['message']
+                    ]);
+                }
+                
+            } catch (Exception $e) {
+                Log::warning('Consolidated receipt generation failed', [
+                    'distribution_id' => $distribution->id,
+                    'consolidated_package_id' => $consolidatedPackage->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            // Log the distribution
+            $this->logConsolidatedDistribution($consolidatedPackage, $packages->toArray(), $distribution, $amountCollected, $user);
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'distribution' => $distribution,
+                'consolidated_package' => $consolidatedPackage,
+                'message' => 'Consolidated packages distributed successfully',
+            ];
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Consolidated package distribution failed', [
+                'error' => $e->getMessage(),
+                'consolidated_package_id' => $consolidatedPackage->id,
+                'amount_collected' => $amountCollected,
+                'user_id' => $user->id,
+            ]);
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
     /**
      * Distribute packages to a customer with enhanced options
      *
@@ -43,13 +266,34 @@ class PackageDistributionService
                 throw new Exception('No packages provided for distribution');
             }
 
+            // Check if any packages are consolidated and handle accordingly
+            $consolidatedPackageIds = Package::whereIn('id', $packageIds)
+                ->whereNotNull('consolidated_package_id')
+                ->pluck('consolidated_package_id')
+                ->unique();
+
+            if ($consolidatedPackageIds->isNotEmpty()) {
+                // If consolidated packages are detected, redirect to consolidated distribution
+                if ($consolidatedPackageIds->count() > 1) {
+                    throw new Exception('Cannot distribute packages from multiple consolidations together');
+                }
+                
+                $consolidatedPackage = ConsolidatedPackage::find($consolidatedPackageIds->first());
+                if (!$consolidatedPackage) {
+                    throw new Exception('Consolidated package not found');
+                }
+                
+                return $this->distributeConsolidatedPackages($consolidatedPackage, $amountCollected, $user, $balanceOptions, $options);
+            }
+
             // Validate packages are ready for distribution
             $packages = Package::whereIn('id', $packageIds)
                 ->where('status', PackageStatus::READY)
+                ->whereNull('consolidated_package_id') // Only individual packages
                 ->get();
 
             if ($packages->count() !== count($packageIds)) {
-                throw new Exception('Some packages are not ready for distribution');
+                throw new Exception('Some packages are not ready for distribution or are part of a consolidation');
             }
 
             // Ensure all packages belong to the same customer
@@ -423,13 +667,19 @@ class PackageDistributionService
     }
 
     /**
-     * Calculate total cost for packages
+     * Calculate total cost for packages or consolidated packages
      *
      * @param array $packages
+     * @param ConsolidatedPackage|null $consolidatedPackage
      * @return float
      */
-    public function calculatePackageTotals(array $packages): float
+    public function calculatePackageTotals(array $packages, ConsolidatedPackage $consolidatedPackage = null): float
     {
+        // If consolidated package is provided, use its totals
+        if ($consolidatedPackage) {
+            return $consolidatedPackage->total_cost;
+        }
+
         $total = 0;
 
         foreach ($packages as $package) {
@@ -543,5 +793,336 @@ class PackageDistributionService
         }
         
         return $this->distributePackages($packageIds, $amountCollected, $user, $balanceOptions, $options);
+    }
+
+    /**
+     * Generate consolidated receipt with itemized individual package details
+     *
+     * @param ConsolidatedPackage $consolidatedPackage
+     * @param PackageDistribution $distribution
+     * @return string
+     */
+    public function generateConsolidatedReceipt(ConsolidatedPackage $consolidatedPackage, PackageDistribution $distribution): string
+    {
+        try {
+            // Load distribution with relationships
+            $distribution->load(['customer', 'distributedBy', 'items.package']);
+
+            // Format consolidated receipt data
+            $receiptData = $this->formatConsolidatedReceiptData($consolidatedPackage, $distribution);
+
+            // Calculate totals using the receipt generator
+            $totals = $this->receiptGenerator->calculateTotals($distribution);
+
+            // Add payment status to totals if not present
+            if (!isset($totals['payment_status'])) {
+                $totals['payment_status'] = ucfirst($distribution->payment_status);
+            }
+
+            // Merge data
+            $data = array_merge($receiptData, $totals);
+
+            // Generate PDF
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('receipts.consolidated-package-distribution', $data);
+            
+            // Set PDF options
+            $pdf->setPaper('a4', 'portrait');
+            $pdf->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'sans-serif'
+            ]);
+
+            // Generate filename
+            $filename = 'receipts/consolidated-' . $distribution->receipt_number . '.pdf';
+            
+            // Save PDF to storage
+            $pdfContent = $pdf->output();
+            \Illuminate\Support\Facades\Storage::disk('public')->put($filename, $pdfContent);
+
+            return $filename;
+
+        } catch (Exception $e) {
+            throw new Exception('Failed to generate consolidated receipt: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Format consolidated receipt data for PDF template
+     *
+     * @param ConsolidatedPackage $consolidatedPackage
+     * @param PackageDistribution $distribution
+     * @return array
+     */
+    public function formatConsolidatedReceiptData(ConsolidatedPackage $consolidatedPackage, PackageDistribution $distribution): array
+    {
+        return [
+            'receipt_number' => $distribution->receipt_number,
+            'distribution_date' => $distribution->distributed_at->format('F j, Y'),
+            'distribution_time' => $distribution->distributed_at->format('g:i A'),
+            'is_consolidated' => true,
+            'consolidated_tracking_number' => $consolidatedPackage->consolidated_tracking_number,
+            'consolidated_totals' => [
+                'total_weight' => number_format($consolidatedPackage->total_weight, 2),
+                'total_quantity' => $consolidatedPackage->total_quantity,
+                'total_freight_price' => number_format($consolidatedPackage->total_freight_price, 2),
+                'total_customs_duty' => number_format($consolidatedPackage->total_customs_duty, 2),
+                'total_storage_fee' => number_format($consolidatedPackage->total_storage_fee, 2),
+                'total_delivery_fee' => number_format($consolidatedPackage->total_delivery_fee, 2),
+                'total_cost' => number_format($consolidatedPackage->total_cost, 2),
+            ],
+            'customer' => [
+                'name' => $distribution->customer->full_name,
+                'email' => $distribution->customer->email,
+                'account_number' => $distribution->customer->profile->account_number ?? 'N/A',
+            ],
+            'distributed_by' => [
+                'name' => $distribution->distributedBy->full_name,
+                'role' => $distribution->distributedBy->role->name ?? 'Staff',
+            ],
+            'packages' => $distribution->items->map(function ($item) {
+                $package = $item->package;
+                $isSeaPackage = $package->isSeaPackage();
+                
+                return [
+                    'tracking_number' => $package->tracking_number,
+                    'description' => $package->description ?? 'Package',
+                    'weight_display' => $isSeaPackage 
+                        ? number_format($package->cubic_feet ?? 0, 2) . ' ft³'
+                        : number_format($package->weight ?? 0, 1) . ' lbs',
+                    'weight_label' => $isSeaPackage ? 'Cubic Feet' : 'Weight',
+                    'is_sea_package' => $isSeaPackage,
+                    'freight_price' => number_format($item->freight_price, 2),
+                    'customs_duty' => number_format($item->customs_duty, 2),
+                    'storage_fee' => number_format($item->storage_fee, 2),
+                    'delivery_fee' => number_format($item->delivery_fee, 2),
+                    'total_cost' => number_format($item->total_cost, 2),
+                ];
+            })->toArray(),
+            'company' => [
+                'name' => config('app.name', 'ShipShark Ltd'),
+                'address' => 'Shop #24b Reliance Plaza, Mandeville, Manchester',
+                'phone' => '876-237-1191',
+                'email' => 'support@shipsharkltd.com',
+                'website' => 'www.shipsharkltd.com',
+            ],
+        ];
+    }
+
+    /**
+     * Handle payment transactions for consolidated packages
+     *
+     * @param User $customer
+     * @param PackageDistribution $distribution
+     * @param ConsolidatedPackage $consolidatedPackage
+     * @param \Illuminate\Database\Eloquent\Collection $packages
+     * @param User $user
+     * @param float $totalAmount
+     * @param float $amountCollected
+     * @param float $totalBalanceApplied
+     * @param float $writeOffAmount
+     * @return void
+     */
+    protected function handleConsolidatedPaymentTransactions(User $customer, PackageDistribution $distribution, ConsolidatedPackage $consolidatedPackage, $packages, User $user, float $totalAmount, float $amountCollected, float $totalBalanceApplied, float $writeOffAmount): void
+    {
+        $totalPaid = $amountCollected + $totalBalanceApplied;
+        $netChargeAmount = $totalAmount - $totalBalanceApplied;
+        
+        if ($totalPaid >= $totalAmount) {
+            // Customer paid enough
+            if ($netChargeAmount > 0) {
+                $customer->recordCharge(
+                    $netChargeAmount,
+                    "Consolidated package distribution charge - Receipt #{$distribution->receipt_number}",
+                    $user->id,
+                    'consolidated_package_distribution',
+                    $distribution->id,
+                    [
+                        'distribution_id' => $distribution->id,
+                        'consolidated_package_id' => $consolidatedPackage->id,
+                        'consolidated_tracking_number' => $consolidatedPackage->consolidated_tracking_number,
+                        'total_amount' => $totalAmount,
+                        'package_ids' => $packages->pluck('id')->toArray(),
+                    ]
+                );
+            }
+            
+            if ($amountCollected > 0) {
+                $servicePaymentAmount = min($amountCollected, $netChargeAmount);
+                
+                if ($servicePaymentAmount > 0) {
+                    $customer->recordPayment(
+                        $servicePaymentAmount,
+                        "Payment received for consolidated package distribution - Receipt #{$distribution->receipt_number}",
+                        $user->id,
+                        'consolidated_package_distribution',
+                        $distribution->id,
+                        [
+                            'distribution_id' => $distribution->id,
+                            'consolidated_package_id' => $consolidatedPackage->id,
+                            'consolidated_tracking_number' => $consolidatedPackage->consolidated_tracking_number,
+                            'amount_collected' => $amountCollected,
+                            'service_payment_portion' => $servicePaymentAmount,
+                            'package_ids' => $packages->pluck('id')->toArray(),
+                        ]
+                    );
+                }
+            }
+        } else {
+            // Customer didn't pay enough
+            if ($netChargeAmount > 0) {
+                $customer->recordCharge(
+                    $netChargeAmount,
+                    "Consolidated package distribution charge - Receipt #{$distribution->receipt_number}",
+                    $user->id,
+                    'consolidated_package_distribution',
+                    $distribution->id,
+                    [
+                        'distribution_id' => $distribution->id,
+                        'consolidated_package_id' => $consolidatedPackage->id,
+                        'consolidated_tracking_number' => $consolidatedPackage->consolidated_tracking_number,
+                        'total_amount' => $totalAmount,
+                        'package_ids' => $packages->pluck('id')->toArray(),
+                    ]
+                );
+            }
+            
+            if ($amountCollected > 0) {
+                $customer->recordPayment(
+                    $amountCollected,
+                    "Payment received for consolidated package distribution - Receipt #{$distribution->receipt_number}",
+                    $user->id,
+                    'consolidated_package_distribution',
+                    $distribution->id,
+                    [
+                        'distribution_id' => $distribution->id,
+                        'consolidated_package_id' => $consolidatedPackage->id,
+                        'consolidated_tracking_number' => $consolidatedPackage->consolidated_tracking_number,
+                        'amount_collected' => $amountCollected,
+                        'package_ids' => $packages->pluck('id')->toArray(),
+                    ]
+                );
+            }
+        }
+
+        // Record write-off if provided
+        if ($writeOffAmount > 0) {
+            $customer->recordWriteOff(
+                $writeOffAmount,
+                "Write-off/discount applied to consolidated distribution - Receipt #{$distribution->receipt_number}",
+                $user->id,
+                'consolidated_package_distribution',
+                $distribution->id,
+                [
+                    'distribution_id' => $distribution->id,
+                    'consolidated_package_id' => $consolidatedPackage->id,
+                    'consolidated_tracking_number' => $consolidatedPackage->consolidated_tracking_number,
+                    'original_total' => $totalAmount + $writeOffAmount,
+                    'write_off_amount' => $writeOffAmount,
+                    'package_ids' => $packages->pluck('id')->toArray(),
+                ]
+            );
+        }
+
+        // Handle overpayment
+        $totalCovered = $totalBalanceApplied + $amountCollected;
+        $actualOverpayment = $totalCovered - $totalAmount;
+        
+        if ($actualOverpayment > 0) {
+            $customer->addOverpaymentCredit(
+                $actualOverpayment,
+                "Overpayment credit from consolidated package distribution - Receipt #{$distribution->receipt_number}",
+                $user->id,
+                'consolidated_package_distribution',
+                $distribution->id,
+                [
+                    'distribution_id' => $distribution->id,
+                    'consolidated_package_id' => $consolidatedPackage->id,
+                    'consolidated_tracking_number' => $consolidatedPackage->consolidated_tracking_number,
+                    'total_amount' => $totalAmount,
+                    'amount_collected' => $amountCollected,
+                    'total_balance_applied' => $totalBalanceApplied,
+                    'overpayment' => $actualOverpayment,
+                    'package_ids' => $packages->pluck('id')->toArray(),
+                ]
+            );
+        }
+    }
+
+    /**
+     * Update transaction references with distribution ID
+     *
+     * @param User $customer
+     * @param PackageDistribution $distribution
+     * @param float $creditApplied
+     * @param float $accountBalanceApplied
+     * @return void
+     */
+    protected function updateTransactionReferences(User $customer, PackageDistribution $distribution, float $creditApplied, float $accountBalanceApplied): void
+    {
+        if ($creditApplied > 0) {
+            $creditTransaction = $customer->transactions()
+                ->where('reference_type', 'package_distribution')
+                ->orWhere('reference_type', 'consolidated_package_distribution')
+                ->whereNull('reference_id')
+                ->where('amount', $creditApplied)
+                ->latest()
+                ->first();
+            
+            if ($creditTransaction) {
+                $creditTransaction->update([
+                    'reference_id' => $distribution->id,
+                    'description' => str_replace('Receipt #TBD', "Receipt #{$distribution->receipt_number}", $creditTransaction->description)
+                ]);
+            }
+        }
+        
+        if ($accountBalanceApplied > 0) {
+            $accountTransaction = $customer->transactions()
+                ->where('reference_type', 'package_distribution')
+                ->orWhere('reference_type', 'consolidated_package_distribution')
+                ->whereNull('reference_id')
+                ->where('amount', $accountBalanceApplied)
+                ->where('type', 'charge')
+                ->latest()
+                ->first();
+            
+            if ($accountTransaction) {
+                $accountTransaction->update([
+                    'reference_id' => $distribution->id,
+                    'description' => str_replace('Receipt #TBD', "Receipt #{$distribution->receipt_number}", $accountTransaction->description)
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Log consolidated distribution transaction
+     *
+     * @param ConsolidatedPackage $consolidatedPackage
+     * @param array $packages
+     * @param PackageDistribution $distribution
+     * @param float $amountCollected
+     * @param User $user
+     * @return void
+     */
+    public function logConsolidatedDistribution(ConsolidatedPackage $consolidatedPackage, array $packages, PackageDistribution $distribution, float $amountCollected, User $user): void
+    {
+        $packageIds = collect($packages)->pluck('id')->toArray();
+        
+        Log::info('Consolidated package distribution completed', [
+            'distribution_id' => $distribution->id,
+            'receipt_number' => $distribution->receipt_number,
+            'consolidated_package_id' => $consolidatedPackage->id,
+            'consolidated_tracking_number' => $consolidatedPackage->consolidated_tracking_number,
+            'customer_id' => $distribution->customer_id,
+            'distributed_by' => $user->id,
+            'package_ids' => $packageIds,
+            'package_count' => count($packageIds),
+            'total_amount' => $distribution->total_amount,
+            'amount_collected' => $amountCollected,
+            'payment_status' => $distribution->payment_status,
+            'distributed_at' => $distribution->distributed_at,
+        ]);
     }
 }
