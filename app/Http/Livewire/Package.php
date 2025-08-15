@@ -4,24 +4,256 @@ namespace App\Http\Livewire;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Models\User;
+use App\Models\Package as PackageModel;
+use App\Models\ConsolidatedPackage;
+use App\Services\PackageConsolidationService;
 use Livewire\Component;
+use Illuminate\Support\Facades\Session;
 
 class Package extends Component
 {
-    // use AuthorizesRequests;
+    use AuthorizesRequests;
 
     public int $inComingAir = 0;
     public int $inComingSea = 0;
     public int $availableAir = 0;
     public int $availableSea = 0;
     public float $accountBalance = 0;
+    public int $delayedPackages = 0;
+    public float $creditBalance = 0;
+    public float $pendingPackageCharges = 0;
+    public float $totalAvailableBalance = 0;
+    public float $totalAmountNeeded = 0;
 
-    // public function mount()
-    // {
-    //     // Check authorization when component is mounted
-    //     $this->authorize('viewAny', User::class);
-    // }
+    // Consolidation properties
+    public bool $consolidationMode = false;
+    public array $selectedPackagesForConsolidation = [];
+    public bool $showConsolidatedView = false;
+    public string $consolidationNotes = '';
+
+    // UI state
+    public string $successMessage = '';
+    public string $errorMessage = '';
+
+    protected $consolidationService;
+
+    public function __construct()
+    {
+        $this->consolidationService = app(PackageConsolidationService::class);
+    }
+
+    public function mount()
+    {
+        // Load consolidation mode from session
+        $this->consolidationMode = Session::get('consolidation_mode', false);
+        $this->showConsolidatedView = Session::get('show_consolidated_view', false);
+    }
     
+    /**
+     * Toggle package selection for consolidation
+     */
+    public function togglePackageSelection($packageId)
+    {
+        if (!$this->consolidationMode) {
+            return;
+        }
+
+        if (in_array($packageId, $this->selectedPackagesForConsolidation)) {
+            $this->selectedPackagesForConsolidation = array_filter(
+                $this->selectedPackagesForConsolidation,
+                fn($id) => $id != $packageId
+            );
+        } else {
+            $this->selectedPackagesForConsolidation[] = $packageId;
+        }
+
+        // Reset array keys
+        $this->selectedPackagesForConsolidation = array_values($this->selectedPackagesForConsolidation);
+    }
+
+    /**
+     * Consolidate selected packages
+     */
+    public function consolidateSelectedPackages()
+    {
+        $this->resetMessages();
+
+        if (empty($this->selectedPackagesForConsolidation)) {
+            $this->errorMessage = 'Please select at least 2 packages to consolidate.';
+            return;
+        }
+
+        if (count($this->selectedPackagesForConsolidation) < 2) {
+            $this->errorMessage = 'At least 2 packages are required for consolidation.';
+            return;
+        }
+
+        try {
+            $result = $this->consolidationService->consolidatePackages(
+                $this->selectedPackagesForConsolidation,
+                auth()->user(),
+                ['notes' => $this->consolidationNotes]
+            );
+
+            if ($result['success']) {
+                $this->successMessage = $result['message'];
+                $this->selectedPackagesForConsolidation = [];
+                $this->consolidationNotes = '';
+                
+                // Emit event to refresh package lists
+                $this->emit('packagesConsolidated');
+            } else {
+                $this->errorMessage = $result['message'];
+            }
+        } catch (\Exception $e) {
+            $this->errorMessage = 'An error occurred while consolidating packages: ' . $e->getMessage();
+        }
+    }
+
+    /**
+     * Unconsolidate a consolidated package
+     */
+    public function unconsolidatePackage($consolidatedPackageId)
+    {
+        $this->resetMessages();
+
+        try {
+            $consolidatedPackage = ConsolidatedPackage::findOrFail($consolidatedPackageId);
+            
+            $result = $this->consolidationService->unconsolidatePackages(
+                $consolidatedPackage,
+                auth()->user()
+            );
+
+            if ($result['success']) {
+                $this->successMessage = $result['message'];
+                
+                // Emit event to refresh package lists
+                $this->emit('packagesUnconsolidated');
+            } else {
+                $this->errorMessage = $result['message'];
+            }
+        } catch (\Exception $e) {
+            $this->errorMessage = 'An error occurred while unconsolidating packages: ' . $e->getMessage();
+        }
+    }
+
+    /**
+     * Toggle consolidation mode
+     */
+    public function toggleConsolidationMode()
+    {
+        $this->consolidationMode = !$this->consolidationMode;
+        
+        // Clear selections when toggling mode
+        $this->selectedPackagesForConsolidation = [];
+        $this->consolidationNotes = '';
+        
+        // Store in session
+        Session::put('consolidation_mode', $this->consolidationMode);
+        
+        $this->resetMessages();
+    }
+
+    /**
+     * Toggle consolidated view
+     */
+    public function toggleConsolidatedView()
+    {
+        $this->showConsolidatedView = !$this->showConsolidatedView;
+        
+        // Store in session
+        Session::put('show_consolidated_view', $this->showConsolidatedView);
+        
+        // Clear selections when switching views
+        $this->selectedPackagesForConsolidation = [];
+        
+        $this->resetMessages();
+    }
+
+    /**
+     * Clear selected packages
+     */
+    public function clearSelectedPackages()
+    {
+        $this->selectedPackagesForConsolidation = [];
+        $this->consolidationNotes = '';
+        $this->resetMessages();
+    }
+
+    /**
+     * Reset success and error messages
+     */
+    protected function resetMessages()
+    {
+        $this->successMessage = '';
+        $this->errorMessage = '';
+    }
+
+    /**
+     * Get individual packages for current user
+     */
+    public function getIndividualPackagesProperty()
+    {
+        if (!auth()->check()) {
+            return collect();
+        }
+
+        return PackageModel::where('user_id', auth()->id())
+            ->individual()
+            ->with(['manifest', 'items', 'shipper', 'office'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Get consolidated packages for current user
+     */
+    public function getConsolidatedPackagesProperty()
+    {
+        if (!auth()->check()) {
+            return collect();
+        }
+
+        return ConsolidatedPackage::where('customer_id', auth()->id())
+            ->active()
+            ->with(['packages.manifest', 'packages.items', 'packages.shipper', 'packages.office', 'createdBy'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Get packages available for consolidation
+     */
+    public function getAvailablePackagesForConsolidationProperty()
+    {
+        if (!auth()->check()) {
+            return collect();
+        }
+
+        return PackageModel::where('user_id', auth()->id())
+            ->availableForConsolidation()
+            ->with(['manifest', 'items', 'shipper', 'office'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Check if package is selected for consolidation
+     */
+    public function isPackageSelected($packageId)
+    {
+        return in_array($packageId, $this->selectedPackagesForConsolidation);
+    }
+
+    /**
+     * Get count of selected packages
+     */
+    public function getSelectedPackagesCountProperty()
+    {
+        return count($this->selectedPackagesForConsolidation);
+    }
+
     public function render()
     {
         return view('livewire.packages.package');
