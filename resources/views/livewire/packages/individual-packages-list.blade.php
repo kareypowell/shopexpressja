@@ -12,9 +12,41 @@
                                 </svg>
                                 Individual
                             </span>
-                            <h5 class="font-semibold text-gray-900">{{ $package->tracking_number }}</h5>
+                            <h5 class="font-semibold text-gray-900">
+                                @if($this->hasSearchMatches($package->id, 'individual'))
+                                    <x-search-highlight 
+                                        :text="$package->tracking_number" 
+                                        :search="$search ?? ''" 
+                                        :matches="$this->getPackageSearchMatches($package->id, 'individual')" />
+                                @else
+                                    {{ $package->tracking_number }}
+                                @endif
+                            </h5>
                         </div>
                         <x-package-status-badge :status="$package->status" />
+                        
+                        <!-- Search Match Indicators -->
+                        @if($this->hasSearchMatches($package->id, 'individual'))
+                            <div class="flex items-center space-x-1">
+                                @foreach($this->getPackageSearchMatches($package->id, 'individual') as $match)
+                                    @if($match['type'] === 'exact')
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            <svg class="w-2 h-2 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ ucfirst(str_replace('_', ' ', $match['field'])) }}
+                                        </span>
+                                    @elseif($match['type'] === 'consolidated')
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <svg class="w-2 h-2 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            Consolidated
+                                        </span>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                     
                     <div class="text-sm text-gray-600 space-y-2">
@@ -23,7 +55,16 @@
                                 <svg class="w-4 h-4 mt-0.5 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                                 </svg>
-                                <p class="flex-1">{{ $package->description }}</p>
+                                <p class="flex-1">
+                                    @if($this->hasSearchMatches($package->id, 'individual'))
+                                        <x-search-highlight 
+                                            :text="$package->description" 
+                                            :search="$search ?? ''" 
+                                            :matches="$this->getPackageSearchMatches($package->id, 'individual')" />
+                                    @else
+                                        {{ $package->description }}
+                                    @endif
+                                </p>
                             </div>
                         @endif
                         

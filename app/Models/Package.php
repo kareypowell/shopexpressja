@@ -50,6 +50,7 @@ class Package extends Model
     {
         return $query->where(function($query) use ($term) {
             $query->where('tracking_number', 'like', '%' . $term . '%')
+                  ->orWhere('description', 'like', '%' . $term . '%')
                   ->orWhere('status', 'like', '%' . $term . '%');
             
             // Also search by status labels
@@ -60,6 +61,66 @@ class Package extends Model
                 }
             }
         });
+    }
+
+    /**
+     * Scope to search packages including consolidated packages by individual tracking numbers
+     */
+    public function scopeSearchWithConsolidated($query, $term)
+    {
+        return $query->where(function($query) use ($term) {
+            // Search individual packages
+            $query->where(function($q) use ($term) {
+                $q->where('tracking_number', 'like', '%' . $term . '%')
+                  ->orWhere('description', 'like', '%' . $term . '%');
+            });
+
+            // Search within consolidated packages
+            $query->orWhereHas('consolidatedPackage', function($consolidatedQuery) use ($term) {
+                $consolidatedQuery->where('consolidated_tracking_number', 'like', '%' . $term . '%')
+                                 ->orWhere('notes', 'like', '%' . $term . '%');
+            });
+        });
+    }
+
+    /**
+     * Get search match details for highlighting
+     */
+    public function getSearchMatchDetails($term): array
+    {
+        $matches = [];
+        $searchTerm = strtolower($term);
+
+        // Check tracking number match
+        if (str_contains(strtolower($this->tracking_number), $searchTerm)) {
+            $matches[] = [
+                'field' => 'tracking_number',
+                'value' => $this->tracking_number,
+                'type' => 'exact'
+            ];
+        }
+
+        // Check description match
+        if (str_contains(strtolower($this->description), $searchTerm)) {
+            $matches[] = [
+                'field' => 'description',
+                'value' => $this->description,
+                'type' => 'partial'
+            ];
+        }
+
+        // Check consolidated package match
+        if ($this->isConsolidated() && $this->consolidatedPackage) {
+            if (str_contains(strtolower($this->consolidatedPackage->consolidated_tracking_number), $searchTerm)) {
+                $matches[] = [
+                    'field' => 'consolidated_tracking_number',
+                    'value' => $this->consolidatedPackage->consolidated_tracking_number,
+                    'type' => 'consolidated'
+                ];
+            }
+        }
+
+        return $matches;
     }
 
     public function manifest()

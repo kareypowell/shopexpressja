@@ -31,11 +31,22 @@ class Package extends Component
     public bool $showConsolidatedView = false;
     public string $consolidationNotes = '';
 
+    // Search and filtering
+    public string $search = '';
+    public string $statusFilter = '';
+    public bool $showSearchResults = false;
+    public array $searchMatches = [];
+
     // UI state
     public string $successMessage = '';
     public string $errorMessage = '';
 
     protected $consolidationService;
+
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'statusFilter' => ['except' => ''],
+    ];
 
     public function __construct()
     {
@@ -47,6 +58,64 @@ class Package extends Component
         // Load consolidation mode from session
         $this->consolidationMode = Session::get('consolidation_mode', false);
         $this->showConsolidatedView = Session::get('show_consolidated_view', false);
+    }
+
+    /**
+     * Handle search input updates
+     */
+    public function updatedSearch()
+    {
+        $this->showSearchResults = !empty($this->search);
+        $this->updateSearchMatches();
+    }
+
+    /**
+     * Handle status filter updates
+     */
+    public function updatedStatusFilter()
+    {
+        $this->updateSearchMatches();
+    }
+
+    /**
+     * Clear search and filters
+     */
+    public function clearSearch()
+    {
+        $this->search = '';
+        $this->statusFilter = '';
+        $this->showSearchResults = false;
+        $this->searchMatches = [];
+    }
+
+    /**
+     * Update search matches for highlighting
+     */
+    protected function updateSearchMatches()
+    {
+        $this->searchMatches = [];
+        
+        if (empty($this->search)) {
+            return;
+        }
+
+        // Get matches from individual packages
+        $individualPackages = $this->getFilteredIndividualPackages();
+        foreach ($individualPackages as $package) {
+            $matches = $package->getSearchMatchDetails($this->search);
+            if (!empty($matches)) {
+                $this->searchMatches['individual'][$package->id] = $matches;
+            }
+        }
+
+        // Get matches from consolidated packages
+        $consolidatedPackages = $this->getFilteredConsolidatedPackages();
+        foreach ($consolidatedPackages as $consolidatedPackage) {
+            $matches = $consolidatedPackage->getSearchMatchDetails($this->search);
+            if (!empty($matches)) {
+                $this->searchMatches['consolidated'][$consolidatedPackage->id] = $matches;
+            }
+        }
     }
     
     /**
@@ -195,15 +264,7 @@ class Package extends Component
      */
     public function getIndividualPackagesProperty()
     {
-        if (!auth()->check()) {
-            return collect();
-        }
-
-        return PackageModel::where('user_id', auth()->id())
-            ->individual()
-            ->with(['manifest', 'items', 'shipper', 'office'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        return $this->getFilteredIndividualPackages();
     }
 
     /**
@@ -211,15 +272,59 @@ class Package extends Component
      */
     public function getConsolidatedPackagesProperty()
     {
+        return $this->getFilteredConsolidatedPackages();
+    }
+
+    /**
+     * Get filtered individual packages based on search and filters
+     */
+    protected function getFilteredIndividualPackages()
+    {
         if (!auth()->check()) {
             return collect();
         }
 
-        return ConsolidatedPackage::where('customer_id', auth()->id())
+        $query = PackageModel::where('user_id', auth()->id())
+            ->individual()
+            ->with(['manifest', 'items', 'shipper', 'office', 'consolidatedPackage']);
+
+        // Apply search
+        if (!empty($this->search)) {
+            $query->searchWithConsolidated($this->search);
+        }
+
+        // Apply status filter
+        if (!empty($this->statusFilter)) {
+            $query->where('status', $this->statusFilter);
+        }
+
+        return $query->orderBy('created_at', 'desc')->get();
+    }
+
+    /**
+     * Get filtered consolidated packages based on search and filters
+     */
+    protected function getFilteredConsolidatedPackages()
+    {
+        if (!auth()->check()) {
+            return collect();
+        }
+
+        $query = ConsolidatedPackage::where('customer_id', auth()->id())
             ->active()
-            ->with(['packages.manifest', 'packages.items', 'packages.shipper', 'packages.office', 'createdBy'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+            ->with(['packages.manifest', 'packages.items', 'packages.shipper', 'packages.office', 'createdBy']);
+
+        // Apply search
+        if (!empty($this->search)) {
+            $query->search($this->search);
+        }
+
+        // Apply status filter
+        if (!empty($this->statusFilter)) {
+            $query->where('status', $this->statusFilter);
+        }
+
+        return $query->orderBy('created_at', 'desc')->get();
     }
 
     /**
@@ -252,6 +357,35 @@ class Package extends Component
     public function getSelectedPackagesCountProperty()
     {
         return count($this->selectedPackagesForConsolidation);
+    }
+
+    /**
+     * Get search matches for a specific package
+     */
+    public function getPackageSearchMatches($packageId, $type = 'individual')
+    {
+        return $this->searchMatches[$type][$packageId] ?? [];
+    }
+
+    /**
+     * Check if a package has search matches
+     */
+    public function hasSearchMatches($packageId, $type = 'individual')
+    {
+        return !empty($this->searchMatches[$type][$packageId] ?? []);
+    }
+
+    /**
+     * Get available status options for filtering
+     */
+    public function getAvailableStatusesProperty()
+    {
+        return collect(\App\Enums\PackageStatus::cases())->map(function($status) {
+            return [
+                'value' => $status->value,
+                'label' => $status->getLabel()
+            ];
+        });
     }
 
     public function render()

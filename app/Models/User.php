@@ -344,6 +344,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Package::class);
     }
 
+    public function consolidatedPackages()
+    {
+        return $this->hasMany(ConsolidatedPackage::class, 'customer_id');
+    }
+
     public function preAlerts()
     {
         return $this->hasMany(PreAlert::class);

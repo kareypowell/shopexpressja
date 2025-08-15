@@ -211,4 +211,85 @@ class ConsolidatedPackage extends Model
     {
         return $query->where('customer_id', $customerId);
     }
+
+    /**
+     * Scope to search consolidated packages
+     */
+    public function scopeSearch($query, $term)
+    {
+        return $query->where(function($query) use ($term) {
+            $query->where('consolidated_tracking_number', 'like', '%' . $term . '%')
+                  ->orWhere('notes', 'like', '%' . $term . '%')
+                  ->orWhereHas('packages', function ($packageQuery) use ($term) {
+                      $packageQuery->where('tracking_number', 'like', '%' . $term . '%')
+                                   ->orWhere('description', 'like', '%' . $term . '%');
+                  });
+        });
+    }
+
+    /**
+     * Get search match details for highlighting
+     */
+    public function getSearchMatchDetails($term): array
+    {
+        $matches = [];
+        $searchTerm = strtolower($term);
+
+        // Check consolidated tracking number match
+        if (str_contains(strtolower($this->consolidated_tracking_number), $searchTerm)) {
+            $matches[] = [
+                'field' => 'consolidated_tracking_number',
+                'value' => $this->consolidated_tracking_number,
+                'type' => 'exact'
+            ];
+        }
+
+        // Check notes match
+        if ($this->notes && str_contains(strtolower($this->notes), $searchTerm)) {
+            $matches[] = [
+                'field' => 'notes',
+                'value' => $this->notes,
+                'type' => 'partial'
+            ];
+        }
+
+        // Check individual package matches
+        $matchingPackages = $this->packages()->where(function($query) use ($term) {
+            $query->where('tracking_number', 'like', '%' . $term . '%')
+                  ->orWhere('description', 'like', '%' . $term . '%');
+        })->get();
+
+        foreach ($matchingPackages as $package) {
+            if (str_contains(strtolower($package->tracking_number), $searchTerm)) {
+                $matches[] = [
+                    'field' => 'individual_tracking_number',
+                    'value' => $package->tracking_number,
+                    'type' => 'individual_package',
+                    'package_id' => $package->id
+                ];
+            }
+
+            if (str_contains(strtolower($package->description), $searchTerm)) {
+                $matches[] = [
+                    'field' => 'individual_description',
+                    'value' => $package->description,
+                    'type' => 'individual_package',
+                    'package_id' => $package->id
+                ];
+            }
+        }
+
+        return $matches;
+    }
+
+    /**
+     * Get matching individual packages for a search term
+     */
+    public function getMatchingPackages($term)
+    {
+        return $this->packages()->where(function($query) use ($term) {
+            $query->where('tracking_number', 'like', '%' . $term . '%')
+                  ->orWhere('description', 'like', '%' . $term . '%');
+        })->get();
+    }
 }
