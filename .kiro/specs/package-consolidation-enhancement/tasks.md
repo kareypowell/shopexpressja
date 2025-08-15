@@ -66,7 +66,7 @@
   - Write feature tests for enhanced Package component consolidation functionality
   - _Requirements: 1.1, 1.2, 1.6, 2.1, 2.2, 5.1, 5.2, 5.3, 5.4, 5.5, 10.4_
 
-- [ ] 9. Update Package Blade templates for consolidation UI
+- [x] 9. Update Package Blade templates for consolidation UI
   - Modify package listing template to show consolidation toggle and selection checkboxes
   - Create consolidated package display template with expandable individual package details
   - Add consolidation action buttons (consolidate selected, unconsolidate)
