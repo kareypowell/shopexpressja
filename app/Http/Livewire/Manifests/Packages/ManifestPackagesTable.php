@@ -78,29 +78,47 @@ class ManifestPackagesTable extends DataTableComponent
     public function setStatus(PackageStatus $status)
     {
         $packageStatusService = app(PackageStatusService::class);
+        $consolidationService = app(\App\Services\PackageConsolidationService::class);
         $successCount = 0;
         $errorCount = 0;
 
-        collect($this->selectedKeys)->each(function ($id) use ($status, $packageStatusService, &$successCount, &$errorCount) {
+        collect($this->selectedKeys)->each(function ($id) use ($status, $packageStatusService, $consolidationService, &$successCount, &$errorCount) {
             try {
                 $package = Package::find($id);
                 if ($package) {
-                    $result = $packageStatusService->updateStatus(
-                        $package,
-                        $status,
-                        auth()->user(),
-                        'Bulk status update from manifest packages table'
-                    );
+                    // Check if package is consolidated
+                    if ($package->isConsolidated()) {
+                        // Update the entire consolidated package status
+                        $consolidatedPackage = $package->consolidatedPackage;
+                        $result = $consolidationService->updateConsolidatedStatus(
+                            $consolidatedPackage,
+                            $status->value,
+                            auth()->user(),
+                            ['reason' => 'Bulk status update from manifest packages table']
+                        );
 
-                    if ($result) {
-                        $successCount++;
-                        
-                        // Update PackagePreAlert status as well for backward compatibility
-                        PackagePreAlert::where('package_id', $id)->update(['status' => $status->value]);
-
-                        // Note: Email notifications are now handled automatically by PackageStatusService
+                        if ($result['success']) {
+                            $successCount++;
+                        } else {
+                            $errorCount++;
+                        }
                     } else {
-                        $errorCount++;
+                        // Update individual package status
+                        $result = $packageStatusService->updateStatus(
+                            $package,
+                            $status,
+                            auth()->user(),
+                            'Bulk status update from manifest packages table'
+                        );
+
+                        if ($result) {
+                            $successCount++;
+                            
+                            // Update PackagePreAlert status as well for backward compatibility
+                            PackagePreAlert::where('package_id', $id)->update(['status' => $status->value]);
+                        } else {
+                            $errorCount++;
+                        }
                     }
                 }
             } catch (\Exception $e) {
@@ -173,7 +191,7 @@ class ManifestPackagesTable extends DataTableComponent
     public function query(): Builder
     {
         return Package::query()
-            ->with(['manifest', 'items'])
+            ->with(['manifest', 'items', 'consolidatedPackage'])
             ->where('manifest_id', $this->manifest_id)
             ->orderBy('created_at', 'desc');
     }

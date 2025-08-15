@@ -186,12 +186,146 @@
         </div>
     @endif
 
-    <!-- Packages Table -->
+    <!-- Manifest Summary -->
+    @if($manifestId && ($this->manifestTotals['individual_packages'] > 0 || $this->manifestTotals['consolidated_packages'] > 0))
+    <div class="bg-white shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <h4 class="text-lg font-medium text-gray-900 mb-4">Manifest Summary</h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">{{ $this->manifestTotals['individual_packages'] }}</div>
+                    <div class="text-sm text-gray-500">Individual Packages</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ $this->manifestTotals['consolidated_packages'] }}</div>
+                    <div class="text-sm text-gray-500">Consolidated Groups</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600">{{ $this->manifestTotals['total_packages_in_consolidated'] }}</div>
+                    <div class="text-sm text-gray-500">Packages in Groups</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-600">{{ number_format($this->manifestTotals['total_weight'], 2) }} lbs</div>
+                    <div class="text-sm text-gray-500">Total Weight</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Consolidated Packages Section -->
+    @if($manifestId && $this->consolidatedPackages->count() > 0)
+    <div class="bg-white shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <h4 class="text-lg font-medium text-gray-900 mb-4">Consolidated Packages</h4>
+            <div class="space-y-4">
+                @foreach($this->consolidatedPackages as $consolidatedPackage)
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-4">
+                                <div>
+                                    <h5 class="font-medium text-gray-900">{{ $consolidatedPackage->consolidated_tracking_number }}</h5>
+                                    <p class="text-sm text-gray-500">{{ $consolidatedPackage->customer->full_name ?? 'N/A' }}</p>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    @php
+                                        $badgeClass = \App\Enums\PackageStatus::from($consolidatedPackage->status)->getBadgeClass();
+                                        $statusLabel = \App\Enums\PackageStatus::from($consolidatedPackage->status)->getLabel();
+                                    @endphp
+                                    @if($badgeClass === 'default')
+                                        <x-badges.default>{{ $statusLabel }}</x-badges.default>
+                                    @elseif($badgeClass === 'primary')
+                                        <x-badges.primary>{{ $statusLabel }}</x-badges.primary>
+                                    @elseif($badgeClass === 'success')
+                                        <x-badges.success>{{ $statusLabel }}</x-badges.success>
+                                    @elseif($badgeClass === 'warning')
+                                        <x-badges.warning>{{ $statusLabel }}</x-badges.warning>
+                                    @elseif($badgeClass === 'danger')
+                                        <x-badges.danger>{{ $statusLabel }}</x-badges.danger>
+                                    @elseif($badgeClass === 'shs')
+                                        <x-badges.shs>{{ $statusLabel }}</x-badges.shs>
+                                    @else
+                                        <x-badges.default>{{ $statusLabel }}</x-badges.default>
+                                    @endif
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        {{ $consolidatedPackage->total_quantity }} packages
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <select wire:change="updateConsolidatedPackageStatus({{ $consolidatedPackage->id }}, $event.target.value)"
+                                        class="text-sm border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500">
+                                    <option value="">Change Status</option>
+                                    @foreach($statusOptions as $value => $label)
+                                        <option value="{{ $value }}" 
+                                                @if($consolidatedPackage->status === $value) selected @endif>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <button onclick="toggleConsolidatedWorkflowDetails({{ $consolidatedPackage->id }})"
+                                        class="text-blue-600 hover:text-blue-900 text-sm">
+                                    Toggle Details
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
+                            <div>Weight: {{ number_format($consolidatedPackage->total_weight, 2) }} lbs</div>
+                            <div>Freight: ${{ number_format($consolidatedPackage->total_freight_price, 2) }}</div>
+                            <div>Customs: ${{ number_format($consolidatedPackage->total_customs_duty, 2) }}</div>
+                            <div>Total: ${{ number_format($consolidatedPackage->total_cost, 2) }}</div>
+                        </div>
+
+                        <!-- Expandable Individual Packages -->
+                        <div id="consolidated-workflow-details-{{ $consolidatedPackage->id }}" class="hidden mt-4 border-t pt-4">
+                            <h6 class="font-medium text-gray-900 mb-2">Individual Packages:</h6>
+                            <div class="space-y-2">
+                                @foreach($consolidatedPackage->packages as $package)
+                                    <div class="flex items-center justify-between bg-gray-50 p-3 rounded">
+                                        <div class="flex items-center space-x-4">
+                                            <span class="font-medium">{{ $package->tracking_number }}</span>
+                                            <span class="text-gray-600">{{ Str::limit($package->description, 30) }}</span>
+                                            <span class="text-gray-500">{{ $package->weight }} lbs</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            @php
+                                                $packageBadgeClass = $package->status_badge_class ?? 'default';
+                                                $packageStatusLabel = $package->status_label ?? 'Unknown';
+                                            @endphp
+                                            @if($packageBadgeClass === 'default')
+                                                <x-badges.default>{{ $packageStatusLabel }}</x-badges.default>
+                                            @elseif($packageBadgeClass === 'primary')
+                                                <x-badges.primary>{{ $packageStatusLabel }}</x-badges.primary>
+                                            @elseif($packageBadgeClass === 'success')
+                                                <x-badges.success>{{ $packageStatusLabel }}</x-badges.success>
+                                            @elseif($packageBadgeClass === 'warning')
+                                                <x-badges.warning>{{ $packageStatusLabel }}</x-badges.warning>
+                                            @elseif($packageBadgeClass === 'danger')
+                                                <x-badges.danger>{{ $packageStatusLabel }}</x-badges.danger>
+                                            @elseif($packageBadgeClass === 'shs')
+                                                <x-badges.shs>{{ $packageStatusLabel }}</x-badges.shs>
+                                            @else
+                                                <x-badges.default>{{ $packageStatusLabel }}</x-badges.default>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Individual Packages Table -->
     <div class="bg-white shadow overflow-hidden sm:rounded-md">
         <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 sm:px-6">
             <div class="flex items-center justify-between">
                 <h3 class="text-lg leading-6 font-medium text-gray-900">
-                    Packages ({{ $packages->total() }})
+                    Individual Packages ({{ $packages->total() }})
                 </h3>
                 
                 <div class="flex items-center space-x-2">
@@ -222,6 +356,11 @@
                                     <div class="flex items-center space-x-3">
                                         <p class="text-sm font-medium text-gray-900 truncate">
                                             {{ $package->tracking_number }}
+                                            @if($package->isConsolidated())
+                                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                    Consolidated
+                                                </span>
+                                            @endif
                                         </p>
                                         @php
                                             $badgeClass = $package->status_badge_class ?? 'default';
@@ -251,6 +390,10 @@
                                         @if($package->total_cost > 0)
                                             <span>•</span>
                                             <span>Cost: ${{ number_format($package->total_cost, 2) }}</span>
+                                        @endif
+                                        @if($package->isConsolidated() && $package->consolidatedPackage)
+                                            <span>•</span>
+                                            <span>Group: {{ $package->consolidatedPackage->consolidated_tracking_number }}</span>
                                         @endif
                                     </div>
                                     
@@ -626,4 +769,13 @@
             </div>
         </div>
     @endif
+
+    <script>
+        function toggleConsolidatedWorkflowDetails(consolidatedPackageId) {
+            const detailsElement = document.getElementById('consolidated-workflow-details-' + consolidatedPackageId);
+            if (detailsElement) {
+                detailsElement.classList.toggle('hidden');
+            }
+        }
+    </script>
 </div>

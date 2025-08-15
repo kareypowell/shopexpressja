@@ -78,7 +78,7 @@ class PackageWorkflow extends Component
 
     public function getPackages()
     {
-        $query = Package::with(['user', 'manifest', 'office', 'shipper']);
+        $query = Package::with(['user', 'manifest', 'office', 'shipper', 'consolidatedPackage']);
 
         // Filter by manifest if specified
         if ($this->manifestId) {
@@ -92,10 +92,69 @@ class PackageWorkflow extends Component
 
         // Apply search
         if ($this->search) {
-            $query->search($this->search);
+            $query->searchWithConsolidated($this->search);
         }
 
         return $query->orderBy('created_at', 'desc')->paginate(20);
+    }
+
+    /**
+     * Get consolidated packages for the current manifest
+     */
+    public function getConsolidatedPackagesProperty()
+    {
+        if (!$this->manifestId) {
+            return collect();
+        }
+
+        return \App\Models\ConsolidatedPackage::whereHas('packages', function ($query) {
+                $query->where('manifest_id', $this->manifestId);
+            })
+            ->with(['packages' => function ($query) {
+                $query->where('manifest_id', $this->manifestId);
+            }, 'customer.profile'])
+            ->active()
+            ->get();
+    }
+
+    /**
+     * Get manifest totals including consolidated packages
+     */
+    public function getManifestTotalsProperty()
+    {
+        if (!$this->manifestId) {
+            return [
+                'individual_packages' => 0,
+                'consolidated_packages' => 0,
+                'total_packages_in_consolidated' => 0,
+                'total_weight' => 0,
+                'total_cost' => 0,
+            ];
+        }
+
+        $individualPackages = Package::where('manifest_id', $this->manifestId)
+            ->individual()
+            ->get();
+
+        $consolidatedPackages = $this->consolidatedPackages;
+
+        $totals = [
+            'individual_packages' => $individualPackages->count(),
+            'consolidated_packages' => $consolidatedPackages->count(),
+            'total_packages_in_consolidated' => $consolidatedPackages->sum('total_quantity'),
+            'total_weight' => $individualPackages->sum('weight') + $consolidatedPackages->sum('total_weight'),
+            'total_freight_price' => $individualPackages->sum('freight_price') + $consolidatedPackages->sum('total_freight_price'),
+            'total_customs_duty' => $individualPackages->sum('customs_duty') + $consolidatedPackages->sum('total_customs_duty'),
+            'total_storage_fee' => $individualPackages->sum('storage_fee') + $consolidatedPackages->sum('total_storage_fee'),
+            'total_delivery_fee' => $individualPackages->sum('delivery_fee') + $consolidatedPackages->sum('total_delivery_fee'),
+        ];
+
+        $totals['total_cost'] = $totals['total_freight_price'] + 
+                               $totals['total_customs_duty'] + 
+                               $totals['total_storage_fee'] + 
+                               $totals['total_delivery_fee'];
+
+        return $totals;
     }
 
     public function getStatusOptions()
@@ -198,12 +257,62 @@ class PackageWorkflow extends Component
 
         $packageIds = collect($this->confirmingPackages)->pluck('id')->toArray();
         $statusEnum = PackageStatus::from($this->confirmingStatus);
-        $results = $this->packageStatusService->bulkUpdateStatus(
-            $packageIds,
-            $statusEnum,
-            Auth::user(),
-            $this->notes ?: null
-        );
+        
+        // Handle consolidated packages separately
+        $consolidationService = app(\App\Services\PackageConsolidationService::class);
+        $consolidatedPackageIds = [];
+        $individualPackageIds = [];
+
+        foreach ($packageIds as $packageId) {
+            $package = Package::find($packageId);
+            if ($package && $package->isConsolidated()) {
+                $consolidatedPackageIds[] = $package->consolidated_package_id;
+            } else {
+                $individualPackageIds[] = $packageId;
+            }
+        }
+
+        $successCount = 0;
+        $errorCount = 0;
+
+        // Update individual packages
+        if (!empty($individualPackageIds)) {
+            $results = $this->packageStatusService->bulkUpdateStatus(
+                $individualPackageIds,
+                $statusEnum,
+                Auth::user(),
+                $this->notes ?: null
+            );
+            $successCount += count($results['success']);
+            $errorCount += count($results['failed']);
+        }
+
+        // Update consolidated packages
+        foreach (array_unique($consolidatedPackageIds) as $consolidatedPackageId) {
+            try {
+                $consolidatedPackage = \App\Models\ConsolidatedPackage::find($consolidatedPackageId);
+                if ($consolidatedPackage) {
+                    $result = $consolidationService->updateConsolidatedStatus(
+                        $consolidatedPackage,
+                        $this->confirmingStatus,
+                        Auth::user(),
+                        ['reason' => $this->notes ?: 'Bulk status update from manifest workflow']
+                    );
+
+                    if ($result['success']) {
+                        $successCount += $consolidatedPackage->packages()->count();
+                    } else {
+                        $errorCount += $consolidatedPackage->packages()->count();
+                    }
+                }
+            } catch (\Exception $e) {
+                $errorCount++;
+                \Log::error('Failed to update consolidated package status in bulk update', [
+                    'consolidated_package_id' => $consolidatedPackageId,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
 
         $this->showConfirmModal = false;
         $this->selectedPackages = [];
@@ -214,19 +323,57 @@ class PackageWorkflow extends Component
         $this->confirmingStatusLabel = '';
         $this->confirmingPackages = [];
 
-        if (count($results['success']) > 0) {
+        if ($successCount > 0) {
             $this->dispatchBrowserEvent('toastr:success', [
-                'message' => count($results['success']) . ' package(s) updated successfully.'
+                'message' => $successCount . ' package(s) updated successfully.'
             ]);
         }
 
-        if (count($results['failed']) > 0) {
+        if ($errorCount > 0) {
             $this->dispatchBrowserEvent('toastr:error', [
-                'message' => count($results['failed']) . ' package(s) failed to update. Please check the logs.'
+                'message' => $errorCount . ' package(s) failed to update. Please check the logs.'
             ]);
         }
 
         $this->emit('packageStatusUpdated');
+    }
+
+    /**
+     * Update consolidated package status
+     */
+    public function updateConsolidatedPackageStatus($consolidatedPackageId, $newStatus)
+    {
+        try {
+            $consolidatedPackage = \App\Models\ConsolidatedPackage::findOrFail($consolidatedPackageId);
+            $consolidationService = app(\App\Services\PackageConsolidationService::class);
+
+            $result = $consolidationService->updateConsolidatedStatus(
+                $consolidatedPackage,
+                $newStatus,
+                Auth::user(),
+                ['reason' => 'Status update from manifest workflow']
+            );
+
+            if ($result['success']) {
+                $this->dispatchBrowserEvent('toastr:success', [
+                    'message' => "Consolidated package status updated successfully."
+                ]);
+                $this->emit('packageStatusUpdated');
+            } else {
+                $this->dispatchBrowserEvent('toastr:error', [
+                    'message' => $result['message']
+                ]);
+            }
+        } catch (\Exception $e) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Failed to update consolidated package status.'
+            ]);
+            \Log::error('Failed to update consolidated package status', [
+                'consolidated_package_id' => $consolidatedPackageId,
+                'new_status' => $newStatus,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     public function cancelBulkUpdate()

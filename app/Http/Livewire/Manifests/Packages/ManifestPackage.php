@@ -12,6 +12,7 @@ use App\Models\PreAlert;
 use App\Models\Rate;
 use App\Models\Manifest;
 use App\Models\PackageItem;
+use App\Models\ConsolidatedPackage;
 use Illuminate\Support\Facades\Log;
 use App\Notifications\MissingPreAlertNotification;
 use App\Services\SeaRateCalculator;
@@ -367,11 +368,12 @@ class ManifestPackage extends Component
 
     /**
      * Get packages for the current manifest with filtering and search
+     * Includes both individual packages and consolidated packages
      */
     public function getPackagesProperty()
     {
         $query = Package::where('manifest_id', $this->manifest_id)
-            ->with(['user.profile', 'shipper', 'office']);
+            ->with(['user.profile', 'shipper', 'office', 'consolidatedPackage']);
 
         // Apply status filter
         if (!empty($this->statusFilter)) {
@@ -387,11 +389,61 @@ class ManifestPackage extends Component
                   ->orWhereHas('user', function ($userQuery) {
                       $userQuery->where('first_name', 'like', '%' . $this->searchTerm . '%')
                                ->orWhere('last_name', 'like', '%' . $this->searchTerm . '%');
+                  })
+                  // Search within consolidated packages
+                  ->orWhereHas('consolidatedPackage', function ($consolidatedQuery) {
+                      $consolidatedQuery->where('consolidated_tracking_number', 'like', '%' . $this->searchTerm . '%')
+                                       ->orWhere('notes', 'like', '%' . $this->searchTerm . '%');
                   });
             });
         }
 
         return $query->orderBy('created_at', 'desc')->paginate(20);
+    }
+
+    /**
+     * Get consolidated packages for the current manifest
+     */
+    public function getConsolidatedPackagesProperty()
+    {
+        return ConsolidatedPackage::whereHas('packages', function ($query) {
+                $query->where('manifest_id', $this->manifest_id);
+            })
+            ->with(['packages' => function ($query) {
+                $query->where('manifest_id', $this->manifest_id);
+            }, 'customer.profile'])
+            ->active()
+            ->get();
+    }
+
+    /**
+     * Get manifest totals including consolidated packages
+     */
+    public function getManifestTotalsProperty()
+    {
+        $individualPackages = Package::where('manifest_id', $this->manifest_id)
+            ->individual()
+            ->get();
+
+        $consolidatedPackages = $this->consolidatedPackages;
+
+        $totals = [
+            'individual_packages' => $individualPackages->count(),
+            'consolidated_packages' => $consolidatedPackages->count(),
+            'total_packages_in_consolidated' => $consolidatedPackages->sum('total_quantity'),
+            'total_weight' => $individualPackages->sum('weight') + $consolidatedPackages->sum('total_weight'),
+            'total_freight_price' => $individualPackages->sum('freight_price') + $consolidatedPackages->sum('total_freight_price'),
+            'total_customs_duty' => $individualPackages->sum('customs_duty') + $consolidatedPackages->sum('total_customs_duty'),
+            'total_storage_fee' => $individualPackages->sum('storage_fee') + $consolidatedPackages->sum('total_storage_fee'),
+            'total_delivery_fee' => $individualPackages->sum('delivery_fee') + $consolidatedPackages->sum('total_delivery_fee'),
+        ];
+
+        $totals['total_cost'] = $totals['total_freight_price'] + 
+                               $totals['total_customs_duty'] + 
+                               $totals['total_storage_fee'] + 
+                               $totals['total_delivery_fee'];
+
+        return $totals;
     }
 
 
@@ -487,22 +539,42 @@ class ManifestPackage extends Component
         $successCount = 0;
         $errorCount = 0;
         $packageStatusService = $this->getPackageStatusService();
+        $consolidationService = app(\App\Services\PackageConsolidationService::class);
 
         foreach ($this->selectedPackages as $packageId) {
             try {
                 $package = Package::find($packageId);
                 if ($package) {
-                    $result = $packageStatusService->updateStatus(
-                        $package,
-                        PackageStatus::from($this->bulkStatus),
-                        auth()->user(),
-                        'Bulk status update from manifest package view'
-                    );
+                    // Check if package is consolidated
+                    if ($package->isConsolidated()) {
+                        // Update the entire consolidated package status
+                        $consolidatedPackage = $package->consolidatedPackage;
+                        $result = $consolidationService->updateConsolidatedStatus(
+                            $consolidatedPackage,
+                            $this->bulkStatus,
+                            auth()->user(),
+                            ['reason' => 'Bulk status update from manifest package view']
+                        );
 
-                    if ($result) {
-                        $successCount++;
+                        if ($result['success']) {
+                            $successCount++;
+                        } else {
+                            $errorCount++;
+                        }
                     } else {
-                        $errorCount++;
+                        // Update individual package status
+                        $result = $packageStatusService->updateStatus(
+                            $package,
+                            PackageStatus::from($this->bulkStatus),
+                            auth()->user(),
+                            'Bulk status update from manifest package view'
+                        );
+
+                        if ($result) {
+                            $successCount++;
+                        } else {
+                            $errorCount++;
+                        }
                     }
                 } else {
                     $errorCount++;
@@ -537,6 +609,43 @@ class ManifestPackage extends Component
         // Reset state
         $this->cancelStatusUpdate();
         $this->clearSelections();
+    }
+
+    /**
+     * Update consolidated package status
+     */
+    public function updateConsolidatedPackageStatus($consolidatedPackageId, $newStatus)
+    {
+        try {
+            $consolidatedPackage = ConsolidatedPackage::findOrFail($consolidatedPackageId);
+            $consolidationService = app(\App\Services\PackageConsolidationService::class);
+
+            $result = $consolidationService->updateConsolidatedStatus(
+                $consolidatedPackage,
+                $newStatus,
+                auth()->user(),
+                ['reason' => 'Status update from manifest view']
+            );
+
+            if ($result['success']) {
+                $this->dispatchBrowserEvent('toastr:success', [
+                    'message' => "Consolidated package status updated successfully.",
+                ]);
+            } else {
+                $this->dispatchBrowserEvent('toastr:error', [
+                    'message' => $result['message'],
+                ]);
+            }
+        } catch (\Exception $e) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Failed to update consolidated package status.',
+            ]);
+            Log::error('Failed to update consolidated package status', [
+                'consolidated_package_id' => $consolidatedPackageId,
+                'new_status' => $newStatus,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     /**

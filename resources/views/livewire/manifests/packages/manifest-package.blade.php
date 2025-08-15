@@ -82,9 +82,106 @@
     </div>
     @endif
 
-    <!-- Packages Table -->
+    <!-- Manifest Totals Summary -->
+    @if($this->manifestTotals['individual_packages'] > 0 || $this->manifestTotals['consolidated_packages'] > 0)
+    <div class="bg-white shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <h4 class="text-lg font-medium text-gray-900 mb-4">Manifest Summary</h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">{{ $this->manifestTotals['individual_packages'] }}</div>
+                    <div class="text-sm text-gray-500">Individual Packages</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ $this->manifestTotals['consolidated_packages'] }}</div>
+                    <div class="text-sm text-gray-500">Consolidated Groups</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600">{{ $this->manifestTotals['total_packages_in_consolidated'] }}</div>
+                    <div class="text-sm text-gray-500">Packages in Groups</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-600">{{ number_format($this->manifestTotals['total_weight'], 2) }} lbs</div>
+                    <div class="text-sm text-gray-500">Total Weight</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Consolidated Packages Section -->
+    @if($this->consolidatedPackages->count() > 0)
+    <div class="bg-white shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <h4 class="text-lg font-medium text-gray-900 mb-4">Consolidated Packages</h4>
+            <div class="space-y-4">
+                @foreach($this->consolidatedPackages as $consolidatedPackage)
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-4">
+                                <div>
+                                    <h5 class="font-medium text-gray-900">{{ $consolidatedPackage->consolidated_tracking_number }}</h5>
+                                    <p class="text-sm text-gray-500">{{ $consolidatedPackage->customer->full_name ?? 'N/A' }}</p>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <x-package-status-badge :status="$consolidatedPackage->status" />
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        {{ $consolidatedPackage->total_quantity }} packages
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <select wire:change="updateConsolidatedPackageStatus({{ $consolidatedPackage->id }}, $event.target.value)"
+                                        class="text-sm border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">Change Status</option>
+                                    @foreach($this->statusOptions as $option)
+                                        <option value="{{ $option['value'] }}" 
+                                                @if($consolidatedPackage->status === $option['value']) selected @endif>
+                                            {{ $option['label'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <button onclick="toggleConsolidatedDetails({{ $consolidatedPackage->id }})"
+                                        class="text-blue-600 hover:text-blue-900 text-sm">
+                                    Toggle Details
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
+                            <div>Weight: {{ number_format($consolidatedPackage->total_weight, 2) }} lbs</div>
+                            <div>Freight: ${{ number_format($consolidatedPackage->total_freight_price, 2) }}</div>
+                            <div>Customs: ${{ number_format($consolidatedPackage->total_customs_duty, 2) }}</div>
+                            <div>Total: ${{ number_format($consolidatedPackage->total_cost, 2) }}</div>
+                        </div>
+
+                        <!-- Expandable Individual Packages -->
+                        <div id="consolidated-details-{{ $consolidatedPackage->id }}" class="hidden mt-4 border-t pt-4">
+                            <h6 class="font-medium text-gray-900 mb-2">Individual Packages:</h6>
+                            <div class="space-y-2">
+                                @foreach($consolidatedPackage->packages as $package)
+                                    <div class="flex items-center justify-between bg-gray-50 p-3 rounded">
+                                        <div class="flex items-center space-x-4">
+                                            <span class="font-medium">{{ $package->tracking_number }}</span>
+                                            <span class="text-gray-600">{{ Str::limit($package->description, 30) }}</span>
+                                            <span class="text-gray-500">{{ $package->weight }} lbs</span>
+                                        </div>
+                                        <x-package-status-badge :package="$package" />
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Individual Packages Table -->
     <div class="bg-white shadow overflow-hidden sm:rounded-md">
         <div class="px-4 py-5 sm:p-6">
+            <h4 class="text-lg font-medium text-gray-900 mb-4">Individual Packages</h4>
             @if($this->packages->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -213,4 +310,13 @@
     @if($isOpen)
     @include('livewire.manifests.packages.create')
     @endif
+
+    <script>
+        function toggleConsolidatedDetails(consolidatedPackageId) {
+            const detailsElement = document.getElementById('consolidated-details-' + consolidatedPackageId);
+            if (detailsElement) {
+                detailsElement.classList.toggle('hidden');
+            }
+        }
+    </script>
 </div>
