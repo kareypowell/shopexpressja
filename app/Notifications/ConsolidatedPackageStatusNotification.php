@@ -53,7 +53,7 @@ class ConsolidatedPackageStatusNotification extends Notification
         
         return (new MailMessage)
                     ->subject("Consolidated Package {$statusTitle}")
-                    ->markdown('emails.packages.consolidated-package-status', [
+                    ->view('emails.packages.consolidated-package-status', [
                         'user' => $this->user,
                         'consolidatedPackage' => $this->consolidatedPackage,
                         'newStatus' => $this->newStatus,

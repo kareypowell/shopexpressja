@@ -8,23 +8,32 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use MailerSend\LaravelDriver\MailerSendTrait;
 use App\Models\ConsolidatedPackage;
+use App\Models\User;
 
-class PackageConsolidationNotification extends Notification
+class ConsolidatedPackageReadyNotification extends Notification
 {
     use Queueable, MailerSendTrait;
 
     public $user;
     public $consolidatedPackage;
+    public $showCosts;
+    public $specialInstructions;
 
     /**
      * Create a new notification instance.
      *
+     * @param User $user
+     * @param ConsolidatedPackage $consolidatedPackage
+     * @param bool $showCosts
+     * @param string|null $specialInstructions
      * @return void
      */
-    public function __construct($user, ConsolidatedPackage $consolidatedPackage)
+    public function __construct(User $user, ConsolidatedPackage $consolidatedPackage, bool $showCosts = true, ?string $specialInstructions = null)
     {
         $this->user = $user;
         $this->consolidatedPackage = $consolidatedPackage;
+        $this->showCosts = $showCosts;
+        $this->specialInstructions = $specialInstructions;
     }
 
     /**
@@ -46,15 +55,14 @@ class PackageConsolidationNotification extends Notification
      */
     public function toMail($notifiable)
     {
-        $packageCount = $this->consolidatedPackage->packages->count();
-        
         return (new MailMessage)
-                    ->subject('Your Packages Have Been Consolidated')
-                    ->view('emails.packages.package-consolidation', [
+                    ->subject('Consolidated Package Ready for Pickup - ' . $this->consolidatedPackage->consolidated_tracking_number)
+                    ->view('emails.packages.consolidated-package-ready', [
                         'user' => $this->user,
                         'consolidatedPackage' => $this->consolidatedPackage,
                         'individualPackages' => $this->consolidatedPackage->packages,
-                        'packageCount' => $packageCount,
+                        'showCosts' => $this->showCosts,
+                        'specialInstructions' => $this->specialInstructions,
                     ]);
     }
 
@@ -70,7 +78,8 @@ class PackageConsolidationNotification extends Notification
             'consolidated_package_id' => $this->consolidatedPackage->id,
             'consolidated_tracking_number' => $this->consolidatedPackage->consolidated_tracking_number,
             'individual_packages_count' => $this->consolidatedPackage->packages->count(),
-            'individual_tracking_numbers' => $this->consolidatedPackage->packages->pluck('tracking_number')->toArray(),
+            'show_costs' => $this->showCosts,
+            'special_instructions' => $this->specialInstructions,
         ];
     }
 }

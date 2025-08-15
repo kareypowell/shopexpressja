@@ -3,6 +3,7 @@
 namespace App\Http\Livewire;
 
 use App\Models\Package;
+use App\Models\ConsolidatedPackage;
 use App\Models\User;
 use App\Services\PackageDistributionService;
 use App\Enums\PackageStatus;
@@ -19,6 +20,8 @@ class PackageDistribution extends Component
     public $showCustomerDropdown = false;
     public $selectedCustomerDisplay = '';
     public $selectedPackages = [];
+    public $selectedConsolidatedPackages = [];
+    public $showConsolidatedView = false;
     public $amountCollected = 0;
     public $applyCreditBalance = false;
     public $applyAccountBalance = false;
@@ -44,8 +47,10 @@ class PackageDistribution extends Component
 
     protected $rules = [
         'amountCollected' => 'required|numeric|min:0',
-        'selectedPackages' => 'required|array|min:1',
+        'selectedPackages' => 'required_without:selectedConsolidatedPackages|array',
         'selectedPackages.*' => 'exists:packages,id',
+        'selectedConsolidatedPackages' => 'required_without:selectedPackages|array',
+        'selectedConsolidatedPackages.*' => 'exists:consolidated_packages,id',
         'selectedCustomerId' => 'required|exists:users,id',
         'writeOffAmount' => 'nullable|numeric|min:0',
         'writeOffReason' => 'nullable|string|max:500',
@@ -56,13 +61,20 @@ class PackageDistribution extends Component
     {
         $rules = [
             'amountCollected' => 'required|numeric|min:0',
-            'selectedPackages' => 'required|array|min:1',
-            'selectedPackages.*' => 'exists:packages,id',
             'selectedCustomerId' => 'required|exists:users,id',
             'writeOffAmount' => 'nullable|numeric|min:0',
             'writeOffReason' => 'nullable|string|max:500',
             'distributionNotes' => 'nullable|string|max:1000',
         ];
+        
+        // Require either individual packages or consolidated packages
+        if ($this->showConsolidatedView) {
+            $rules['selectedConsolidatedPackages'] = 'required|array|min:1';
+            $rules['selectedConsolidatedPackages.*'] = 'exists:consolidated_packages,id';
+        } else {
+            $rules['selectedPackages'] = 'required|array|min:1';
+            $rules['selectedPackages.*'] = 'exists:packages,id';
+        }
         
         // Only require write-off reason if write-off amount is greater than 0
         $writeOffAmount = (float) ($this->writeOffAmount ?: 0);
@@ -76,6 +88,8 @@ class PackageDistribution extends Component
     protected $messages = [
         'selectedPackages.required' => 'Please select at least one package for distribution.',
         'selectedPackages.min' => 'Please select at least one package for distribution.',
+        'selectedConsolidatedPackages.required' => 'Please select at least one consolidated package for distribution.',
+        'selectedConsolidatedPackages.min' => 'Please select at least one consolidated package for distribution.',
         'amountCollected.required' => 'Please enter the amount collected from the customer.',
         'amountCollected.numeric' => 'Amount collected must be a valid number.',
         'amountCollected.min' => 'Amount collected cannot be negative.',
@@ -95,6 +109,7 @@ class PackageDistribution extends Component
     public function updatedSelectedCustomerId()
     {
         $this->selectedPackages = [];
+        $this->selectedConsolidatedPackages = [];
         $this->resetPage();
         $this->resetForm();
     }
@@ -141,12 +156,27 @@ class PackageDistribution extends Component
         $this->resetPage();
     }
 
+    public function toggleConsolidatedView()
+    {
+        $this->showConsolidatedView = !$this->showConsolidatedView;
+        $this->selectedPackages = [];
+        $this->selectedConsolidatedPackages = [];
+        $this->calculateTotals();
+        $this->updatePaymentStatus();
+    }
+
     public function updatedSearch()
     {
         $this->resetPage();
     }
 
     public function updatedSelectedPackages()
+    {
+        $this->calculateTotals();
+        $this->updatePaymentStatus();
+    }
+
+    public function updatedSelectedConsolidatedPackages()
     {
         $this->calculateTotals();
         $this->updatePaymentStatus();
@@ -242,12 +272,38 @@ class PackageDistribution extends Component
 
         $query = Package::where('user_id', $this->selectedCustomerId)
             ->where('status', PackageStatus::READY)
+            ->whereNull('consolidated_package_id') // Only individual packages
             ->with(['manifest', 'office', 'user.profile']);
 
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('tracking_number', 'like', '%' . $this->search . '%')
                   ->orWhere('description', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        return $query->orderBy('created_at', 'desc')->paginate(10);
+    }
+
+    public function getConsolidatedPackagesProperty()
+    {
+        if (!$this->selectedCustomerId) {
+            return collect();
+        }
+
+        $query = ConsolidatedPackage::where('customer_id', $this->selectedCustomerId)
+            ->where('status', PackageStatus::READY)
+            ->where('is_active', true)
+            ->with(['packages', 'customer.profile']);
+
+        if ($this->search) {
+            $query->where(function ($q) {
+                $q->where('consolidated_tracking_number', 'like', '%' . $this->search . '%')
+                  ->orWhere('notes', 'like', '%' . $this->search . '%')
+                  ->orWhereHas('packages', function ($packageQuery) {
+                      $packageQuery->where('tracking_number', 'like', '%' . $this->search . '%')
+                                   ->orWhere('description', 'like', '%' . $this->search . '%');
+                  });
             });
         }
 
@@ -265,16 +321,31 @@ class PackageDistribution extends Component
 
     public function calculateTotals()
     {
-        if (empty($this->selectedPackages) || !$this->selectedCustomerId) {
-            $this->totalCost = 0;
+        $this->totalCost = 0;
+
+        if (!$this->selectedCustomerId) {
             return;
         }
 
-        $packages = Package::whereIn('id', $this->selectedPackages)
-            ->where('user_id', $this->selectedCustomerId)
-            ->get();
+        if ($this->showConsolidatedView) {
+            // Calculate totals for consolidated packages
+            if (!empty($this->selectedConsolidatedPackages)) {
+                $consolidatedPackages = ConsolidatedPackage::whereIn('id', $this->selectedConsolidatedPackages)
+                    ->where('customer_id', $this->selectedCustomerId)
+                    ->get();
 
-        $this->totalCost = $packages->sum('total_cost');
+                $this->totalCost = $consolidatedPackages->sum('total_cost');
+            }
+        } else {
+            // Calculate totals for individual packages
+            if (!empty($this->selectedPackages)) {
+                $packages = Package::whereIn('id', $this->selectedPackages)
+                    ->where('user_id', $this->selectedCustomerId)
+                    ->get();
+
+                $this->totalCost = $packages->sum('total_cost');
+            }
+        }
     }
 
     public function updatePaymentStatus()
@@ -327,11 +398,20 @@ class PackageDistribution extends Component
         $this->calculateTotals();
         $this->updatePaymentStatus();
 
-        $packages = Package::whereIn('id', $this->selectedPackages)
-            ->where('user_id', $this->selectedCustomerId)
-            ->get();
-
         $customer = $this->selectedCustomer;
+        $packages = collect();
+        $consolidatedPackages = collect();
+
+        if ($this->showConsolidatedView) {
+            $consolidatedPackages = ConsolidatedPackage::whereIn('id', $this->selectedConsolidatedPackages)
+                ->where('customer_id', $this->selectedCustomerId)
+                ->with('packages')
+                ->get();
+        } else {
+            $packages = Package::whereIn('id', $this->selectedPackages)
+                ->where('user_id', $this->selectedCustomerId)
+                ->get();
+        }
 
         // Calculate advanced payment details
         $amountCollected = (float) ($this->amountCollected ?: 0);
@@ -346,8 +426,40 @@ class PackageDistribution extends Component
         $totalReceived = $amountCollected + $balanceApplied;
         $outstandingBalance = max(0, $netTotal - $totalReceived);
 
-        $this->distributionSummary = [
-            'packages' => $packages->map(function ($package) {
+        // Prepare distribution summary based on view type
+        $summaryPackages = [];
+        $summaryConsolidatedPackages = [];
+
+        if ($this->showConsolidatedView) {
+            $summaryConsolidatedPackages = $consolidatedPackages->map(function ($consolidatedPackage) {
+                return [
+                    'id' => $consolidatedPackage->id,
+                    'consolidated_tracking_number' => $consolidatedPackage->consolidated_tracking_number,
+                    'total_weight' => $consolidatedPackage->total_weight,
+                    'total_quantity' => $consolidatedPackage->total_quantity,
+                    'total_freight_price' => $consolidatedPackage->total_freight_price ?? 0,
+                    'total_customs_duty' => $consolidatedPackage->total_customs_duty ?? 0,
+                    'total_storage_fee' => $consolidatedPackage->total_storage_fee ?? 0,
+                    'total_delivery_fee' => $consolidatedPackage->total_delivery_fee ?? 0,
+                    'total_cost' => $consolidatedPackage->total_cost,
+                    'notes' => $consolidatedPackage->notes,
+                    'individual_packages' => $consolidatedPackage->packages->map(function ($package) {
+                        return [
+                            'id' => $package->id,
+                            'tracking_number' => $package->tracking_number,
+                            'description' => $package->description,
+                            'weight' => $package->weight,
+                            'freight_price' => $package->freight_price ?? 0,
+                            'customs_duty' => $package->customs_duty ?? 0,
+                            'storage_fee' => $package->storage_fee ?? 0,
+                            'delivery_fee' => $package->delivery_fee ?? 0,
+                            'total_cost' => $package->total_cost,
+                        ];
+                    })->toArray(),
+                ];
+            })->toArray();
+        } else {
+            $summaryPackages = $packages->map(function ($package) {
                 return [
                     'id' => $package->id,
                     'tracking_number' => $package->tracking_number,
@@ -358,7 +470,13 @@ class PackageDistribution extends Component
                     'delivery_fee' => $package->delivery_fee ?? 0,
                     'total_cost' => $package->total_cost,
                 ];
-            })->toArray(),
+            })->toArray();
+        }
+
+        $this->distributionSummary = [
+            'is_consolidated' => $this->showConsolidatedView,
+            'packages' => $summaryPackages,
+            'consolidated_packages' => $summaryConsolidatedPackages,
             'total_cost' => $totalCost,
             'write_off_amount' => $writeOffAmount,
             'write_off_reason' => $this->writeOffReason,
@@ -430,13 +548,40 @@ class PackageDistribution extends Component
                 $balanceOptions['account'] = true;
             }
             
-            $result = $distributionService->distributePackages(
-                $this->selectedPackages,
-                $this->amountCollected,
-                Auth::user(),
-                $balanceOptions,
-                $options
-            );
+            $result = null;
+            
+            if ($this->showConsolidatedView) {
+                // Handle consolidated package distribution
+                if (count($this->selectedConsolidatedPackages) !== 1) {
+                    throw new \Exception('Please select exactly one consolidated package for distribution.');
+                }
+                
+                $consolidatedPackage = ConsolidatedPackage::find($this->selectedConsolidatedPackages[0]);
+                if (!$consolidatedPackage) {
+                    throw new \Exception('Consolidated package not found.');
+                }
+                
+                $result = $distributionService->distributeConsolidatedPackages(
+                    $consolidatedPackage,
+                    $this->amountCollected,
+                    Auth::user(),
+                    $balanceOptions,
+                    $options
+                );
+                
+                $packageCount = $consolidatedPackage->packages()->count();
+            } else {
+                // Handle individual package distribution
+                $result = $distributionService->distributePackages(
+                    $this->selectedPackages,
+                    $this->amountCollected,
+                    Auth::user(),
+                    $balanceOptions,
+                    $options
+                );
+                
+                $packageCount = count($this->selectedPackages);
+            }
 
             if ($result['success']) {
                 $this->successMessage = $result['message'];
@@ -446,7 +591,8 @@ class PackageDistribution extends Component
                 $this->emit('packageDistributed', [
                     'distribution_id' => $result['distribution']->id,
                     'customer_id' => $this->selectedCustomerId,
-                    'package_count' => count($this->selectedPackages),
+                    'package_count' => $packageCount,
+                    'is_consolidated' => $this->showConsolidatedView,
                 ]);
             } else {
                 $this->errorMessage = $result['message'];
@@ -457,7 +603,9 @@ class PackageDistribution extends Component
                 'error' => $e->getMessage(),
                 'customer_id' => $this->selectedCustomerId,
                 'selected_packages' => $this->selectedPackages,
+                'selected_consolidated_packages' => $this->selectedConsolidatedPackages,
                 'amount_collected' => $this->amountCollected,
+                'is_consolidated' => $this->showConsolidatedView,
             ]);
         } finally {
             $this->isProcessing = false;
@@ -468,6 +616,7 @@ class PackageDistribution extends Component
     public function resetForm()
     {
         $this->selectedPackages = [];
+        $this->selectedConsolidatedPackages = [];
         $this->amountCollected = 0;
         $this->applyCreditBalance = false;
         $this->applyAccountBalance = false;
@@ -573,6 +722,7 @@ class PackageDistribution extends Component
             'customers' => $this->customers,
             'filteredCustomers' => $this->filteredCustomers,
             'packages' => $this->packages,
+            'consolidatedPackages' => $this->consolidatedPackages,
             'selectedCustomer' => $this->selectedCustomer,
         ]);
     }

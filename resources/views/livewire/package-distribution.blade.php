@@ -170,11 +170,31 @@
                 <div class="flex items-center justify-between">
                     <h4 class="text-lg font-medium text-gray-900">Ready Packages</h4>
                     <div class="flex items-center space-x-4">
+                        <!-- View Toggle -->
+                        <div class="flex items-center space-x-2">
+                            <button 
+                                wire:click="toggleConsolidatedView"
+                                class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md {{ $showConsolidatedView ? 'text-white bg-wax-flower-600 border-wax-flower-600' : 'text-gray-700 bg-white hover:bg-gray-50' }} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
+                            >
+                                @if($showConsolidatedView)
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                    </svg>
+                                    Consolidated View
+                                @else
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                    </svg>
+                                    Individual View
+                                @endif
+                            </button>
+                        </div>
+                        
                         <div class="relative">
                             <input 
                                 type="text" 
                                 wire:model.debounce.300ms="search"
-                                placeholder="Search packages..."
+                                placeholder="{{ $showConsolidatedView ? 'Search consolidated packages...' : 'Search packages...' }}"
                                 class="block w-64 border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
                             >
                         </div>
@@ -182,24 +202,129 @@
                 </div>
             </div>
 
-            @if($packages->count() > 0)
-                <!-- Package Selection -->
-                <div class="px-6 py-4">
-                    @if(count($selectedPackages) > 0)
-                        <div class="mb-4 bg-wax-flower-50 border border-wax-flower-200 rounded-lg p-4">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm font-medium text-wax-flower-800">
-                                    {{ count($selectedPackages) }} package(s) selected for distribution
-                                </span>
-                                <button 
-                                    wire:click="resetForm"
-                                    class="text-sm text-wax-flower-600 hover:text-wax-flower-800"
-                                >
-                                    Clear Selection
-                                </button>
+            @if($showConsolidatedView)
+                @if($consolidatedPackages->count() > 0)
+                    <!-- Consolidated Package Selection -->
+                    <div class="px-6 py-4">
+                        @if(count($selectedConsolidatedPackages) > 0)
+                            <div class="mb-4 bg-wax-flower-50 border border-wax-flower-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-medium text-wax-flower-800">
+                                        {{ count($selectedConsolidatedPackages) }} consolidated package(s) selected for distribution
+                                    </span>
+                                    <button 
+                                        wire:click="resetForm"
+                                        class="text-sm text-wax-flower-600 hover:text-wax-flower-800"
+                                    >
+                                        Clear Selection
+                                    </button>
+                                </div>
                             </div>
+                        @endif
+
+                        <!-- Consolidated Packages Table -->
+                        <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                            <table class="min-w-full divide-y divide-gray-300">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="relative px-6 py-3">
+                                            <span class="sr-only">Select</span>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Consolidated Tracking
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Package Count
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Total Weight
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Individual Packages
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Total Cost
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach($consolidatedPackages as $consolidatedPackage)
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="relative px-6 py-4 whitespace-nowrap">
+                                                <input 
+                                                    type="checkbox" 
+                                                    wire:model="selectedConsolidatedPackages"
+                                                    value="{{ $consolidatedPackage->id }}"
+                                                    class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                                >
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <x-badges.primary>{{ $consolidatedPackage->consolidated_tracking_number }}</x-badges.primary>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                    {{ $consolidatedPackage->total_quantity }} packages
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {{ number_format($consolidatedPackage->total_weight, 2) }} lbs
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <div class="text-xs text-gray-500 max-w-xs">
+                                                    @foreach($consolidatedPackage->packages->take(3) as $package)
+                                                        <span class="inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs mr-1 mb-1">
+                                                            {{ $package->tracking_number }}
+                                                        </span>
+                                                    @endforeach
+                                                    @if($consolidatedPackage->packages->count() > 3)
+                                                        <span class="text-gray-400">+{{ $consolidatedPackage->packages->count() - 3 }} more</span>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <x-badges.success>${{ number_format($consolidatedPackage->total_cost, 2) }}</x-badges.success>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
-                    @endif
+
+                        <!-- Pagination -->
+                        <div class="mt-4">
+                            {{ $consolidatedPackages->links() }}
+                        </div>
+                    </div>
+                @else
+                    <div class="px-6 py-8 text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No consolidated packages found</h3>
+                        <p class="mt-1 text-sm text-gray-500">This customer has no consolidated packages ready for distribution.</p>
+                    </div>
+                @endif
+            @else
+                @if($packages->count() > 0)
+                    <!-- Package Selection -->
+                    <div class="px-6 py-4">
+                        @if(count($selectedPackages) > 0)
+                            <div class="mb-4 bg-wax-flower-50 border border-wax-flower-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-medium text-wax-flower-800">
+                                        {{ count($selectedPackages) }} package(s) selected for distribution
+                                    </span>
+                                    <button 
+                                        wire:click="resetForm"
+                                        class="text-sm text-wax-flower-600 hover:text-wax-flower-800"
+                                    >
+                                        Clear Selection
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
 
                     <!-- Packages Table -->
                     <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
@@ -277,8 +402,19 @@
                     </div>
                 </div>
 
-                <!-- Distribution Summary and Actions -->
-                @if(count($selectedPackages) > 0)
+                @else
+                    <div class="px-6 py-8 text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No packages found</h3>
+                        <p class="mt-1 text-sm text-gray-500">This customer has no individual packages ready for distribution.</p>
+                    </div>
+                @endif
+            @endif
+
+            <!-- Distribution Summary and Actions -->
+            @if(($showConsolidatedView && count($selectedConsolidatedPackages) > 0) || (!$showConsolidatedView && count($selectedPackages) > 0))
                     <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Amount Collection -->
@@ -538,7 +674,7 @@
                                 wire:click="showDistributionConfirmation"
                                 type="button"
                                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-wax-flower-600 hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
-                                @if(count($selectedPackages) === 0 || ($amountCollected ?: 0) < 0) disabled @endif
+                                @if(($showConsolidatedView && count($selectedConsolidatedPackages) === 0) || (!$showConsolidatedView && count($selectedPackages) === 0) || ($amountCollected ?: 0) < 0) disabled @endif
                             >
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -547,8 +683,9 @@
                             </button>
                         </div>
                     </div>
-                @endif
-            @else
+            @endif
+        @endif
+    @else
                 <div class="px-6 py-8 text-center">
                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2M4 13h2m13-8V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v1M7 6V4a1 1 0 011-1h4a1 1 0 011 1v2"></path>
@@ -635,63 +772,130 @@
 
                     <!-- Package Details -->
                     <div class="mt-4">
-                        <h4 class="text-sm font-medium text-gray-900 mb-3">Packages to Distribute</h4>
-                        <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                            <table class="min-w-full divide-y divide-gray-300">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Tracking Number
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Description
-                                        </th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Freight
-                                        </th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Customs
-                                        </th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Storage
-                                        </th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Delivery
-                                        </th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Total
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    @foreach($distributionSummary['packages'] as $package)
+                        @if($distributionSummary['is_consolidated'] ?? false)
+                            <h4 class="text-sm font-medium text-gray-900 mb-3">Consolidated Packages to Distribute</h4>
+                            
+                            @foreach($distributionSummary['consolidated_packages'] as $consolidatedPackage)
+                                <div class="mb-6 border border-blue-200 rounded-lg overflow-hidden">
+                                    <!-- Consolidated Package Header -->
+                                    <div class="bg-blue-50 px-4 py-3 border-b border-blue-200">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h5 class="text-sm font-medium text-blue-900">
+                                                    Consolidated Package: {{ $consolidatedPackage['consolidated_tracking_number'] }}
+                                                </h5>
+                                                <p class="text-xs text-blue-700 mt-1">
+                                                    {{ $consolidatedPackage['total_quantity'] }} packages • {{ number_format($consolidatedPackage['total_weight'], 2) }} lbs total
+                                                </p>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="text-sm font-medium text-blue-900">
+                                                    ${{ number_format($consolidatedPackage['total_cost'], 2) }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Individual Packages in Consolidation -->
+                                    <div class="overflow-hidden">
+                                        <table class="min-w-full divide-y divide-gray-300">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Tracking Number
+                                                    </th>
+                                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Description
+                                                    </th>
+                                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Weight
+                                                    </th>
+                                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Total
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="bg-white divide-y divide-gray-200">
+                                                @foreach($consolidatedPackage['individual_packages'] as $package)
+                                                    <tr>
+                                                        <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-900">
+                                                            {{ $package['tracking_number'] }}
+                                                        </td>
+                                                        <td class="px-4 py-2 text-xs text-gray-500 max-w-xs truncate">
+                                                            {{ $package['description'] ?: '-' }}
+                                                        </td>
+                                                        <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-900 text-right">
+                                                            {{ number_format($package['weight'], 2) }} lbs
+                                                        </td>
+                                                        <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-900 text-right">
+                                                            ${{ number_format($package['total_cost'], 2) }}
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <h4 class="text-sm font-medium text-gray-900 mb-3">Packages to Distribute</h4>
+                            <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                                <table class="min-w-full divide-y divide-gray-300">
+                                    <thead class="bg-gray-50">
                                         <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {{ $package['tracking_number'] }}
-                                            </td>
-                                            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
-                                                {{ $package['description'] ?: '-' }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                                ${{ number_format($package['freight_price'], 2) }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                                ${{ number_format($package['customs_duty'], 2) }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                                ${{ number_format($package['storage_fee'], 2) }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                                ${{ number_format($package['delivery_fee'], 2) }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                                                ${{ number_format($package['total_cost'], 2) }}
-                                            </td>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Tracking Number
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Description
+                                            </th>
+                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Freight
+                                            </th>
+                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Customs
+                                            </th>
+                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Storage
+                                            </th>
+                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Delivery
+                                            </th>
+                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Total
+                                            </th>
                                         </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @foreach($distributionSummary['packages'] as $package)
+                                            <tr>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                    {{ $package['tracking_number'] }}
+                                                </td>
+                                                <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                                                    {{ $package['description'] ?: '-' }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                                    ${{ number_format($package['freight_price'], 2) }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                                    ${{ number_format($package['customs_duty'], 2) }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                                    ${{ number_format($package['storage_fee'], 2) }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                                    ${{ number_format($package['delivery_fee'], 2) }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                                                    ${{ number_format($package['total_cost'], 2) }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Payment Summary -->

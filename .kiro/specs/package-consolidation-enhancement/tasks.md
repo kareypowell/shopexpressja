@@ -75,7 +75,7 @@
   - Write browser tests for consolidation UI interactions and visual elements
   - _Requirements: 1.6, 2.5, 3.5, 3.6, 10.4_
 
-- [ ] 10. Enhance PackageDistribution component for consolidated packages
+- [x] 10. Enhance PackageDistribution component for consolidated packages
   - Update package selection logic to handle consolidated packages in distribution
   - Modify distribution calculation methods to work with consolidated package totals
   - Update distribution UI to show consolidated package details with individual breakdowns
@@ -83,7 +83,7 @@
   - Write feature tests for consolidated package distribution workflow
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-- [ ] 11. Create consolidated package notification templates
+- [x] 11. Create consolidated package notification templates
   - Create email templates for consolidated package status notifications
   - Design consolidated package consolidation notification template
   - Create unconsolidation notification template

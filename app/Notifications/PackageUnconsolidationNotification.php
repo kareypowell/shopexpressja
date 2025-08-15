@@ -53,7 +53,7 @@ class PackageUnconsolidationNotification extends Notification
         
         return (new MailMessage)
                     ->subject('Your Consolidated Package Has Been Separated')
-                    ->markdown('emails.packages.package-unconsolidation', [
+                    ->view('emails.packages.package-unconsolidation', [
                         'user' => $this->user,
                         'packages' => $this->packages,
                         'packageCount' => $packageCount,
