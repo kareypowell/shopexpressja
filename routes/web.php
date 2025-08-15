@@ -133,3 +133,12 @@ Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
 Route::middleware(['auth', 'verified', 'role:purchaser'])->prefix('staff')->group(function () {
     // Route::get('/rates', Rate::class)->name('rates');
 });
+
+// Test routes (only in non-production environments)
+if (app()->environment(['local', 'testing'])) {
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('/test-consolidation-toggle', function () {
+            return view('test.consolidation-toggle');
+        })->name('test.consolidation-toggle');
+    });
+}
