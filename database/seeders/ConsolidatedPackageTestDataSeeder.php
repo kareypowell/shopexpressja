@@ -101,7 +101,7 @@ class ConsolidatedPackageTestDataSeeder extends Seeder
         $customers = [];
 
         // Generate unique email suffix to avoid conflicts with existing users
-        $timestamp = now()->format('YmdHis');
+        $timestamp = now()->format('YmdHis') . rand(1000, 9999);
         
         // Customer 1: Multiple packages ready for consolidation
         $customers['consolidation_ready'] = User::firstOrCreate(
@@ -525,7 +525,7 @@ class ConsolidatedPackageTestDataSeeder extends Seeder
 
         // Create a customer with historical consolidation activity
         $customerRole = Role::where('name', 'customer')->first();
-        $timestamp = now()->format('YmdHis');
+        $timestamp = now()->format('YmdHis') . rand(1000, 9999);
         $historicalCustomer = User::firstOrCreate(
             ['email' => "historical.consolidation.{$timestamp}@test.com"],
             [
@@ -621,8 +621,9 @@ class ConsolidatedPackageTestDataSeeder extends Seeder
         ]);
 
         // Create a distribution record for this historical consolidation
+        $uniqueReceiptSuffix = now()->format('His') . rand(1000, 9999);
         $distribution = PackageDistribution::create([
-            'receipt_number' => 'RCP' . now()->subDays(5)->format('YmdHis') . '001',
+            'receipt_number' => 'RCP' . now()->subDays(5)->format('Ymd') . $uniqueReceiptSuffix,
             'customer_id' => $historicalCustomer->id,
             'distributed_by' => $baseData['admin_user']->id,
             'distributed_at' => now()->subDays(5),
@@ -660,7 +661,7 @@ class ConsolidatedPackageTestDataSeeder extends Seeder
 
         // Create a customer for testing unconsolidation
         $customerRole = Role::where('name', 'customer')->first();
-        $timestamp = now()->format('YmdHis');
+        $timestamp = now()->format('YmdHis') . rand(1000, 9999);
         $unconsolidationCustomer = User::firstOrCreate(
             ['email' => "unconsolidation.test.{$timestamp}@test.com"],
             [
@@ -728,7 +729,7 @@ class ConsolidatedPackageTestDataSeeder extends Seeder
         $customerRole = Role::where('name', 'customer')->first();
         
         // Customer for status testing
-        $timestamp = now()->format('YmdHis');
+        $timestamp = now()->format('YmdHis') . rand(1000, 9999);
         $statusCustomer = User::firstOrCreate(
             ['email' => "status.test.{$timestamp}@test.com"],
             [

@@ -12,11 +12,12 @@ use Database\Seeders\ConsolidatedPackageTestDataSeeder;
 
 class ConsolidatedPackageSeederTest extends TestCase
 {
-    use RefreshDatabase;
-
     protected function setUp(): void
     {
         parent::setUp();
+        
+        // Fresh migrate for each test
+        $this->artisan('migrate:fresh');
         
         // Seed base data needed for consolidation
         $this->seed([
@@ -36,11 +37,15 @@ class ConsolidatedPackageSeederTest extends TestCase
             'role_id' => \App\Models\Role::where('name', 'customer')->first()->id,
         ]);
 
-        // Run the seeder
-        $this->seed(ConsolidatedPackageTestDataSeeder::class);
+        // Run the seeder with error handling
+        try {
+            $this->seed(ConsolidatedPackageTestDataSeeder::class);
+        } catch (\Exception $e) {
+            $this->fail('Seeder failed with exception: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+        }
 
         // Verify test customers were created with unique emails
-        $testCustomers = User::where('email', 'like', '%.test.com')->get();
+        $testCustomers = User::where('email', 'like', '%@test.com')->get();
         $this->assertGreaterThan(5, $testCustomers->count());
 
         // Verify no duplicate emails
@@ -102,7 +107,7 @@ class ConsolidatedPackageSeederTest extends TestCase
 
         // Get all packages created by the seeder
         $packages = Package::whereHas('user', function ($query) {
-            $query->where('email', 'like', '%.test.com');
+            $query->where('email', 'like', '%@test.com');
         })->get();
 
         $this->assertGreaterThan(0, $packages->count());
@@ -118,7 +123,7 @@ class ConsolidatedPackageSeederTest extends TestCase
         $this->seed(ConsolidatedPackageTestDataSeeder::class);
 
         // Get test customers
-        $testCustomers = User::where('email', 'like', '%.test.com')->get();
+        $testCustomers = User::where('email', 'like', '%@test.com')->get();
 
         // Verify customers have expected balance ranges
         $testCustomers->each(function ($customer) {
@@ -134,11 +139,11 @@ class ConsolidatedPackageSeederTest extends TestCase
     {
         // Run seeder first time
         $this->seed(ConsolidatedPackageTestDataSeeder::class);
-        $firstRunCount = User::where('email', 'like', '%.test.com')->count();
+        $firstRunCount = User::where('email', 'like', '%@test.com')->count();
 
         // Run seeder second time
         $this->seed(ConsolidatedPackageTestDataSeeder::class);
-        $secondRunCount = User::where('email', 'like', '%.test.com')->count();
+        $secondRunCount = User::where('email', 'like', '%@test.com')->count();
 
         // Should create new users each time due to timestamp-based emails
         $this->assertGreaterThan($firstRunCount, $secondRunCount);

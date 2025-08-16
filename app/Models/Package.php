@@ -515,4 +515,59 @@ class Package extends Model
             'delivery_fee', 'is_consolidated'
         ]);
     }
+
+    /**
+     * Get package weight in pounds
+     */
+    public function getWeightInLbs(): float
+    {
+        return (float) ($this->weight ?? 0.0);
+    }
+
+    /**
+     * Get package weight in kilograms (converted from pounds)
+     */
+    public function getWeightInKg(): float
+    {
+        $weightLbs = $this->getWeightInLbs();
+        return round($weightLbs * 0.453592, 2); // 1 lb = 0.453592 kg
+    }
+
+    /**
+     * Get package volume in cubic feet
+     */
+    public function getVolumeInCubicFeet(): float
+    {
+        // First check if cubic_feet is directly stored
+        if ($this->cubic_feet && $this->cubic_feet > 0) {
+            return (float) $this->cubic_feet;
+        }
+
+        // Otherwise calculate from dimensions
+        return $this->calculateCubicFeet();
+    }
+
+    /**
+     * Check if package has weight data
+     */
+    public function hasWeightData(): bool
+    {
+        return $this->weight > 0;
+    }
+
+    /**
+     * Check if package has volume data (either cubic_feet or complete dimensions)
+     */
+    public function hasVolumeData(): bool
+    {
+        // Check if cubic_feet is directly available
+        if ($this->cubic_feet && $this->cubic_feet > 0) {
+            return true;
+        }
+
+        // Check if all dimensions are available for calculation
+        return $this->length_inches && $this->length_inches > 0 &&
+               $this->width_inches && $this->width_inches > 0 &&
+               $this->height_inches && $this->height_inches > 0;
+    }
 }

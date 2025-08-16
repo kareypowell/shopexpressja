@@ -7,7 +7,7 @@
   - Write unit tests for all calculation services with various data scenarios
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 2. Enhance existing models for summary data
+- [x] 2. Enhance existing models for summary data
   - Add getType(), getTotalWeight(), getTotalVolume(), hasCompleteWeightData(), and hasCompleteVolumeData() methods to Manifest model
   - Add getWeightInLbs(), getWeightInKg(), getVolumeInCubicFeet(), hasWeightData(), and hasVolumeData() methods to Package model
   - Implement weight and volume data validation in model methods

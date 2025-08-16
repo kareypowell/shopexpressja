@@ -69,4 +69,87 @@ class Manifest extends Model
             'flight_destination' => $this->flight_destination,
         ];
     }
+
+    /**
+     * Get the manifest type (air or sea)
+     */
+    public function getType(): string
+    {
+        return $this->type ?: 'air';
+    }
+
+    /**
+     * Calculate total weight for all packages in this manifest
+     */
+    public function getTotalWeight(): float
+    {
+        return $this->packages()
+            ->whereNotNull('weight')
+            ->where('weight', '>', 0)
+            ->sum('weight') ?? 0.0;
+    }
+
+    /**
+     * Calculate total volume for all packages in this manifest
+     */
+    public function getTotalVolume(): float
+    {
+        $totalVolume = 0.0;
+
+        $this->packages()
+            ->select(['id', 'cubic_feet', 'length_inches', 'width_inches', 'height_inches'])
+            ->get()
+            ->each(function ($package) use (&$totalVolume) {
+                $volume = $package->getVolumeInCubicFeet();
+                if ($volume > 0) {
+                    $totalVolume += $volume;
+                }
+            });
+
+        return round($totalVolume, 3);
+    }
+
+    /**
+     * Check if all packages have complete weight data
+     */
+    public function hasCompleteWeightData(): bool
+    {
+        $totalPackages = $this->packages()->count();
+        
+        if ($totalPackages === 0) {
+            return true; // No packages means complete by default
+        }
+
+        $packagesWithWeight = $this->packages()
+            ->whereNotNull('weight')
+            ->where('weight', '>', 0)
+            ->count();
+
+        return $packagesWithWeight === $totalPackages;
+    }
+
+    /**
+     * Check if all packages have complete volume data
+     */
+    public function hasCompleteVolumeData(): bool
+    {
+        $totalPackages = $this->packages()->count();
+        
+        if ($totalPackages === 0) {
+            return true; // No packages means complete by default
+        }
+
+        $packagesWithCompleteVolumeData = 0;
+
+        $this->packages()
+            ->select(['id', 'cubic_feet', 'length_inches', 'width_inches', 'height_inches'])
+            ->get()
+            ->each(function ($package) use (&$packagesWithCompleteVolumeData) {
+                if ($package->hasVolumeData()) {
+                    $packagesWithCompleteVolumeData++;
+                }
+            });
+
+        return $packagesWithCompleteVolumeData === $totalPackages;
+    }
 }

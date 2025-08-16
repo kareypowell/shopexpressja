@@ -279,6 +279,7 @@ class ConsolidatedPackageModelTest extends TestCase
     /** @test */
     public function it_syncs_status_to_all_packages()
     {
+        $user = User::factory()->create();
         $consolidatedPackage = ConsolidatedPackage::factory()->create();
         
         $packages = Package::factory()->count(3)->create([
@@ -286,7 +287,7 @@ class ConsolidatedPackageModelTest extends TestCase
             'status' => PackageStatus::PROCESSING,
         ]);
 
-        $consolidatedPackage->syncPackageStatuses(PackageStatus::READY);
+        $consolidatedPackage->syncPackageStatuses(PackageStatus::READY, $user);
 
         foreach ($packages as $package) {
             $package->refresh();

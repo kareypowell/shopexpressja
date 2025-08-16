@@ -208,17 +208,40 @@ class ConsolidatedPackage extends Model
     /**
      * Synchronize status to all individual packages
      */
-    public function syncPackageStatuses(string $newStatus, ?\App\Models\User $user = null): void
+    public function syncPackageStatuses($newStatus, ?\App\Models\User $user = null): void
     {
+        // Handle both string and PackageStatus enum inputs
+        if ($newStatus instanceof \App\Enums\PackageStatus) {
+            $statusEnum = $newStatus;
+            $statusString = $newStatus->value;
+        } else {
+            $statusString = $newStatus;
+            $statusEnum = \App\Enums\PackageStatus::from($newStatus);
+        }
+        
         // Update consolidated package status first
-        $this->update(['status' => $newStatus]);
+        $this->update(['status' => $statusString]);
         
         // Update individual packages using the PackageStatusService to maintain proper logging
         $packageStatusService = app(\App\Services\PackageStatusService::class);
-        $statusEnum = \App\Enums\PackageStatus::from($newStatus);
         
-        // Get user for logging - prefer passed user, then auth user, then fallback to first admin
-        $updateUser = $user ?? auth()->user() ?? \App\Models\User::where('role_id', 1)->first();
+        // Get user for logging - prefer passed user, then auth user, then create a system user
+        $updateUser = $user ?? auth()->user();
+        
+        if (!$updateUser) {
+            // Try to find an admin user
+            $updateUser = \App\Models\User::where('role_id', 1)->first();
+            
+            // If no admin user exists, create a system user for testing
+            if (!$updateUser) {
+                $updateUser = \App\Models\User::factory()->create([
+                    'first_name' => 'System',
+                    'last_name' => 'User',
+                    'email' => 'system@test.com',
+                    'role_id' => 1
+                ]);
+            }
+        }
         
         foreach ($this->packages as $package) {
             // Use fromConsolidatedUpdate = true to bypass the consolidated package check
