@@ -58,6 +58,12 @@ class ManifestPackage extends Component
     public string $consolidationNotes = '';
     public array $packagesForConsolidation = [];
 
+    // Consolidated package fee modal properties
+    public bool $showConsolidatedFeeModal = false;
+    public $feeConsolidatedPackageId = null;
+    public $feeConsolidatedPackage = null;
+    public array $consolidatedPackagesNeedingFees = [];
+
     // Services
     protected $packageStatusService;
     
@@ -624,6 +630,13 @@ class ManifestPackage extends Component
     {
         try {
             $consolidatedPackage = ConsolidatedPackage::findOrFail($consolidatedPackageId);
+            
+            // Check if transitioning to READY status - show fee modal for packages that need fees
+            if ($newStatus === PackageStatus::READY) {
+                $this->showConsolidatedFeeEntryModal($consolidatedPackageId);
+                return;
+            }
+            
             $consolidationService = app(\App\Services\PackageConsolidationService::class);
 
             $result = $consolidationService->updateConsolidatedStatus(
@@ -1314,6 +1327,102 @@ class ManifestPackage extends Component
             'items.*.weight_per_item.min' => 'Weight per item cannot be negative.',
             'items.*.weight_per_item.max' => 'Weight per item cannot exceed 1000 lbs.',
         ];
+    }
+
+    /**
+     * Show consolidated fee entry modal for transitioning to ready status
+     */
+    public function showConsolidatedFeeEntryModal($consolidatedPackageId)
+    {
+        $this->feeConsolidatedPackageId = $consolidatedPackageId;
+        $this->feeConsolidatedPackage = ConsolidatedPackage::with(['packages.user.profile'])->findOrFail($consolidatedPackageId);
+        
+        // Check which packages in the consolidation need fee entry
+        $this->consolidatedPackagesNeedingFees = [];
+        foreach ($this->feeConsolidatedPackage->packages as $package) {
+            // Always include all packages for fee review when transitioning to ready
+            $this->consolidatedPackagesNeedingFees[] = [
+                'id' => $package->id,
+                'tracking_number' => $package->tracking_number,
+                'description' => $package->description,
+                'customs_duty' => $package->customs_duty ?? 0,
+                'storage_fee' => $package->storage_fee ?? 0,
+                'delivery_fee' => $package->delivery_fee ?? 0,
+                'needs_fees' => $this->packageNeedsFeeEntry($package),
+            ];
+        }
+        
+        $this->showConsolidatedFeeModal = true;
+    }
+
+    /**
+     * Check if a package needs fee entry
+     */
+    private function packageNeedsFeeEntry($package): bool
+    {
+        // Package needs fee entry if any required fees are missing or zero
+        return ($package->customs_duty ?? 0) == 0 || 
+               ($package->storage_fee ?? 0) == 0 || 
+               ($package->delivery_fee ?? 0) == 0;
+    }
+
+    /**
+     * Close consolidated fee entry modal
+     */
+    public function closeConsolidatedFeeModal()
+    {
+        $this->showConsolidatedFeeModal = false;
+        $this->feeConsolidatedPackageId = null;
+        $this->feeConsolidatedPackage = null;
+        $this->consolidatedPackagesNeedingFees = [];
+    }
+
+    /**
+     * Process consolidated package fee updates and set status to ready
+     */
+    public function processConsolidatedFeeUpdate()
+    {
+        try {
+            $consolidatedPackage = ConsolidatedPackage::findOrFail($this->feeConsolidatedPackageId);
+            
+            // Update fees for each package in the consolidation
+            foreach ($this->consolidatedPackagesNeedingFees as $packageData) {
+                $package = Package::findOrFail($packageData['id']);
+                
+                $package->update([
+                    'customs_duty' => $packageData['customs_duty'] ?? 0,
+                    'storage_fee' => $packageData['storage_fee'] ?? 0,
+                    'delivery_fee' => $packageData['delivery_fee'] ?? 0,
+                ]);
+            }
+            
+            // Update consolidated package status to ready
+            $consolidationService = app(\App\Services\PackageConsolidationService::class);
+            $result = $consolidationService->updateConsolidatedStatus(
+                $consolidatedPackage,
+                PackageStatus::READY,
+                auth()->user(),
+                ['reason' => 'Status update to ready after fee entry']
+            );
+
+            if ($result['success']) {
+                $this->dispatchBrowserEvent('toastr:success', [
+                    'message' => 'Consolidated package fees updated and status set to ready successfully!'
+                ]);
+                
+                $this->closeConsolidatedFeeModal();
+            } else {
+                $this->dispatchBrowserEvent('toastr:error', [
+                    'message' => 'Failed to update consolidated package status: ' . ($result['message'] ?? 'Unknown error')
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error updating consolidated package fees: ' . $e->getMessage());
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'An error occurred while updating consolidated package fees.'
+            ]);
+            $this->closeConsolidatedFeeModal();
+        }
     }
 
     public function render()

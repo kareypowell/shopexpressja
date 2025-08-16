@@ -439,6 +439,145 @@
     </div>
     @endif
 
+    <!-- Consolidated Package Fee Entry Modal -->
+    @if($showConsolidatedFeeModal)
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" id="consolidated-fee-modal">
+            <div class="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">
+                            Update Consolidated Package Fees - {{ $feeConsolidatedPackage->consolidated_tracking_number ?? '' }}
+                        </h3>
+                        <button wire:click="closeConsolidatedFeeModal" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    @if($feeConsolidatedPackage)
+                        <!-- Consolidated Package Info -->
+                        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                            <h4 class="font-medium text-gray-900 mb-2">Consolidated Package Information</h4>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-500">Customer:</span>
+                                    <span class="ml-2 font-medium">{{ $feeConsolidatedPackage->packages->first()->user->full_name ?? 'N/A' }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Total Packages:</span>
+                                    <span class="ml-2">{{ $feeConsolidatedPackage->packages->count() }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Total Weight:</span>
+                                    <span class="ml-2">{{ number_format($feeConsolidatedPackage->packages->sum('weight'), 2) }} lbs</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Total Freight Price:</span>
+                                    <span class="ml-2">${{ number_format($feeConsolidatedPackage->packages->sum('freight_price'), 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Individual Package Fees -->
+                        <div class="mb-6">
+                            <h4 class="font-medium text-gray-900 mb-4">Individual Package Fees</h4>
+                            <div class="space-y-4">
+                                @foreach($consolidatedPackagesNeedingFees as $index => $packageData)
+                                    <div class="border border-gray-200 rounded-lg p-4">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h5 class="font-medium text-gray-800">
+                                                {{ $packageData['tracking_number'] }}
+                                            </h5>
+                                            @if($packageData['needs_fees'])
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                    Needs Fees
+                                                </span>
+                                            @endif
+                                        </div>
+                                        
+                                        <div class="mb-3 text-sm text-gray-600">
+                                            {{ $packageData['description'] }}
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                    Customs Duty
+                                                </label>
+                                                <div class="relative">
+                                                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                                    <input 
+                                                        type="number" 
+                                                        wire:model.lazy="consolidatedPackagesNeedingFees.{{ $index }}.customs_duty"
+                                                        step="0.01"
+                                                        min="0"
+                                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                                        placeholder="0.00"
+                                                    >
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                    Storage Fee
+                                                </label>
+                                                <div class="relative">
+                                                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                                    <input 
+                                                        type="number" 
+                                                        wire:model.lazy="consolidatedPackagesNeedingFees.{{ $index }}.storage_fee"
+                                                        step="0.01"
+                                                        min="0"
+                                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                                        placeholder="0.00"
+                                                    >
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                    Delivery Fee
+                                                </label>
+                                                <div class="relative">
+                                                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                                    <input 
+                                                        type="number" 
+                                                        wire:model.lazy="consolidatedPackagesNeedingFees.{{ $index }}.delivery_fee"
+                                                        step="0.01"
+                                                        min="0"
+                                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                                        placeholder="0.00"
+                                                    >
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center justify-end space-x-3">
+                            <button 
+                                wire:click="closeConsolidatedFeeModal" 
+                                class="px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                wire:click="processConsolidatedFeeUpdate" 
+                                class="px-4 py-2 bg-wax-flower-600 text-white text-sm font-medium rounded-md hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-wax-flower-500"
+                            >
+                                Update Fees & Set Ready
+                            </button>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endif
+
     <script>
         function toggleConsolidatedDetails(consolidatedPackageId) {
             const detailsElement = document.getElementById('consolidated-details-' + consolidatedPackageId);
