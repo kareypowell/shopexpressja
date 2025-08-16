@@ -27,27 +27,43 @@ class ManifestSummaryService
      */
     public function getManifestSummary(Manifest $manifest): array
     {
-        $packages = $manifest->packages;
-        $manifestType = $this->getManifestType($manifest);
+        try {
+            $packages = $manifest->packages;
+            $manifestType = $this->getManifestType($manifest);
 
-        $baseSummary = [
-            'manifest_type' => $manifestType,
-            'package_count' => $packages->count(),
-            'total_value' => $this->calculateTotalValue($packages),
-        ];
+            $baseSummary = [
+                'manifest_type' => $manifestType,
+                'package_count' => max(0, $packages->count()),
+                'total_value' => $this->calculateTotalValue($packages),
+            ];
 
-        if ($manifestType === 'air') {
-            return array_merge($baseSummary, $this->calculateAirManifestSummary($packages));
-        } elseif ($manifestType === 'sea') {
-            return array_merge($baseSummary, $this->calculateSeaManifestSummary($packages));
+            if ($manifestType === 'air') {
+                $airSummary = $this->calculateAirManifestSummary($packages);
+                return array_merge($baseSummary, $this->validateSummaryData($airSummary));
+            } elseif ($manifestType === 'sea') {
+                $seaSummary = $this->calculateSeaManifestSummary($packages);
+                return array_merge($baseSummary, $this->validateSummaryData($seaSummary));
+            }
+
+            // Fallback for unknown manifest types - include both weight and volume
+            $airSummary = $this->calculateAirManifestSummary($packages);
+            $seaSummary = $this->calculateSeaManifestSummary($packages);
+            
+            return array_merge(
+                $baseSummary,
+                $this->validateSummaryData($airSummary),
+                $this->validateSummaryData($seaSummary)
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to get manifest summary', [
+                'manifest_id' => $manifest->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Return safe fallback summary
+            return $this->getFallbackSummary($manifest);
         }
-
-        // Fallback for unknown manifest types - include both weight and volume
-        return array_merge(
-            $baseSummary,
-            $this->calculateAirManifestSummary($packages),
-            $this->calculateSeaManifestSummary($packages)
-        );
     }
 
     /**
@@ -58,21 +74,51 @@ class ManifestSummaryService
      */
     public function calculateAirManifestSummary(Collection $packages): array
     {
-        $weightStats = $this->weightService->getWeightStatistics($packages);
-        $weightValidation = $this->weightService->validateWeightData($packages);
+        try {
+            $weightStats = $this->weightService->getWeightStatistics($packages);
+            $weightValidation = $this->weightService->validateWeightData($packages);
 
-        return [
-            'weight' => [
-                'total_lbs' => $weightStats['total_weight_lbs'],
-                'total_kg' => $weightStats['total_weight_kg'],
-                'average_lbs' => $weightStats['average_weight_lbs'],
-                'average_kg' => $weightStats['average_weight_kg'],
-                'formatted' => $weightStats['formatted']
-            ],
-            'weight_validation' => $weightValidation,
-            'incomplete_data' => !$weightValidation['is_complete'],
-            'primary_metric' => 'weight'
-        ];
+            // Validate weight statistics
+            $weightStats = $this->weightService->validateCalculationResults($weightStats);
+
+            return [
+                'weight' => [
+                    'total_lbs' => $weightStats['total_weight_lbs'] ?? 0,
+                    'total_kg' => $weightStats['total_weight_kg'] ?? 0,
+                    'average_lbs' => $weightStats['average_weight_lbs'] ?? 0,
+                    'average_kg' => $weightStats['average_weight_kg'] ?? 0,
+                    'formatted' => $weightStats['formatted'] ?? $this->weightService->formatWeightUnits(0)
+                ],
+                'weight_validation' => $weightValidation,
+                'incomplete_data' => !($weightValidation['is_complete'] ?? false),
+                'primary_metric' => 'weight'
+            ];
+        } catch (\Exception $e) {
+            Log::error('Failed to calculate air manifest summary', [
+                'package_count' => $packages->count(),
+                'error' => $e->getMessage()
+            ]);
+            
+            return [
+                'weight' => [
+                    'total_lbs' => 0,
+                    'total_kg' => 0,
+                    'average_lbs' => 0,
+                    'average_kg' => 0,
+                    'formatted' => $this->weightService->formatWeightUnits(0)
+                ],
+                'weight_validation' => [
+                    'total_packages' => $packages->count(),
+                    'packages_with_weight' => 0,
+                    'packages_missing_weight' => $packages->count(),
+                    'is_complete' => false,
+                    'completion_percentage' => 0,
+                    'missing_weight_tracking_numbers' => []
+                ],
+                'incomplete_data' => true,
+                'primary_metric' => 'weight'
+            ];
+        }
     }
 
     /**
@@ -83,19 +129,47 @@ class ManifestSummaryService
      */
     public function calculateSeaManifestSummary(Collection $packages): array
     {
-        $volumeStats = $this->volumeService->getVolumeStatistics($packages);
-        $volumeValidation = $this->volumeService->validateVolumeData($packages);
+        try {
+            $volumeStats = $this->volumeService->getVolumeStatistics($packages);
+            $volumeValidation = $this->volumeService->validateVolumeData($packages);
 
-        return [
-            'volume' => [
-                'total_cubic_feet' => $volumeStats['total_volume'],
-                'average_cubic_feet' => $volumeStats['average_volume'],
-                'formatted' => $volumeStats['formatted']
-            ],
-            'volume_validation' => $volumeValidation,
-            'incomplete_data' => !$volumeValidation['is_complete'],
-            'primary_metric' => 'volume'
-        ];
+            // Validate volume statistics
+            $volumeStats = $this->volumeService->validateCalculationResults($volumeStats);
+
+            return [
+                'volume' => [
+                    'total_cubic_feet' => $volumeStats['total_volume'] ?? 0,
+                    'average_cubic_feet' => $volumeStats['average_volume'] ?? 0,
+                    'formatted' => $volumeStats['formatted'] ?? $this->volumeService->getVolumeDisplayData(0)
+                ],
+                'volume_validation' => $volumeValidation,
+                'incomplete_data' => !($volumeValidation['is_complete'] ?? false),
+                'primary_metric' => 'volume'
+            ];
+        } catch (\Exception $e) {
+            Log::error('Failed to calculate sea manifest summary', [
+                'package_count' => $packages->count(),
+                'error' => $e->getMessage()
+            ]);
+            
+            return [
+                'volume' => [
+                    'total_cubic_feet' => 0,
+                    'average_cubic_feet' => 0,
+                    'formatted' => $this->volumeService->getVolumeDisplayData(0)
+                ],
+                'volume_validation' => [
+                    'total_packages' => $packages->count(),
+                    'packages_with_volume' => 0,
+                    'packages_missing_volume' => $packages->count(),
+                    'is_complete' => false,
+                    'completion_percentage' => 0,
+                    'missing_volume_tracking_numbers' => []
+                ],
+                'incomplete_data' => true,
+                'primary_metric' => 'volume'
+            ];
+        }
     }
 
     /**
@@ -130,9 +204,133 @@ class ManifestSummaryService
      */
     protected function calculateTotalValue(Collection $packages): float
     {
-        return $packages->sum(function (Package $package) {
-            return $package->total_cost ?? 0;
-        });
+        try {
+            $totalValue = $packages->sum(function (Package $package) {
+                $cost = $package->total_cost ?? 0;
+                
+                // Validate cost value
+                if (!is_numeric($cost) || $cost < 0) {
+                    Log::warning('Invalid cost value found in package', [
+                        'package_id' => $package->id ?? null,
+                        'tracking_number' => $package->tracking_number ?? null,
+                        'cost' => $cost
+                    ]);
+                    return 0;
+                }
+                
+                // Cap extremely high costs (likely data errors)
+                if ($cost > 100000) {
+                    Log::warning('Extremely high cost value found, capping at $100,000', [
+                        'package_id' => $package->id ?? null,
+                        'tracking_number' => $package->tracking_number ?? null,
+                        'original_cost' => $cost
+                    ]);
+                    return 100000;
+                }
+                
+                return $cost;
+            });
+            
+            return round($totalValue, 2);
+        } catch (\Exception $e) {
+            Log::error('Failed to calculate total value', [
+                'package_count' => $packages->count(),
+                'error' => $e->getMessage()
+            ]);
+            
+            return 0.0;
+        }
+    }
+
+    /**
+     * Validate summary data before returning
+     *
+     * @param array $summaryData
+     * @return array Validated summary data
+     */
+    protected function validateSummaryData(array $summaryData): array
+    {
+        $validatedData = [];
+        
+        foreach ($summaryData as $key => $value) {
+            if (is_array($value)) {
+                $validatedData[$key] = $this->validateSummaryData($value);
+            } elseif (is_numeric($value)) {
+                // Ensure numeric values are reasonable
+                if ($value < 0) {
+                    Log::warning("Negative value found in summary data: {$key} = {$value}");
+                    $validatedData[$key] = 0;
+                } else {
+                    $validatedData[$key] = $value;
+                }
+            } else {
+                $validatedData[$key] = $value;
+            }
+        }
+        
+        return $validatedData;
+    }
+
+    /**
+     * Get fallback summary when calculation fails
+     *
+     * @param Manifest $manifest
+     * @return array Safe fallback summary
+     */
+    protected function getFallbackSummary(Manifest $manifest): array
+    {
+        $manifestType = 'unknown';
+        
+        try {
+            $manifestType = $this->getManifestType($manifest);
+        } catch (\Exception $e) {
+            Log::error('Failed to determine manifest type for fallback', [
+                'manifest_id' => $manifest->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+        $fallbackSummary = [
+            'manifest_type' => $manifestType,
+            'package_count' => 0,
+            'total_value' => 0.0,
+            'incomplete_data' => true,
+            'primary_metric' => $manifestType === 'air' ? 'weight' : 'volume'
+        ];
+        
+        if ($manifestType === 'air') {
+            $fallbackSummary['weight'] = [
+                'total_lbs' => 0,
+                'total_kg' => 0,
+                'average_lbs' => 0,
+                'average_kg' => 0,
+                'formatted' => $this->weightService->formatWeightUnits(0)
+            ];
+            $fallbackSummary['weight_validation'] = [
+                'total_packages' => 0,
+                'packages_with_weight' => 0,
+                'packages_missing_weight' => 0,
+                'is_complete' => false,
+                'completion_percentage' => 0,
+                'missing_weight_tracking_numbers' => []
+            ];
+        } elseif ($manifestType === 'sea') {
+            $fallbackSummary['volume'] = [
+                'total_cubic_feet' => 0,
+                'average_cubic_feet' => 0,
+                'formatted' => $this->volumeService->getVolumeDisplayData(0)
+            ];
+            $fallbackSummary['volume_validation'] = [
+                'total_packages' => 0,
+                'packages_with_volume' => 0,
+                'packages_missing_volume' => 0,
+                'is_complete' => false,
+                'completion_percentage' => 0,
+                'missing_volume_tracking_numbers' => []
+            ];
+        }
+        
+        return $fallbackSummary;
     }
 
     /**

@@ -43,7 +43,7 @@ class ManifestTabsContainerTest extends TestCase
     {
         $component = Livewire::test(ManifestTabsContainer::class, ['manifest' => $this->manifest]);
         
-        $component->assertSet('activeTab', 'consolidated');
+        $component->assertSet('activeTab', 'individual');
         $component->assertSet('manifest.id', $this->manifest->id);
     }
 

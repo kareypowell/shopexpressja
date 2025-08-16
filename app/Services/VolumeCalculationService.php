@@ -4,6 +4,8 @@ namespace App\Services;
 
 use Illuminate\Support\Collection;
 use App\Models\Package;
+use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 
 class VolumeCalculationService
 {
@@ -12,17 +14,55 @@ class VolumeCalculationService
      *
      * @param Collection $packages
      * @return float Total volume in cubic feet
+     * @throws InvalidArgumentException
      */
     public function calculateTotalVolume(Collection $packages): float
     {
-        return $packages->sum(function (Package $package) {
-            // Use existing cubic_feet field if available, otherwise calculate from dimensions
-            if (!is_null($package->cubic_feet) && $package->cubic_feet > 0) {
-                return $package->cubic_feet;
-            }
-
-            return $this->calculateVolumeFromDimensions($package);
-        });
+        try {
+            $this->validatePackagesCollection($packages);
+            
+            $totalVolume = $packages->sum(function (Package $package) {
+                $volume = 0;
+                
+                // Use existing cubic_feet field if available, otherwise calculate from dimensions
+                if (!is_null($package->cubic_feet) && is_numeric($package->cubic_feet) && $package->cubic_feet > 0) {
+                    $volume = $package->cubic_feet;
+                } else {
+                    $volume = $this->calculateVolumeFromDimensions($package);
+                }
+                
+                // Validate volume value
+                if (!is_numeric($volume) || $volume < 0) {
+                    Log::warning('Invalid volume value found in package', [
+                        'package_id' => $package->id ?? null,
+                        'tracking_number' => $package->tracking_number ?? null,
+                        'volume' => $volume
+                    ]);
+                    return 0;
+                }
+                
+                // Cap extremely high volumes (likely data errors)
+                if ($volume > 1000) {
+                    Log::warning('Extremely high volume value found, capping at 1000 ft³', [
+                        'package_id' => $package->id ?? null,
+                        'tracking_number' => $package->tracking_number ?? null,
+                        'original_volume' => $volume
+                    ]);
+                    return 1000;
+                }
+                
+                return $volume;
+            });
+            
+            return round($totalVolume, 3);
+        } catch (\Exception $e) {
+            Log::error('Failed to calculate total volume', [
+                'package_count' => $packages->count(),
+                'error' => $e->getMessage()
+            ]);
+            
+            return 0.0;
+        }
     }
 
     /**
@@ -33,12 +73,47 @@ class VolumeCalculationService
      */
     public function calculateVolumeFromDimensions(Package $package): float
     {
-        if ($package->length_inches && $package->width_inches && $package->height_inches) {
+        try {
+            $length = $package->length_inches ?? 0;
+            $width = $package->width_inches ?? 0;
+            $height = $package->height_inches ?? 0;
+            
+            // Validate dimensions
+            if (!is_numeric($length) || !is_numeric($width) || !is_numeric($height)) {
+                return 0;
+            }
+            
+            if ($length <= 0 || $width <= 0 || $height <= 0) {
+                return 0;
+            }
+            
+            // Check for reasonable dimension limits (max 120 inches per dimension)
+            if ($length > 120 || $width > 120 || $height > 120) {
+                Log::warning('Extremely large package dimensions found', [
+                    'package_id' => $package->id ?? null,
+                    'tracking_number' => $package->tracking_number ?? null,
+                    'dimensions' => "{$length}x{$width}x{$height}"
+                ]);
+                
+                // Cap dimensions at reasonable maximums
+                $length = min($length, 120);
+                $width = min($width, 120);
+                $height = min($height, 120);
+            }
+            
             // Formula: (length × width × height) ÷ 1728 (cubic inches to cubic feet)
-            return round(($package->length_inches * $package->width_inches * $package->height_inches) / 1728, 3);
+            $volume = ($length * $width * $height) / 1728;
+            
+            return round($volume, 3);
+        } catch (\Exception $e) {
+            Log::error('Failed to calculate volume from dimensions', [
+                'package_id' => $package->id ?? null,
+                'tracking_number' => $package->tracking_number ?? null,
+                'error' => $e->getMessage()
+            ]);
+            
+            return 0;
         }
-
-        return 0;
     }
 
     /**
@@ -125,11 +200,66 @@ class VolumeCalculationService
      */
     public function getVolumeStatistics(Collection $packages): array
     {
-        $packagesWithVolume = $packages->filter(function (Package $package) {
-            return $this->hasVolumeData($package);
-        });
+        try {
+            $this->validatePackagesCollection($packages);
+            
+            $packagesWithVolume = $packages->filter(function (Package $package) {
+                return $this->hasVolumeData($package);
+            });
 
-        if ($packagesWithVolume->isEmpty()) {
+            if ($packagesWithVolume->isEmpty()) {
+                return [
+                    'total_volume' => 0,
+                    'average_volume' => 0,
+                    'min_volume' => 0,
+                    'max_volume' => 0,
+                    'formatted' => $this->getVolumeDisplayData(0)
+                ];
+            }
+
+            $volumes = $packagesWithVolume->map(function (Package $package) {
+                $volume = 0;
+                
+                if (!is_null($package->cubic_feet) && is_numeric($package->cubic_feet) && $package->cubic_feet > 0) {
+                    $volume = $package->cubic_feet;
+                } else {
+                    $volume = $this->calculateVolumeFromDimensions($package);
+                }
+                
+                return $volume;
+            })->filter(function ($volume) {
+                return is_numeric($volume) && $volume > 0 && $volume <= 1000;
+            });
+
+            if ($volumes->isEmpty()) {
+                Log::warning('No valid volumes found after filtering');
+                return [
+                    'total_volume' => 0,
+                    'average_volume' => 0,
+                    'min_volume' => 0,
+                    'max_volume' => 0,
+                    'formatted' => $this->getVolumeDisplayData(0)
+                ];
+            }
+
+            $totalVolume = $volumes->sum();
+            $averageVolume = $volumes->avg();
+            $minVolume = $volumes->min();
+            $maxVolume = $volumes->max();
+
+            return [
+                'total_volume' => round($totalVolume, 3),
+                'average_volume' => round($averageVolume, 3),
+                'min_volume' => $minVolume,
+                'max_volume' => $maxVolume,
+                'formatted' => $this->getVolumeDisplayData($totalVolume)
+            ];
+        } catch (\Exception $e) {
+            Log::error('Failed to calculate volume statistics', [
+                'package_count' => $packages->count(),
+                'error' => $e->getMessage()
+            ]);
+            
             return [
                 'total_volume' => 0,
                 'average_volume' => 0,
@@ -138,26 +268,58 @@ class VolumeCalculationService
                 'formatted' => $this->getVolumeDisplayData(0)
             ];
         }
+    }
 
-        $volumes = $packagesWithVolume->map(function (Package $package) {
-            if (!is_null($package->cubic_feet) && $package->cubic_feet > 0) {
-                return $package->cubic_feet;
-            }
-            return $this->calculateVolumeFromDimensions($package);
+    /**
+     * Validate packages collection
+     *
+     * @param Collection $packages
+     * @throws InvalidArgumentException
+     */
+    protected function validatePackagesCollection(Collection $packages): void
+    {
+        if ($packages->isEmpty()) {
+            return; // Empty collection is valid
+        }
+
+        // Check if all items are Package instances
+        $invalidItems = $packages->filter(function ($item) {
+            return !($item instanceof Package);
         });
 
-        $totalVolume = $volumes->sum();
-        $averageVolume = $volumes->avg();
-        $minVolume = $volumes->min();
-        $maxVolume = $volumes->max();
+        if ($invalidItems->isNotEmpty()) {
+            throw new InvalidArgumentException('Collection must contain only Package instances');
+        }
+    }
 
-        return [
-            'total_volume' => $totalVolume,
-            'average_volume' => round($averageVolume, 3),
-            'min_volume' => $minVolume,
-            'max_volume' => $maxVolume,
-            'formatted' => $this->getVolumeDisplayData($totalVolume)
-        ];
+    /**
+     * Validate calculation results before returning
+     *
+     * @param array $results
+     * @return array Validated results
+     */
+    public function validateCalculationResults(array $results): array
+    {
+        $validatedResults = [];
+        
+        foreach ($results as $key => $value) {
+            if (is_numeric($value)) {
+                // Ensure numeric values are reasonable
+                if ($value < 0) {
+                    Log::warning("Negative value found in calculation results: {$key} = {$value}");
+                    $validatedResults[$key] = 0;
+                } elseif ($value > 100000) {
+                    Log::warning("Extremely high value found in calculation results: {$key} = {$value}");
+                    $validatedResults[$key] = 100000; // Cap at reasonable maximum
+                } else {
+                    $validatedResults[$key] = $value;
+                }
+            } else {
+                $validatedResults[$key] = $value;
+            }
+        }
+        
+        return $validatedResults;
     }
 
     /**

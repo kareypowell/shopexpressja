@@ -107,38 +107,60 @@
          aria-busy="{{ $this->isLoading ? 'true' : 'false' }}"
          tabindex="-1">
         
-        <!-- Loading State -->
-        <div wire:loading.delay 
-             class="flex flex-col items-center justify-center py-16 px-4"
-             role="status"
-             aria-live="polite">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-            <span class="text-gray-600 font-medium text-center">
-                Loading {{ $activeTabData['name'] }}...
-            </span>
-            <span class="sr-only">Please wait while content loads</span>
-        </div>
+        <!-- Error State -->
+        @if($hasError)
+            <div class="flex flex-col items-center justify-center py-16 px-4"
+                 role="alert"
+                 aria-live="assertive">
+                <div class="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md w-full">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-6 h-6 text-red-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                        <h3 class="text-lg font-medium text-red-800">Error Loading Content</h3>
+                    </div>
+                    <p class="text-red-700 mb-4">{{ $errorMessage }}</p>
+                    <button wire:click="$refresh" 
+                            class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors">
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        @else
+            <!-- Loading State -->
+            <div wire:loading.delay 
+                 class="flex flex-col items-center justify-center py-16 px-4"
+                 role="status"
+                 aria-live="polite">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+                <span class="text-gray-600 font-medium text-center">
+                    Loading {{ $activeTabData['name'] }}...
+                </span>
+                <span class="sr-only">Please wait while content loads</span>
+            </div>
 
-        <!-- Tab Content -->
-        <div wire:loading.remove class="p-4 sm:p-6">
-            @if($activeTab === 'consolidated')
-                <div class="consolidated-packages-content"
-                     id="tabpanel-consolidated"
-                     role="tabpanel"
-                     aria-labelledby="tab-consolidated"
-                     aria-label="Consolidated packages view">
-                    @livewire('manifests.consolidated-packages-tab', ['manifest' => $manifest], key('consolidated-'.$manifest->id))
-                </div>
-            @elseif($activeTab === 'individual')
-                <div class="individual-packages-content"
-                     id="tabpanel-individual"
-                     role="tabpanel"
-                     aria-labelledby="tab-individual"
-                     aria-label="Individual packages view">
-                    @livewire('manifests.individual-packages-tab', ['manifest' => $manifest], key('individual-'.$manifest->id))
-                </div>
-            @endif
-        </div>
+            <!-- Tab Content -->
+            <div wire:loading.remove class="p-4 sm:p-6">
+                @if($activeTab === 'consolidated')
+                    <div class="consolidated-packages-content"
+                         id="tabpanel-consolidated"
+                         role="tabpanel"
+                         aria-labelledby="tab-consolidated"
+                         aria-label="Consolidated packages view">
+                        @livewire('manifests.consolidated-packages-tab', ['manifest' => $manifest], key('consolidated-'.$manifest->id))
+                    </div>
+                @elseif($activeTab === 'individual')
+                    <div class="individual-packages-content"
+                         id="tabpanel-individual"
+                         role="tabpanel"
+                         aria-labelledby="tab-individual"
+                         aria-label="Individual packages view">
+                        @livewire('manifests.individual-packages-tab', ['manifest' => $manifest], key('individual-'.$manifest->id))
+                    </div>
+                @endif
+            </div>
+        @endif
         
         <!-- Empty State Message -->
         @if(($activeTab === 'consolidated' && $tabs['consolidated']['count'] === 0) || 
