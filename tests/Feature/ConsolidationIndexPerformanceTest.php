@@ -175,7 +175,7 @@ class ConsolidationIndexPerformanceTest extends TestCase
             $packages = Package::factory()->count(5)->create([
                 'user_id' => $this->customer->id,
                 'status' => PackageStatus::READY,
-                'tracking_number' => 'SEARCH-' . str_pad($i, 3, '0', STR_PAD_LEFT) . '-' . fake()->unique()->numerify('####'),
+                'tracking_number' => 'SEARCH-' . str_pad($i, 3, '0', STR_PAD_LEFT) . '-' . \Illuminate\Support\Str::random(4),
             ]);
 
             $this->consolidationService->consolidatePackages(

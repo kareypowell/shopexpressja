@@ -274,7 +274,8 @@ class ConsolidatedPackage extends Model
     {
         return $query->with([
             'packagesWithDetails',
-            'customer:id,first_name,last_name,email,account_number',
+            'customer:id,first_name,last_name,email',
+            'customer.profile:user_id,account_number',
             'createdBy:id,first_name,last_name,email'
         ]);
     }

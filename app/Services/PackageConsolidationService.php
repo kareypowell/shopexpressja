@@ -758,6 +758,74 @@ class PackageConsolidationService
     }
 
     /**
+     * Get consolidation statistics
+     *
+     * @param User|null $user User requesting the statistics (optional for admin-only stats)
+     * @param array $filters Optional filters for statistics
+     * @return array Consolidation statistics
+     */
+    public function getConsolidationStatistics(User $user = null, array $filters = []): array
+    {
+        $query = ConsolidationHistory::query();
+
+        // Apply customer filter if provided
+        if (isset($filters['customer_id'])) {
+            $query->whereHas('consolidatedPackage', function ($q) use ($filters) {
+                $q->where('customer_id', $filters['customer_id']);
+            });
+        }
+
+        // Apply date range filter if provided
+        if (isset($filters['start_date'])) {
+            $query->where('performed_at', '>=', $filters['start_date']);
+        }
+
+        if (isset($filters['end_date'])) {
+            $query->where('performed_at', '<=', $filters['end_date']);
+        }
+
+        $history = $query->get();
+
+        $consolidatedPackagesQuery = ConsolidatedPackage::query();
+
+        // Apply same filters to consolidated packages
+        if (isset($filters['customer_id'])) {
+            $consolidatedPackagesQuery->where('customer_id', $filters['customer_id']);
+        }
+
+        if (isset($filters['start_date'])) {
+            $consolidatedPackagesQuery->where('created_at', '>=', $filters['start_date']);
+        }
+
+        if (isset($filters['end_date'])) {
+            $consolidatedPackagesQuery->where('created_at', '<=', $filters['end_date']);
+        }
+
+        $consolidatedPackages = $consolidatedPackagesQuery->get();
+
+        return [
+            'total_consolidations' => $consolidatedPackages->count(),
+            'active_consolidations' => $consolidatedPackages->where('is_active', true)->count(),
+            'inactive_consolidations' => $consolidatedPackages->where('is_active', false)->count(),
+            'total_actions' => $history->count(),
+            'actions_by_type' => $history->groupBy('action')->map->count()->toArray(),
+            'total_packages_consolidated' => $consolidatedPackages->sum(function ($cp) {
+                return $cp->packages()->count();
+            }),
+            'total_weight_consolidated' => $consolidatedPackages->sum('total_weight'),
+            'total_value_consolidated' => $consolidatedPackages->sum(function ($cp) {
+                return $cp->total_freight_price + $cp->total_customs_duty + 
+                       $cp->total_storage_fee + $cp->total_delivery_fee;
+            }),
+            'average_packages_per_consolidation' => $consolidatedPackages->count() > 0 
+                ? round($consolidatedPackages->sum(function ($cp) {
+                    return $cp->packages()->count();
+                }) / $consolidatedPackages->count(), 2) 
+                : 0,
+        ];
+    }
+
+    /**
      * Convert audit trail data to CSV format
      *
      * @param array $exportData
@@ -794,50 +862,5 @@ class PackageConsolidationService
         return implode("\n", $csv);
     }
 
-    /**
-     * Get consolidation statistics for reporting
-     *
-     * @param array $filters Optional filters (date_from, date_to, customer_id, etc.)
-     * @return array Consolidation statistics
-     */
-    public function getConsolidationStatistics(array $filters = []): array
-    {
-        $query = ConsolidationHistory::query();
 
-        // Apply filters
-        if (isset($filters['date_from'])) {
-            $query->where('performed_at', '>=', $filters['date_from']);
-        }
-
-        if (isset($filters['date_to'])) {
-            $query->where('performed_at', '<=', $filters['date_to']);
-        }
-
-        if (isset($filters['customer_id'])) {
-            $query->whereHas('consolidatedPackage', function ($q) use ($filters) {
-                $q->where('customer_id', $filters['customer_id']);
-            });
-        }
-
-        if (isset($filters['action'])) {
-            $query->byAction($filters['action']);
-        }
-
-        $history = $query->with(['consolidatedPackage', 'performedBy'])->get();
-
-        return [
-            'total_actions' => $history->count(),
-            'actions_by_type' => $history->groupBy('action')->map->count(),
-            'actions_by_date' => $history->groupBy(function ($item) {
-                return $item->performed_at->format('Y-m-d');
-            })->map->count(),
-            'actions_by_user' => $history->groupBy('performed_by')->map->count(),
-            'unique_consolidated_packages' => $history->pluck('consolidated_package_id')->unique()->count(),
-            'unique_users' => $history->pluck('performed_by')->unique()->count(),
-            'date_range' => [
-                'from' => $history->min('performed_at'),
-                'to' => $history->max('performed_at'),
-            ],
-        ];
-    }
 }

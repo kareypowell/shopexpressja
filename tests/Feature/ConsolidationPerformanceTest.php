@@ -111,7 +111,7 @@ class ConsolidationPerformanceTest extends TestCase
                 ->create([
                     'user_id' => $this->customer->id,
                     'status' => PackageStatus::READY,
-                    'tracking_number' => 'TEST-' . str_pad($i, 3, '0', STR_PAD_LEFT) . '-' . fake()->unique()->numerify('####'),
+                    'tracking_number' => 'TEST-' . str_pad($i, 3, '0', STR_PAD_LEFT) . '-' . \Illuminate\Support\Str::random(4),
                 ]);
 
             $this->consolidationService->consolidatePackages(
