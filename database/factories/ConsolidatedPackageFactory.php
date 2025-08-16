@@ -77,4 +77,117 @@ class ConsolidatedPackageFactory extends Factory
             'customer_id' => $customer->id,
         ]);
     }
+
+    /**
+     * State for specific admin creator
+     */
+    public function createdBy(User $admin): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'created_by' => $admin->id,
+        ]);
+    }
+
+    /**
+     * State for delivered consolidation
+     */
+    public function delivered(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => PackageStatus::DELIVERED,
+        ]);
+    }
+
+    /**
+     * State for processing consolidation
+     */
+    public function processing(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => PackageStatus::PROCESSING,
+        ]);
+    }
+
+    /**
+     * State for customs consolidation
+     */
+    public function customs(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => PackageStatus::CUSTOMS,
+        ]);
+    }
+
+    /**
+     * State for shipped consolidation
+     */
+    public function shipped(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => PackageStatus::SHIPPED,
+        ]);
+    }
+
+    /**
+     * State for ready consolidation
+     */
+    public function ready(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => PackageStatus::READY,
+        ]);
+    }
+
+    /**
+     * State for high value consolidation
+     */
+    public function highValue(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'total_weight' => $this->faker->randomFloat(2, 10, 50),
+            'total_quantity' => $this->faker->numberBetween(5, 15),
+            'total_freight_price' => $this->faker->randomFloat(2, 200, 800),
+            'total_customs_duty' => $this->faker->randomFloat(2, 50, 200),
+            'total_storage_fee' => $this->faker->randomFloat(2, 20, 80),
+            'total_delivery_fee' => $this->faker->randomFloat(2, 20, 60),
+        ]);
+    }
+
+    /**
+     * State for small consolidation
+     */
+    public function small(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'total_weight' => $this->faker->randomFloat(2, 1, 5),
+            'total_quantity' => $this->faker->numberBetween(2, 3),
+            'total_freight_price' => $this->faker->randomFloat(2, 20, 80),
+            'total_customs_duty' => $this->faker->randomFloat(2, 5, 25),
+            'total_storage_fee' => $this->faker->randomFloat(2, 2, 10),
+            'total_delivery_fee' => $this->faker->randomFloat(2, 3, 12),
+        ]);
+    }
+
+    /**
+     * State for historical consolidation (created in the past)
+     */
+    public function historical(): static
+    {
+        $daysAgo = $this->faker->numberBetween(7, 30);
+        return $this->state(fn (array $attributes) => [
+            'consolidated_at' => now()->subDays($daysAgo),
+            'created_at' => now()->subDays($daysAgo),
+            'updated_at' => now()->subDays($daysAgo - $this->faker->numberBetween(1, 5)),
+        ]);
+    }
+
+    /**
+     * State for consolidation with specific notes
+     */
+    public function withNotes(string $notes): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'notes' => $notes,
+        ]);
+    }
 }

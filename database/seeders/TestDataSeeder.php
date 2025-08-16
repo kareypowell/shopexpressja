@@ -22,6 +22,10 @@ class TestDataSeeder extends Seeder
         $this->command->info('📦 Step 2: Creating test packages...');
         $this->call(PackageDistributionTestDataSeeder::class);
         
+        // Step 3: Create consolidated package test data
+        $this->command->info('📦 Step 3: Creating consolidated package test data...');
+        $this->call(ConsolidatedPackageTestDataSeeder::class);
+        
         $this->command->info('✅ Test data seeding completed successfully!');
         $this->command->info('');
         $this->command->info('📋 Test Scenarios Created:');
@@ -36,5 +40,10 @@ class TestDataSeeder extends Seeder
         $this->command->info('  • Overpayment handling');
         $this->command->info('  • Account balance updates');
         $this->command->info('  • Dashboard balance display');
+        $this->command->info('  • Package consolidation workflows');
+        $this->command->info('  • Consolidated package distribution');
+        $this->command->info('  • Consolidation search and filtering');
+        $this->command->info('  • Unconsolidation processes');
+        $this->command->info('  • Consolidation audit trails');
     }
 }

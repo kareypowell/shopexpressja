@@ -66,6 +66,14 @@ class ConsolidatedPackage extends Model
     }
 
     /**
+     * Relationship to consolidation history
+     */
+    public function history(): HasMany
+    {
+        return $this->hasMany(ConsolidationHistory::class);
+    }
+
+    /**
      * Calculate total weight from individual packages
      */
     public function getTotalWeightAttribute($value)

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Package;
 use App\Models\ConsolidatedPackage;
+use App\Models\ConsolidationHistory;
 use App\Models\User;
 use App\Enums\PackageStatus;
 use Illuminate\Support\Facades\DB;
@@ -383,19 +384,32 @@ class PackageConsolidationService
      * @param ConsolidatedPackage $consolidatedPackage
      * @param User $user User who performed the action
      * @param array $details Additional details to log
-     * @return void
+     * @return ConsolidationHistory Created history record
      */
-    protected function logConsolidationAction(string $action, ConsolidatedPackage $consolidatedPackage, User $user, array $details = []): void
+    protected function logConsolidationAction(string $action, ConsolidatedPackage $consolidatedPackage, User $user, array $details = []): ConsolidationHistory
     {
+        // Create history record in database
+        $historyRecord = ConsolidationHistory::create([
+            'consolidated_package_id' => $consolidatedPackage->id,
+            'action' => $action,
+            'performed_by' => $user->id,
+            'details' => $details,
+            'performed_at' => now(),
+        ]);
+
+        // Also log to Laravel log for system monitoring
         Log::info("Package consolidation action: {$action}", [
+            'history_id' => $historyRecord->id,
             'action' => $action,
             'consolidated_package_id' => $consolidatedPackage->id,
             'tracking_number' => $consolidatedPackage->consolidated_tracking_number,
             'customer_id' => $consolidatedPackage->customer_id,
             'performed_by' => $user->id,
-            'performed_at' => now(),
+            'performed_at' => $historyRecord->performed_at,
             'details' => $details,
         ]);
+
+        return $historyRecord;
     }
 
     /**
@@ -424,7 +438,7 @@ class PackageConsolidationService
             $consolidatedPackage->update(['status' => $newStatus]);
 
             // Sync status to all individual packages
-            $consolidatedPackage->syncPackageStatuses($newStatus);
+            $consolidatedPackage->syncPackageStatuses($newStatus, $user);
 
             // Log status change
             $this->logConsolidationAction('status_changed', $consolidatedPackage, $user, [
@@ -497,39 +511,50 @@ class PackageConsolidationService
      * Get consolidation history for a consolidated package
      *
      * @param ConsolidatedPackage $consolidatedPackage
-     * @return array History of consolidation actions
+     * @param array $options Options for filtering/sorting history
+     * @return Collection History of consolidation actions
      */
-    public function getConsolidationHistory(ConsolidatedPackage $consolidatedPackage): array
+    public function getConsolidationHistory(ConsolidatedPackage $consolidatedPackage, array $options = []): Collection
     {
-        // This would typically query a consolidation_history table
-        // For now, we'll return basic information from the consolidated package
-        $history = [];
+        $query = $consolidatedPackage->history()
+            ->with('performedBy')
+            ->orderBy('performed_at', 'desc');
 
-        // Add consolidation event
-        $history[] = [
-            'action' => 'consolidated',
-            'performed_at' => $consolidatedPackage->consolidated_at,
-            'performed_by' => $consolidatedPackage->createdBy,
-            'details' => [
-                'package_count' => $consolidatedPackage->packages()->count(),
-                'total_weight' => $consolidatedPackage->total_weight,
-                'total_cost' => $consolidatedPackage->total_cost,
-            ],
-        ];
-
-        // Add unconsolidation event if applicable
-        if (!$consolidatedPackage->is_active && $consolidatedPackage->unconsolidated_at) {
-            $history[] = [
-                'action' => 'unconsolidated',
-                'performed_at' => $consolidatedPackage->unconsolidated_at,
-                'performed_by' => null, // Would need to track this separately
-                'details' => [
-                    'reason' => 'Package unconsolidated',
-                ],
-            ];
+        // Apply filters if provided
+        if (isset($options['action'])) {
+            $query->byAction($options['action']);
         }
 
-        return $history;
+        if (isset($options['days'])) {
+            $query->recent($options['days']);
+        }
+
+        if (isset($options['limit'])) {
+            $query->limit($options['limit']);
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * Get consolidation history summary for a consolidated package
+     *
+     * @param ConsolidatedPackage $consolidatedPackage
+     * @return array Summary of consolidation history
+     */
+    public function getConsolidationHistorySummary(ConsolidatedPackage $consolidatedPackage): array
+    {
+        $history = $consolidatedPackage->history()->with('performedBy')->get();
+        
+        $summary = [
+            'total_actions' => $history->count(),
+            'actions_by_type' => $history->groupBy('action')->map->count(),
+            'first_action' => $history->sortBy('performed_at')->first(),
+            'last_action' => $history->sortByDesc('performed_at')->first(),
+            'unique_users' => $history->pluck('performed_by')->unique()->count(),
+        ];
+
+        return $summary;
     }
 
     /**
@@ -557,5 +582,156 @@ class PackageConsolidationService
             ->active()
             ->with(['packages', 'createdBy'])
             ->get();
+    }
+
+    /**
+     * Export consolidation audit trail for a consolidated package
+     *
+     * @param ConsolidatedPackage $consolidatedPackage
+     * @param string $format Format for export (csv, json, array)
+     * @return array|string Exported audit trail data
+     */
+    public function exportConsolidationAuditTrail(ConsolidatedPackage $consolidatedPackage, string $format = 'array')
+    {
+        $history = $this->getConsolidationHistory($consolidatedPackage);
+        
+        $auditData = $history->map(function ($record) {
+            return [
+                'id' => $record->id,
+                'action' => $record->action,
+                'action_description' => $record->action_description,
+                'performed_at' => $record->performed_at->format('Y-m-d H:i:s'),
+                'performed_by_id' => $record->performed_by,
+                'performed_by_name' => $record->performedBy ? $record->performedBy->name : 'Unknown',
+                'performed_by_email' => $record->performedBy ? $record->performedBy->email : 'Unknown',
+                'details' => $record->details,
+                'formatted_details' => $record->formatted_details,
+            ];
+        });
+
+        // Add consolidated package information
+        $packageInfo = [
+            'consolidated_package_id' => $consolidatedPackage->id,
+            'consolidated_tracking_number' => $consolidatedPackage->consolidated_tracking_number,
+            'customer_id' => $consolidatedPackage->customer_id,
+            'customer_name' => $consolidatedPackage->customer ? $consolidatedPackage->customer->name : 'Unknown',
+            'customer_email' => $consolidatedPackage->customer ? $consolidatedPackage->customer->email : 'Unknown',
+            'created_at' => $consolidatedPackage->created_at->format('Y-m-d H:i:s'),
+            'is_active' => $consolidatedPackage->is_active,
+            'total_weight' => $consolidatedPackage->total_weight,
+            'total_cost' => $consolidatedPackage->total_cost,
+            'package_count' => $consolidatedPackage->packages()->count(),
+            'individual_packages' => $consolidatedPackage->packages->map(function ($package) {
+                return [
+                    'id' => $package->id,
+                    'tracking_number' => $package->tracking_number,
+                    'description' => $package->description,
+                    'weight' => $package->weight,
+                    'status' => $package->status,
+                ];
+            }),
+        ];
+
+        $exportData = [
+            'export_generated_at' => now()->format('Y-m-d H:i:s'),
+            'consolidated_package' => $packageInfo,
+            'audit_trail' => $auditData->toArray(),
+        ];
+
+        switch ($format) {
+            case 'json':
+                return json_encode($exportData, JSON_PRETTY_PRINT);
+            
+            case 'csv':
+                return $this->convertAuditTrailToCsv($exportData);
+            
+            case 'array':
+            default:
+                return $exportData;
+        }
+    }
+
+    /**
+     * Convert audit trail data to CSV format
+     *
+     * @param array $exportData
+     * @return string CSV formatted data
+     */
+    protected function convertAuditTrailToCsv(array $exportData): string
+    {
+        $csv = [];
+        
+        // Add header
+        $csv[] = 'Export Generated At,' . $exportData['export_generated_at'];
+        $csv[] = 'Consolidated Package ID,' . $exportData['consolidated_package']['consolidated_package_id'];
+        $csv[] = 'Consolidated Tracking Number,' . $exportData['consolidated_package']['consolidated_tracking_number'];
+        $csv[] = 'Customer Name,' . $exportData['consolidated_package']['customer_name'];
+        $csv[] = 'Customer Email,' . $exportData['consolidated_package']['customer_email'];
+        $csv[] = '';
+        
+        // Add audit trail header
+        $csv[] = 'Action,Action Description,Performed At,Performed By,Performed By Email,Details';
+        
+        // Add audit trail data
+        foreach ($exportData['audit_trail'] as $record) {
+            $detailsString = is_array($record['details']) ? json_encode($record['details']) : $record['details'];
+            $csv[] = implode(',', [
+                '"' . $record['action'] . '"',
+                '"' . $record['action_description'] . '"',
+                '"' . $record['performed_at'] . '"',
+                '"' . $record['performed_by_name'] . '"',
+                '"' . $record['performed_by_email'] . '"',
+                '"' . str_replace('"', '""', $detailsString) . '"',
+            ]);
+        }
+        
+        return implode("\n", $csv);
+    }
+
+    /**
+     * Get consolidation statistics for reporting
+     *
+     * @param array $filters Optional filters (date_from, date_to, customer_id, etc.)
+     * @return array Consolidation statistics
+     */
+    public function getConsolidationStatistics(array $filters = []): array
+    {
+        $query = ConsolidationHistory::query();
+
+        // Apply filters
+        if (isset($filters['date_from'])) {
+            $query->where('performed_at', '>=', $filters['date_from']);
+        }
+
+        if (isset($filters['date_to'])) {
+            $query->where('performed_at', '<=', $filters['date_to']);
+        }
+
+        if (isset($filters['customer_id'])) {
+            $query->whereHas('consolidatedPackage', function ($q) use ($filters) {
+                $q->where('customer_id', $filters['customer_id']);
+            });
+        }
+
+        if (isset($filters['action'])) {
+            $query->byAction($filters['action']);
+        }
+
+        $history = $query->with(['consolidatedPackage', 'performedBy'])->get();
+
+        return [
+            'total_actions' => $history->count(),
+            'actions_by_type' => $history->groupBy('action')->map->count(),
+            'actions_by_date' => $history->groupBy(function ($item) {
+                return $item->performed_at->format('Y-m-d');
+            })->map->count(),
+            'actions_by_user' => $history->groupBy('performed_by')->map->count(),
+            'unique_consolidated_packages' => $history->pluck('consolidated_package_id')->unique()->count(),
+            'unique_users' => $history->pluck('performed_by')->unique()->count(),
+            'date_range' => [
+                'from' => $history->min('performed_at'),
+                'to' => $history->max('performed_at'),
+            ],
+        ];
     }
 }

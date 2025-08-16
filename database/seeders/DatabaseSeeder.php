@@ -25,5 +25,8 @@ class DatabaseSeeder extends Seeder
         
         // Comprehensive package distribution and account balance test data
         $this->call(ComprehensiveTestDataSeeder::class);
+        
+        // Consolidated package test data
+        $this->call(ConsolidatedPackageTestDataSeeder::class);
     }
 }

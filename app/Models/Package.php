@@ -422,6 +422,15 @@ class Package extends Model
     }
 
     /**
+     * Check if this package can have its status updated individually
+     * Consolidated packages should only be updated through the consolidated package management
+     */
+    public function canUpdateStatusIndividually(): bool
+    {
+        return !$this->isConsolidated();
+    }
+
+    /**
      * Check if package can be consolidated
      */
     public function canBeConsolidated(): bool

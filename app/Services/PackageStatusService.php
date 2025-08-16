@@ -22,7 +22,7 @@ class PackageStatusService
     /**
      * Update package status with validation and logging
      */
-    public function updateStatus(Package $package, PackageStatus $newStatus, User $user, ?string $notes = null, bool $allowDeliveredStatus = false): bool
+    public function updateStatus(Package $package, PackageStatus $newStatus, User $user, ?string $notes = null, bool $allowDeliveredStatus = false, bool $fromConsolidatedUpdate = false): bool
     {
         try {
             $oldStatus = $package->status; // Already cast to enum by model
@@ -38,10 +38,27 @@ class PackageStatusService
                 return false;
             }
             
-            // Validate status transition
-            if (!$this->canTransitionTo($oldStatus, $newStatus)) {
+            // Validate status transition (skip validation for consolidated updates)
+            if (!$fromConsolidatedUpdate && !$this->canTransitionTo($oldStatus, $newStatus)) {
                 Log::warning('Invalid status transition attempted', [
                     'package_id' => $package->id,
+                    'old_status' => $oldStatus->value,
+                    'new_status' => $newStatus->value,
+                    'user_id' => $user->id,
+                ]);
+                return false;
+            }
+
+            // Check if package is consolidated before updating
+            $isConsolidated = $package->isConsolidated();
+            $consolidatedPackage = $isConsolidated ? $package->consolidatedPackage : null;
+            
+            // Prevent individual status updates for consolidated packages (unless coming from consolidated update)
+            if ($isConsolidated && $consolidatedPackage && !$fromConsolidatedUpdate) {
+                Log::warning('Individual status update blocked for consolidated package - use consolidated package status update instead', [
+                    'package_id' => $package->id,
+                    'consolidated_package_id' => $consolidatedPackage->id,
+                    'consolidated_tracking_number' => $consolidatedPackage->consolidated_tracking_number,
                     'old_status' => $oldStatus->value,
                     'new_status' => $newStatus->value,
                     'user_id' => $user->id,

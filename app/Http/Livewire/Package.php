@@ -40,6 +40,8 @@ class Package extends Component
     // UI state
     public string $successMessage = '';
     public string $errorMessage = '';
+    public bool $showHistoryModal = false;
+    public $selectedConsolidatedPackageForHistory = null;
 
     protected $consolidationService;
 
@@ -425,6 +427,52 @@ class Package extends Component
         $this->showConsolidatedView = true;
         Session::put('show_consolidated_view', true);
         $this->resetMessages();
+    }
+
+    /**
+     * Show consolidation history modal
+     */
+    public function showConsolidationHistory($consolidatedPackageId)
+    {
+        try {
+            $consolidatedPackage = ConsolidatedPackage::findOrFail($consolidatedPackageId);
+            
+            // Authorize access to this consolidated package
+            $this->authorize('view', $consolidatedPackage);
+            
+            $this->selectedConsolidatedPackageForHistory = $consolidatedPackage;
+            $this->showHistoryModal = true;
+            
+            // Emit event to child component
+            $this->emit('showConsolidationHistory', $consolidatedPackage->id);
+            
+        } catch (\Exception $e) {
+            $this->errorMessage = 'Unable to load consolidation history: ' . $e->getMessage();
+        }
+    }
+
+    /**
+     * Close consolidation history modal
+     */
+    public function closeConsolidationHistory()
+    {
+        $this->showHistoryModal = false;
+        $this->selectedConsolidatedPackageForHistory = null;
+        $this->resetMessages();
+    }
+
+    /**
+     * Get consolidation history for the selected package
+     */
+    public function getConsolidationHistoryProperty()
+    {
+        if (!$this->selectedConsolidatedPackageForHistory) {
+            return collect();
+        }
+
+        return $this->consolidationService->getConsolidationHistory(
+            $this->selectedConsolidatedPackageForHistory
+        );
     }
 
     public function render()

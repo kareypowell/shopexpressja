@@ -109,7 +109,7 @@
   - Write integration tests for consolidated packages in manifest workflows
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-- [ ] 14. Add consolidation audit logging and history tracking
+- [x] 14. Add consolidation audit logging and history tracking
   - Implement consolidation action logging in PackageConsolidationService
   - Create consolidation history tracking for all consolidation/unconsolidation events
   - Add consolidated package status change logging with individual package details
@@ -118,7 +118,7 @@
   - Write tests for consolidation audit logging and history tracking
   - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
 
-- [ ] 15. Create database seeders and test data for consolidation
+- [x] 15. Create database seeders and test data for consolidation
   - Create ConsolidatedPackageFactory for generating test consolidated packages
   - Implement database seeder for consolidated package test scenarios
   - Create test data scenarios covering various consolidation states and workflows

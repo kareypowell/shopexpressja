@@ -9,6 +9,8 @@ use App\Policies\UserPolicy;
 use App\Policies\CustomerPolicy;
 use App\Models\Package;
 use App\Policies\PackagePolicy;
+use App\Models\ConsolidatedPackage;
+use App\Policies\ConsolidatedPackagePolicy;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 
@@ -22,6 +24,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         User::class => UserPolicy::class,
         Package::class => PackagePolicy::class,
+        ConsolidatedPackage::class => ConsolidatedPackagePolicy::class,
     ];
 
     /**

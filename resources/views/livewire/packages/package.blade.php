@@ -400,6 +400,15 @@
                                             <div class="flex items-center space-x-3">
                                                 <x-package-status-badge :status="$consolidatedPackage->status" />
                                                 
+                                                <!-- History Button -->
+                                                <button wire:click="showConsolidationHistory({{ $consolidatedPackage->id }})" 
+                                                        class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    History
+                                                </button>
+                                                
                                                 @if($consolidatedPackage->canBeUnconsolidated())
                                                     <button wire:click="unconsolidatePackage({{ $consolidatedPackage->id }})" 
                                                             class="inline-flex items-center px-3 py-1.5 border border-red-300 shadow-sm text-xs font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
@@ -606,4 +615,9 @@
             });
         });
     </script>
+
+    <!-- Consolidation History Component -->
+    @if($showHistoryModal && $selectedConsolidatedPackageForHistory)
+        @livewire('consolidation-history', ['consolidatedPackage' => $selectedConsolidatedPackageForHistory], key('history-'.$selectedConsolidatedPackageForHistory->id))
+    @endif
 </div>
