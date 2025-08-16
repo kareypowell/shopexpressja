@@ -10,7 +10,9 @@ use App\Enums\PackageStatus;
 use App\Services\ConsolidationCacheService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Collection;
+use Illuminate\Auth\Access\AuthorizationException;
 use Exception;
 
 class PackageConsolidationService
@@ -28,10 +30,16 @@ class PackageConsolidationService
      * @param User $admin Admin user performing the consolidation
      * @param array $options Additional options: notes, etc.
      * @return array Result with success status and consolidated package or error message
+     * @throws AuthorizationException
      */
     public function consolidatePackages(array $packageIds, User $admin, array $options = []): array
     {
         try {
+            // Check if user has permission to create consolidated packages
+            if (!Gate::forUser($admin)->allows('create', ConsolidatedPackage::class)) {
+                throw new AuthorizationException('You do not have permission to consolidate packages.');
+            }
+
             DB::beginTransaction();
 
             // Validate input
@@ -61,6 +69,13 @@ class PackageConsolidationService
             }
 
             $customerId = $customerIds->first();
+
+            // Check if user has permission to consolidate packages for this customer
+            foreach ($packages as $package) {
+                if (!Gate::forUser($admin)->allows('update', $package)) {
+                    throw new AuthorizationException('You do not have permission to consolidate packages for this customer.');
+                }
+            }
 
             // Calculate consolidated totals
             $totals = $this->calculateConsolidatedTotals($packages);
@@ -122,6 +137,17 @@ class PackageConsolidationService
                 'message' => 'Packages consolidated successfully',
             ];
 
+        } catch (AuthorizationException $e) {
+            DB::rollBack();
+            
+            Log::warning('Package consolidation authorization failed', [
+                'error' => $e->getMessage(),
+                'package_ids' => $packageIds,
+                'admin_id' => $admin->id,
+            ]);
+
+            // Re-throw authorization exceptions so they can be handled by the caller
+            throw $e;
         } catch (Exception $e) {
             DB::rollBack();
             
@@ -145,10 +171,16 @@ class PackageConsolidationService
      * @param User $admin Admin user performing the unconsolidation
      * @param array $options Additional options: notes, etc.
      * @return array Result with success status and restored packages or error message
+     * @throws AuthorizationException
      */
     public function unconsolidatePackages(ConsolidatedPackage $consolidatedPackage, User $admin, array $options = []): array
     {
         try {
+            // Check if user has permission to unconsolidate this package
+            if (!Gate::forUser($admin)->allows('unconsolidate', $consolidatedPackage)) {
+                throw new AuthorizationException('You do not have permission to unconsolidate this package.');
+            }
+
             DB::beginTransaction();
 
             // Validate unconsolidation eligibility
@@ -210,6 +242,17 @@ class PackageConsolidationService
                 'message' => 'Packages unconsolidated successfully',
             ];
 
+        } catch (AuthorizationException $e) {
+            DB::rollBack();
+            
+            Log::warning('Package unconsolidation authorization failed', [
+                'error' => $e->getMessage(),
+                'consolidated_package_id' => $consolidatedPackage->id,
+                'admin_id' => $admin->id,
+            ]);
+
+            // Re-throw authorization exceptions so they can be handled by the caller
+            throw $e;
         } catch (Exception $e) {
             DB::rollBack();
             
@@ -435,10 +478,16 @@ class PackageConsolidationService
      * @param User $user User performing the status update
      * @param array $options Additional options
      * @return array Result with success status
+     * @throws AuthorizationException
      */
     public function updateConsolidatedStatus(ConsolidatedPackage $consolidatedPackage, string $newStatus, User $user, array $options = []): array
     {
         try {
+            // Check if user has permission to update this consolidated package
+            if (!Gate::forUser($user)->allows('update', $consolidatedPackage)) {
+                throw new AuthorizationException('You do not have permission to update this consolidated package.');
+            }
+
             DB::beginTransaction();
 
             // Validate status
@@ -505,6 +554,18 @@ class PackageConsolidationService
                 'message' => 'Status updated successfully',
             ];
 
+        } catch (AuthorizationException $e) {
+            DB::rollBack();
+            
+            Log::warning('Consolidated package status update authorization failed', [
+                'error' => $e->getMessage(),
+                'consolidated_package_id' => $consolidatedPackage->id,
+                'new_status' => $newStatus,
+                'user_id' => $user->id,
+            ]);
+
+            // Re-throw authorization exceptions so they can be handled by the caller
+            throw $e;
         } catch (Exception $e) {
             DB::rollBack();
             
@@ -526,11 +587,18 @@ class PackageConsolidationService
      * Get consolidation history for a consolidated package
      *
      * @param ConsolidatedPackage $consolidatedPackage
+     * @param User $user User requesting the history
      * @param array $options Options for filtering/sorting history
      * @return Collection History of consolidation actions
+     * @throws AuthorizationException
      */
-    public function getConsolidationHistory(ConsolidatedPackage $consolidatedPackage, array $options = []): Collection
+    public function getConsolidationHistory(ConsolidatedPackage $consolidatedPackage, User $user, array $options = []): Collection
     {
+        // Check if user has permission to view history for this consolidated package
+        if (!Gate::forUser($user)->allows('viewHistory', $consolidatedPackage)) {
+            throw new AuthorizationException('You do not have permission to view consolidation history for this package.');
+        }
+
         $query = $consolidatedPackage->history()
             ->with('performedBy')
             ->orderBy('performed_at', 'desc');
@@ -555,10 +623,17 @@ class PackageConsolidationService
      * Get consolidation history summary for a consolidated package
      *
      * @param ConsolidatedPackage $consolidatedPackage
+     * @param User $user User requesting the history summary
      * @return array Summary of consolidation history
+     * @throws AuthorizationException
      */
-    public function getConsolidationHistorySummary(ConsolidatedPackage $consolidatedPackage): array
+    public function getConsolidationHistorySummary(ConsolidatedPackage $consolidatedPackage, User $user): array
     {
+        // Check if user has permission to view history for this consolidated package
+        if (!Gate::forUser($user)->allows('viewHistory', $consolidatedPackage)) {
+            throw new AuthorizationException('You do not have permission to view consolidation history for this package.');
+        }
+
         $history = $consolidatedPackage->history()->with('performedBy')->get();
         
         $summary = [
@@ -576,10 +651,17 @@ class PackageConsolidationService
      * Get packages available for consolidation for a specific customer (cached)
      *
      * @param int $customerId
+     * @param User $user User requesting the packages
      * @return Collection
+     * @throws AuthorizationException
      */
-    public function getAvailablePackagesForCustomer(int $customerId): Collection
+    public function getAvailablePackagesForCustomer(int $customerId, User $user): Collection
     {
+        // Check if user has permission to view packages for this customer
+        if (!$user->isSuperAdmin() && !$user->isAdmin() && $user->id !== $customerId) {
+            throw new AuthorizationException('You do not have permission to view packages for this customer.');
+        }
+
         return $this->cacheService->getAvailablePackagesForConsolidation($customerId);
     }
 
@@ -587,10 +669,17 @@ class PackageConsolidationService
      * Get active consolidated packages for a customer (cached)
      *
      * @param int $customerId
+     * @param User $user User requesting the packages
      * @return Collection
+     * @throws AuthorizationException
      */
-    public function getActiveConsolidatedPackagesForCustomer(int $customerId): Collection
+    public function getActiveConsolidatedPackagesForCustomer(int $customerId, User $user): Collection
     {
+        // Check if user has permission to view consolidated packages for this customer
+        if (!$user->isSuperAdmin() && !$user->isAdmin() && $user->id !== $customerId) {
+            throw new AuthorizationException('You do not have permission to view consolidated packages for this customer.');
+        }
+
         return $this->cacheService->getCustomerConsolidations($customerId, true);
     }
 
@@ -598,12 +687,19 @@ class PackageConsolidationService
      * Export consolidation audit trail for a consolidated package
      *
      * @param ConsolidatedPackage $consolidatedPackage
+     * @param User $user User requesting the export
      * @param string $format Format for export (csv, json, array)
      * @return array|string Exported audit trail data
+     * @throws AuthorizationException
      */
-    public function exportConsolidationAuditTrail(ConsolidatedPackage $consolidatedPackage, string $format = 'array')
+    public function exportConsolidationAuditTrail(ConsolidatedPackage $consolidatedPackage, User $user, string $format = 'array')
     {
-        $history = $this->getConsolidationHistory($consolidatedPackage);
+        // Check if user has permission to export audit trail for this consolidated package
+        if (!Gate::forUser($user)->allows('exportAuditTrail', $consolidatedPackage)) {
+            throw new AuthorizationException('You do not have permission to export audit trail for this package.');
+        }
+
+        $history = $this->getConsolidationHistory($consolidatedPackage, $user);
         
         $auditData = $history->map(function ($record) {
             return [

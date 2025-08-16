@@ -9,7 +9,7 @@ use App\Models\ConsolidationHistory;
 use App\Services\PackageConsolidationService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
-class ConsolidationHistory extends Component
+class ConsolidationHistoryModal extends Component
 {
     use WithPagination, AuthorizesRequests;
 

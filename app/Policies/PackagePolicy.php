@@ -18,7 +18,7 @@ class PackagePolicy
      */
     public function viewAny(User $user)
     {
-        return $user->isAdmin();
+        return $user->isSuperAdmin() || $user->isAdmin();
     }
 
     /**
@@ -30,7 +30,7 @@ class PackagePolicy
      */
     public function view(User $user, Package $package)
     {
-        return $user->isAdmin() || $user->id === $package->user_id;
+        return $user->isSuperAdmin() || $user->isAdmin() || $user->id === $package->user_id;
     }
 
     /**
@@ -41,7 +41,7 @@ class PackagePolicy
      */
     public function create(User $user)
     {
-        return $user->isAdmin();
+        return $user->isSuperAdmin() || $user->isAdmin();
     }
 
     /**
@@ -53,7 +53,7 @@ class PackagePolicy
      */
     public function update(User $user, Package $package)
     {
-        return $user->isAdmin() || $user->id === $package->user_id;
+        return $user->isSuperAdmin() || $user->isAdmin() || $user->id === $package->user_id;
     }
 
     /**
@@ -65,7 +65,7 @@ class PackagePolicy
      */
     public function delete(User $user, Package $package)
     {
-        return $user->isAdmin() || $user->id === $package->user_id;
+        return $user->isSuperAdmin() || $user->isAdmin() || $user->id === $package->user_id;
     }
 
     /**

@@ -15,8 +15,8 @@ class ConsolidatedPackagePolicy
      */
     public function view(User $user, ConsolidatedPackage $consolidatedPackage): bool
     {
-        // Admin users can view any consolidated package
-        if ($user->role_id === 1) {
+        // Superadmin and admin users can view any consolidated package
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
             return true;
         }
 
@@ -29,8 +29,8 @@ class ConsolidatedPackagePolicy
      */
     public function create(User $user): bool
     {
-        // Only admin users can create consolidated packages
-        return $user->role_id === 1;
+        // Superadmin and admin users can create consolidated packages
+        return $user->isSuperAdmin() || $user->isAdmin();
     }
 
     /**
@@ -38,8 +38,8 @@ class ConsolidatedPackagePolicy
      */
     public function update(User $user, ConsolidatedPackage $consolidatedPackage): bool
     {
-        // Only admin users can update consolidated packages
-        return $user->role_id === 1;
+        // Superadmin and admin users can update consolidated packages
+        return $user->isSuperAdmin() || $user->isAdmin();
     }
 
     /**
@@ -47,8 +47,8 @@ class ConsolidatedPackagePolicy
      */
     public function delete(User $user, ConsolidatedPackage $consolidatedPackage): bool
     {
-        // Only admin users can delete consolidated packages
-        return $user->role_id === 1;
+        // Superadmin and admin users can delete consolidated packages
+        return $user->isSuperAdmin() || $user->isAdmin();
     }
 
     /**
@@ -56,8 +56,8 @@ class ConsolidatedPackagePolicy
      */
     public function unconsolidate(User $user, ConsolidatedPackage $consolidatedPackage): bool
     {
-        // Only admin users can unconsolidate packages
-        return $user->role_id === 1;
+        // Superadmin and admin users can unconsolidate packages
+        return $user->isSuperAdmin() || $user->isAdmin();
     }
 
     /**

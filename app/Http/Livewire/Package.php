@@ -57,8 +57,8 @@ class Package extends Component
 
     public function mount()
     {
-        // Load consolidation mode from session
-        $this->consolidationMode = Session::get('consolidation_mode', false);
+        // Load consolidation mode from session (only for superadmin and admin users)
+        $this->consolidationMode = (auth()->user()->isSuperAdmin() || auth()->user()->isAdmin()) ? Session::get('consolidation_mode', false) : false;
         // Always show consolidated view by default so customers can see their consolidated packages
         $this->showConsolidatedView = true;
         // Update session to ensure it's always true
@@ -152,6 +152,14 @@ class Package extends Component
     {
         $this->resetMessages();
 
+        // Check authorization first
+        try {
+            $this->authorize('create', ConsolidatedPackage::class);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            $this->errorMessage = 'You do not have permission to consolidate packages.';
+            return;
+        }
+
         if (empty($this->selectedPackagesForConsolidation)) {
             $this->errorMessage = 'Please select at least 2 packages to consolidate.';
             return;
@@ -179,6 +187,8 @@ class Package extends Component
             } else {
                 $this->errorMessage = $result['message'];
             }
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            $this->errorMessage = $e->getMessage();
         } catch (\Exception $e) {
             $this->errorMessage = 'An error occurred while consolidating packages: ' . $e->getMessage();
         }
@@ -194,6 +204,9 @@ class Package extends Component
         try {
             $consolidatedPackage = ConsolidatedPackage::findOrFail($consolidatedPackageId);
             
+            // Check authorization
+            $this->authorize('unconsolidate', $consolidatedPackage);
+            
             $result = $this->consolidationService->unconsolidatePackages(
                 $consolidatedPackage,
                 auth()->user()
@@ -207,6 +220,8 @@ class Package extends Component
             } else {
                 $this->errorMessage = $result['message'];
             }
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            $this->errorMessage = 'You do not have permission to unconsolidate this package.';
         } catch (\Exception $e) {
             $this->errorMessage = 'An error occurred while unconsolidating packages: ' . $e->getMessage();
         }
@@ -217,6 +232,14 @@ class Package extends Component
      */
     public function toggleConsolidationMode()
     {
+        // Check authorization first
+        try {
+            $this->authorize('create', ConsolidatedPackage::class);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            $this->errorMessage = 'You do not have permission to use consolidation features.';
+            return;
+        }
+
         $this->consolidationMode = !$this->consolidationMode;
         
         // Clear selections when toggling mode
@@ -367,6 +390,11 @@ class Package extends Component
             return collect();
         }
 
+        // Only superadmin and admin users can see packages available for consolidation
+        if (!auth()->user()->isSuperAdmin() && !auth()->user()->isAdmin()) {
+            return collect();
+        }
+
         return PackageModel::where('user_id', auth()->id())
             ->availableForConsolidation()
             ->with(['manifest', 'items', 'shipper', 'office'])
@@ -430,6 +458,34 @@ class Package extends Component
     }
 
     /**
+     * Check if current user can use consolidation features
+     */
+    public function getCanUseConsolidationProperty()
+    {
+        return auth()->check() && (auth()->user()->isSuperAdmin() || auth()->user()->isAdmin());
+    }
+
+    /**
+     * Check if current user can consolidate packages for a specific customer
+     */
+    public function canConsolidateForCustomer($customerId)
+    {
+        if (!auth()->check()) {
+            return false;
+        }
+
+        $user = auth()->user();
+        
+        // Superadmin and admin users can consolidate for any customer
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
+            return true;
+        }
+
+        // Regular users cannot consolidate packages
+        return false;
+    }
+
+    /**
      * Show consolidation history modal
      */
     public function showConsolidationHistory($consolidatedPackageId)
@@ -470,9 +526,15 @@ class Package extends Component
             return collect();
         }
 
-        return $this->consolidationService->getConsolidationHistory(
-            $this->selectedConsolidatedPackageForHistory
-        );
+        try {
+            return $this->consolidationService->getConsolidationHistory(
+                $this->selectedConsolidatedPackageForHistory,
+                auth()->user()
+            );
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            $this->errorMessage = 'You do not have permission to view consolidation history.';
+            return collect();
+        }
     }
 
     public function render()
