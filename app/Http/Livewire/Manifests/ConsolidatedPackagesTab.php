@@ -246,6 +246,7 @@ class ConsolidatedPackagesTab extends Component
         }
 
         $this->emit('packageStatusUpdated');
+        $this->emit('packagesChanged');
     }
 
     public function cancelBulkUpdate()
@@ -283,6 +284,7 @@ class ConsolidatedPackagesTab extends Component
                     'message' => "Consolidated package status updated successfully."
                 ]);
                 $this->emit('packageStatusUpdated');
+                $this->emit('packagesChanged');
             } else {
                 $this->dispatchBrowserEvent('toastr:error', [
                     'message' => $result['message']
@@ -369,6 +371,7 @@ class ConsolidatedPackagesTab extends Component
                 
                 $this->closeConsolidatedFeeModal();
                 $this->emit('packageStatusUpdated');
+                $this->emit('packagesChanged');
             } else {
                 $this->dispatchBrowserEvent('toastr:error', [
                     'message' => 'Failed to update consolidated package status: ' . ($result['message'] ?? 'Unknown error')
@@ -418,6 +421,7 @@ class ConsolidatedPackagesTab extends Component
                     'message' => 'Packages unconsolidated successfully.'
                 ]);
                 $this->emit('packageStatusUpdated');
+                $this->emit('packagesChanged');
                 $this->cancelUnconsolidation();
             } else {
                 $this->dispatchBrowserEvent('toastr:error', [

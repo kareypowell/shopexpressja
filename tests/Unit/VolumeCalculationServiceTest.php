@@ -106,7 +106,7 @@ class VolumeCalculationServiceTest extends TestCase
         $volume = 15.75;
         $formatted = $this->service->formatVolumeDisplay($volume);
 
-        $this->assertEquals('15.75 cubic feet', $formatted);
+        $this->assertEquals('15.75 ft³', $formatted);
     }
 
     /** @test */
@@ -117,9 +117,9 @@ class VolumeCalculationServiceTest extends TestCase
 
         $this->assertEquals([
             'cubic_feet' => '12.35',
-            'display' => '12.35 cubic feet',
+            'display' => '12.35 ft³',
             'raw_value' => 12.345,
-            'unit' => 'cubic feet'
+            'unit' => 'ft³'
         ], $displayData);
     }
 

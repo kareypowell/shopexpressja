@@ -36,7 +36,7 @@
 
 <x-livewire-tables::table.cell>
   <div>
-    <x-badges.success>${{ number_format($row->packages->sum('freight_price'), 2) }}</x-badges.success>
+    <x-badges.success>${{ number_format($row->packages->sum(function($package) { return $package->total_cost; }), 2) }}</x-badges.success>
   </div>
 </x-livewire-tables::table.cell>
 

@@ -49,7 +49,7 @@ class VolumeCalculationService
      */
     public function formatVolumeDisplay(float $cubicFeet): string
     {
-        return number_format($cubicFeet, 2) . ' cubic feet';
+        return number_format($cubicFeet, 2) . ' ft³';
     }
 
     /**
@@ -64,7 +64,7 @@ class VolumeCalculationService
             'cubic_feet' => number_format($cubicFeet, 2),
             'display' => $this->formatVolumeDisplay($cubicFeet),
             'raw_value' => $cubicFeet,
-            'unit' => 'cubic feet'
+            'unit' => 'ft³'
         ];
     }
 

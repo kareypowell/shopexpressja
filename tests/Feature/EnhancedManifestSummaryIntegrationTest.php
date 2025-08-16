@@ -28,11 +28,16 @@ class EnhancedManifestSummaryIntegrationTest extends TestCase
     {
         $manifest = Manifest::factory()->create(['type' => 'air']);
         
-        // Create packages with weight data
+        // Create packages with weight data and cost breakdown
         Package::factory()->count(3)->create([
             'manifest_id' => $manifest->id,
             'weight' => 15.5,
-            'estimated_value' => 200.00,
+            'estimated_value' => 100.00,
+            'freight_price' => 150.00,
+            'customs_duty' => 30.00,
+            'storage_fee' => 15.00,
+            'delivery_fee' => 5.00,
+            // total_cost = 150 + 30 + 15 + 5 = 200.00 per package, 3 packages = $600.00
         ]);
 
         $component = Livewire::test(EnhancedManifestSummary::class, ['manifest' => $manifest]);
@@ -43,7 +48,7 @@ class EnhancedManifestSummaryIntegrationTest extends TestCase
                   ->assertSee('Total Weight')
                   ->assertSee('lbs')
                   ->assertSee('kg')
-                  ->assertSee('Total Value')
+                  ->assertSee('Total Cost')
                   ->assertSee('$600.00');
     }
 
@@ -52,13 +57,18 @@ class EnhancedManifestSummaryIntegrationTest extends TestCase
     {
         $manifest = Manifest::factory()->create(['type' => 'sea']);
         
-        // Create packages with volume data
+        // Create packages with volume data and cost breakdown
         Package::factory()->count(2)->create([
             'manifest_id' => $manifest->id,
             'length_inches' => 24,
             'width_inches' => 18,
             'height_inches' => 12,
-            'estimated_value' => 150.00,
+            'estimated_value' => 100.00,
+            'freight_price' => 100.00,
+            'customs_duty' => 25.00,
+            'storage_fee' => 20.00,
+            'delivery_fee' => 5.00,
+            // total_cost = 100 + 25 + 20 + 5 = 150.00 per package, 2 packages = $300.00
         ]);
 
         $component = Livewire::test(EnhancedManifestSummary::class, ['manifest' => $manifest]);
@@ -67,8 +77,8 @@ class EnhancedManifestSummaryIntegrationTest extends TestCase
                   ->assertSee('Total Packages')
                   ->assertSee('2')
                   ->assertSee('Total Volume')
-                  ->assertSee('cubic feet')
-                  ->assertSee('Total Value')
+                  ->assertSee('ft³')
+                  ->assertSee('Total Cost')
                   ->assertSee('$300.00');
     }
 

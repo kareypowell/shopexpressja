@@ -1,6 +1,6 @@
 <div class="manifest-summary bg-gradient-to-br from-white to-gray-50 p-8 rounded-xl shadow-lg border border-gray-100" wire:poll.30s="refreshSummary">
     <!-- Header Section -->
-    <div class="flex items-center justify-between mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 space-y-4 sm:space-y-0">
         <div class="flex items-center space-x-3">
             <div class="p-3 bg-blue-100 rounded-lg">
                 <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -8,7 +8,7 @@
                 </svg>
             </div>
             <div>
-                <h3 class="text-2xl font-bold text-gray-900" id="manifest-summary-title">Manifest Summary</h3>
+                <h3 class="text-xl sm:text-2xl font-bold text-gray-900" id="manifest-summary-title">Manifest Summary</h3>
                 <p class="text-sm text-gray-500">Real-time package overview</p>
             </div>
         </div>
@@ -20,9 +20,9 @@
         </div>
     </div>
     
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" role="region" aria-labelledby="manifest-summary-title">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" role="region" aria-labelledby="manifest-summary-title">
         <!-- Package Count -->
-        <div class="relative bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+        <div class="relative bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
             <div class="flex items-center justify-between">
                 <div class="flex-1">
                     <div class="flex items-center space-x-2 mb-2">
@@ -33,7 +33,7 @@
                         </div>
                         <h4 class="text-sm font-medium text-gray-600">Total Packages</h4>
                     </div>
-                    <div class="text-3xl font-bold text-gray-900 mb-1" aria-label="Total packages: {{ $summary['package_count'] ?? 0 }}">
+                    <div class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1" aria-label="Total packages: {{ $summary['package_count'] ?? 0 }}">
                         {{ $summary['package_count'] ?? 0 }}
                     </div>
                     <div class="text-sm text-gray-500">Active shipments</div>
@@ -45,7 +45,7 @@
         <!-- Conditional Metrics Based on Manifest Type -->
         @if($manifestType === 'air')
             <!-- Weight Display for Air Manifests -->
-            <div class="relative bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+            <div class="relative bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                 <div class="flex items-center justify-between">
                     <div class="flex-1">
                         <div class="flex items-center space-x-2 mb-2">
@@ -56,7 +56,7 @@
                             </div>
                             <h4 class="text-sm font-medium text-gray-600">Total Weight</h4>
                         </div>
-                        <div class="text-3xl font-bold text-gray-900 mb-1" 
+                        <div class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1" 
                              aria-label="Total weight: {{ $summary['weight']['lbs'] ?? '0.0 lbs' }}">
                             {{ $summary['weight']['lbs'] ?? '0.0 lbs' }}
                         </div>
@@ -70,7 +70,7 @@
             </div>
         @elseif($manifestType === 'sea')
             <!-- Volume Display for Sea Manifests -->
-            <div class="relative bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+            <div class="relative bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                 <div class="flex items-center justify-between">
                     <div class="flex-1">
                         <div class="flex items-center space-x-2 mb-2">
@@ -81,9 +81,9 @@
                             </div>
                             <h4 class="text-sm font-medium text-gray-600">Total Volume</h4>
                         </div>
-                        <div class="text-3xl font-bold text-gray-900 mb-1" 
-                             aria-label="Total volume: {{ $summary['volume'] ?? '0.0 cubic feet' }}">
-                            {{ $summary['volume'] ?? '0.0 cubic feet' }}
+                        <div class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1" 
+                             aria-label="Total volume: {{ $summary['volume'] ?? '0.0 ft³' }}">
+                            {{ $summary['volume'] ?? '0.0 ft³' }}
                         </div>
                         <div class="text-sm text-gray-500">Cargo capacity</div>
                     </div>
@@ -92,7 +92,7 @@
             </div>
         @else
             <!-- Default metric for unknown manifest types -->
-            <div class="relative bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+            <div class="relative bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                 <div class="flex items-center justify-between">
                     <div class="flex-1">
                         <div class="flex items-center space-x-2 mb-2">
@@ -114,7 +114,7 @@
         @endif
         
         <!-- Total Value -->
-        <div class="relative bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+        <div class="relative bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
             <div class="flex items-center justify-between">
                 <div class="flex-1">
                     <div class="flex items-center space-x-2 mb-2">
@@ -123,13 +123,13 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </div>
-                        <h4 class="text-sm font-medium text-gray-600">Total Value</h4>
+                        <h4 class="text-sm font-medium text-gray-600">Total Cost</h4>
                     </div>
-                    <div class="text-3xl font-bold text-gray-900 mb-1" 
-                         aria-label="Total value: ${{ number_format($summary['total_value'] ?? 0, 2) }}">
+                    <div class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1" 
+                         aria-label="Total cost: ${{ number_format($summary['total_value'] ?? 0, 2) }}">
                         ${{ number_format($summary['total_value'] ?? 0, 2) }}
                     </div>
-                    <div class="text-sm text-gray-500">Declared worth</div>
+                    <div class="text-sm text-gray-500">Shipping charges</div>
                 </div>
                 <div class="absolute top-4 right-4 w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
             </div>

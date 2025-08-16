@@ -202,7 +202,7 @@ class ManifestSummaryServiceTest extends TestCase
         $this->assertEquals('200.00', $displaySummary['total_value']);
         $this->assertEquals('volume', $displaySummary['primary_metric']['type']);
         $this->assertEquals('Total Volume', $displaySummary['primary_metric']['label']);
-        $this->assertStringContainsString('4.50 cubic feet', $displaySummary['primary_metric']['display']);
+        $this->assertStringContainsString('4.50 ft³', $displaySummary['primary_metric']['display']);
     }
 
     /** @test */
@@ -332,6 +332,17 @@ class ManifestSummaryServiceTest extends TestCase
         $package->weight = $weight;
         $package->estimated_value = $value;
         $package->tracking_number = $trackingNumber ?? 'PKG' . rand(1000, 9999);
+        
+        // Add cost fields so total_cost works correctly
+        if ($value !== null) {
+            // Split the value into cost components for realistic total_cost calculation
+            $package->freight_price = $value * 0.6; // 60% of value
+            $package->customs_duty = $value * 0.2;  // 20% of value
+            $package->storage_fee = $value * 0.15;  // 15% of value
+            $package->delivery_fee = $value * 0.05; // 5% of value
+            // total_cost will be 100% of the original value
+        }
+        
         return $package;
     }
 
@@ -344,6 +355,17 @@ class ManifestSummaryServiceTest extends TestCase
         $package->cubic_feet = $volume;
         $package->estimated_value = $value;
         $package->tracking_number = $trackingNumber ?? 'PKG' . rand(1000, 9999);
+        
+        // Add cost fields so total_cost works correctly
+        if ($value !== null) {
+            // Split the value into cost components for realistic total_cost calculation
+            $package->freight_price = $value * 0.6; // 60% of value
+            $package->customs_duty = $value * 0.2;  // 20% of value
+            $package->storage_fee = $value * 0.15;  // 15% of value
+            $package->delivery_fee = $value * 0.05; // 5% of value
+            // total_cost will be 100% of the original value
+        }
+        
         return $package;
     }
 
@@ -357,6 +379,17 @@ class ManifestSummaryServiceTest extends TestCase
         $package->cubic_feet = $volume;
         $package->estimated_value = $value;
         $package->tracking_number = 'PKG' . rand(1000, 9999);
+        
+        // Add cost fields so total_cost works correctly
+        if ($value !== null) {
+            // Split the value into cost components for realistic total_cost calculation
+            $package->freight_price = $value * 0.6; // 60% of value
+            $package->customs_duty = $value * 0.2;  // 20% of value
+            $package->storage_fee = $value * 0.15;  // 15% of value
+            $package->delivery_fee = $value * 0.05; // 5% of value
+            // total_cost will be 100% of the original value
+        }
+        
         return $package;
     }
 }

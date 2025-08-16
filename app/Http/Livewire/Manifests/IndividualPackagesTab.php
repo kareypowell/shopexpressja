@@ -244,6 +244,7 @@ class IndividualPackagesTab extends Component
         }
 
         $this->emit('packageStatusUpdated');
+        $this->emit('packagesChanged');
     }
 
     public function cancelBulkUpdate()
@@ -281,6 +282,7 @@ class IndividualPackagesTab extends Component
                     'message' => "Package status updated successfully."
                 ]);
                 $this->emit('packageStatusUpdated');
+                $this->emit('packagesChanged');
             } else {
                 $this->dispatchBrowserEvent('toastr:error', [
                     'message' => 'Failed to update package status.'
@@ -362,6 +364,7 @@ class IndividualPackagesTab extends Component
                 
                 $this->closeFeeModal();
                 $this->emit('packageStatusUpdated');
+                $this->emit('packagesChanged');
             } else {
                 $this->dispatchBrowserEvent('toastr:error', [
                     'message' => 'Failed to update package status after fee entry.'

@@ -123,15 +123,15 @@ class ManifestSummaryService
     }
 
     /**
-     * Calculate total estimated value of packages
+     * Calculate total cost of packages (freight + customs + storage + delivery)
      *
      * @param Collection $packages
-     * @return float Total estimated value
+     * @return float Total cost
      */
     protected function calculateTotalValue(Collection $packages): float
     {
         return $packages->sum(function (Package $package) {
-            return $package->estimated_value ?? 0;
+            return $package->total_cost ?? 0;
         });
     }
 
