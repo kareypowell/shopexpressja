@@ -7,6 +7,7 @@ use App\Models\Manifest;
 use App\Models\User;
 use App\Models\Office;
 use App\Models\Shipper;
+use App\Enums\PackageStatus;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PackageFactory extends Factory
@@ -24,7 +25,14 @@ class PackageFactory extends Factory
             'tracking_number' => $this->faker->unique()->numerify('TRK#########'),
             'description' => $this->faker->sentence(),
             'weight' => $this->faker->randomFloat(2, 0.1, 100.0),
-            'status' => $this->faker->randomElement(['pending', 'processing', 'shipped', 'delivered']),
+            'status' => $this->faker->randomElement([
+                PackageStatus::PENDING,
+                PackageStatus::PROCESSING,
+                PackageStatus::SHIPPED,
+                PackageStatus::CUSTOMS,
+                PackageStatus::DELAYED,
+                PackageStatus::DELIVERED
+            ]),
             'estimated_value' => $this->faker->randomFloat(2, 10.0, 1000.0),
             'freight_price' => $this->faker->randomFloat(2, 5.0, 100.0),
             'customs_duty' => $this->faker->randomFloat(2, 0.0, 50.0),

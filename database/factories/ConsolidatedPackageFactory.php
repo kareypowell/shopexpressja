@@ -42,9 +42,10 @@ class ConsolidatedPackageFactory extends Factory
     private function generateTrackingNumber(): string
     {
         $date = now()->format('Ymd');
-        $sequence = $this->faker->numberBetween(1, 9999);
+        $microtime = substr(microtime(true) * 10000, -4); // Get last 4 digits of microtime
+        $random = $this->faker->numberBetween(1, 99);
         
-        return sprintf('CONS-%s-%04d', $date, $sequence);
+        return sprintf('CONS-%s-%s%02d', $date, $microtime, $random);
     }
 
     /**

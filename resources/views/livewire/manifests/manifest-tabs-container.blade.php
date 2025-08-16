@@ -142,23 +142,25 @@
 
             <!-- Tab Content -->
             <div wire:loading.remove class="p-4 sm:p-6">
-                @if($activeTab === 'consolidated')
-                    <div class="consolidated-packages-content"
-                         id="tabpanel-consolidated"
-                         role="tabpanel"
-                         aria-labelledby="tab-consolidated"
-                         aria-label="Consolidated packages view">
-                        @livewire('manifests.consolidated-packages-tab', ['manifest' => $manifest], key('consolidated-'.$manifest->id))
-                    </div>
-                @elseif($activeTab === 'individual')
-                    <div class="individual-packages-content"
-                         id="tabpanel-individual"
-                         role="tabpanel"
-                         aria-labelledby="tab-individual"
-                         aria-label="Individual packages view">
-                        @livewire('manifests.individual-packages-tab', ['manifest' => $manifest], key('individual-'.$manifest->id))
-                    </div>
-                @endif
+                <!-- Consolidated Packages Tab Content -->
+                <div class="consolidated-packages-content {{ $activeTab !== 'consolidated' ? 'hidden' : '' }}"
+                     id="tabpanel-consolidated"
+                     role="tabpanel"
+                     aria-labelledby="tab-consolidated"
+                     aria-label="Consolidated packages view"
+                     aria-hidden="{{ $activeTab !== 'consolidated' ? 'true' : 'false' }}">
+                    @livewire('manifests.consolidated-packages-tab', ['manifest' => $manifest], key('consolidated-'.$manifest->id))
+                </div>
+                
+                <!-- Individual Packages Tab Content -->
+                <div class="individual-packages-content {{ $activeTab !== 'individual' ? 'hidden' : '' }}"
+                     id="tabpanel-individual"
+                     role="tabpanel"
+                     aria-labelledby="tab-individual"
+                     aria-label="Individual packages view"
+                     aria-hidden="{{ $activeTab !== 'individual' ? 'true' : 'false' }}">
+                    @livewire('manifests.individual-packages-tab', ['manifest' => $manifest], key('individual-'.$manifest->id))
+                </div>
             </div>
         @endif
         
@@ -198,6 +200,7 @@ function manifestTabs() {
                 this.announceTabChange(tab);
                 this.updateFocus();
                 this.updateFocusedTabIndex(tab);
+                this.updateTabVisibility(tab);
             });
             
             // Listen for URL update events
@@ -217,6 +220,19 @@ function manifestTabs() {
             
             // Initialize focused tab index
             this.updateFocusedTabIndex(this.$wire.activeTab);
+            
+            // Initialize tab visibility
+            this.updateTabVisibility(this.$wire.activeTab);
+            
+            // Ensure Alpine.js components are initialized after Livewire updates
+            this.$wire.on('tabContentUpdated', () => {
+                // Force Alpine.js to re-scan for new components
+                setTimeout(() => {
+                    if (window.Alpine) {
+                        window.Alpine.initTree(document.getElementById('tab-content'));
+                    }
+                }, 100);
+            });
             
             // Handle window resize for responsive behavior
             window.addEventListener('resize', this.handleResize.bind(this));
@@ -254,6 +270,32 @@ function manifestTabs() {
         updateFocusedTabIndex(tab) {
             const tabs = ['individual', 'consolidated'];
             this.focusedTabIndex = tabs.indexOf(tab);
+        },
+        
+        updateTabVisibility(activeTab) {
+            // Update visibility of tab panels
+            const consolidatedPanel = document.getElementById('tabpanel-consolidated');
+            const individualPanel = document.getElementById('tabpanel-individual');
+            
+            if (consolidatedPanel) {
+                if (activeTab === 'consolidated') {
+                    consolidatedPanel.classList.remove('hidden');
+                    consolidatedPanel.setAttribute('aria-hidden', 'false');
+                } else {
+                    consolidatedPanel.classList.add('hidden');
+                    consolidatedPanel.setAttribute('aria-hidden', 'true');
+                }
+            }
+            
+            if (individualPanel) {
+                if (activeTab === 'individual') {
+                    individualPanel.classList.remove('hidden');
+                    individualPanel.setAttribute('aria-hidden', 'false');
+                } else {
+                    individualPanel.classList.add('hidden');
+                    individualPanel.setAttribute('aria-hidden', 'true');
+                }
+            }
         },
         
         scrollTabIntoView(tabElement) {
@@ -402,6 +444,23 @@ document.addEventListener('keydown', function(e) {
             firstTab.focus();
         }
     }
+});
+
+// Ensure Alpine.js components are properly initialized after DOM changes
+document.addEventListener('livewire:load', function () {
+    // Re-initialize Alpine.js components when Livewire updates
+    Livewire.hook('message.processed', (message, component) => {
+        if (component.fingerprint.name === 'manifests.manifest-tabs-container') {
+            setTimeout(() => {
+                if (window.Alpine) {
+                    const tabContent = document.getElementById('tab-content');
+                    if (tabContent) {
+                        window.Alpine.initTree(tabContent);
+                    }
+                }
+            }, 50);
+        }
+    });
 });
 </script>
 @endpush
@@ -624,18 +683,29 @@ document.addEventListener('keydown', function(e) {
     white-space: normal;
 }
 
+/* Tab panel visibility and transitions */
+.manifest-tabs-container [role="tabpanel"] {
+    transition: opacity 0.2s ease-in-out;
+}
+
+.manifest-tabs-container [role="tabpanel"].hidden {
+    display: none !important;
+}
+
+.manifest-tabs-container [role="tabpanel"]:not(.hidden) {
+    display: block;
+    animation: fadeIn 0.2s ease-out;
+}
+
 /* Animation for tab content changes */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-.manifest-tabs-container #tab-content > div {
-    animation: fadeIn 0.2s ease-out;
-}
-
 @media (prefers-reduced-motion: reduce) {
-    .manifest-tabs-container #tab-content > div {
+    .manifest-tabs-container [role="tabpanel"] {
+        transition: none;
         animation: none;
     }
 }

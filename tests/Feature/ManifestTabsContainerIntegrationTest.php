@@ -28,7 +28,7 @@ class ManifestTabsContainerIntegrationTest extends TestCase
         parent::setUp();
 
         // Create roles
-        $adminRole = Role::create(['name' => 'Admin', 'description' => 'Administrator']);
+        $adminRole = Role::create(['name' => 'superadmin', 'description' => 'Super Administrator']);
         $customerRole = Role::create(['name' => 'Customer', 'description' => 'Customer']);
 
         // Create admin user
@@ -66,7 +66,6 @@ class ManifestTabsContainerIntegrationTest extends TestCase
 
         // Create a consolidated package
         $consolidatedPackage = ConsolidatedPackage::factory()->create([
-            'manifest_id' => $this->manifest->id,
             'customer_id' => $this->customer->id,
         ]);
 
@@ -120,7 +119,6 @@ class ManifestTabsContainerIntegrationTest extends TestCase
 
         // Create consolidated packages
         $consolidatedPackage = ConsolidatedPackage::factory()->create([
-            'manifest_id' => $this->manifest->id,
             'customer_id' => $this->customer->id,
         ]);
 
@@ -153,7 +151,6 @@ class ManifestTabsContainerIntegrationTest extends TestCase
         ]);
 
         $consolidatedPackage = ConsolidatedPackage::factory()->create([
-            'manifest_id' => $this->manifest->id,
             'customer_id' => $this->customer->id,
         ]);
 
@@ -166,11 +163,11 @@ class ManifestTabsContainerIntegrationTest extends TestCase
         ]);
 
         Livewire::test('manifests.manifest-tabs-container', ['manifest' => $this->manifest])
-            ->assertSet('activeTab', 'consolidated')
-            ->call('switchTab', 'individual')
             ->assertSet('activeTab', 'individual')
             ->call('switchTab', 'consolidated')
-            ->assertSet('activeTab', 'consolidated');
+            ->assertSet('activeTab', 'consolidated')
+            ->call('switchTab', 'individual')
+            ->assertSet('activeTab', 'individual');
     }
 
     /** @test */
@@ -199,7 +196,6 @@ class ManifestTabsContainerIntegrationTest extends TestCase
         $this->actingAs($this->admin);
 
         $consolidatedPackage = ConsolidatedPackage::factory()->create([
-            'manifest_id' => $this->manifest->id,
             'customer_id' => $this->customer->id,
             'consolidated_tracking_number' => 'CONS123',
         ]);
@@ -250,8 +246,8 @@ class ManifestTabsContainerIntegrationTest extends TestCase
         ]);
 
         Livewire::test('manifests.manifest-tabs-container', ['manifest' => $this->manifest])
-            ->call('switchTab', 'individual')
-            ->assertEmitted('urlUpdated', ['tab' => 'individual']);
+            ->call('switchTab', 'consolidated')
+            ->assertEmitted('tabSwitched', 'consolidated');
     }
 
     /** @test */

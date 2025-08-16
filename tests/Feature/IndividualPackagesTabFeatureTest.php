@@ -487,6 +487,7 @@ class IndividualPackagesTabFeatureTest extends TestCase
             'customs_duty' => 0,
             'storage_fee' => 0,
             'delivery_fee' => 0,
+            'status' => PackageStatus::CUSTOMS, // Status that can transition to READY
             'consolidated_package_id' => null
         ]);
 

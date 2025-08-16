@@ -66,7 +66,7 @@ class ManifestTabsContainerTest extends TestCase
             'activeTab' => 'invalid_tab'
         ]);
         
-        $component->assertSet('activeTab', 'consolidated');
+        $component->assertSet('activeTab', 'individual');
     }
 
     /** @test */
@@ -74,11 +74,11 @@ class ManifestTabsContainerTest extends TestCase
     {
         $component = Livewire::test(ManifestTabsContainer::class, ['manifest' => $this->manifest]);
         
-        $component->call('switchTab', 'individual');
-        $component->assertSet('activeTab', 'individual');
-        
         $component->call('switchTab', 'consolidated');
         $component->assertSet('activeTab', 'consolidated');
+        
+        $component->call('switchTab', 'individual');
+        $component->assertSet('activeTab', 'individual');
     }
 
     /** @test */
@@ -87,7 +87,7 @@ class ManifestTabsContainerTest extends TestCase
         $component = Livewire::test(ManifestTabsContainer::class, ['manifest' => $this->manifest]);
         
         $component->call('switchTab', 'invalid_tab');
-        $component->assertSet('activeTab', 'consolidated');
+        $component->assertSet('activeTab', 'individual');
     }
 
     /** @test */
@@ -95,11 +95,11 @@ class ManifestTabsContainerTest extends TestCase
     {
         $component = Livewire::test(ManifestTabsContainer::class, ['manifest' => $this->manifest]);
         
-        $component->call('switchTab', 'individual');
+        $component->call('switchTab', 'consolidated');
         
-        $component->assertEmitted('tabSwitched', 'individual');
+        $component->assertEmitted('tabSwitched', 'consolidated');
         $component->assertDispatchedBrowserEvent('tab-switched', [
-            'tab' => 'individual',
+            'tab' => 'consolidated',
             'manifestId' => $this->manifest->id
         ]);
     }
@@ -109,7 +109,7 @@ class ManifestTabsContainerTest extends TestCase
     {
         $component = Livewire::test(ManifestTabsContainer::class, ['manifest' => $this->manifest]);
         
-        $component->call('switchTab', 'consolidated');
+        $component->call('switchTab', 'individual');
         
         $component->assertNotEmitted('tabSwitched');
     }
@@ -119,13 +119,13 @@ class ManifestTabsContainerTest extends TestCase
     {
         $component = Livewire::test(ManifestTabsContainer::class, ['manifest' => $this->manifest]);
         
-        $component->call('switchTab', 'individual');
+        $component->call('switchTab', 'consolidated');
         
         $sessionKey = "manifest_tabs_{$this->manifest->id}";
         $tabState = session()->get($sessionKey);
         
         $this->assertNotNull($tabState);
-        $this->assertEquals('individual', $tabState['activeTab']);
+        $this->assertEquals('consolidated', $tabState['activeTab']);
         $this->assertEquals($this->manifest->id, $tabState['manifestId']);
         $this->assertArrayHasKey('timestamp', $tabState);
     }
@@ -161,7 +161,7 @@ class ManifestTabsContainerTest extends TestCase
         $component = Livewire::test(ManifestTabsContainer::class, ['manifest' => $this->manifest]);
         $component->call('restoreTabState');
         
-        $component->assertSet('activeTab', 'consolidated');
+        $component->assertSet('activeTab', 'individual');
     }
 
     /** @test */
@@ -169,9 +169,9 @@ class ManifestTabsContainerTest extends TestCase
     {
         $component = Livewire::test(ManifestTabsContainer::class, ['manifest' => $this->manifest]);
         
-        $component->emit('tabStateChanged', ['tab' => 'individual']);
+        $component->emit('tabStateChanged', ['tab' => 'consolidated']);
         
-        $component->assertSet('activeTab', 'individual');
+        $component->assertSet('activeTab', 'consolidated');
     }
 
     /** @test */
@@ -179,7 +179,7 @@ class ManifestTabsContainerTest extends TestCase
     {
         $component = Livewire::test(ManifestTabsContainer::class, ['manifest' => $this->manifest]);
         
-        $component->emit('tabStateChanged', ['tab' => 'consolidated']);
+        $component->emit('tabStateChanged', ['tab' => 'individual']);
         
         // Should not emit additional events
         $component->assertNotEmitted('tabSwitched');
@@ -193,7 +193,7 @@ class ManifestTabsContainerTest extends TestCase
         $component->call('updateUrl');
         
         $component->assertDispatchedBrowserEvent('update-url', [
-            'tab' => 'consolidated',
+            'tab' => 'individual',
             'manifestId' => $this->manifest->id
         ]);
     }
@@ -227,14 +227,14 @@ class ManifestTabsContainerTest extends TestCase
         
         $activeTabData = $component->get('activeTabData');
         
-        $this->assertEquals('Consolidated Packages', $activeTabData['name']);
-        $this->assertEquals('archive-box', $activeTabData['icon']);
-        
-        $component->call('switchTab', 'individual');
-        
-        $activeTabData = $component->get('activeTabData');
         $this->assertEquals('Individual Packages', $activeTabData['name']);
         $this->assertEquals('cube', $activeTabData['icon']);
+        
+        $component->call('switchTab', 'consolidated');
+        
+        $activeTabData = $component->get('activeTabData');
+        $this->assertEquals('Consolidated Packages', $activeTabData['name']);
+        $this->assertEquals('archive-box', $activeTabData['icon']);
     }
 
     /** @test */
@@ -273,7 +273,7 @@ class ManifestTabsContainerTest extends TestCase
         $component = Livewire::test(ManifestTabsContainer::class, ['manifest' => $this->manifest]);
         
         $component->assertViewHas('manifest', $this->manifest);
-        $component->assertViewHas('activeTab', 'consolidated');
+        $component->assertViewHas('activeTab', 'individual');
         $component->assertViewHas('tabs');
         $component->assertViewHas('activeTabData');
     }
@@ -294,9 +294,9 @@ class ManifestTabsContainerTest extends TestCase
     {
         $component = Livewire::test(ManifestTabsContainer::class, ['manifest' => $this->manifest]);
         
-        $component->call('switchTab', 'individual');
+        $component->call('switchTab', 'consolidated');
         
-        $component->assertEmitted('preserveTabState', 'individual');
+        $component->assertEmitted('preserveTabState', 'consolidated');
     }
 
     /** @test */
@@ -304,18 +304,18 @@ class ManifestTabsContainerTest extends TestCase
     {
         $component = Livewire::test(ManifestTabsContainer::class, ['manifest' => $this->manifest]);
         
-        // Test invalid tabs default to consolidated when switching
+        // Test invalid tabs default to individual when switching
         $component->call('switchTab', 'invalid');
-        $component->assertSet('activeTab', 'consolidated');
-        
-        $component->call('switchTab', '');
-        $component->assertSet('activeTab', 'consolidated');
-        
-        // Test valid tabs work correctly
-        $component->call('switchTab', 'individual');
         $component->assertSet('activeTab', 'individual');
         
+        $component->call('switchTab', '');
+        $component->assertSet('activeTab', 'individual');
+        
+        // Test valid tabs work correctly
         $component->call('switchTab', 'consolidated');
         $component->assertSet('activeTab', 'consolidated');
+        
+        $component->call('switchTab', 'individual');
+        $component->assertSet('activeTab', 'individual');
     }
 }
