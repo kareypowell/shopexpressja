@@ -26,6 +26,11 @@ class PackageWorkflow extends Component
     public $notes = '';
     public $manifestId = null;
 
+    // Consolidation properties
+    public $showConsolidationModal = false;
+    public $consolidationNotes = '';
+    public $packagesForConsolidation = [];
+
     // Fee entry modal properties
     public $showFeeModal = false;
     public $feePackageId = null;
@@ -114,6 +119,7 @@ class PackageWorkflow extends Component
                 $query->where('manifest_id', $this->manifestId);
             }, 'customer.profile'])
             ->active()
+            ->orderBy('consolidated_tracking_number', 'desc')
             ->get();
     }
 
@@ -374,6 +380,185 @@ class PackageWorkflow extends Component
                 'error' => $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Show consolidation modal for selected packages
+     */
+    public function showConsolidationModal()
+    {
+        if (empty($this->selectedPackages)) {
+            $this->dispatchBrowserEvent('toastr:warning', [
+                'message' => 'Please select at least 2 packages to consolidate.'
+            ]);
+            return;
+        }
+
+        if (count($this->selectedPackages) < 2) {
+            $this->dispatchBrowserEvent('toastr:warning', [
+                'message' => 'Please select at least 2 packages to consolidate.'
+            ]);
+            return;
+        }
+
+        // Validate consolidation eligibility
+        $consolidationService = app(\App\Services\PackageConsolidationService::class);
+        $validationResult = $consolidationService->validateConsolidation($this->selectedPackages);
+
+        if (!$validationResult['valid']) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => $validationResult['message']
+            ]);
+            return;
+        }
+
+        // Get packages for consolidation preview
+        $packages = Package::whereIn('id', $this->selectedPackages)
+            ->with(['user.profile'])
+            ->get();
+
+        $this->packagesForConsolidation = $packages->map(function ($package) {
+            $user = $package->user;
+            $fullName = 'N/A';
+            
+            if ($user) {
+                // Try to get full name using the accessor
+                try {
+                    $fullName = $user->full_name;
+                } catch (\Exception $e) {
+                    // Fallback to manual concatenation
+                    $fullName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+                    if (empty($fullName)) {
+                        $fullName = 'N/A';
+                    }
+                }
+            }
+
+            return [
+                'id' => $package->id,
+                'tracking_number' => $package->tracking_number,
+                'description' => $package->description,
+                'weight' => $package->weight,
+                'user' => [
+                    'id' => $user->id ?? null,
+                    'full_name' => $fullName,
+                    'first_name' => $user->first_name ?? '',
+                    'last_name' => $user->last_name ?? '',
+                    'profile' => $user && $user->profile ? [
+                        'account_number' => $user->profile->account_number ?? ''
+                    ] : null
+                ]
+            ];
+        })->toArray();
+
+        $this->showConsolidationModal = true;
+    }
+
+    /**
+     * Cancel consolidation
+     */
+    public function cancelConsolidation()
+    {
+        $this->showConsolidationModal = false;
+        $this->consolidationNotes = '';
+        $this->packagesForConsolidation = [];
+    }
+
+    /**
+     * Confirm and execute consolidation
+     */
+    public function confirmConsolidation()
+    {
+        if (empty($this->selectedPackages) || count($this->selectedPackages) < 2) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Please select at least 2 packages to consolidate.'
+            ]);
+            return;
+        }
+
+        try {
+            $consolidationService = app(\App\Services\PackageConsolidationService::class);
+            $result = $consolidationService->consolidatePackages(
+                $this->selectedPackages,
+                Auth::user(),
+                ['notes' => $this->consolidationNotes]
+            );
+
+            if ($result['success']) {
+                $this->dispatchBrowserEvent('toastr:success', [
+                    'message' => 'Packages consolidated successfully! Consolidated tracking number: ' . $result['consolidated_package']->consolidated_tracking_number
+                ]);
+
+                // Reset state
+                $this->cancelConsolidation();
+                $this->selectedPackages = [];
+                $this->selectAll = false;
+                $this->emit('packageStatusUpdated');
+            } else {
+                $this->dispatchBrowserEvent('toastr:error', [
+                    'message' => $result['message']
+                ]);
+            }
+        } catch (\Exception $e) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Failed to consolidate packages. Please try again.'
+            ]);
+            \Log::error('Failed to consolidate packages from workflow view', [
+                'package_ids' => $this->selectedPackages,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Unconsolidate a consolidated package
+     */
+    public function unconsolidatePackage($consolidatedPackageId)
+    {
+        try {
+            $consolidatedPackage = \App\Models\ConsolidatedPackage::findOrFail($consolidatedPackageId);
+            $consolidationService = app(\App\Services\PackageConsolidationService::class);
+
+            $result = $consolidationService->unconsolidatePackages(
+                $consolidatedPackage,
+                Auth::user(),
+                ['notes' => 'Unconsolidated from workflow view']
+            );
+
+            if ($result['success']) {
+                $this->dispatchBrowserEvent('toastr:success', [
+                    'message' => 'Packages unconsolidated successfully.'
+                ]);
+                $this->emit('packageStatusUpdated');
+            } else {
+                $this->dispatchBrowserEvent('toastr:error', [
+                    'message' => $result['message']
+                ]);
+            }
+        } catch (\Exception $e) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Failed to unconsolidate packages.'
+            ]);
+            \Log::error('Failed to unconsolidate packages from workflow view', [
+                'consolidated_package_id' => $consolidatedPackageId,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Check if selected packages can be consolidated
+     */
+    public function getCanConsolidateSelectedProperty()
+    {
+        if (count($this->selectedPackages) < 2) {
+            return false;
+        }
+
+        $consolidationService = app(\App\Services\PackageConsolidationService::class);
+        $validationResult = $consolidationService->validateConsolidation($this->selectedPackages);
+
+        return $validationResult['valid'];
     }
 
     public function cancelBulkUpdate()

@@ -22,6 +22,35 @@
         </div>
     @endif
 
+    <!-- Consolidated Packages Notification -->
+    @if($this->consolidatedPackages->count() > 0 && !$showConsolidatedView)
+        <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <div>
+                        <p class="text-sm font-medium text-blue-800">
+                            You have {{ $this->consolidatedPackages->count() }} consolidated package group{{ $this->consolidatedPackages->count() !== 1 ? 's' : '' }}
+                        </p>
+                        <p class="text-xs text-blue-600">
+                            Some of your packages have been grouped together for easier processing and potentially lower costs.
+                        </p>
+                    </div>
+                </div>
+                <button wire:click="forceConsolidatedView" 
+                        class="inline-flex items-center px-3 py-1.5 border border-blue-300 shadow-sm text-xs font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    View Consolidated Packages
+                </button>
+            </div>
+        </div>
+    @endif
+
     <div class="mt-10">
         <!-- Search and Filter Controls -->
         <div class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">

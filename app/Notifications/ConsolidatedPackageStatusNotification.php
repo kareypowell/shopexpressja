@@ -83,21 +83,7 @@ class ConsolidatedPackageStatusNotification extends Notification
      */
     private function getStatusTitle(PackageStatus $status): string
     {
-        switch ($status->value) {
-            case PackageStatus::PROCESSING:
-                return 'Processing Update';
-            case PackageStatus::SHIPPED:
-                return 'Shipped';
-            case PackageStatus::CUSTOMS:
-                return 'In Customs';
-            case PackageStatus::READY:
-                return 'Ready for Pickup';
-            case PackageStatus::DELIVERED:
-                return 'Delivered';
-            case PackageStatus::DELAYED:
-                return 'Delayed';
-            default:
-                return 'Status Update';
-        }
+        // Use the standard label from the enum to match individual package notifications
+        return $status->getLabel();
     }
 }

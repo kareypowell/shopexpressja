@@ -3,207 +3,259 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consolidated Package Distribution Receipt - {{ $receipt_number }}</title>
+    <title>{{ $company['name'] }} - Consolidated Package Distribution Receipt</title>
     <style>
-        body {
-            font-family: 'DejaVu Sans', sans-serif;
-            font-size: 12px;
-            line-height: 1.4;
-            color: #333;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #374151;
+            background-color: white;
             padding: 20px;
         }
-        
+
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+        }
+
+        /* Header Section */
         .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #2563eb;
-            padding-bottom: 20px;
-        }
-        
-        .company-name {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2563eb;
-            margin-bottom: 5px;
-        }
-        
-        .company-details {
-            font-size: 11px;
-            color: #666;
-            line-height: 1.3;
-        }
-        
-        .receipt-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #1f2937;
-            margin: 20px 0 10px 0;
-            text-align: center;
-            background-color: #f3f4f6;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        
-        .receipt-info {
-            display: table;
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
-        
-        .receipt-info-left,
-        .receipt-info-right {
-            display: table-cell;
-            width: 50%;
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .header-left {
+            width: 60%;
             vertical-align: top;
         }
-        
-        .receipt-info-right {
+
+        .header-right {
+            width: 40%;
+            vertical-align: top;
             text-align: right;
         }
-        
-        .info-section {
-            margin-bottom: 20px;
+
+        .logo {
+            height: 60px;
+            width: auto;
+            margin-right: 15px;
+            vertical-align: middle;
         }
-        
-        .info-title {
-            font-weight: bold;
-            color: #374151;
+
+        .header-title {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .header-title h1 {
+            font-weight: 900;
+            font-size: 30px;
+            color: #111827;
+            margin-bottom: 5px;
+        }
+
+        .header-title p {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
             margin-bottom: 8px;
-            font-size: 13px;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 3px;
+            text-transform: uppercase;
         }
-        
+
+        .status-badge.paid {
+            background-color: #059669;
+            color: white;
+        }
+
+        .status-badge.partial {
+            background-color: #d97706;
+            color: white;
+        }
+
+        .status-badge.unpaid {
+            background-color: #dc2626;
+            color: white;
+        }
+
+        /* Company Info */
+        .company-info {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+        }
+
+        .company-info p {
+            color: #374151;
+            font-size: 14px;
+        }
+
+        /* Receipt Details */
+        .receipt-details {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .details-column {
+            width: 33.33%;
+            vertical-align: top;
+            padding-right: 20px;
+        }
+
+        .details-section h3 {
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .details-section p {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .details-section .label {
+            font-weight: 600;
+        }
+
+        .total-highlight {
+            background-color: #fef3c7;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .total-amount {
+            font-weight: 900;
+            font-size: 24px;
+            color: #d97706;
+            margin-bottom: 4px;
+        }
+
+        .total-label {
+            font-size: 14px;
+            color: #d97706;
+        }
+
+        .receipt-number {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: #0891b2;
+            background: #f0f9ff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #e0f2fe;
+        }
+
+        /* Consolidated Package Summary */
         .consolidated-summary {
             background-color: #dbeafe;
             border: 1px solid #3b82f6;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 20px;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
         }
-        
+
         .consolidated-summary h3 {
-            margin: 0 0 10px 0;
+            font-weight: 700;
             color: #1e40af;
-            font-size: 14px;
+            margin-bottom: 15px;
+            font-size: 18px;
         }
-        
+
         .consolidated-details {
             display: table;
             width: 100%;
         }
-        
+
         .consolidated-details > div {
             display: table-cell;
             width: 33.33%;
-            padding: 5px;
+            padding-right: 20px;
+            vertical-align: top;
         }
-        
-        table {
+
+        .consolidated-details p {
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .consolidated-details .label {
+            font-weight: 600;
+            color: #1e40af;
+        }
+
+        /* Items Section */
+        .items-section h3 {
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 0;
         }
-        
-        th, td {
-            border: 1px solid #d1d5db;
-            padding: 8px;
+
+        .items-table thead {
+            background-color: #0891b2;
+            color: white;
+        }
+
+        .items-table th,
+        .items-table td {
+            padding: 12px;
             text-align: left;
+            font-size: 14px;
+            border-bottom: 1px solid #e5e7eb;
         }
-        
-        th {
-            background-color: #f9fafb;
-            font-weight: bold;
-            font-size: 11px;
-            color: #374151;
+
+        .items-table th {
+            font-weight: 600;
         }
-        
-        td {
-            font-size: 11px;
-        }
-        
-        .text-right {
+
+        .items-table .text-right {
             text-align: right;
         }
-        
-        .text-center {
+
+        .items-table .text-center {
             text-align: center;
         }
-        
-        .font-bold {
-            font-weight: bold;
+
+        .tracking-number {
+            color: #0891b2;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
         }
-        
-        .totals-section {
-            margin-top: 20px;
-            border-top: 2px solid #374151;
-            padding-top: 15px;
-        }
-        
-        .totals-table {
-            width: 60%;
-            margin-left: auto;
-            border: none;
-        }
-        
-        .totals-table td {
-            border: none;
-            padding: 5px 10px;
-            font-size: 12px;
-        }
-        
-        .totals-table .total-row {
-            border-top: 1px solid #374151;
-            font-weight: bold;
-            font-size: 13px;
-        }
-        
-        .payment-status {
-            text-align: center;
-            margin: 20px 0;
-            padding: 10px;
-            border-radius: 5px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        
-        .payment-status.paid {
-            background-color: #d1fae5;
-            color: #065f46;
-            border: 1px solid #10b981;
-        }
-        
-        .payment-status.partial {
-            background-color: #fef3c7;
-            color: #92400e;
-            border: 1px solid #f59e0b;
-        }
-        
-        .payment-status.unpaid {
-            background-color: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #ef4444;
-        }
-        
-        .footer {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 10px;
-            color: #6b7280;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 15px;
-        }
-        
-        .tracking-numbers {
-            background-color: #f8fafc;
-            border: 1px solid #cbd5e1;
-            border-radius: 3px;
-            padding: 8px;
-            font-size: 10px;
-            margin-top: 5px;
-        }
-        
+
         .weight-badge {
             background-color: #e0e7ff;
             color: #3730a3;
@@ -211,170 +263,295 @@
             border-radius: 3px;
             font-size: 10px;
             font-weight: bold;
+            margin-left: 8px;
         }
-        
+
         .sea-badge {
             background-color: #dbeafe;
             color: #1e40af;
         }
-        
+
         .air-badge {
             background-color: #fef3c7;
             color: #92400e;
         }
+
+        /* Payment Summary */
+        .payment-summary {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .summary-spacer {
+            width: 60%;
+        }
+
+        .summary-box {
+            width: 40%;
+            vertical-align: top;
+        }
+
+        .summary-row {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+        }
+
+        .summary-row td {
+            padding: 8px 0;
+            font-size: 14px;
+        }
+
+        .summary-label {
+            text-align: right;
+            padding-right: 20px;
+        }
+
+        .summary-amount {
+            text-align: right;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        .summary-total {
+            border-top: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .summary-total td {
+            padding: 12px 0;
+        }
+
+        .summary-paid {
+            color: #059669;
+            font-weight: 600;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding-top: 25px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer h4 {
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .footer p {
+            font-size: 14px;
+            color: #6b7280;
+        }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <div class="header">
-        <div class="company-name">{{ $company['name'] }}</div>
-        <div class="company-details">
-            {{ $company['address'] }}<br>
-            Phone: {{ $company['phone'] }} | Email: {{ $company['email'] }}<br>
-            Website: {{ $company['website'] }}
+    <div class="invoice-container">
+        <!-- Header Section -->
+        <div class="header">
+            <table class="header-table">
+                <tr>
+                    <td class="header-left">
+                        <img src="{{ asset('img/shipsharkltd-logo.png') }}" alt="{{ $company['name'] }}" class="logo">
+                        <div class="header-title">
+                            <h1>RECEIPT</h1>
+                            <p>Consolidated Package Distribution Receipt</p>
+                        </div>
+                    </td>
+                    <td class="header-right">
+                        <div class="status-badge {{ strtolower($payment_status) }}">{{ $payment_status }}</div><br>
+                        <span style="font-size: 14px; color: #6b7280;">Generated {{ date('F j, Y \a\t g:i A') }}</span>
+                    </td>
+                </tr>
+            </table>
         </div>
-    </div>
 
-    <!-- Receipt Title -->
-    <div class="receipt-title">
-        CONSOLIDATED PACKAGE DISTRIBUTION RECEIPT
-    </div>
+        <!-- Company Info -->
+        <div class="company-info">
+            <p>{{ $company['address'] }} • {{ $company['phone'] }} • {{ $company['email'] }}</p>
+        </div>
 
-    <!-- Receipt Information -->
-    <div class="receipt-info">
-        <div class="receipt-info-left">
-            <div class="info-section">
-                <div class="info-title">Receipt Details</div>
-                <strong>Receipt #:</strong> {{ $receipt_number }}<br>
-                <strong>Date:</strong> {{ $distribution_date }}<br>
-                <strong>Time:</strong> {{ $distribution_time }}<br>
-                <strong>Distributed By:</strong> {{ $distributed_by['name'] }}
+        <!-- Receipt Details -->
+        <div class="receipt-details">
+            <table class="details-table">
+                <tr>
+                    <td class="details-column">
+                        <div class="details-section">
+                            <h3>Receipt Details</h3>
+                            <p><span class="label">Receipt #:</span><br><span class="receipt-number">{{ $receipt_number }}</span></p>
+                            <p><span class="label">Date:</span> {{ $distribution_date }} at {{ $distribution_time }}</p>
+                            <p><span class="label">Processed by:</span> {{ $distributed_by['name'] }}</p>
+                        </div>
+                    </td>
+                    <td class="details-column">
+                        <div class="details-section">
+                            <h3>Customer Information</h3>
+                            <p><span class="label">Name:</span> {{ $customer['name'] }}</p>
+                            <p><span class="label">Email:</span> {{ $customer['email'] }}</p>
+                            <p><span class="label">Account:</span> {{ $customer['account_number'] }}</p>
+                        </div>
+                    </td>
+                    <td class="details-column">
+                        <div class="total-highlight">
+                            <div class="total-amount">${{ is_numeric($total_amount) ? number_format((float)$total_amount, 2) : $total_amount }}</div>
+                            <div class="total-label">Total Amount</div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Consolidated Package Summary -->
+        <div class="consolidated-summary">
+            <h3>Consolidated Package: {{ $consolidated_tracking_number }}</h3>
+            <div class="consolidated-details">
+                <div>
+                    <p><span class="label">Total Weight:</span> {{ $consolidated_totals['total_weight'] }} lbs</p>
+                    <p><span class="label">Package Count:</span> {{ $consolidated_totals['total_quantity'] }}</p>
+                </div>
+                <div>
+                    <p><span class="label">Freight:</span> ${{ is_numeric($consolidated_totals['total_freight_price'] ?? 0) ? number_format((float)$consolidated_totals['total_freight_price'], 2) : ($consolidated_totals['total_freight_price'] ?? '0.00') }}</p>
+                    <p><span class="label">Customs:</span> ${{ is_numeric($consolidated_totals['total_customs_duty'] ?? 0) ? number_format((float)$consolidated_totals['total_customs_duty'], 2) : ($consolidated_totals['total_customs_duty'] ?? '0.00') }}</p>
+                </div>
+                <div>
+                    <p><span class="label">Storage:</span> ${{ is_numeric($consolidated_totals['total_storage_fee'] ?? 0) ? number_format((float)$consolidated_totals['total_storage_fee'], 2) : ($consolidated_totals['total_storage_fee'] ?? '0.00') }}</p>
+                    <p><span class="label">Delivery:</span> ${{ is_numeric($consolidated_totals['total_delivery_fee'] ?? 0) ? number_format((float)$consolidated_totals['total_delivery_fee'], 2) : ($consolidated_totals['total_delivery_fee'] ?? '0.00') }}</p>
+                </div>
             </div>
         </div>
-        <div class="receipt-info-right">
-            <div class="info-section">
-                <div class="info-title">Customer Information</div>
-                <strong>Name:</strong> {{ $customer['name'] }}<br>
-                <strong>Email:</strong> {{ $customer['email'] }}<br>
-                <strong>Account:</strong> {{ $customer['account_number'] }}
-            </div>
+
+        <!-- Items Table -->
+        <div class="items-section">
+            <h3>Individual Packages in Consolidation</h3>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Tracking</th>
+                        <th>Description</th>
+                        <th>
+                            @php
+                                $hasSeaPackages = collect($packages)->contains('is_sea_package', true);
+                                $hasAirPackages = collect($packages)->contains('is_sea_package', false);
+                            @endphp
+                            @if($hasSeaPackages && $hasAirPackages)
+                                Weight/Volume
+                            @elseif($hasSeaPackages)
+                                Cubic Feet
+                            @else
+                                Weight
+                            @endif
+                        </th>
+                        <th class="text-right">Freight</th>
+                        <th class="text-right">Customs</th>
+                        <th class="text-right">Storage</th>
+                        <th class="text-right">Delivery</th>
+                        <th class="text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($packages as $package)
+                    <tr>
+                        <td class="tracking-number">
+                            {{ $package['tracking_number'] }}
+                            @if($package['is_sea_package'])
+                                <span class="weight-badge sea-badge">SEA</span>
+                            @else
+                                <span class="weight-badge air-badge">AIR</span>
+                            @endif
+                        </td>
+                        <td>{{ $package['description'] }}</td>
+                        <td>{{ $package['weight_display'] }}</td>
+                        <td class="text-right">${{ is_numeric($package['freight_price'] ?? 0) ? number_format((float)$package['freight_price'], 2) : ($package['freight_price'] ?? '0.00') }}</td>
+                        <td class="text-right">${{ is_numeric($package['customs_duty'] ?? 0) ? number_format((float)$package['customs_duty'], 2) : ($package['customs_duty'] ?? '0.00') }}</td>
+                        <td class="text-right">${{ is_numeric($package['storage_fee'] ?? 0) ? number_format((float)$package['storage_fee'], 2) : ($package['storage_fee'] ?? '0.00') }}</td>
+                        <td class="text-right">${{ is_numeric($package['delivery_fee'] ?? 0) ? number_format((float)$package['delivery_fee'], 2) : ($package['delivery_fee'] ?? '0.00') }}</td>
+                        <td class="text-right">${{ is_numeric($package['total_cost'] ?? 0) ? number_format((float)$package['total_cost'], 2) : ($package['total_cost'] ?? '0.00') }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
-    </div>
 
-    <!-- Consolidated Package Summary -->
-    <div class="consolidated-summary">
-        <h3>Consolidated Package: {{ $consolidated_tracking_number }}</h3>
-        <div class="consolidated-details">
-            <div>
-                <strong>Total Weight:</strong> {{ $consolidated_totals['total_weight'] }} lbs<br>
-                <strong>Package Count:</strong> {{ $consolidated_totals['total_quantity'] }}
-            </div>
-            <div>
-                <strong>Freight:</strong> ${{ $consolidated_totals['total_freight_price'] }}<br>
-                <strong>Customs:</strong> ${{ $consolidated_totals['total_customs_duty'] }}
-            </div>
-            <div>
-                <strong>Storage:</strong> ${{ $consolidated_totals['total_storage_fee'] }}<br>
-                <strong>Delivery:</strong> ${{ $consolidated_totals['total_delivery_fee'] }}
-            </div>
+        <!-- Payment Summary -->
+        <div class="payment-summary">
+            <table class="summary-table">
+                <tr>
+                    <td class="summary-spacer"></td>
+                    <td class="summary-box">
+                        <table class="summary-row">
+                            <tr>
+                                <td class="summary-label">Subtotal:</td>
+                                <td class="summary-amount">${{ is_numeric($subtotal) ? number_format((float)$subtotal, 2) : $subtotal }}</td>
+                            </tr>
+                        </table>
+                        <table class="summary-row summary-total">
+                            <tr>
+                                <td class="summary-label">Total Amount:</td>
+                                <td class="summary-amount">${{ is_numeric($total_amount) ? number_format((float)$total_amount, 2) : $total_amount }}</td>
+                            </tr>
+                        </table>
+                        <table class="summary-row">
+                            <tr>
+                                <td class="summary-label">Cash Collected:</td>
+                                <td class="summary-amount">${{ is_numeric($amount_collected) ? number_format((float)$amount_collected, 2) : $amount_collected }}</td>
+                            </tr>
+                        </table>
+                        @if($credit_applied > 0)
+                        <table class="summary-row">
+                            <tr>
+                                <td class="summary-label">Credit Applied:</td>
+                                <td class="summary-amount">${{ is_numeric($credit_applied) ? number_format((float)$credit_applied, 2) : ($credit_applied ?? '0.00') }}</td>
+                            </tr>
+                        </table>
+                        @endif
+                        @if($account_balance_applied > 0)
+                        <table class="summary-row">
+                            <tr>
+                                <td class="summary-label">Account Balance Applied:</td>
+                                <td class="summary-amount">${{ is_numeric($account_balance_applied) ? number_format((float)$account_balance_applied, 2) : ($account_balance_applied ?? '0.00') }}</td>
+                            </tr>
+                        </table>
+                        @endif
+                        @if($write_off_amount > 0)
+                        <table class="summary-row">
+                            <tr>
+                                <td class="summary-label">Discount/Write-off:</td>
+                                <td class="summary-amount">-${{ is_numeric($write_off_amount) ? number_format((float)$write_off_amount, 2) : ($write_off_amount ?? '0.00') }}</td>
+                            </tr>
+                        </table>
+                        @endif
+                        <table class="summary-row summary-paid">
+                            <tr>
+                                <td class="summary-label">Total Paid:</td>
+                                <td class="summary-amount">${{ is_numeric($total_paid ?? $total_received ?? 0) ? number_format((float)($total_paid ?? $total_received ?? 0), 2) : ($total_paid ?? $total_received ?? '0.00') }}</td>
+                            </tr>
+                        </table>
+                        @if($outstanding_balance > 0)
+                        <table class="summary-row">
+                            <tr>
+                                <td class="summary-label">Outstanding Balance:</td>
+                                <td class="summary-amount">${{ is_numeric($outstanding_balance) ? number_format((float)$outstanding_balance, 2) : ($outstanding_balance ?? '0.00') }}</td>
+                            </tr>
+                        </table>
+                        @endif
+                    </td>
+                </tr>
+            </table>
         </div>
-    </div>
 
-    <!-- Individual Packages Table -->
-    <div class="info-title">Individual Packages in Consolidation</div>
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 15%;">Tracking #</th>
-                <th style="width: 25%;">Description</th>
-                <th style="width: 10%;">{{ $packages[0]['weight_label'] ?? 'Weight' }}</th>
-                <th style="width: 12%;">Freight</th>
-                <th style="width: 12%;">Customs</th>
-                <th style="width: 12%;">Storage</th>
-                <th style="width: 12%;">Delivery</th>
-                <th style="width: 12%;">Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($packages as $package)
-            <tr>
-                <td class="font-bold">
-                    {{ $package['tracking_number'] }}
-                    @if($package['is_sea_package'])
-                        <span class="weight-badge sea-badge">SEA</span>
-                    @else
-                        <span class="weight-badge air-badge">AIR</span>
-                    @endif
-                </td>
-                <td>{{ $package['description'] }}</td>
-                <td class="text-center">{{ $package['weight_display'] }}</td>
-                <td class="text-right">${{ $package['freight_price'] }}</td>
-                <td class="text-right">${{ $package['customs_duty'] }}</td>
-                <td class="text-right">${{ $package['storage_fee'] }}</td>
-                <td class="text-right">${{ $package['delivery_fee'] }}</td>
-                <td class="text-right font-bold">${{ $package['total_cost'] }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    <!-- Totals Section -->
-    <div class="totals-section">
-        <table class="totals-table">
-            <tr>
-                <td><strong>Subtotal:</strong></td>
-                <td class="text-right">${{ number_format($subtotal, 2) }}</td>
-            </tr>
-            @if($write_off_amount > 0)
-            <tr>
-                <td><strong>Write-off/Discount:</strong></td>
-                <td class="text-right">-${{ number_format($write_off_amount, 2) }}</td>
-            </tr>
-            @endif
-            <tr class="total-row">
-                <td><strong>Total Amount:</strong></td>
-                <td class="text-right"><strong>${{ number_format($total_amount, 2) }}</strong></td>
-            </tr>
-            <tr>
-                <td><strong>Cash Collected:</strong></td>
-                <td class="text-right">${{ number_format($amount_collected, 2) }}</td>
-            </tr>
-            @if($credit_applied > 0)
-            <tr>
-                <td><strong>Credit Applied:</strong></td>
-                <td class="text-right">${{ number_format($credit_applied, 2) }}</td>
-            </tr>
-            @endif
-            @if($account_balance_applied > 0)
-            <tr>
-                <td><strong>Account Balance Applied:</strong></td>
-                <td class="text-right">${{ number_format($account_balance_applied, 2) }}</td>
-            </tr>
-            @endif
-            <tr class="total-row">
-                <td><strong>Total Received:</strong></td>
-                <td class="text-right"><strong>${{ number_format($total_received, 2) }}</strong></td>
-            </tr>
-            @if($outstanding_balance > 0)
-            <tr>
-                <td><strong>Outstanding Balance:</strong></td>
-                <td class="text-right" style="color: #dc2626;"><strong>${{ number_format($outstanding_balance, 2) }}</strong></td>
-            </tr>
-            @endif
-        </table>
-    </div>
-
-    <!-- Payment Status -->
-    <div class="payment-status {{ strtolower($payment_status) }}">
-        PAYMENT STATUS: {{ strtoupper($payment_status) }}
-    </div>
-
-    <!-- Footer -->
-    <div class="footer">
-        <p><strong>Thank you for choosing {{ $company['name'] }}!</strong></p>
-        <p>This is a computer-generated receipt. Please keep this receipt for your records.</p>
-        <p>For inquiries, contact us at {{ $company['phone'] }} or {{ $company['email'] }}</p>
-        <p><em>Generated on {{ now()->format('F j, Y \a\t g:i A') }}</em></p>
+        <!-- Footer -->
+        <div class="footer">
+            <h4>Thank you for choosing {{ $company['name'] }}</h4>
+            <p>Keep this receipt for your records</p>
+        </div>
     </div>
 </body>
 </html>

@@ -57,7 +57,10 @@ class Package extends Component
     {
         // Load consolidation mode from session
         $this->consolidationMode = Session::get('consolidation_mode', false);
-        $this->showConsolidatedView = Session::get('show_consolidated_view', false);
+        // Always show consolidated view by default so customers can see their consolidated packages
+        $this->showConsolidatedView = true;
+        // Update session to ensure it's always true
+        Session::put('show_consolidated_view', true);
     }
 
     /**
@@ -277,6 +280,7 @@ class Package extends Component
 
     /**
      * Get filtered individual packages based on search and filters
+     * Now includes consolidated packages so customers can see all their packages
      */
     protected function getFilteredIndividualPackages()
     {
@@ -284,8 +288,33 @@ class Package extends Component
             return collect();
         }
 
+        // Show all packages (both individual and consolidated) so customers can see everything
         $query = PackageModel::where('user_id', auth()->id())
-            ->individual()
+            ->with(['manifest', 'items', 'shipper', 'office', 'consolidatedPackage']);
+
+        // Apply search
+        if (!empty($this->search)) {
+            $query->searchWithConsolidated($this->search);
+        }
+
+        // Apply status filter
+        if (!empty($this->statusFilter)) {
+            $query->where('status', $this->statusFilter);
+        }
+
+        return $query->orderBy('created_at', 'desc')->get();
+    }
+
+    /**
+     * Get all packages (both individual and consolidated) for display
+     */
+    public function getAllPackagesProperty()
+    {
+        if (!auth()->check()) {
+            return collect();
+        }
+
+        $query = PackageModel::where('user_id', auth()->id())
             ->with(['manifest', 'items', 'shipper', 'office', 'consolidatedPackage']);
 
         // Apply search
@@ -388,8 +417,32 @@ class Package extends Component
         });
     }
 
+    /**
+     * Force consolidated view to be shown (for debugging)
+     */
+    public function forceConsolidatedView()
+    {
+        $this->showConsolidatedView = true;
+        Session::put('show_consolidated_view', true);
+        $this->resetMessages();
+    }
+
     public function render()
     {
+        // Debug: Log what the customer is seeing
+        if (auth()->check()) {
+            \Log::info('Customer package view render', [
+                'user_id' => auth()->id(),
+                'user_name' => auth()->user()->full_name ?? 'N/A',
+                'showConsolidatedView' => $this->showConsolidatedView,
+                'consolidationMode' => $this->consolidationMode,
+                'individual_packages_count' => $this->individualPackages->count(),
+                'consolidated_packages_count' => $this->consolidatedPackages->count(),
+                'search' => $this->search,
+                'statusFilter' => $this->statusFilter,
+            ]);
+        }
+
         return view('livewire.packages.package');
     }
 }

@@ -434,6 +434,34 @@ class PackageConsolidationService
                 'reason' => $options['reason'] ?? 'Status updated',
             ]);
 
+            // Send notification to customer if status changed
+            if ($oldStatus !== $newStatus) {
+                try {
+                    $customer = $consolidatedPackage->customer;
+                    if ($customer) {
+                        $statusEnum = PackageStatus::from($newStatus);
+                        $customer->notify(new \App\Notifications\ConsolidatedPackageStatusNotification(
+                            $customer,
+                            $consolidatedPackage,
+                            $statusEnum
+                        ));
+
+                        Log::info('Consolidated package status notification sent', [
+                            'consolidated_package_id' => $consolidatedPackage->id,
+                            'customer_id' => $customer->id,
+                            'new_status' => $newStatus,
+                        ]);
+                    }
+                } catch (Exception $notificationException) {
+                    // Don't fail the entire operation if notification fails
+                    Log::error('Failed to send consolidated package status notification', [
+                        'consolidated_package_id' => $consolidatedPackage->id,
+                        'new_status' => $newStatus,
+                        'error' => $notificationException->getMessage(),
+                    ]);
+                }
+            }
+
             DB::commit();
 
             Log::info('Consolidated package status updated', [

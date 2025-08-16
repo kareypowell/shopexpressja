@@ -440,7 +440,7 @@
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                                 
-                                @if(($amountCollected ?: 0) == 0)
+                                @if($amountCollected == 0)
                                     <p class="mt-1 text-xs text-gray-500">
                                         💡 Enter the amount collected from the customer to proceed with distribution.
                                     </p>
@@ -601,8 +601,8 @@
                                     </div>
                                     
                                     @php
-                                        $netTotal = $totalCost - ($writeOffAmount ?: 0);
-                                        $remainingAfterCash = max(0, $netTotal - ($amountCollected ?: 0));
+                                        $netTotal = $totalCost - ($writeOffAmount ?? 0);
+                                        $remainingAfterCash = max(0, $netTotal - ($amountCollected ?? 0));
                                         $creditApplied = 0;
                                         $accountApplied = 0;
                                         
@@ -637,9 +637,9 @@
                                     </div>
                                     @if($paymentStatus !== 'paid')
                                         @php
-                                            $amountCollectedNum = (float) ($amountCollected ?: 0);
-                                            $writeOffAmountNum = (float) ($writeOffAmount ?: 0);
-                                            $totalCostNum = (float) ($totalCost ?: 0);
+                                            $amountCollectedNum = (float) ($amountCollected ?? 0);
+                                            $writeOffAmountNum = (float) ($writeOffAmount ?? 0);
+                                            $totalCostNum = (float) ($totalCost ?? 0);
                                             
                                             $netTotal = $totalCostNum - $writeOffAmountNum;
                                             $balanceApplied = 0;
@@ -674,7 +674,7 @@
                                 wire:click="showDistributionConfirmation"
                                 type="button"
                                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-wax-flower-600 hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
-                                @if(($showConsolidatedView && count($selectedConsolidatedPackages) === 0) || (!$showConsolidatedView && count($selectedPackages) === 0) || ($amountCollected ?: 0) < 0) disabled @endif
+                                @if(($showConsolidatedView && count($selectedConsolidatedPackages) === 0) || (!$showConsolidatedView && count($selectedPackages) === 0) || $amountCollected < 0) disabled @endif
                             >
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -683,8 +683,6 @@
                             </button>
                         </div>
                     </div>
-            @endif
-        @endif
     @else
                 <div class="px-6 py-8 text-center">
                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1154,3 +1152,6 @@
         });
     });
 </script>
+            </div>
+        </div>
+</div>

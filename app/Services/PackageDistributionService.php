@@ -880,7 +880,7 @@ class PackageDistributionService
                 'name' => $distribution->distributedBy->full_name,
                 'role' => $distribution->distributedBy->role->name ?? 'Staff',
             ],
-            'packages' => $distribution->items->map(function ($item) {
+            'packages' => $distribution->items->sortByDesc('package.tracking_number')->map(function ($item) {
                 $package = $item->package;
                 $isSeaPackage = $package->isSeaPackage();
                 

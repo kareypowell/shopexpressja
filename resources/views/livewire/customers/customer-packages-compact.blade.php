@@ -10,9 +10,18 @@
                             <div class="flex-1 min-w-0">
                                 <!-- Header: Tracking number with status badge -->
                                 <div class="flex items-center space-x-2 mb-3">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                                        {{ $package->tracking_number }}
-                                    </span>
+                                    @if(isset($package->is_consolidated) && $package->is_consolidated)
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $package->tracking_number }}
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                                            {{ $package->tracking_number }}
+                                        </span>
+                                    @endif
                                     @php
                                         $badgeClass = $package->status_badge_class ?? 'default';
                                         $statusLabel = $package->status_label ?? 'Unknown';
@@ -52,7 +61,12 @@
                                             </span>
                                         @endif
                                         <span>
-                                            @if($package->isSeaPackage())
+                                            @if(isset($package->is_consolidated) && $package->is_consolidated)
+                                                {{ number_format($package->weight, 1) }} lbs
+                                                @if($package->cubic_feet > 0)
+                                                    ({{ number_format($package->cubic_feet, 2) }} ft³)
+                                                @endif
+                                            @elseif(method_exists($package, 'isSeaPackage') && $package->isSeaPackage())
                                                 {{ number_format($package->cubic_feet, 2) }} ft³
                                             @else
                                                 {{ number_format($package->weight, 1) }} lbs
@@ -71,11 +85,19 @@
                             </div>
                             
                             <!-- View details button -->
-                            <button 
-                                wire:click="showPackageDetails({{ $package->id }})"
-                                class="ml-3 p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors duration-150 flex-shrink-0"
-                                title="View details"
-                            >
+                            @if(isset($package->is_consolidated) && $package->is_consolidated)
+                                <button 
+                                    wire:click="showConsolidatedPackageDetails({{ $package->consolidated_package_id }})"
+                                    class="ml-3 p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors duration-150 flex-shrink-0"
+                                    title="View consolidated package details"
+                                >
+                            @else
+                                <button 
+                                    wire:click="showPackageDetails({{ $package->id }})"
+                                    class="ml-3 p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors duration-150 flex-shrink-0"
+                                    title="View details"
+                                >
+                            @endif
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -100,9 +122,18 @@
                                 <!-- Package Info -->
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center space-x-3 mb-1">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                            {{ $package->tracking_number }}
-                                        </span>
+                                        @if(isset($package->is_consolidated) && $package->is_consolidated)
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                {{ $package->tracking_number }}
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                                {{ $package->tracking_number }}
+                                            </span>
+                                        @endif
                                         @if($package->manifest)
                                             @if($package->manifest->type === 'air')
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-sky-100 text-sky-800">
@@ -142,7 +173,12 @@
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16l-3-3m3 3l3-3"></path>
                                             </svg>
-                                            @if($package->isSeaPackage())
+                                            @if(isset($package->is_consolidated) && $package->is_consolidated)
+                                                {{ number_format($package->weight, 1) }} lbs
+                                                @if($package->cubic_feet > 0)
+                                                    ({{ number_format($package->cubic_feet, 2) }} ft³)
+                                                @endif
+                                            @elseif(method_exists($package, 'isSeaPackage') && $package->isSeaPackage())
                                                 {{ number_format($package->cubic_feet, 2) }} ft³
                                             @else
                                                 {{ number_format($package->weight, 1) }} lbs
@@ -175,10 +211,17 @@
                                         <p class="text-xs text-gray-500">Total Cost</p>
                                     </div>
                                 @endif
-                                <button 
-                                    wire:click="showPackageDetails({{ $package->id }})"
-                                    class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                >
+                                @if(isset($package->is_consolidated) && $package->is_consolidated)
+                                    <button 
+                                        wire:click="showConsolidatedPackageDetails({{ $package->consolidated_package_id }})"
+                                        class="inline-flex items-center px-3 py-1.5 border border-green-300 shadow-sm text-sm font-medium rounded-md text-green-700 bg-white hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                    >
+                                @else
+                                    <button 
+                                        wire:click="showPackageDetails({{ $package->id }})"
+                                        class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    >
+                                @endif
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>

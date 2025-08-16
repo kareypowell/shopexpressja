@@ -93,6 +93,7 @@ class ConsolidatedPackageManifestIntegrationTest extends TestCase
             'shipper_id' => $this->shipper->id,
             'weight' => 10,
             'freight_price' => 100,
+            'status' => PackageStatus::PROCESSING,
         ]);
 
         // Create packages for consolidation
@@ -103,6 +104,7 @@ class ConsolidatedPackageManifestIntegrationTest extends TestCase
             'shipper_id' => $this->shipper->id,
             'weight' => 5,
             'freight_price' => 50,
+            'status' => PackageStatus::PROCESSING,
         ]);
 
         // Consolidate packages
@@ -112,7 +114,9 @@ class ConsolidatedPackageManifestIntegrationTest extends TestCase
             $this->admin
         );
 
-        $this->assertTrue($result['success']);
+        if (!$result['success']) {
+            $this->fail('Consolidation failed: ' . ($result['message'] ?? 'Unknown error'));
+        }
 
         // Test the manifest package component
         $component = Livewire::actingAs($this->admin)
@@ -440,5 +444,129 @@ class ConsolidatedPackageManifestIntegrationTest extends TestCase
 
         $consolidatedPackages2 = $component2->get('consolidatedPackages');
         $this->assertEquals(0, $consolidatedPackages2->count());
+    }
+
+    /** @test */
+    public function manifest_package_component_can_consolidate_packages()
+    {
+        // Create packages for consolidation
+        $packages = Package::factory()->count(3)->create([
+            'user_id' => $this->customer->id,
+            'manifest_id' => $this->manifest->id,
+            'office_id' => $this->office->id,
+            'shipper_id' => $this->shipper->id,
+            'status' => PackageStatus::PROCESSING,
+        ]);
+
+        // Test the manifest package component
+        $component = Livewire::actingAs($this->admin)
+            ->test(\App\Http\Livewire\Manifests\Packages\ManifestPackage::class, [
+                'manifest' => $this->manifest
+            ]);
+
+        // Select packages for consolidation
+        $component->set('selectedPackages', $packages->pluck('id')->toArray());
+
+        // Check if packages can be consolidated
+        $this->assertTrue($component->get('canConsolidateSelected'));
+
+        // Show consolidation modal
+        $component->call('showConsolidationModal');
+        $this->assertTrue($component->get('showConsolidationModal'));
+
+        // Confirm consolidation
+        $component->set('consolidationNotes', 'Test consolidation from manifest')
+                  ->call('confirmConsolidation');
+
+        // Verify consolidation was successful
+        $this->assertEquals(1, \App\Models\ConsolidatedPackage::count());
+        
+        // Verify packages are consolidated
+        foreach ($packages as $package) {
+            $package->refresh();
+            $this->assertTrue($package->isConsolidated());
+        }
+    }
+
+    /** @test */
+    public function package_workflow_component_can_consolidate_packages()
+    {
+        // Create packages for consolidation
+        $packages = Package::factory()->count(2)->create([
+            'user_id' => $this->customer->id,
+            'manifest_id' => $this->manifest->id,
+            'office_id' => $this->office->id,
+            'shipper_id' => $this->shipper->id,
+            'status' => PackageStatus::PROCESSING,
+        ]);
+
+        // Test the package workflow component
+        $component = Livewire::actingAs($this->admin)
+            ->test(\App\Http\Livewire\Manifests\PackageWorkflow::class, [
+                'manifest' => $this->manifest
+            ]);
+
+        // Select packages for consolidation
+        $component->set('selectedPackages', $packages->pluck('id')->toArray());
+
+        // Check if packages can be consolidated
+        $this->assertTrue($component->get('canConsolidateSelected'));
+
+        // Show consolidation modal
+        $component->call('showConsolidationModal');
+        $this->assertTrue($component->get('showConsolidationModal'));
+
+        // Confirm consolidation
+        $component->set('consolidationNotes', 'Test consolidation from workflow')
+                  ->call('confirmConsolidation');
+
+        // Verify consolidation was successful
+        $this->assertEquals(1, \App\Models\ConsolidatedPackage::count());
+        
+        // Verify packages are consolidated
+        foreach ($packages as $package) {
+            $package->refresh();
+            $this->assertTrue($package->isConsolidated());
+        }
+    }
+
+    /** @test */
+    public function manifest_components_can_unconsolidate_packages()
+    {
+        // Create packages for consolidation
+        $packages = Package::factory()->count(2)->create([
+            'user_id' => $this->customer->id,
+            'manifest_id' => $this->manifest->id,
+            'office_id' => $this->office->id,
+            'shipper_id' => $this->shipper->id,
+            'status' => PackageStatus::PROCESSING,
+        ]);
+
+        // Consolidate packages first
+        $consolidationService = app(PackageConsolidationService::class);
+        $result = $consolidationService->consolidatePackages(
+            $packages->pluck('id')->toArray(),
+            $this->admin
+        );
+
+        $this->assertTrue($result['success']);
+        $consolidatedPackage = $result['consolidated_package'];
+
+        // Test unconsolidation in manifest package component
+        $component = Livewire::actingAs($this->admin)
+            ->test(\App\Http\Livewire\Manifests\Packages\ManifestPackage::class, [
+                'manifest' => $this->manifest
+            ]);
+
+        $component->call('unconsolidatePackage', $consolidatedPackage->id);
+
+        // Verify packages are unconsolidated
+        $consolidatedPackage->refresh();
+        $this->assertFalse($consolidatedPackage->is_active);
+
+        foreach ($packages as $package) {
+            $package->refresh();
+            $this->assertFalse($package->isConsolidated());
+        }
     }
 }

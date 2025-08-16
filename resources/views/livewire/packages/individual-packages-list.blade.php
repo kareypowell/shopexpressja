@@ -5,13 +5,23 @@
                 <div class="flex-1">
                     <div class="flex items-center space-x-3 mb-2">
                         <div class="flex items-center space-x-2">
-                            <!-- Individual Package Indicator -->
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
-                                </svg>
-                                Individual
-                            </span>
+                            @if($package->isConsolidated())
+                                <!-- Consolidated Package Indicator -->
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Part of Group
+                                </span>
+                            @else
+                                <!-- Individual Package Indicator -->
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Individual
+                                </span>
+                            @endif
                             <h5 class="font-semibold text-gray-900">
                                 @if($this->hasSearchMatches($package->id, 'individual'))
                                     <x-search-highlight 
@@ -68,6 +78,32 @@
                             </div>
                         @endif
                         
+                        <!-- Consolidated Package Info -->
+                        @if($package->isConsolidated() && $package->consolidatedPackage)
+                            <div class="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span class="text-sm font-medium text-green-800">
+                                            Consolidated Group: {{ $package->consolidatedPackage->consolidated_tracking_number }}
+                                        </span>
+                                    </div>
+                                    <div class="text-xs text-green-600">
+                                        {{ $package->consolidatedPackage->total_quantity }} packages total
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-xs text-green-700">
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <div>Total Weight: {{ number_format($package->consolidatedPackage->total_weight, 2) }} lbs</div>
+                                        <div>Total Cost: ${{ number_format($package->consolidatedPackage->total_cost, 2) }}</div>
+                                        <div>Status: {{ $package->consolidatedPackage->status }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                             @if($package->weight)
                                 <div class="flex items-center">
