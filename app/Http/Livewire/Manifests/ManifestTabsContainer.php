@@ -9,6 +9,7 @@ class ManifestTabsContainer extends Component
 {
     public Manifest $manifest;
     public string $activeTab = 'individual';
+    public bool $isLoading = false;
     
     protected $queryString = ['activeTab' => ['except' => 'individual']];
     
@@ -35,6 +36,8 @@ class ManifestTabsContainer extends Component
         $validatedTab = $this->validateTab($tabName);
         
         if ($validatedTab !== $this->activeTab) {
+            $this->isLoading = true;
+            
             $this->activeTab = $validatedTab;
             
             // Preserve new tab state after switching
@@ -50,6 +53,8 @@ class ManifestTabsContainer extends Component
                 'tab' => $this->activeTab,
                 'manifestId' => $this->manifest->id
             ]);
+            
+            $this->isLoading = false;
         }
     }
 
