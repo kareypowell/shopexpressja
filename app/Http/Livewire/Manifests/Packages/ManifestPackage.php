@@ -1425,6 +1425,14 @@ class ManifestPackage extends Component
         }
     }
 
+    /**
+     * Get the manifest instance
+     */
+    public function getManifestProperty()
+    {
+        return Manifest::find($this->manifest_id);
+    }
+
     public function render()
     {
         return view('livewire.manifests.packages.manifest-package');

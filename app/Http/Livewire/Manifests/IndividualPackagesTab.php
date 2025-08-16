@@ -262,7 +262,7 @@ class IndividualPackagesTab extends Component
             $package = Package::findOrFail($packageId);
             
             // Check if transitioning to READY status - show fee modal for packages that need fees
-            if ($newStatus === PackageStatus::READY->value && $this->packageNeedsFeeEntry($package)) {
+            if ($newStatus === PackageStatus::READY && $this->packageNeedsFeeEntry($package)) {
                 $this->showFeeEntryModal($packageId);
                 return;
             }

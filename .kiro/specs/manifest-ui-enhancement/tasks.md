@@ -46,7 +46,7 @@
   - Write unit tests for individual packages tab functionality and state preservation
   - _Requirements: 1.1, 1.3, 1.4, 1.5, 2.2, 2.3_
 
-- [ ] 7. Update existing manifest pages to use tabbed interface
+- [x] 7. Update existing manifest pages to use tabbed interface
   - Modify Manifest Packages page to use the new ManifestTabsContainer component instead of separate sections
   - Update Package Workflow page to use the same tabbed interface for consistency
   - Replace existing consolidated and individual package sections with the new tab components

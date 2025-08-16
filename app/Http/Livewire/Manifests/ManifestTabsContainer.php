@@ -8,22 +8,22 @@ use Livewire\Component;
 class ManifestTabsContainer extends Component
 {
     public Manifest $manifest;
-    public string $activeTab = 'consolidated';
+    public string $activeTab = 'individual';
     
-    protected $queryString = ['activeTab' => ['except' => 'consolidated']];
+    protected $queryString = ['activeTab' => ['except' => 'individual']];
     
     protected $listeners = [
         'tabStateChanged' => 'handleTabStateChange',
         'preserveState' => 'preserveTabState'
     ];
 
-    public function mount(Manifest $manifest, string $activeTab = 'consolidated')
+    public function mount(Manifest $manifest, string $activeTab = 'individual')
     {
         $this->manifest = $manifest;
         $this->activeTab = $this->validateTab($activeTab);
         
         // Try to restore tab state from session if no specific tab was requested
-        if ($activeTab === 'consolidated') {
+        if ($activeTab === 'individual') {
             $this->restoreTabState();
         }
         
@@ -103,29 +103,29 @@ class ManifestTabsContainer extends Component
 
     public function getTabsProperty()
     {
+        // Get individual packages (packages without consolidated_package_id)
+        $individualPackagesCount = $this->manifest->packages()
+            ->whereNull('consolidated_package_id')
+            ->count();
+            
         // Get consolidated packages through packages that have consolidated_package_id
         $consolidatedPackagesCount = $this->manifest->packages()
             ->whereNotNull('consolidated_package_id')
             ->distinct('consolidated_package_id')
             ->count('consolidated_package_id');
-            
-        // Get individual packages (packages without consolidated_package_id)
-        $individualPackagesCount = $this->manifest->packages()
-            ->whereNull('consolidated_package_id')
-            ->count();
         
         return [
-            'consolidated' => [
-                'name' => 'Consolidated Packages',
-                'icon' => 'archive-box',
-                'count' => $consolidatedPackagesCount,
-                'aria_label' => 'View consolidated packages for this manifest'
-            ],
             'individual' => [
                 'name' => 'Individual Packages',
                 'icon' => 'cube',
                 'count' => $individualPackagesCount,
                 'aria_label' => 'View individual packages for this manifest'
+            ],
+            'consolidated' => [
+                'name' => 'Consolidated Packages',
+                'icon' => 'archive-box',
+                'count' => $consolidatedPackagesCount,
+                'aria_label' => 'View consolidated packages for this manifest'
             ]
         ];
     }
@@ -133,13 +133,13 @@ class ManifestTabsContainer extends Component
     public function getActiveTabDataProperty()
     {
         $tabs = $this->tabs;
-        return $tabs[$this->activeTab] ?? $tabs['consolidated'];
+        return $tabs[$this->activeTab] ?? $tabs['individual'];
     }
 
     protected function validateTab(string $tab): string
     {
         $validTabs = ['consolidated', 'individual'];
-        return in_array($tab, $validTabs) ? $tab : 'consolidated';
+        return in_array($tab, $validTabs) ? $tab : 'individual';
     }
 
     public function render()

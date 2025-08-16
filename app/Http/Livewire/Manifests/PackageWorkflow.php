@@ -74,6 +74,14 @@ class PackageWorkflow extends Component
         }
     }
 
+    /**
+     * Get the manifest instance
+     */
+    public function getManifestProperty()
+    {
+        return $this->manifestId ? \App\Models\Manifest::find($this->manifestId) : null;
+    }
+
     public function render()
     {
         $packages = $this->getPackages();
