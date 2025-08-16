@@ -50,6 +50,16 @@ class ConsolidatedPackage extends Model
     }
 
     /**
+     * Relationship to individual packages with eager loading optimization
+     */
+    public function packagesWithDetails(): HasMany
+    {
+        return $this->hasMany(Package::class)
+            ->select(['id', 'consolidated_package_id', 'tracking_number', 'description', 'weight', 'status', 'freight_price', 'customs_duty', 'storage_fee', 'delivery_fee'])
+            ->orderBy('tracking_number');
+    }
+
+    /**
      * Relationship to customer
      */
     public function customer(): BelongsTo
@@ -243,7 +253,7 @@ class ConsolidatedPackage extends Model
     }
 
     /**
-     * Scope to search consolidated packages
+     * Scope to search consolidated packages with optimized eager loading
      */
     public function scopeSearch($query, $term)
     {
@@ -254,11 +264,36 @@ class ConsolidatedPackage extends Model
                       $packageQuery->where('tracking_number', 'like', '%' . $term . '%')
                                    ->orWhere('description', 'like', '%' . $term . '%');
                   });
-        });
+        })->with(['packagesWithDetails', 'customer:id,first_name,last_name,email']);
     }
 
     /**
-     * Get search match details for highlighting
+     * Scope for optimized loading with essential relationships
+     */
+    public function scopeWithEssentials($query)
+    {
+        return $query->with([
+            'packagesWithDetails',
+            'customer:id,first_name,last_name,email,account_number',
+            'createdBy:id,first_name,last_name,email'
+        ]);
+    }
+
+    /**
+     * Scope for dashboard queries with minimal data
+     */
+    public function scopeForDashboard($query)
+    {
+        return $query->select([
+            'id', 'consolidated_tracking_number', 'customer_id', 'status', 
+            'total_weight', 'total_quantity', 'total_freight_price', 
+            'total_customs_duty', 'total_storage_fee', 'total_delivery_fee',
+            'consolidated_at', 'is_active'
+        ])->with('customer:id,first_name,last_name,email');
+    }
+
+    /**
+     * Get search match details for highlighting (optimized)
      */
     public function getSearchMatchDetails($term): array
     {
@@ -283,11 +318,15 @@ class ConsolidatedPackage extends Model
             ];
         }
 
-        // Check individual package matches
-        $matchingPackages = $this->packages()->where(function($query) use ($term) {
-            $query->where('tracking_number', 'like', '%' . $term . '%')
-                  ->orWhere('description', 'like', '%' . $term . '%');
-        })->get();
+        // Check individual package matches with optimized query
+        $matchingPackages = $this->packages()
+            ->select(['id', 'tracking_number', 'description'])
+            ->where(function($query) use ($term) {
+                $query->where('tracking_number', 'like', '%' . $term . '%')
+                      ->orWhere('description', 'like', '%' . $term . '%');
+            })
+            ->limit(10) // Limit to prevent performance issues
+            ->get();
 
         foreach ($matchingPackages as $package) {
             if (str_contains(strtolower($package->tracking_number), $searchTerm)) {
@@ -313,13 +352,47 @@ class ConsolidatedPackage extends Model
     }
 
     /**
-     * Get matching individual packages for a search term
+     * Get matching individual packages for a search term (optimized)
      */
     public function getMatchingPackages($term)
     {
-        return $this->packages()->where(function($query) use ($term) {
-            $query->where('tracking_number', 'like', '%' . $term . '%')
-                  ->orWhere('description', 'like', '%' . $term . '%');
-        })->get();
+        return $this->packages()
+            ->select(['id', 'tracking_number', 'description', 'weight', 'status'])
+            ->where(function($query) use ($term) {
+                $query->where('tracking_number', 'like', '%' . $term . '%')
+                      ->orWhere('description', 'like', '%' . $term . '%');
+            })
+            ->orderBy('tracking_number')
+            ->get();
+    }
+
+    /**
+     * Optimized search scope with full-text capabilities
+     */
+    public function scopeSearchOptimized($query, $term)
+    {
+        return $query->where(function($query) use ($term) {
+            // Direct matches on consolidated package
+            $query->where('consolidated_tracking_number', 'like', '%' . $term . '%')
+                  ->orWhere('notes', 'like', '%' . $term . '%');
+            
+            // Subquery for package matches to avoid N+1 issues
+            $query->orWhereExists(function ($subquery) use ($term) {
+                $subquery->select(\DB::raw(1))
+                         ->from('packages')
+                         ->whereColumn('packages.consolidated_package_id', 'consolidated_packages.id')
+                         ->where(function($packageQuery) use ($term) {
+                             $packageQuery->where('tracking_number', 'like', '%' . $term . '%')
+                                          ->orWhere('description', 'like', '%' . $term . '%');
+                         });
+            });
+        })
+        ->with(['packagesWithDetails' => function($query) use ($term) {
+            // Only load matching packages to reduce memory usage
+            $query->where(function($packageQuery) use ($term) {
+                $packageQuery->where('tracking_number', 'like', '%' . $term . '%')
+                             ->orWhere('description', 'like', '%' . $term . '%');
+            });
+        }, 'customer:id,name,email']);
     }
 }

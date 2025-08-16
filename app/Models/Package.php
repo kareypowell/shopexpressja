@@ -483,18 +483,36 @@ class Package extends Model
     }
 
     /**
-     * Scope to get packages available for consolidation
+     * Scope to get packages available for consolidation with optimized loading
      */
     public function scopeAvailableForConsolidation($query)
     {
-        return $query->where('is_consolidated', false)
-                    ->whereNull('consolidated_package_id')
-                    ->whereIn('status', [
-                        PackageStatus::PENDING,
-                        PackageStatus::PROCESSING,
-                        PackageStatus::READY,
-                        PackageStatus::SHIPPED,
-                        PackageStatus::CUSTOMS
-                    ]);
+        return $query->select([
+                'id', 'user_id', 'tracking_number', 'description', 'weight', 'status',
+                'freight_price', 'customs_duty', 'storage_fee', 'delivery_fee',
+                'is_consolidated', 'consolidated_package_id'
+            ])
+            ->where('is_consolidated', false)
+            ->whereNull('consolidated_package_id')
+            ->whereIn('status', [
+                PackageStatus::PENDING,
+                PackageStatus::PROCESSING,
+                PackageStatus::READY,
+                PackageStatus::SHIPPED,
+                PackageStatus::CUSTOMS
+            ])
+            ->orderBy('tracking_number');
+    }
+
+    /**
+     * Scope for consolidated package queries with minimal data
+     */
+    public function scopeForConsolidation($query)
+    {
+        return $query->select([
+            'id', 'consolidated_package_id', 'tracking_number', 'description', 
+            'weight', 'status', 'freight_price', 'customs_duty', 'storage_fee', 
+            'delivery_fee', 'is_consolidated'
+        ]);
     }
 }

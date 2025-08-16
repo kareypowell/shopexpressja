@@ -7,6 +7,7 @@ use App\Models\ConsolidatedPackage;
 use App\Models\ConsolidationHistory;
 use App\Models\User;
 use App\Enums\PackageStatus;
+use App\Services\ConsolidationCacheService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
@@ -14,6 +15,12 @@ use Exception;
 
 class PackageConsolidationService
 {
+    protected ConsolidationCacheService $cacheService;
+
+    public function __construct(ConsolidationCacheService $cacheService)
+    {
+        $this->cacheService = $cacheService;
+    }
     /**
      * Consolidate multiple packages into a single consolidated package
      *
@@ -38,7 +45,7 @@ class PackageConsolidationService
                 throw new Exception($validationResult['message']);
             }
 
-            // Get packages for consolidation
+            // Get packages for consolidation with optimized loading
             $packages = Package::whereIn('id', $packageIds)
                 ->availableForConsolidation()
                 ->get();
@@ -97,6 +104,10 @@ class PackageConsolidationService
 
             DB::commit();
 
+            // Invalidate relevant caches
+            $this->cacheService->invalidateAllForCustomer($customerId);
+            $this->cacheService->invalidateConsolidationStats();
+
             Log::info('Packages consolidated successfully', [
                 'consolidated_package_id' => $consolidatedPackage->id,
                 'tracking_number' => $consolidatedTrackingNumber,
@@ -107,7 +118,7 @@ class PackageConsolidationService
 
             return [
                 'success' => true,
-                'consolidated_package' => $consolidatedPackage->load(['packages', 'customer', 'createdBy']),
+                'consolidated_package' => $consolidatedPackage->load(['packagesWithDetails', 'customer', 'createdBy']),
                 'message' => 'Packages consolidated successfully',
             ];
 
@@ -181,6 +192,10 @@ class PackageConsolidationService
             ]);
 
             DB::commit();
+
+            // Invalidate relevant caches
+            $this->cacheService->invalidateAllForCustomer($consolidatedPackage->customer_id);
+            $this->cacheService->invalidateConsolidationStats();
 
             Log::info('Packages unconsolidated successfully', [
                 'consolidated_package_id' => $consolidatedPackage->id,
@@ -558,30 +573,25 @@ class PackageConsolidationService
     }
 
     /**
-     * Get packages available for consolidation for a specific customer
+     * Get packages available for consolidation for a specific customer (cached)
      *
      * @param int $customerId
      * @return Collection
      */
     public function getAvailablePackagesForCustomer(int $customerId): Collection
     {
-        return Package::where('user_id', $customerId)
-            ->availableForConsolidation()
-            ->get();
+        return $this->cacheService->getAvailablePackagesForConsolidation($customerId);
     }
 
     /**
-     * Get active consolidated packages for a customer
+     * Get active consolidated packages for a customer (cached)
      *
      * @param int $customerId
      * @return Collection
      */
     public function getActiveConsolidatedPackagesForCustomer(int $customerId): Collection
     {
-        return ConsolidatedPackage::where('customer_id', $customerId)
-            ->active()
-            ->with(['packages', 'createdBy'])
-            ->get();
+        return $this->cacheService->getCustomerConsolidations($customerId, true);
     }
 
     /**
