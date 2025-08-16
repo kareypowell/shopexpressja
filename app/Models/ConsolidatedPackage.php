@@ -190,10 +190,32 @@ class ConsolidatedPackage extends Model
     /**
      * Synchronize status to all individual packages
      */
-    public function syncPackageStatuses(string $newStatus): void
+    public function syncPackageStatuses(string $newStatus, ?\App\Models\User $user = null): void
     {
-        $this->packages()->update(['status' => $newStatus]);
+        // Update consolidated package status first
         $this->update(['status' => $newStatus]);
+        
+        // Update individual packages using the PackageStatusService to maintain proper logging
+        $packageStatusService = app(\App\Services\PackageStatusService::class);
+        $statusEnum = \App\Enums\PackageStatus::from($newStatus);
+        
+        // Get user for logging - prefer passed user, then auth user, then fallback to first admin
+        $updateUser = $user ?? auth()->user() ?? \App\Models\User::where('role_id', 1)->first();
+        
+        foreach ($this->packages as $package) {
+            // Use fromConsolidatedUpdate = true to bypass the consolidated package check
+            // Allow DELIVERED status when synchronizing from consolidated package
+            $allowDeliveredStatus = ($statusEnum->value === \App\Enums\PackageStatus::DELIVERED);
+            
+            $packageStatusService->updateStatus(
+                $package, 
+                $statusEnum, 
+                $updateUser,
+                'Status synchronized from consolidated package update',
+                $allowDeliveredStatus, // Allow DELIVERED status when consolidation is delivered
+                true   // fromConsolidatedUpdate
+            );
+        }
     }
 
     /**
