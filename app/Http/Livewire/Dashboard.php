@@ -26,7 +26,8 @@ class Dashboard extends Component
 
     public function mount()
     {
-        // Individual packages
+        // All individual packages (including those that are part of consolidated packages)
+        // This counts the actual packages the customer has, regardless of consolidation status
         $this->inComingAir = Package::whereHas('manifest', function (Builder $query) {
                                         $query->where('type', 'air');
                                     })
@@ -55,21 +56,9 @@ class Dashboard extends Component
                                     ->whereIn('status', ['ready'])
                                     ->count();
 
-        // Add consolidated packages to the counts
-        $consolidatedInTransit = ConsolidatedPackage::where('customer_id', auth()->id())
-            ->active()
-            ->whereIn('status', ['processing', 'shipped', 'customs'])
-            ->count();
-
-        $consolidatedReady = ConsolidatedPackage::where('customer_id', auth()->id())
-            ->active()
-            ->where('status', 'ready')
-            ->count();
-
-        // For consolidated packages, we'll add them to both air and sea counts for now
-        // In a more sophisticated implementation, you might want to categorize them based on their contents
-        $this->inComingAir += $consolidatedInTransit;
-        $this->availableAir += $consolidatedReady;
+        // Note: We count all individual packages (including those in consolidated packages)
+        // We do NOT add consolidated package entries themselves to the count
+        // This gives customers the true count of their packages
 
         // Get user account balance information
         $user = auth()->user();
@@ -80,9 +69,6 @@ class Dashboard extends Component
         $this->totalAmountNeeded = $user->total_amount_needed ?? 0.0;
 
         $this->delayedPackages = Package::where('user_id', auth()->id())
-                                        ->where('status', 'delayed')->count() +
-                                ConsolidatedPackage::where('customer_id', auth()->id())
-                                        ->active()
                                         ->where('status', 'delayed')->count();
     }
 

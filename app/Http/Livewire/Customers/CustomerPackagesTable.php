@@ -182,8 +182,9 @@ class CustomerPackagesTable extends DataTableComponent
     {
         return Package::query()
             ->orderBy('id', 'desc')
-            ->with(['manifest', 'items', 'shipper', 'office'])
+            ->with(['manifest', 'items', 'shipper', 'office', 'consolidatedPackage'])
             ->where('user_id', $this->customer->id)
+            ->whereNull('consolidated_package_id') // Exclude packages that are part of consolidated packages
             ->when($this->getFilter('search'), fn($query, $search) => $query->search($search))
             ->when($this->getFilter('status'), fn($query, $status) => $query->where('status', $status))
             ->when($this->getFilter('date_range'), function($query, $range) {
@@ -225,13 +226,15 @@ class CustomerPackagesTable extends DataTableComponent
 
     public function getPackageStats(): array
     {
-        $packages = $this->customer->packages;
+        // Get ALL individual packages (including those in consolidated packages)
+        // This gives the true count of packages the customer has
+        $allPackages = $this->customer->packages;
         
         // Calculate costs only for packages where costs should be visible
         $totalSpent = 0;
         $packagesWithVisibleCosts = 0;
         
-        foreach ($packages as $package) {
+        foreach ($allPackages as $package) {
             if ($this->shouldShowCostForPackage($package)) {
                 $totalSpent += $this->calculateTotalCost($package);
                 $packagesWithVisibleCosts++;
@@ -239,10 +242,10 @@ class CustomerPackagesTable extends DataTableComponent
         }
         
         return [
-            'total_packages' => $packages->count(),
+            'total_packages' => $allPackages->count(), // Count all individual packages
             'total_spent' => $totalSpent,
             'average_cost' => $packagesWithVisibleCosts > 0 ? $totalSpent / $packagesWithVisibleCosts : 0,
-            'status_breakdown' => $packages->filter(fn($package) => $package->status !== null)->groupBy(fn($package) => $package->status->value)->map->count(),
+            'status_breakdown' => $allPackages->filter(fn($package) => $package->status !== null)->groupBy(fn($package) => $package->status->value)->map->count(),
         ];
     }
 }
