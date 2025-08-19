@@ -216,29 +216,6 @@
                 </div>
             </div>
 
-            <!-- Customer Information -->
-            <div class="customer-info">
-                <h4>Your Contact Information</h4>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">Customer Name</div>
-                        <div class="info-value">{{ $user->full_name }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Account Number</div>
-                        <div class="info-value">{{ $user->profile->account_number ?? 'N/A' }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Phone Number</div>
-                        <div class="info-value">{{ $user->profile->telephone_number ?? 'N/A' }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Email Address</div>
-                        <div class="info-value">{{ $user->email }}</div>
-                    </div>
-                </div>
-            </div>
-
             <div style="margin-top: 30px; padding: 20px; background-color: #f0f9ff; border-radius: 8px; border-left: 4px solid #0ea5e9;">
                 <p style="color: #0c4a6e; font-size: 14px; line-height: 1.6;">
                     <strong>What's Happening:</strong> Our warehouse team is currently inspecting, documenting, and preparing your package. You'll receive another notification once processing is complete and your package moves to the next stage.
