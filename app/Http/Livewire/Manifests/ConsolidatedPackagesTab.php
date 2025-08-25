@@ -479,10 +479,5 @@ class ConsolidatedPackagesTab extends Component
         return ConsolidatedPackage::whereIn('id', $this->selectedConsolidatedPackages)->get();
     }
 
-    public function togglePackageDetails($consolidatedPackageId)
-    {
-        $this->dispatchBrowserEvent('toggle-consolidated-details', [
-            'packageId' => $consolidatedPackageId
-        ]);
-    }
+
 }

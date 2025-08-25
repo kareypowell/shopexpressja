@@ -1435,6 +1435,10 @@ class ManifestPackage extends Component
 
     public function render()
     {
-        return view('livewire.manifests.packages.manifest-package');
+        $manifest = Manifest::find($this->manifest_id);
+        
+        return view('livewire.manifests.packages.manifest-package', [
+            'manifest' => $manifest
+        ]);
     }
 }

@@ -238,7 +238,7 @@
                                     >
                                         <div class="py-1">
                                             <button 
-                                                wire:click="togglePackageDetails({{ $package->id }})"
+                                                @click="document.getElementById('package-details-{{ $package->id }}').classList.toggle('hidden')"
                                                 class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                             >
                                                 Toggle Details
@@ -483,13 +483,3 @@
     @endif
 </div>
 
-<script>
-    document.addEventListener('livewire:load', function () {
-        Livewire.on('toggle-package-details', function (data) {
-            const element = document.getElementById('package-details-' + data.packageId);
-            if (element) {
-                element.classList.toggle('hidden');
-            }
-        });
-    });
-</script>

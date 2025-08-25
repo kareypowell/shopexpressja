@@ -1,8 +1,13 @@
 <div>
     <div class="flex items-center justify-between mb-5">
-        <h3 class="text-lg leading-6 font-medium text-gray-900">
-            Manifest Packages
-        </h3>
+        <div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                Manifest Packages
+            </h3>
+            @if($manifest && $manifest->name)
+                <p class="text-sm text-gray-600 mt-1">{{ $manifest->name }}</p>
+            @endif
+        </div>
 
         <div class="flex space-x-3">
             <button wire:click="goToWorkflow()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">

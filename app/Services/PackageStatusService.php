@@ -74,7 +74,7 @@ class PackageStatusService
             $this->logStatusChange($package, $oldStatus, $newStatus, $user, $notes);
 
             // Send email notification to customer
-            $this->notificationService->sendStatusNotification($package, $newStatus);
+            $this->notificationService->sendStatusNotification($package, $newStatus, $fromConsolidatedUpdate);
 
             Log::info('Package status updated successfully', [
                 'package_id' => $package->id,

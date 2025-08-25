@@ -25,9 +25,10 @@ class PackageNotificationService
      *
      * @param Package $package
      * @param PackageStatus $newStatus
+     * @param bool $fromConsolidatedUpdate Whether this update is coming from a consolidated package update
      * @return bool
      */
-    public function sendStatusNotification(Package $package, PackageStatus $newStatus): bool
+    public function sendStatusNotification(Package $package, PackageStatus $newStatus, bool $fromConsolidatedUpdate = false): bool
     {
         try {
             $user = $package->user;
@@ -40,8 +41,19 @@ class PackageNotificationService
                 return false;
             }
 
-            // Check if package is consolidated and send consolidated notification instead
-            if ($package->is_consolidated && $package->consolidatedPackage) {
+            // Skip individual notifications if this is part of a consolidated package update
+            // The consolidated notification will be sent separately to avoid duplicates
+            if ($package->is_consolidated && $package->consolidatedPackage && $fromConsolidatedUpdate) {
+                Log::info('Skipping individual package notification - consolidated notification will be sent instead', [
+                    'package_id' => $package->id,
+                    'consolidated_package_id' => $package->consolidatedPackage->id,
+                    'status' => $newStatus->value
+                ]);
+                return true;
+            }
+
+            // Check if package is consolidated and send consolidated notification instead (for non-consolidated updates)
+            if ($package->is_consolidated && $package->consolidatedPackage && !$fromConsolidatedUpdate) {
                 return $this->sendConsolidatedStatusNotification(
                     $package->consolidatedPackage, 
                     $newStatus

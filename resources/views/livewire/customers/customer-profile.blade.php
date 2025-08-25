@@ -519,9 +519,11 @@
     @endif
 
     <!-- Enhanced Package History -->
+    {{--
     @if($canViewPackages)
         @livewire('customers.package-history', ['customer' => $customer])
     @endif
+    --}}
 
     <!-- Loading Overlay -->
     <div wire:loading.flex class="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 items-center justify-center">

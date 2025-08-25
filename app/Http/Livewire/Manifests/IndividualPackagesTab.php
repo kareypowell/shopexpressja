@@ -534,10 +534,5 @@ class IndividualPackagesTab extends Component
         return Package::whereIn('id', $this->selectedPackages)->get();
     }
 
-    public function togglePackageDetails($packageId)
-    {
-        $this->dispatchBrowserEvent('toggle-package-details', [
-            'packageId' => $packageId
-        ]);
-    }
+
 }
