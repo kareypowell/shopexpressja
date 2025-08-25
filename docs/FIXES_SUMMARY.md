@@ -51,6 +51,22 @@
 - `app/Http/Livewire/Manifests/ConsolidatedPackagesTab.php` - Removed unnecessary togglePackageDetails method
 - `app/Http/Livewire/Manifests/IndividualPackagesTab.php` - Removed unnecessary togglePackageDetails method
 
+### 4. Event Bubbling Issue with Row Selection
+**Problem**: When clicking on a checkbox to select a row, all dropdown options were being triggered due to event bubbling.
+
+**Root Cause**: Click events from checkboxes, dropdowns, and buttons were bubbling up to parent elements, causing unintended interactions with Alpine.js components and other UI elements.
+
+**Solution**: Added `@click.stop` directive to prevent event bubbling on all interactive elements:
+- Checkboxes (both individual and "Select All")
+- Status dropdown selects
+- Action dropdown buttons
+- Dropdown menu items
+- Also added `open = false` to dropdown menu items to close the dropdown after selection
+
+**Files Modified**:
+- `resources/views/livewire/manifests/consolidated-packages-tab.blade.php` - Added @click.stop to all interactive elements
+- `resources/views/livewire/manifests/individual-packages-tab.blade.php` - Added @click.stop to all interactive elements
+
 ## Testing Recommendations
 
 ### 1. Test Manifest Name Display
@@ -69,6 +85,13 @@
 - On initial page load, click the three-dot menu for any consolidated package
 - Click "Toggle Details" - it should immediately show/hide the individual package details
 - Switch between tabs and test again to ensure functionality persists
+
+### 4. Test Row Selection Without Event Bubbling
+- Navigate to either consolidated or individual packages tab
+- Click on checkboxes to select rows - verify only the checkbox is affected
+- Click on status dropdowns - verify only the dropdown opens, no other elements are triggered
+- Click on action buttons (three dots) - verify only that specific dropdown opens
+- Click on dropdown menu items - verify the action executes and dropdown closes properly
 
 ## Additional Notes
 

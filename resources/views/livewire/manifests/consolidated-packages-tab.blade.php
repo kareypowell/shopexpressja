@@ -120,6 +120,7 @@
                         type="checkbox" 
                         wire:model="selectAll"
                         class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                        onclick="event.stopPropagation()"
                     >
                     <label class="text-sm text-gray-700">Select All</label>
                 </div>
@@ -129,7 +130,7 @@
         @if($consolidatedPackages->count() > 0)
             <div class="divide-y divide-gray-200">
                 @foreach($consolidatedPackages as $consolidatedPackage)
-                    <div class="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                    <div class="px-4 py-4 sm:px-6 hover:bg-gray-50" onclick="event.stopPropagation()">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
                                 <input 
@@ -137,6 +138,7 @@
                                     wire:model="selectedConsolidatedPackages"
                                     value="{{ $consolidatedPackage->id }}"
                                     class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                    onclick="event.stopPropagation()"
                                 >
                                 
                                 <div class="flex-1 min-w-0">
@@ -192,6 +194,7 @@
                                 <select 
                                     wire:change="updateConsolidatedPackageStatus({{ $consolidatedPackage->id }}, $event.target.value)"
                                     class="text-sm border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500"
+                                    onclick="event.stopPropagation()"
                                 >
                                     <option value="">Change Status</option>
                                     @foreach($statusOptions as $value => $label)
@@ -203,9 +206,9 @@
                                 </select>
 
                                 <!-- Actions Dropdown -->
-                                <div class="relative" x-data="{ open: false }">
+                                <div class="relative">
                                     <button 
-                                        @click="open = !open"
+                                        onclick="event.stopPropagation(); toggleDropdown('dropdown-{{ $consolidatedPackage->id }}')"
                                         class="inline-flex items-center p-2 border border-gray-300 rounded-full shadow-sm text-gray-400 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
                                     >
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,26 +217,19 @@
                                     </button>
 
                                     <div 
-                                        x-show="open" 
-                                        @click.away="open = false"
-                                        x-transition:enter="transition ease-out duration-100"
-                                        x-transition:enter-start="transform opacity-0 scale-95"
-                                        x-transition:enter-end="transform opacity-100 scale-100"
-                                        x-transition:leave="transition ease-in duration-75"
-                                        x-transition:leave-start="transform opacity-100 scale-100"
-                                        x-transition:leave-end="transform opacity-0 scale-95"
-                                        class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
+                                        id="dropdown-{{ $consolidatedPackage->id }}"
+                                        class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
                                     >
                                         <div class="py-1">
                                             <button 
-                                                @click="document.getElementById('consolidated-details-{{ $consolidatedPackage->id }}').classList.toggle('hidden')"
+                                                onclick="event.stopPropagation(); document.getElementById('consolidated-details-{{ $consolidatedPackage->id }}').classList.toggle('hidden'); closeDropdown('dropdown-{{ $consolidatedPackage->id }}')"
                                                 class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                             >
                                                 Toggle Details
                                             </button>
                                             @if($consolidatedPackage->canBeUnconsolidated())
                                                 <button 
-                                                    wire:click="showUnconsolidationModal({{ $consolidatedPackage->id }})"
+                                                    onclick="event.stopPropagation(); @this.showUnconsolidationModal({{ $consolidatedPackage->id }}); closeDropdown('dropdown-{{ $consolidatedPackage->id }}')"
                                                     class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                                                 >
                                                     Unconsolidate
@@ -476,6 +472,46 @@
         </div>
     @endif
 
-    <!-- JavaScript for toggling details -->
-
 </div>
+
+<script>
+function toggleDropdown(dropdownId) {
+    // Close all other dropdowns first
+    document.querySelectorAll('[id^="dropdown-"]').forEach(dropdown => {
+        if (dropdown.id !== dropdownId) {
+            dropdown.classList.add('hidden');
+        }
+    });
+    
+    // Toggle the clicked dropdown
+    const dropdown = document.getElementById(dropdownId);
+    if (dropdown) {
+        dropdown.classList.toggle('hidden');
+    }
+}
+
+function closeDropdown(dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (dropdown) {
+        dropdown.classList.add('hidden');
+    }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.relative')) {
+        document.querySelectorAll('[id^="dropdown-"]').forEach(dropdown => {
+            dropdown.classList.add('hidden');
+        });
+    }
+});
+
+// Close dropdowns on escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        document.querySelectorAll('[id^="dropdown-"]').forEach(dropdown => {
+            dropdown.classList.add('hidden');
+        });
+    }
+});
+</script>
