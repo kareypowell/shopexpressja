@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Collection;
 use App\Models\Package;
+use App\Services\ManifestQueryOptimizationService;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 

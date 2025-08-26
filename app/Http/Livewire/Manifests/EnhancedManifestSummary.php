@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Manifests;
 
 use App\Models\Manifest;
 use App\Services\ManifestSummaryService;
+use App\Services\ManifestSummaryCacheService;
 use Livewire\Component;
 
 class EnhancedManifestSummary extends Component
@@ -36,10 +37,10 @@ class EnhancedManifestSummary extends Component
     protected function calculateSummary()
     {
         try {
-            $summaryService = app(ManifestSummaryService::class);
+            $cacheService = app(ManifestSummaryCacheService::class);
             
-            // Get display-ready summary data
-            $displaySummary = $summaryService->getDisplaySummary($this->manifest);
+            // Get cached display-ready summary data
+            $displaySummary = $cacheService->getCachedDisplaySummary($this->manifest);
             
             $this->manifestType = $displaySummary['manifest_type'];
             $this->hasIncompleteData = $displaySummary['incomplete_data'];

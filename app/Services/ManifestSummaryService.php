@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Manifest;
 use App\Models\Package;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class ManifestSummaryService
 {
@@ -206,7 +207,11 @@ class ManifestSummaryService
     {
         try {
             $totalValue = $packages->sum(function (Package $package) {
-                $cost = $package->total_cost ?? 0;
+                // Calculate total cost from individual cost components
+                $cost = ($package->freight_price ?? 0) + 
+                       ($package->customs_duty ?? 0) + 
+                       ($package->storage_fee ?? 0) + 
+                       ($package->delivery_fee ?? 0);
                 
                 // Validate cost value
                 if (!is_numeric($cost) || $cost < 0) {

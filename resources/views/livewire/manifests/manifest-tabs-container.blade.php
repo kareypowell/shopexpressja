@@ -142,24 +142,32 @@
 
             <!-- Tab Content -->
             <div wire:loading.remove class="p-4 sm:p-6">
-                <!-- Consolidated Packages Tab Content -->
-                <div class="consolidated-packages-content {{ $activeTab !== 'consolidated' ? 'hidden' : '' }}"
-                     id="tabpanel-consolidated"
-                     role="tabpanel"
-                     aria-labelledby="tab-consolidated"
-                     aria-label="Consolidated packages view"
-                     aria-hidden="{{ $activeTab !== 'consolidated' ? 'true' : 'false' }}">
-                    @livewire('manifests.consolidated-packages-tab', ['manifest' => $manifest], key('consolidated-'.$manifest->id))
-                </div>
-                
                 <!-- Individual Packages Tab Content -->
-                <div class="individual-packages-content {{ $activeTab !== 'individual' ? 'hidden' : '' }}"
+                <div class="individual-packages-content"
                      id="tabpanel-individual"
                      role="tabpanel"
                      aria-labelledby="tab-individual"
                      aria-label="Individual packages view"
-                     aria-hidden="{{ $activeTab !== 'individual' ? 'true' : 'false' }}">
+                     aria-hidden="{{ $activeTab !== 'individual' ? 'true' : 'false' }}"
+                     x-show="$wire.activeTab === 'individual'"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 transform translate-y-2"
+                     x-transition:enter-end="opacity-100 transform translate-y-0">
                     @livewire('manifests.individual-packages-tab', ['manifest' => $manifest], key('individual-'.$manifest->id))
+                </div>
+                
+                <!-- Consolidated Packages Tab Content -->
+                <div class="consolidated-packages-content"
+                     id="tabpanel-consolidated"
+                     role="tabpanel"
+                     aria-labelledby="tab-consolidated"
+                     aria-label="Consolidated packages view"
+                     aria-hidden="{{ $activeTab !== 'consolidated' ? 'true' : 'false' }}"
+                     x-show="$wire.activeTab === 'consolidated'"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 transform translate-y-2"
+                     x-transition:enter-end="opacity-100 transform translate-y-0">
+                    @livewire('manifests.consolidated-packages-tab', ['manifest' => $manifest], key('consolidated-'.$manifest->id))
                 </div>
             </div>
         @endif
@@ -195,25 +203,35 @@ function manifestTabs() {
         focusedTabIndex: 0,
         
         init() {
+            // Store event listeners for cleanup
+            this.eventListeners = [];
+            
             // Listen for tab switch events
-            this.$wire.on('tabSwitched', (tab) => {
+            const tabSwitchedListener = (tab) => {
                 this.announceTabChange(tab);
                 this.updateFocus();
                 this.updateFocusedTabIndex(tab);
                 this.updateTabVisibility(tab);
-            });
+                this.cleanupInactiveTabContent(tab);
+            };
+            this.$wire.on('tabSwitched', tabSwitchedListener);
+            this.eventListeners.push({ type: 'wire', name: 'tabSwitched', listener: tabSwitchedListener });
             
             // Listen for URL update events
-            window.addEventListener('update-url', (event) => {
+            const urlUpdateListener = (event) => {
                 this.updateBrowserUrl(event.detail);
-            });
+            };
+            window.addEventListener('update-url', urlUpdateListener);
+            this.eventListeners.push({ type: 'window', name: 'update-url', listener: urlUpdateListener });
             
             // Listen for browser back/forward navigation
-            window.addEventListener('popstate', (event) => {
+            const popstateListener = (event) => {
                 if (event.state && event.state.tab) {
                     this.$wire.switchTab(event.state.tab);
                 }
-            });
+            };
+            window.addEventListener('popstate', popstateListener);
+            this.eventListeners.push({ type: 'window', name: 'popstate', listener: popstateListener });
             
             // Initialize browser history state
             this.initializeBrowserState();
@@ -225,20 +243,32 @@ function manifestTabs() {
             this.updateTabVisibility(this.$wire.activeTab);
             
             // Ensure Alpine.js components are initialized after Livewire updates
-            this.$wire.on('tabContentUpdated', () => {
+            const tabContentUpdatedListener = () => {
                 // Force Alpine.js to re-scan for new components
                 setTimeout(() => {
                     if (window.Alpine) {
                         window.Alpine.initTree(document.getElementById('tab-content'));
                     }
                 }, 100);
-            });
+            };
+            this.$wire.on('tabContentUpdated', tabContentUpdatedListener);
+            this.eventListeners.push({ type: 'wire', name: 'tabContentUpdated', listener: tabContentUpdatedListener });
             
             // Handle window resize for responsive behavior
-            window.addEventListener('resize', this.handleResize.bind(this));
+            const resizeListener = this.handleResize.bind(this);
+            window.addEventListener('resize', resizeListener, { passive: true });
+            this.eventListeners.push({ type: 'window', name: 'resize', listener: resizeListener });
             
             // Handle touch events for mobile
             this.initializeTouchHandlers();
+            
+            // Initialize memory management
+            this.initializeMemoryManagement();
+            
+            // Setup cleanup on component destruction
+            this.$wire.on('componentDestroyed', () => {
+                this.cleanup();
+            });
         },
         
         nextTab() {
@@ -430,6 +460,158 @@ function manifestTabs() {
                 `${currentTab.charAt(0).toUpperCase() + currentTab.slice(1)} Packages - Manifest ${manifestId}`,
                 window.location.href
             );
+        },
+        
+        initializeMemoryManagement() {
+            // Track memory usage and cleanup intervals
+            this.memoryCleanupInterval = setInterval(() => {
+                this.performMemoryCleanup();
+            }, 30000); // Clean up every 30 seconds
+            
+            // Monitor memory usage if available
+            if (performance.memory) {
+                this.memoryMonitorInterval = setInterval(() => {
+                    this.monitorMemoryUsage();
+                }, 10000); // Monitor every 10 seconds
+            }
+            
+            // Setup page visibility API for cleanup when tab is hidden
+            const visibilityChangeListener = () => {
+                if (document.hidden) {
+                    this.performMemoryCleanup();
+                }
+            };
+            document.addEventListener('visibilitychange', visibilityChangeListener);
+            this.eventListeners.push({ type: 'document', name: 'visibilitychange', listener: visibilityChangeListener });
+        },
+        
+        performMemoryCleanup() {
+            try {
+                // Clear old cached data
+                this.clearOldCacheData();
+                
+                // Remove unused DOM elements
+                this.cleanupUnusedDOMElements();
+                
+                // Clear old event listeners that might be orphaned
+                this.cleanupOrphanedEventListeners();
+                
+                // Force garbage collection if available (development only)
+                if (window.gc && typeof window.gc === 'function') {
+                    window.gc();
+                }
+            } catch (error) {
+                console.warn('Memory cleanup failed:', error);
+            }
+        },
+        
+        monitorMemoryUsage() {
+            if (performance.memory) {
+                const memoryInfo = {
+                    used: Math.round(performance.memory.usedJSHeapSize / 1048576), // MB
+                    total: Math.round(performance.memory.totalJSHeapSize / 1048576), // MB
+                    limit: Math.round(performance.memory.jsHeapSizeLimit / 1048576) // MB
+                };
+                
+                // Log warning if memory usage is high
+                if (memoryInfo.used > memoryInfo.limit * 0.8) {
+                    console.warn('High memory usage detected:', memoryInfo);
+                    this.performMemoryCleanup();
+                }
+            }
+        },
+        
+        clearOldCacheData() {
+            // Clear old session storage data
+            const keys = Object.keys(sessionStorage);
+            const now = Date.now();
+            const maxAge = 3600000; // 1 hour
+            
+            keys.forEach(key => {
+                if (key.startsWith('manifest_tabs_')) {
+                    try {
+                        const data = JSON.parse(sessionStorage.getItem(key));
+                        if (data && data.timestamp && (now - data.timestamp) > maxAge) {
+                            sessionStorage.removeItem(key);
+                        }
+                    } catch (error) {
+                        // Remove corrupted data
+                        sessionStorage.removeItem(key);
+                    }
+                }
+            });
+        },
+        
+        cleanupUnusedDOMElements() {
+            // Remove any orphaned Livewire components
+            const orphanedElements = document.querySelectorAll('[wire\\:id]:not([wire\\:id=""])');
+            orphanedElements.forEach(element => {
+                if (!element.closest('.manifest-tabs-container')) {
+                    element.remove();
+                }
+            });
+            
+            // Clean up any detached event listeners
+            const tabElements = document.querySelectorAll('[role="tab"]');
+            tabElements.forEach(tab => {
+                // Clone and replace to remove all event listeners
+                if (tab.dataset.cleaned !== 'true') {
+                    const newTab = tab.cloneNode(true);
+                    tab.parentNode.replaceChild(newTab, tab);
+                    newTab.dataset.cleaned = 'true';
+                }
+            });
+        },
+        
+        cleanupOrphanedEventListeners() {
+            // This is a placeholder for more sophisticated cleanup
+            // In a real implementation, you'd track and clean up specific listeners
+        },
+        
+        cleanupInactiveTabContent(activeTab) {
+            // Clean up content from inactive tabs to save memory
+            const inactiveTabs = ['consolidated', 'individual'].filter(tab => tab !== activeTab);
+            
+            inactiveTabs.forEach(tabName => {
+                const tabPanel = document.getElementById(`tabpanel-${tabName}`);
+                if (tabPanel) {
+                    // Remove heavy content from inactive tabs
+                    const heavyElements = tabPanel.querySelectorAll('.data-table, .chart-container, .large-list');
+                    heavyElements.forEach(element => {
+                        if (element.dataset.preserved !== 'true') {
+                            element.style.display = 'none';
+                        }
+                    });
+                }
+            });
+        },
+        
+        cleanup() {
+            // Clean up all event listeners
+            this.eventListeners.forEach(({ type, name, listener }) => {
+                try {
+                    if (type === 'window') {
+                        window.removeEventListener(name, listener);
+                    } else if (type === 'document') {
+                        document.removeEventListener(name, listener);
+                    }
+                    // Wire events are cleaned up automatically by Livewire
+                } catch (error) {
+                    console.warn(`Failed to remove ${type} event listener ${name}:`, error);
+                }
+            });
+            
+            // Clear intervals
+            if (this.memoryCleanupInterval) {
+                clearInterval(this.memoryCleanupInterval);
+            }
+            if (this.memoryMonitorInterval) {
+                clearInterval(this.memoryMonitorInterval);
+            }
+            
+            // Clear any remaining references
+            this.eventListeners = [];
+            this.announcement = '';
         }
     }
 }

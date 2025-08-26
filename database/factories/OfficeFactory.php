@@ -12,7 +12,7 @@ class OfficeFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->company() . ' Office',
+            'name' => $this->faker->unique()->company() . ' Office',
             'address' => $this->faker->address(),
         ];
     }

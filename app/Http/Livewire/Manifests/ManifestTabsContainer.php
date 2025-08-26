@@ -58,15 +58,26 @@ class ManifestTabsContainer extends Component
                 $this->preserveTabState();
                 $this->updateUrl();
                 
-                // Emit event to notify other components
+                // Emit events to notify child components to refresh
                 $this->emit('tabSwitched', $this->activeTab);
+                $this->emit('refreshTabContent', $this->activeTab);
                 $this->emit('preserveTabState', $this->activeTab);
+                
+                // Emit specific events for each tab component
+                if ($this->activeTab === 'individual') {
+                    $this->emit('refreshIndividualPackages');
+                } else if ($this->activeTab === 'consolidated') {
+                    $this->emit('refreshConsolidatedPackages');
+                }
                 
                 // Update browser history
                 $this->dispatchBrowserEvent('tab-switched', [
                     'tab' => $this->activeTab,
                     'manifestId' => $this->manifest->id
                 ]);
+                
+                // Force re-render of the component
+                $this->render();
                 
                 $this->isLoading = false;
             }
