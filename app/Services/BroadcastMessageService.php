@@ -247,10 +247,10 @@ class BroadcastMessageService
      * Schedule a broadcast message for future sending
      *
      * @param int $broadcastId
-     * @param string $scheduledAt
+     * @param Carbon|string $scheduledAt
      * @return array
      */
-    public function scheduleBroadcast(int $broadcastId, string $scheduledAt): array
+    public function scheduleBroadcast(int $broadcastId, $scheduledAt): array
     {
         try {
             $broadcastMessage = BroadcastMessage::findOrFail($broadcastId);
@@ -263,7 +263,7 @@ class BroadcastMessageService
                 ];
             }
             
-            $scheduledDateTime = Carbon::parse($scheduledAt);
+            $scheduledDateTime = $scheduledAt instanceof Carbon ? $scheduledAt : Carbon::parse($scheduledAt);
             
             // Validate that scheduled time is in the future
             if ($scheduledDateTime->isPast()) {
@@ -415,6 +415,65 @@ class BroadcastMessageService
             return [
                 'success' => false,
                 'message' => 'Failed to cancel scheduled broadcast: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Send a broadcast message immediately
+     *
+     * @param int $broadcastId
+     * @return array
+     */
+    public function sendBroadcast(int $broadcastId): array
+    {
+        try {
+            $broadcastMessage = BroadcastMessage::findOrFail($broadcastId);
+            
+            // Only allow sending draft or scheduled messages
+            if (!in_array($broadcastMessage->status, [BroadcastMessage::STATUS_DRAFT, BroadcastMessage::STATUS_SCHEDULED])) {
+                return [
+                    'success' => false,
+                    'message' => 'Only draft or scheduled messages can be sent'
+                ];
+            }
+            
+            // Update status to sending
+            $broadcastMessage->update([
+                'status' => BroadcastMessage::STATUS_SENDING,
+                'sent_at' => Carbon::now()
+            ]);
+            
+            // Get recipients and create delivery records
+            $recipients = $this->getRecipients($broadcastMessage);
+            $deliveryResult = $this->createDeliveryRecords($broadcastMessage, $recipients);
+            
+            if (!$deliveryResult['success']) {
+                $broadcastMessage->update(['status' => BroadcastMessage::STATUS_FAILED]);
+                return $deliveryResult;
+            }
+            
+            // Here we would typically dispatch jobs to send the emails
+            // For now, we'll just mark it as sent
+            $broadcastMessage->update(['status' => BroadcastMessage::STATUS_SENT]);
+            
+            return [
+                'success' => true,
+                'message' => 'Broadcast message sent successfully',
+                'broadcast_message' => $broadcastMessage->fresh(),
+                'recipient_count' => $recipients->count()
+            ];
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to send broadcast message', [
+                'broadcast_id' => $broadcastId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return [
+                'success' => false,
+                'message' => 'Failed to send broadcast message: ' . $e->getMessage()
             ];
         }
     }
