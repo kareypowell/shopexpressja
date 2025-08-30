@@ -269,6 +269,39 @@ class BroadcastHistoryTest extends TestCase
     }
 
     /** @test */
+    public function it_can_edit_draft()
+    {
+        $draft = BroadcastMessage::factory()->create([
+            'sender_id' => $this->admin->id,
+            'status' => BroadcastMessage::STATUS_DRAFT,
+        ]);
+
+        $component = Livewire::test(BroadcastHistory::class);
+
+        $component->call('editDraft', $draft->id)
+                 ->assertEmitted('editDraft', $draft->id);
+
+        // Should store draft ID in session
+        $this->assertEquals($draft->id, session('edit_draft_id'));
+    }
+
+    /** @test */
+    public function it_cannot_edit_non_draft_broadcast()
+    {
+        $sentBroadcast = BroadcastMessage::factory()->create([
+            'sender_id' => $this->admin->id,
+            'status' => BroadcastMessage::STATUS_SENT,
+        ]);
+
+        $component = Livewire::test(BroadcastHistory::class);
+
+        $component->call('editDraft', $sentBroadcast->id);
+
+        // Should not redirect, should show error
+        $component->assertHasNoErrors();
+    }
+
+    /** @test */
     public function it_returns_correct_status_badge_classes()
     {
         $component = new BroadcastHistory();
@@ -374,5 +407,20 @@ class BroadcastHistoryTest extends TestCase
 
         // Page should be reset (Livewire handles this automatically with resetPage())
         $component->assertHasNoErrors();
+    }
+
+    /** @test */
+    public function it_can_compose_new_message()
+    {
+        // Set some draft data in session first
+        session(['edit_draft_id' => 123]);
+
+        $component = Livewire::test(BroadcastHistory::class);
+
+        $component->call('composeNewMessage')
+                 ->assertEmitted('composeNewMessage');
+
+        // Should clear draft session data
+        $this->assertNull(session('edit_draft_id'));
     }
 }
