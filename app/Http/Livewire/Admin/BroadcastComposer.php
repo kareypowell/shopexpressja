@@ -10,6 +10,8 @@ use Livewire\WithPagination;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use HTMLPurifier;
+use HTMLPurifier_Config;
 
 class BroadcastComposer extends Component
 {
@@ -99,6 +101,31 @@ class BroadcastComposer extends Component
     public function mount()
     {
         $this->updateRecipientCount();
+    }
+
+    public function updatedContent($value)
+    {
+        $this->content = $this->sanitizeHtmlContent($value);
+    }
+
+    private function sanitizeHtmlContent($content)
+    {
+        $config = HTMLPurifier_Config::createDefault();
+        
+        // Allow safe HTML tags and attributes
+        $config->set('HTML.Allowed', 'p,br,strong,b,em,i,u,h1,h2,h3,h4,h5,h6,ul,ol,li,a[href|title],img[src|alt|width|height|style],table,thead,tbody,tr,th,td,blockquote,div[class|style],span[style]');
+        
+        // Allow some CSS properties for styling
+        $config->set('CSS.AllowedProperties', 'font-weight,font-style,text-decoration,color,background-color,text-align,margin,padding,border,width,height');
+        
+        // Enable HTML5 parsing
+        $config->set('HTML.Doctype', 'HTML 4.01 Transitional');
+        
+        // Disable cache for simplicity (you may want to enable this in production)
+        $config->set('Cache.DefinitionImpl', null);
+        
+        $purifier = new HTMLPurifier($config);
+        return $purifier->purify($content);
     }
 
     public function updatedRecipientType()
@@ -216,7 +243,7 @@ class BroadcastComposer extends Component
             
             $data = [
                 'subject' => $this->subject,
-                'content' => $this->content,
+                'content' => $this->sanitizeHtmlContent($this->content),
                 'sender_id' => Auth::id(),
                 'recipient_type' => $this->recipientType,
                 'recipient_count' => $this->recipientCount,
@@ -239,7 +266,45 @@ class BroadcastComposer extends Component
 
     public function showPreview()
     {
-        $this->validate($this->getRules());
+        // Basic validation first
+        $this->validate([
+            'subject' => 'required|string|max:255',
+            'content' => 'required|string|min:10',
+        ]);
+
+        // Update recipient count to ensure it's current
+        $this->updateRecipientCount();
+
+        // Additional validation for recipients
+        if ($this->recipientType === 'selected' && empty($this->selectedCustomers)) {
+            $this->addError('selectedCustomers', 'Please select at least one customer.');
+            return;
+        }
+
+        // Allow preview even with 0 recipients, but show warning in the preview modal
+        if ($this->recipientCount === 0 && $this->recipientType === 'selected') {
+            // Only block if selected type has no customers selected
+            session()->flash('error', 'Please select at least one customer to preview.');
+            return;
+        }
+
+        // Validate scheduling if enabled
+        if ($this->isScheduled) {
+            $this->validate([
+                'scheduledDate' => 'required|date|after:today',
+                'scheduledTime' => 'required|date_format:H:i',
+            ]);
+            
+            $this->validateScheduleTime();
+            
+            if ($this->getErrorBag()->has(['scheduledDate', 'scheduledTime'])) {
+                return;
+            }
+        }
+
+        // Sanitize content before preview
+        $this->content = $this->sanitizeHtmlContent($this->content);
+        
         $this->showPreview = true;
     }
 
@@ -269,7 +334,7 @@ class BroadcastComposer extends Component
             
             $data = [
                 'subject' => $this->subject,
-                'content' => $this->content,
+                'content' => $this->sanitizeHtmlContent($this->content),
                 'sender_id' => Auth::id(),
                 'recipient_type' => $this->recipientType,
                 'recipient_count' => $this->recipientCount,

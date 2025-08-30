@@ -17,9 +17,9 @@
                     </div>
                 @endif
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     <!-- Main Composition Area -->
-                    <div class="lg:col-span-2">
+                    <div class="xl:col-span-2">
                         <form wire:submit.prevent="showPreview">
                             <!-- Subject -->
                             <div class="mb-6">
@@ -39,7 +39,7 @@
                             </div>
 
                             <!-- Message Content -->
-                            <div class="mb-6">
+                            <div class="mb-6" wire:ignore>
                                 <label for="content" class="block text-sm font-medium text-gray-700 mb-2">
                                     Message Content <span class="text-red-500">*</span>
                                 </label>
@@ -56,7 +56,7 @@
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p> 
                                 @enderror
                                 <p class="mt-1 text-sm text-gray-500">
-                                    You can use HTML formatting in your message content.
+                                    Use the rich text editor to format your message content.
                                 </p>
                             </div>
 
@@ -130,7 +130,7 @@
                     </div>
 
                     <!-- Recipient Selection Sidebar -->
-                    <div class="lg:col-span-1">
+                    <div class="xl:col-span-1">
                         <div class="bg-gray-50 p-4 rounded-lg">
                             <h3 class="text-lg font-medium text-gray-900 mb-4">Recipients</h3>
                             
@@ -189,15 +189,21 @@
                                         <button 
                                             type="button"
                                             wire:click="selectAllCustomers"
-                                            class="flex-1 px-3 py-1 text-xs bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200"
+                                            class="flex-1 px-3 py-2 text-xs bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition-colors duration-200"
                                         >
+                                            <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
                                             Select All
                                         </button>
                                         <button 
                                             type="button"
                                             wire:click="clearSelection"
-                                            class="flex-1 px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                                            class="flex-1 px-3 py-2 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors duration-200"
                                         >
+                                            <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
                                             Clear All
                                         </button>
                                     </div>
@@ -250,14 +256,15 @@
     <!-- Preview Modal -->
     @if($showPreview)
         <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" wire:click="hidePreview">
-            <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white" wire:click.stop>
+            <div class="relative top-4 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 xl:w-2/3 max-w-4xl shadow-lg rounded-md bg-white mb-8" wire:click.stop>
                 <div class="mt-3">
                     <!-- Modal Header -->
                     <div class="flex items-center justify-between pb-4 border-b">
-                        <h3 class="text-lg font-medium text-gray-900">Preview Message</h3>
+                        <h3 class="text-xl font-semibold text-gray-900">Preview Message</h3>
                         <button 
                             wire:click="hidePreview"
-                            class="text-gray-400 hover:text-gray-600"
+                            class="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                            aria-label="Close preview"
                         >
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -266,71 +273,196 @@
                     </div>
 
                     <!-- Preview Content -->
-                    <div class="mt-4">
-                        <!-- Message Details -->
-                        <div class="bg-gray-50 p-4 rounded-lg mb-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <span class="font-medium text-gray-700">Recipients:</span>
-                                    <span class="text-gray-900">{{ number_format($recipientCount) }} customers</span>
+                    <div class="mt-6">
+                        <!-- Message Summary -->
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg mb-6 border border-blue-200">
+                            <h4 class="text-sm font-semibold text-gray-800 mb-3">Message Summary</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                    <div>
+                                        <span class="font-medium text-gray-700">Recipients:</span>
+                                        <span class="text-gray-900 ml-1">{{ number_format($recipientCount) }}</span>
+                                    </div>
                                 </div>
-                                <div>
-                                    <span class="font-medium text-gray-700">Type:</span>
-                                    <span class="text-gray-900">{{ ucfirst($recipientType) }} customers</span>
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div>
+                                        <span class="font-medium text-gray-700">Type:</span>
+                                        <span class="text-gray-900 ml-1">{{ ucfirst($recipientType) }} customers</span>
+                                    </div>
                                 </div>
                                 @if($isScheduled)
-                                    <div class="md:col-span-2">
-                                        <span class="font-medium text-gray-700">Scheduled for:</span>
-                                        <span class="text-gray-900">
-                                            {{ \Carbon\Carbon::createFromFormat('Y-m-d H:i', $scheduledDate . ' ' . $scheduledTime)->format('M j, Y \a\t g:i A') }}
-                                        </span>
+                                    <div class="flex items-center sm:col-span-2 lg:col-span-1">
+                                        <svg class="w-4 h-4 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <div>
+                                            <span class="font-medium text-gray-700">Scheduled:</span>
+                                            <span class="text-gray-900 ml-1">
+                                                {{ \Carbon\Carbon::createFromFormat('Y-m-d H:i', $scheduledDate . ' ' . $scheduledTime)->format('M j, Y \a\t g:i A') }}
+                                            </span>
+                                        </div>
                                     </div>
                                 @endif
                             </div>
+                            
+                            <!-- Validation Status -->
+                            @if($recipientCount === 0)
+                                <div class="mt-3 p-3 bg-red-100 border border-red-300 rounded-md">
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                        </svg>
+                                        <span class="text-red-700 text-sm font-medium">Warning: No recipients selected</span>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
                         <!-- Email Preview -->
-                        <div class="border border-gray-200 rounded-lg overflow-hidden">
-                            <div class="bg-gray-100 px-4 py-2 border-b">
-                                <div class="text-sm">
-                                    <span class="font-medium">Subject:</span> {{ $subject }}
+                        <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                            <!-- Email Header -->
+                            <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <div class="text-sm text-gray-600">
+                                        <span class="font-medium">From:</span> {{ Auth::user()->full_name }} &lt;{{ Auth::user()->email }}&gt;
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        Email Preview
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <div class="text-lg font-semibold text-gray-900">{{ $subject }}</div>
                                 </div>
                             </div>
-                            <div class="p-4 bg-white">
-                                <div class="prose max-w-none">
-                                    {!! nl2br(e($content)) !!}
+                            
+                            <!-- Email Body -->
+                            <div class="p-6 bg-white">
+                                <div class="prose prose-sm sm:prose lg:prose-lg max-w-none">
+                                    {!! $content !!}
+                                </div>
+                                
+                                <!-- Email Footer -->
+                                <div class="mt-8 pt-4 border-t border-gray-200">
+                                    <div class="text-xs text-gray-500">
+                                        <p>This message was sent to you as a customer of {{ config('app.name') }}.</p>
+                                        <p class="mt-1">If you have any questions, please contact us at {{ Auth::user()->email }}.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Modal Actions -->
-                    <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
-                        <button 
-                            wire:click="hidePreview"
-                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                        >
-                            Edit Message
-                        </button>
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mt-6 pt-4 border-t">
+                        <div class="text-sm text-gray-600 order-2 sm:order-1">
+                            @if($recipientCount > 0)
+                                Ready to send to {{ number_format($recipientCount) }} recipient{{ $recipientCount !== 1 ? 's' : '' }}
+                            @else
+                                <span class="text-red-600">Please select recipients before sending</span>
+                            @endif
+                        </div>
                         
-                        @if($isScheduled)
+                        <div class="flex gap-3 order-1 sm:order-2">
                             <button 
-                                wire:click="scheduleMessage"
-                                class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                wire:click="hidePreview"
+                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200"
                             >
-                                Schedule Message
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path>
+                                </svg>
+                                Edit Message
                             </button>
-                        @else
-                            <button 
-                                wire:click="sendNow"
-                                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                            >
-                                Send Now
-                            </button>
-                        @endif
+                            
+                            @if($recipientCount > 0)
+                                @if($isScheduled)
+                                    <button 
+                                        wire:click="scheduleMessage"
+                                        class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200"
+                                    >
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Schedule Message
+                                    </button>
+                                @else
+                                    <button 
+                                        wire:click="sendNow"
+                                        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
+                                    >
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                        </svg>
+                                        Send Now
+                                    </button>
+                                @endif
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     @endif
+
+    <!-- TinyMCE Script -->
+    <script src="{{ asset('js/tinymce.min.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            tinymce.init({
+                selector: '#content',
+                height: 400,
+                menubar: false,
+                plugins: [
+                    'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                    'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                    'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                ],
+                toolbar: 'undo redo | blocks | ' +
+                    'bold italic forecolor | alignleft aligncenter ' +
+                    'alignright alignjustify | bullist numlist outdent indent | ' +
+                    'removeformat | help',
+                content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; }',
+                branding: false,
+                promotion: false,
+                skin: 'oxide',
+                content_css: 'default',
+                valid_elements: 'p,br,strong,em,u,h1,h2,h3,h4,h5,h6,ul,ol,li,a[href|title],img[src|alt|width|height],table,thead,tbody,tr,th,td,blockquote,div[class]',
+                invalid_elements: 'script,object,embed,iframe',
+                setup: function (editor) {
+                    editor.on('change', function () {
+                        @this.set('content', editor.getContent());
+                    });
+                    
+                    editor.on('keyup', function () {
+                        @this.set('content', editor.getContent());
+                    });
+
+                    // Listen for Livewire updates to sync content
+                    window.addEventListener('livewire:load', function () {
+                        Livewire.hook('message.processed', (message, component) => {
+                            if (component.fingerprint.name === 'admin.broadcast-composer') {
+                                const currentContent = editor.getContent();
+                                const livewireContent = @this.get('content');
+                                if (currentContent !== livewireContent) {
+                                    editor.setContent(livewireContent || '');
+                                }
+                            }
+                        });
+                    });
+                },
+                init_instance_callback: function(editor) {
+                    // Set initial content from Livewire
+                    const initialContent = @this.get('content');
+                    if (initialContent) {
+                        editor.setContent(initialContent);
+                    }
+                }
+            });
+        });
+    </script>
 </div>

@@ -12,6 +12,7 @@
         "asantibanez/livewire-select": "^2.2",
         "barryvdh/laravel-dompdf": "^2.2",
         "doctrine/dbal": "^3.9",
+        "ezyang/htmlpurifier": "^4.18",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.0.1",
         "laravel-frontend-presets/tall": "^4.0",
