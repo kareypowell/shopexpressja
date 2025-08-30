@@ -23,19 +23,19 @@
   - Write unit tests for delivery tracking functionality
   - _Requirements: 4.2, 4.3_
 
-- [ ] 2. Create core service layer
+- [x] 2. Create core service layer
   - Implement BroadcastMessageService with methods for creating, saving, and sending broadcasts
   - Add recipient selection logic for 'all' and 'selected' customer types
   - Create delivery record management functionality
   - _Requirements: 1.1, 2.1, 2.2, 6.1, 7.1_
 
-- [ ] 2.1 Implement broadcast creation and draft functionality
+- [x] 2.1 Implement broadcast creation and draft functionality
   - Code createBroadcast and saveDraft methods in BroadcastMessageService
   - Add validation logic for broadcast data
   - Write unit tests for broadcast creation and draft saving
   - _Requirements: 1.1, 6.1, 6.2, 6.3_
 
-- [ ] 2.2 Implement scheduling functionality
+- [x] 2.2 Implement scheduling functionality
   - Code scheduleBroadcast method with future date validation
   - Create processScheduledBroadcasts method for automated processing
   - Write unit tests for scheduling logic
