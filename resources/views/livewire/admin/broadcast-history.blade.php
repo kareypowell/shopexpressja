@@ -4,11 +4,6 @@
             <div class="p-6 bg-white border-b border-gray-200">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-900">Broadcast History</h2>
-                    <button 
-                        wire:click="composeNewMessage"
-                        class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                        Compose New Message
-                    </button>
                 </div>
 
                 <!-- Flash Messages -->

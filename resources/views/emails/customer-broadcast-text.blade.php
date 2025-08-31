@@ -2,7 +2,7 @@
 
 Dear {{ $customer->full_name }},
 
-{!! strip_tags($broadcastMessage->content) !!}
+{!! strip_tags($content) !!}
 
 Best regards,
 {{ $companyName }} Team

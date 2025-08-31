@@ -15,16 +15,20 @@ class CustomerBroadcastEmail extends Mailable implements ShouldQueue
 
     public $broadcastMessage;
     public $customer;
+    public $personalizedSubject;
+    public $personalizedContent;
     public $tries = 3;
     public $timeout = 60;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(BroadcastMessage $broadcastMessage, User $customer)
+    public function __construct(BroadcastMessage $broadcastMessage, User $customer, $personalizedSubject = null, $personalizedContent = null)
     {
         $this->broadcastMessage = $broadcastMessage;
         $this->customer = $customer;
+        $this->personalizedSubject = $personalizedSubject;
+        $this->personalizedContent = $personalizedContent;
     }
 
     /**
@@ -32,17 +36,21 @@ class CustomerBroadcastEmail extends Mailable implements ShouldQueue
      */
     public function build()
     {
-        return $this->subject($this->broadcastMessage->subject)
+        // Use personalized content if available, otherwise fall back to original
+        $subject = $this->personalizedSubject ?? $this->broadcastMessage->subject;
+        $content = $this->personalizedContent ?? $this->broadcastMessage->content;
+        
+        return $this->subject($subject)
                     ->from(config('mail.from.address'), config('mail.from.name'))
                     ->replyTo(config('mail.from.address'), config('mail.from.name'))
                     ->view('emails.customer-broadcast')
                     ->text('emails.customer-broadcast-text')
                     ->with([
-                        'content' => $this->broadcastMessage->content,
+                        'content' => $content,
                         'customer' => $this->customer,
                         'broadcastMessage' => $this->broadcastMessage,
                         'companyName' => config('app.name', 'ShipShark Ltd'),
-                        'supportEmail' => config('mail.support.address', config('mail.from.address')),
+                        'supportEmail' => config('mail.admin.email', config('mail.from.address')),
                         'unsubscribeUrl' => $this->generateUnsubscribeUrl()
                     ]);
     }

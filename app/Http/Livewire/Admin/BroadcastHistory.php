@@ -119,17 +119,6 @@ class BroadcastHistory extends Component
         }
     }
 
-    public function composeNewMessage()
-    {
-        // Clear any existing draft session data
-        session()->forget('edit_draft_id');
-        
-        // Emit event to navigate to composer
-        $this->emit('composeNewMessage');
-        
-        session()->flash('success', 'Ready to compose new message. Navigate to compose page.');
-    }
-
     public function editDraft($broadcastId)
     {
         try {
@@ -143,11 +132,8 @@ class BroadcastHistory extends Component
             // Store draft ID in session for composer to pick up
             session(['edit_draft_id' => $broadcastId]);
             
-            // Redirect to composer with draft ID (when routes are implemented)
-            // For now, emit event that can be handled by parent component
-            $this->emit('editDraft', $broadcastId);
-            
-            session()->flash('success', 'Draft ready for editing. Navigate to compose page.');
+            // Redirect to composer page
+            return redirect()->route('admin.broadcast-messages.create');
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to edit draft: ' . $e->getMessage());
         }

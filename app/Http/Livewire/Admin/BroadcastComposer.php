@@ -100,7 +100,45 @@ class BroadcastComposer extends Component
 
     public function mount()
     {
+        // Check if we're editing a draft
+        if (session()->has('edit_draft_id')) {
+            $this->loadDraft(session('edit_draft_id'));
+            session()->forget('edit_draft_id');
+        }
+        
         $this->updateRecipientCount();
+    }
+
+    private function loadDraft($draftId)
+    {
+        try {
+            $draft = BroadcastMessage::with('recipients.customer')->findOrFail($draftId);
+            
+            if ($draft->status !== BroadcastMessage::STATUS_DRAFT) {
+                session()->flash('error', 'Only draft messages can be edited.');
+                return;
+            }
+
+            // Load draft data
+            $this->subject = $draft->subject;
+            $this->content = $draft->content;
+            $this->recipientType = $draft->recipient_type;
+            
+            if ($draft->recipient_type === 'selected') {
+                $this->selectedCustomers = $draft->recipients->pluck('customer_id')->toArray();
+            }
+            
+            if ($draft->scheduled_at) {
+                $this->isScheduled = true;
+                $this->scheduledDate = $draft->scheduled_at->format('Y-m-d');
+                $this->scheduledTime = $draft->scheduled_at->format('H:i');
+            }
+            
+            $this->isDraft = true;
+            session()->flash('success', 'Draft loaded for editing.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to load draft: ' . $e->getMessage());
+        }
     }
 
     public function updatedContent($value)
@@ -313,6 +351,30 @@ class BroadcastComposer extends Component
         $this->showPreview = false;
     }
 
+    /**
+     * Get preview content with placeholders replaced
+     *
+     * @return array
+     */
+    public function getPreviewContentProperty()
+    {
+        $broadcastService = app(BroadcastMessageService::class);
+        
+        // Get a sample customer for preview if available
+        $sampleCustomer = null;
+        if ($this->recipientType === 'selected' && !empty($this->selectedCustomers)) {
+            $sampleCustomer = User::find($this->selectedCustomers[0]);
+        } elseif ($this->recipientType === 'all') {
+            $sampleCustomer = User::activeCustomers()->first();
+        }
+        
+        return [
+            'subject' => $broadcastService->previewWithPlaceholders($this->subject, $sampleCustomer),
+            'content' => $broadcastService->previewWithPlaceholders($this->content, $sampleCustomer),
+            'sample_customer' => $sampleCustomer
+        ];
+    }
+
     public function sendNow()
     {
         $this->isScheduled = false;
@@ -338,8 +400,12 @@ class BroadcastComposer extends Component
                 'sender_id' => Auth::id(),
                 'recipient_type' => $this->recipientType,
                 'recipient_count' => $this->recipientCount,
-                'selected_customers' => $this->recipientType === 'selected' ? $this->selectedCustomers : [],
             ];
+
+            // Only include selected_customers if recipient type is 'selected'
+            if ($this->recipientType === 'selected') {
+                $data['selected_customers'] = $this->selectedCustomers;
+            }
 
             if ($this->isScheduled) {
                 $scheduledAt = Carbon::createFromFormat('Y-m-d H:i', $this->scheduledDate . ' ' . $this->scheduledTime);

@@ -7,6 +7,7 @@ use App\Models\BroadcastRecipient;
 use App\Models\BroadcastDelivery;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
@@ -230,7 +231,7 @@ class BroadcastMessageService
      */
     protected function calculateRecipientCount(array $data, ?BroadcastMessage $existingMessage = null): int
     {
-        $recipientType = $data['recipient_type'] ?? $existingMessage?->recipient_type ?? BroadcastMessage::RECIPIENT_TYPE_ALL;
+        $recipientType = $data['recipient_type'] ?? $existingMessage->recipient_type ?? BroadcastMessage::RECIPIENT_TYPE_ALL;
         
         if ($recipientType === BroadcastMessage::RECIPIENT_TYPE_ALL) {
             return User::activeCustomers()->count();
@@ -240,7 +241,7 @@ class BroadcastMessageService
             return count($data['selected_customers']);
         }
 
-        return $existingMessage?->recipient_count ?? 0;
+        return $existingMessage->recipient_count ?? 0;
     }
 
     /**
@@ -454,7 +455,8 @@ class BroadcastMessageService
             }
             
             // Here we would typically dispatch jobs to send the emails
-            // For now, we'll just mark it as sent
+            // For now, we'll simulate sending by processing placeholders and marking as sent
+            $this->processEmailDeliveries($broadcastMessage, $recipients);
             $broadcastMessage->update(['status' => BroadcastMessage::STATUS_SENT]);
             
             return [
@@ -499,5 +501,125 @@ class BroadcastMessageService
         }
 
         BroadcastRecipient::insert($recipients);
+    }
+
+    /**
+     * Process email deliveries with placeholder replacement
+     *
+     * @param BroadcastMessage $broadcastMessage
+     * @param \Illuminate\Database\Eloquent\Collection $recipients
+     * @return void
+     */
+    protected function processEmailDeliveries(BroadcastMessage $broadcastMessage, $recipients): void
+    {
+        foreach ($recipients as $recipient) {
+            try {
+                // Create personalized content for this recipient
+                $personalizedSubject = $this->replacePlaceholders($broadcastMessage->subject, $recipient);
+                $personalizedContent = $this->replacePlaceholders($broadcastMessage->content, $recipient);
+                
+                \Log::info('Placeholder replacement debug', [
+                    'customer_id' => $recipient->id,
+                    'customer_first_name' => $recipient->first_name,
+                    'original_content' => substr($broadcastMessage->content, 0, 200),
+                    'processed_content' => substr($personalizedContent, 0, 200)
+                ]);
+                
+                // Send the email using the CustomerBroadcastEmail mailable with personalized content
+                \Mail::to($recipient->email)->send(new \App\Mail\CustomerBroadcastEmail($broadcastMessage, $recipient, $personalizedSubject, $personalizedContent));
+                
+                // Update delivery status to sent
+                BroadcastDelivery::where('broadcast_message_id', $broadcastMessage->id)
+                    ->where('customer_id', $recipient->id)
+                    ->update([
+                        'status' => 'sent',
+                        'sent_at' => now()
+                    ]);
+                
+                \Log::info('Email sent successfully', [
+                    'customer_id' => $recipient->id,
+                    'customer_email' => $recipient->email,
+                    'customer_name' => $recipient->full_name,
+                    'subject' => $personalizedSubject
+                ]);
+                
+            } catch (\Exception $e) {
+                // Update delivery status to failed
+                BroadcastDelivery::where('broadcast_message_id', $broadcastMessage->id)
+                    ->where('customer_id', $recipient->id)
+                    ->update([
+                        'status' => 'failed',
+                        'failed_at' => now(),
+                        'error_message' => $e->getMessage()
+                    ]);
+                
+                \Log::error('Failed to send email', [
+                    'customer_id' => $recipient->id,
+                    'customer_email' => $recipient->email,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Replace placeholders in content with actual customer data
+     *
+     * @param string $content
+     * @param User|object $customer
+     * @return string
+     */
+    protected function replacePlaceholders(string $content, $customer): string
+    {
+        $placeholders = [
+            '{customer.first_name}' => $customer->first_name ?? '',
+            '{customer.last_name}' => $customer->last_name ?? '',
+            '{customer.full_name}' => $customer->full_name ?? '',
+            '{customer.email}' => $customer->email ?? '',
+            '{customer.phone}' => $customer->phone ?? '',
+            '{customer.address}' => $customer->address ?? '',
+            '{customer.city}' => $customer->city ?? '',
+            '{customer.country}' => $customer->country ?? '',
+            '{company.name}' => config('app.name'),
+            '{company.email}' => env('ADMIN_EMAIL'),
+            '{current.date}' => Carbon::now()->format('F j, Y'),
+            '{current.time}' => Carbon::now()->format('g:i A'),
+        ];
+
+        // Replace placeholders in content
+        $processedContent = str_replace(array_keys($placeholders), array_values($placeholders), $content);
+        
+        // Also handle placeholders wrapped in span tags (from TinyMCE)
+        foreach ($placeholders as $placeholder => $value) {
+            $spanPattern = '/<span[^>]*class="[^"]*placeholder[^"]*"[^>]*>' . preg_quote($placeholder, '/') . '<\/span>/i';
+            $processedContent = preg_replace($spanPattern, $value, $processedContent);
+        }
+        
+        return $processedContent;
+    }
+
+    /**
+     * Preview content with placeholders replaced for a sample customer
+     *
+     * @param string $content
+     * @param User|null $sampleCustomer
+     * @return string
+     */
+    public function previewWithPlaceholders(string $content, $sampleCustomer = null): string
+    {
+        if (!$sampleCustomer) {
+            // Create dummy data for preview
+            $sampleCustomer = new \stdClass();
+            $sampleCustomer->first_name = 'John';
+            $sampleCustomer->last_name = 'Doe';
+            $sampleCustomer->full_name = 'John Doe';
+            $sampleCustomer->email = 'john.doe@example.com';
+            $sampleCustomer->phone = '+1 (555) 123-4567';
+            $sampleCustomer->address = '123 Main Street';
+            $sampleCustomer->city = 'New York';
+            $sampleCustomer->country = 'United States';
+        }
+        
+        return $this->replacePlaceholders($content, $sampleCustomer);
     }
 }

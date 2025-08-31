@@ -2,7 +2,7 @@
     <div class="px-4 py-6 sm:px-0">
         <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
             <div class="p-6 bg-white border-b border-gray-200">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Compose Broadcast Message</h2>
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Compose Message</h2>
 
                 <!-- Flash Messages -->
                 @if (session()->has('success'))
@@ -55,9 +55,10 @@
                                 @error('content') 
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p> 
                                 @enderror
-                                <p class="mt-1 text-sm text-gray-500">
-                                    Use the rich text editor to format your message content.
-                                </p>
+                                <div class="mt-2 text-sm text-gray-500">
+                                    <p class="mb-1">Use the rich text editor to format your message content.</p>
+                                    <p><strong>Personalization:</strong> Type <code class="bg-gray-100 px-1 rounded">@</code> to insert customer placeholders like <code class="bg-gray-100 px-1 rounded">{customer.first_name}</code>, or use the "Placeholders" button in the toolbar.</p>
+                                </div>
                             </div>
 
                             <!-- Scheduling Options -->
@@ -246,6 +247,21 @@
                                     @enderror
                                 </div>
                             @endif
+
+                            <!-- Placeholder Reference -->
+                            <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                <h4 class="text-sm font-semibold text-blue-900 mb-2">Available Placeholders</h4>
+                                <div class="text-xs text-blue-800 space-y-1">
+                                    <div><code class="bg-blue-100 px-1 rounded">{customer.first_name}</code> - Customer's first name</div>
+                                    <div><code class="bg-blue-100 px-1 rounded">{customer.full_name}</code> - Customer's full name</div>
+                                    <div><code class="bg-blue-100 px-1 rounded">{customer.email}</code> - Customer's email</div>
+                                    <div><code class="bg-blue-100 px-1 rounded">{company.name}</code> - Company name</div>
+                                    <div><code class="bg-blue-100 px-1 rounded">{current.date}</code> - Current date</div>
+                                    <div class="text-blue-600 mt-2">
+                                        <strong>Tip:</strong> Type <code class="bg-blue-100 px-1 rounded">@</code> in the editor or use the "Placeholders" button
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -330,28 +346,37 @@
                             <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
                                 <div class="flex items-center justify-between">
                                     <div class="text-sm text-gray-600">
-                                        <span class="font-medium">From:</span> {{ Auth::user()->full_name }} &lt;{{ Auth::user()->email }}&gt;
+                                        <span class="font-medium">From:</span> {{ config('app.name') }} &lt;{{ env('ADMIN_EMAIL') }}&gt;
                                     </div>
                                     <div class="text-xs text-gray-500">
                                         Email Preview
                                     </div>
                                 </div>
                                 <div class="mt-2">
-                                    <div class="text-lg font-semibold text-gray-900">{{ $subject }}</div>
+                                    <div class="text-lg font-semibold text-gray-900">{{ $this->previewContent['subject'] }}</div>
+                                    @if($this->previewContent['sample_customer'])
+                                        <div class="text-xs text-blue-600 mt-1">
+                                            Preview personalized for: {{ $this->previewContent['sample_customer']->full_name }}
+                                        </div>
+                                    @else
+                                        <div class="text-xs text-gray-500 mt-1">
+                                            Preview with sample data (no customers selected)
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                             
                             <!-- Email Body -->
                             <div class="p-6 bg-white">
                                 <div class="prose prose-sm sm:prose lg:prose-lg max-w-none">
-                                    {!! $content !!}
+                                    {!! $this->previewContent['content'] !!}
                                 </div>
                                 
                                 <!-- Email Footer -->
                                 <div class="mt-8 pt-4 border-t border-gray-200">
                                     <div class="text-xs text-gray-500">
                                         <p>This message was sent to you as a customer of {{ config('app.name') }}.</p>
-                                        <p class="mt-1">If you have any questions, please contact us at {{ Auth::user()->email }}.</p>
+                                        <p class="mt-1">If you have any questions, please contact us at {{ env('ADMIN_EMAIL') }}.</p>
                                     </div>
                                 </div>
                             </div>
@@ -410,8 +435,24 @@
     @endif
 
     <!-- TinyMCE Script -->
-    <script src="{{ asset('js/tinymce.min.js') }}"></script>
+    <script src="https://cdn.tiny.cloud/1/{{ env('TINYMCE_API_KEY') }}/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
+        // Available placeholders for customer personalization
+        const availablePlaceholders = [
+            { text: '{customer.first_name}', value: '{customer.first_name}', description: 'Customer first name' },
+            { text: '{customer.last_name}', value: '{customer.last_name}', description: 'Customer last name' },
+            { text: '{customer.full_name}', value: '{customer.full_name}', description: 'Customer full name' },
+            { text: '{customer.email}', value: '{customer.email}', description: 'Customer email address' },
+            { text: '{customer.phone}', value: '{customer.phone}', description: 'Customer phone number' },
+            { text: '{customer.address}', value: '{customer.address}', description: 'Customer address' },
+            { text: '{customer.city}', value: '{customer.city}', description: 'Customer city' },
+            { text: '{customer.country}', value: '{customer.country}', description: 'Customer country' },
+            { text: '{company.name}', value: '{company.name}', description: 'Company name' },
+            { text: '{company.email}', value: '{company.email}', description: 'Company email' },
+            { text: '{current.date}', value: '{current.date}', description: 'Current date' },
+            { text: '{current.time}', value: '{current.time}', description: 'Current time' }
+        ];
+
         document.addEventListener('DOMContentLoaded', function() {
             tinymce.init({
                 selector: '#content',
@@ -420,26 +461,55 @@
                 plugins: [
                     'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
                     'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                    'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                    'insertdatetime', 'media', 'table', 'help', 'wordcount', 'mentions'
                 ],
                 toolbar: 'undo redo | blocks | ' +
                     'bold italic forecolor | alignleft aligncenter ' +
                     'alignright alignjustify | bullist numlist outdent indent | ' +
-                    'removeformat | help',
-                content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; }',
+                    'placeholders | removeformat | help',
+                content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; } .placeholder { background-color: #e3f2fd; padding: 2px 4px; border-radius: 3px; color: #1976d2; font-weight: bold; }',
                 branding: false,
                 promotion: false,
                 skin: 'oxide',
                 content_css: 'default',
-                valid_elements: 'p,br,strong,em,u,h1,h2,h3,h4,h5,h6,ul,ol,li,a[href|title],img[src|alt|width|height],table,thead,tbody,tr,th,td,blockquote,div[class]',
+                valid_elements: 'p,br,strong,em,u,h1,h2,h3,h4,h5,h6,ul,ol,li,a[href|title],img[src|alt|width|height],table,thead,tbody,tr,th,td,blockquote,div[class],span[class]',
                 invalid_elements: 'script,object,embed,iframe',
+                mentions: {
+                    source: availablePlaceholders.map(placeholder => ({
+                        id: placeholder.value,
+                        text: placeholder.text,
+                        description: placeholder.description
+                    })),
+                    delimiter: '@',
+                    insert: function (item) {
+                        return '<span class="placeholder">' + item.id + '</span>';
+                    }
+                },
+                
                 setup: function (editor) {
+                    // Add custom placeholder button
+                    editor.ui.registry.addMenuButton('placeholders', {
+                        text: 'Placeholders',
+                        icon: 'template',
+                        fetch: function (callback) {
+                            const items = availablePlaceholders.map(placeholder => ({
+                                type: 'menuitem',
+                                text: placeholder.text,
+                                onAction: function () {
+                                    editor.insertContent('<span class="placeholder">' + placeholder.value + '</span>');
+                                }
+                            }));
+                            callback(items);
+                        }
+                    });
+
+                    // Sync content with Livewire
                     editor.on('change', function () {
-                        @this.set('content', editor.getContent());
+                        window.livewire.find('{{ $this->id }}').set('content', editor.getContent());
                     });
                     
                     editor.on('keyup', function () {
-                        @this.set('content', editor.getContent());
+                        window.livewire.find('{{ $this->id }}').set('content', editor.getContent());
                     });
 
                     // Listen for Livewire updates to sync content
@@ -447,7 +517,7 @@
                         Livewire.hook('message.processed', (message, component) => {
                             if (component.fingerprint.name === 'admin.broadcast-composer') {
                                 const currentContent = editor.getContent();
-                                const livewireContent = @this.get('content');
+                                const livewireContent = window.livewire.find('{{ $this->id }}').get('content');
                                 if (currentContent !== livewireContent) {
                                     editor.setContent(livewireContent || '');
                                 }
@@ -455,9 +525,10 @@
                         });
                     });
                 },
+                
                 init_instance_callback: function(editor) {
                     // Set initial content from Livewire
-                    const initialContent = @this.get('content');
+                    const initialContent = window.livewire.find('{{ $this->id }}').get('content');
                     if (initialContent) {
                         editor.setContent(initialContent);
                     }

@@ -90,6 +90,7 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->gro
         Route::get('/{manifest}/distribution', \App\Http\Livewire\Manifests\PackageDistribution::class)->name('distribution');
     });
     
+    
     Route::get('/package-distribution', \App\Http\Livewire\PackageDistribution::class)->name('package-distribution');
     Route::get('/transactions', \App\Http\Livewire\Admin\TransactionManagement::class)->name('transactions');
     Route::get('/roles', Role::class)->name('roles');
@@ -114,6 +115,16 @@ Route::middleware(['auth', 'verified', 'customer.management'])->prefix('admin')-
     
     // Customer balance management
     Route::get('/customers/{customer}/balance', CustomerBalanceManager::class)->name('customers.balance');
+});
+
+// Admin routes (both superadmin and admin can access)
+Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    // Broadcast messaging routes - accessible by both admin and superadmin
+    Route::prefix('broadcast-messages')->name('broadcast-messages.')->group(function () {
+        Route::get('/', [App\Http\Controllers\BroadcastMessageController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\BroadcastMessageController::class, 'create'])->name('create');
+        Route::get('/{broadcastMessage}', [App\Http\Controllers\BroadcastMessageController::class, 'show'])->name('show');
+    });
 });
 
 // Customer routes

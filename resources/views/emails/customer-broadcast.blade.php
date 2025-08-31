@@ -153,12 +153,8 @@
 
         <!-- Content -->
         <div class="content">
-            <div class="greeting">
-                Dear {{ $customer->full_name }},
-            </div>
-
             <div class="message-content">
-                {!! $broadcastMessage->content !!}
+                {!! $content !!}
             </div>
         </div>
 

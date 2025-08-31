@@ -113,13 +113,13 @@
   - Implement scheduled broadcast management (cancel, edit)
   - _Requirements: 4.1, 4.2, 7.5, 7.6_
 
-- [ ] 7. Add navigation integration
+- [x] 7. Add navigation integration
   - Update sidebar-nav.blade.php with Broadcast Messages menu item
   - Create route definitions for broadcast messaging functionality
   - Add proper route model binding and middleware for admin access
   - _Requirements: 5.1, 5.2, 5.3_
 
-- [ ] 7.1 Implement controller and routing
+- [x] 7.1 Implement controller and routing
   - Create BroadcastMessageController with index, create, and show methods
   - Define routes with proper middleware and permission checks
   - Add route model binding for broadcast message access
