@@ -18,14 +18,14 @@
   - Implement admin/superadmin authorization logic for all operations
   - _Requirements: 4.1, 4.3_
 
-- [ ] 3. Enhance existing models with required functionality
-- [ ] 3.1 Add search scopes and relationship counts to Office model
+- [x] 3. Enhance existing models with required functionality
+- [x] 3.1 Add search scopes and relationship counts to Office model
   - Implement search scope for name and address fields
   - Add computed attributes for manifest, package, and profile counts
   - Write unit tests for new model functionality
   - _Requirements: 5.1, 6.1_
 
-- [ ] 3.2 Add search scopes and primary address logic to Address model
+- [x] 3.2 Add search scopes and primary address logic to Address model
   - Implement search scope across all address fields
   - Add boot method to ensure single primary address constraint
   - Add proper casting for is_primary boolean field
