@@ -20,6 +20,18 @@ class Kernel extends ConsoleKernel
         // Schedule the weekly user signup report command
         $schedule->command('shs:user-signup-report')
             ->weeklyOn(7, '00:00'); // Runs every Monday at midnight
+            
+        // Process scheduled broadcast messages every 5 minutes
+        $schedule->command('broadcast:process-scheduled')
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10) // Prevent overlapping runs, timeout after 10 minutes
+            ->runInBackground()
+            ->onSuccess(function () {
+                \Log::info('Scheduled broadcast processing completed successfully');
+            })
+            ->onFailure(function () {
+                \Log::error('Scheduled broadcast processing failed');
+            });
     }
 
     /**

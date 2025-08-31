@@ -125,13 +125,13 @@
   - Add route model binding for broadcast message access
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 8. Create scheduled job processing
+- [x] 8. Create scheduled job processing
   - Implement console command for processing scheduled broadcasts
   - Add scheduled job to Laravel scheduler for automated processing
   - Create monitoring and logging for scheduled broadcast execution
   - _Requirements: 7.4, 7.5_
 
-- [ ] 8.1 Write scheduled job tests
+- [x] 8.1 Write scheduled job tests
   - Test scheduled broadcast processing command
   - Test automated scheduling and execution logic
   - Test error handling for failed scheduled broadcasts

@@ -330,18 +330,23 @@ class BroadcastMessageService
                     // Update status to sending to prevent duplicate processing
                     $broadcast->update(['status' => BroadcastMessage::STATUS_SENDING]);
                     
-                    // Get recipients and create delivery records
+                    // Get recipients and validate
                     $recipients = $this->getRecipients($broadcast);
+                    
+                    if ($recipients->isEmpty()) {
+                        throw new \Exception('No recipients found for broadcast');
+                    }
+                    
                     $deliveryResult = $this->createDeliveryRecords($broadcast, $recipients);
                     
                     if (!$deliveryResult['success']) {
                         throw new \Exception($deliveryResult['message']);
                     }
                     
-                    // Here we would typically dispatch a job to send the emails
-                    // For now, we'll just mark it as ready to send
+                    // Process email deliveries and mark as sent
+                    $this->processEmailDeliveries($broadcast, $recipients);
                     $broadcast->update([
-                        'status' => BroadcastMessage::STATUS_SENDING,
+                        'status' => BroadcastMessage::STATUS_SENT,
                         'sent_at' => Carbon::now()
                     ]);
                     
