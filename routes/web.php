@@ -125,6 +125,22 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
         Route::get('/create', [App\Http\Controllers\BroadcastMessageController::class, 'create'])->name('create');
         Route::get('/{broadcastMessage}', [App\Http\Controllers\BroadcastMessageController::class, 'show'])->name('show');
     });
+    
+    // Office management routes - accessible by both admin and superadmin
+    Route::prefix('offices')->name('offices.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\OfficeController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\OfficeController::class, 'create'])->name('create');
+        Route::get('/{office}', [\App\Http\Controllers\OfficeController::class, 'show'])->name('show');
+        Route::get('/{office}/edit', [\App\Http\Controllers\OfficeController::class, 'edit'])->name('edit');
+    });
+    
+    // Address management routes - accessible by both admin and superadmin
+    Route::prefix('addresses')->name('addresses.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\AddressController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\AddressController::class, 'create'])->name('create');
+        Route::get('/{address}', [\App\Http\Controllers\AddressController::class, 'show'])->name('show');
+        Route::get('/{address}/edit', [\App\Http\Controllers\AddressController::class, 'edit'])->name('edit');
+    });
 });
 
 // Customer routes
