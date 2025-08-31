@@ -13,6 +13,10 @@ use App\Models\ConsolidatedPackage;
 use App\Policies\ConsolidatedPackagePolicy;
 use App\Models\BroadcastMessage;
 use App\Policies\BroadcastMessagePolicy;
+use App\Models\Office;
+use App\Policies\OfficePolicy;
+use App\Models\Address;
+use App\Policies\AddressPolicy;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 
@@ -28,6 +32,8 @@ class AuthServiceProvider extends ServiceProvider
         Package::class => PackagePolicy::class,
         ConsolidatedPackage::class => ConsolidatedPackagePolicy::class,
         BroadcastMessage::class => BroadcastMessagePolicy::class,
+        Office::class => OfficePolicy::class,
+        Address::class => AddressPolicy::class,
     ];
 
     /**

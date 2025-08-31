@@ -6,14 +6,14 @@
   - Implement authentication middleware and basic authorization
   - _Requirements: 3.1, 3.2_
 
-- [ ] 2. Create authorization policies
-- [ ] 2.1 Implement OfficePolicy with access control methods
+- [x] 2. Create authorization policies
+- [x] 2.1 Implement OfficePolicy with access control methods
   - Write OfficePolicy class with viewAny, view, create, update, delete methods
   - Implement admin/superadmin authorization logic
   - Add relationship dependency checks for delete operations
   - _Requirements: 4.1, 4.3_
 
-- [ ] 2.2 Implement AddressPolicy with access control methods
+- [x] 2.2 Implement AddressPolicy with access control methods
   - Write AddressPolicy class with viewAny, view, create, update, delete methods
   - Implement admin/superadmin authorization logic for all operations
   - _Requirements: 4.1, 4.3_

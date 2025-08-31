@@ -14,11 +14,6 @@ class Office extends Model
         'address',
     ];
 
-    public function manifests()
-    {
-        return $this->hasMany(Manifest::class);
-    }
-
     public function packages()
     {
         return $this->hasMany(Package::class);
@@ -26,6 +21,6 @@ class Office extends Model
 
     public function profiles()
     {
-        return $this->hasMany(Profile::class);
+        return $this->hasMany(Profile::class, 'pickup_location');
     }
 }
