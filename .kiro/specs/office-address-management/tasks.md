@@ -62,22 +62,22 @@
   - Write component tests for form validation and primary address logic
   - _Requirements: 2.2, 2.3, 2.4, 2.5, 2.6, 4.2, 4.5_
 
-- [ ] 6. Create view templates for office management
-- [ ] 6.1 Create office index view with search and table layout
+- [x] 6. Create view templates for office management
+- [x] 6.1 Create office index view with search and table layout
   - Build Blade template for office listing page
   - Implement responsive table with search bar and pagination
   - Add delete confirmation modal with relationship warnings
   - Style with Tailwind CSS matching existing admin pages
   - _Requirements: 1.1, 1.6, 1.7, 6.1_
 
-- [ ] 6.2 Create office create and edit form views
+- [x] 6.2 Create office create and edit form views
   - Build Blade templates for office creation and editing forms
   - Implement form layouts with validation error display
   - Add breadcrumb navigation and consistent styling
   - Include success/error flash message display
   - _Requirements: 1.2, 1.3, 1.5, 4.1, 4.5_
 
-- [ ] 6.3 Create office show view with relationship details
+- [x] 6.3 Create office show view with relationship details
   - Build Blade template for office detail page
   - Display office information with associated record counts
   - Add links to view related manifests, packages, and profiles
