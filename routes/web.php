@@ -173,5 +173,9 @@ if (app()->environment(['local', 'testing'])) {
         Route::get('/test-consolidation-toggle', function () {
             return view('test.consolidation-toggle');
         })->name('test.consolidation-toggle');
+        
+        Route::get('/test-html5-editor', function () {
+            return view('test-editor');
+        })->name('test.html5-editor');
     });
 }

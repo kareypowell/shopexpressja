@@ -151,7 +151,7 @@ class BroadcastComposer extends Component
         $config = HTMLPurifier_Config::createDefault();
         
         // Allow safe HTML tags and attributes
-        $config->set('HTML.Allowed', 'p,br,strong,b,em,i,u,h1,h2,h3,h4,h5,h6,ul,ol,li,a[href|title],img[src|alt|width|height|style],table,thead,tbody,tr,th,td,blockquote,div[class|style],span[style]');
+        $config->set('HTML.Allowed', 'p,br,strong,b,em,i,u,h1,h2,h3,h4,h5,h6,ul,ol,li,a[href|title],img[src|alt|width|height|style],table,thead,tbody,tr,th,td,blockquote,div[class|style],span[class|style]');
         
         // Allow some CSS properties for styling
         $config->set('CSS.AllowedProperties', 'font-weight,font-style,text-decoration,color,background-color,text-align,margin,padding,border,width,height');

@@ -14,14 +14,9 @@ require("laravel-mix-tailwind");
  */
 
 mix.js("resources/js/app.js", "public/js/app.js")
+    .js("resources/js/html5-editor.js", "public/js/html5-editor.js")
     .sass("resources/sass/app.scss", "public/css/app.css")
     .tailwind("./tailwind.config.js")
-    .copy("node_modules/tinymce/skins", "public/js/skins")
-    .copy("node_modules/tinymce/themes", "public/js/themes")
-    .copy("node_modules/tinymce/plugins", "public/js/plugins")
-    .copy("node_modules/tinymce/models", "public/js/models")
-    .copy("node_modules/tinymce/icons", "public/js/icons")
-    .copy("node_modules/tinymce/tinymce.min.js", "public/js/tinymce.min.js")
     .sourceMaps();
 
 if (mix.inProduction()) {

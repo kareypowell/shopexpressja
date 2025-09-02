@@ -434,8 +434,8 @@
         </div>
     @endif
 
-    <!-- TinyMCE Script -->
-    <script src="https://cdn.tiny.cloud/1/{{ env('TINYMCE_API_KEY') }}/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+    <!-- HTML5 Editor Script -->
+    <script src="{{ mix('js/html5-editor.js') }}"></script>
     <script>
         // Available placeholders for customer personalization
         const availablePlaceholders = [
@@ -454,84 +454,45 @@
         ];
 
         document.addEventListener('DOMContentLoaded', function() {
-            tinymce.init({
-                selector: '#content',
+            // Initialize HTML5 Editor
+            const editor = new HTML5Editor('#content', {
                 height: 400,
-                menubar: false,
-                plugins: [
-                    'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                    'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                    'insertdatetime', 'media', 'table', 'help', 'wordcount', 'mentions'
-                ],
-                toolbar: 'undo redo | blocks | ' +
-                    'bold italic forecolor | alignleft aligncenter ' +
-                    'alignright alignjustify | bullist numlist outdent indent | ' +
-                    'placeholders | removeformat | help',
-                content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; } .placeholder { background-color: #e3f2fd; padding: 2px 4px; border-radius: 3px; color: #1976d2; font-weight: bold; }',
-                branding: false,
-                promotion: false,
-                skin: 'oxide',
-                content_css: 'default',
-                valid_elements: 'p,br,strong,em,u,h1,h2,h3,h4,h5,h6,ul,ol,li,a[href|title],img[src|alt|width|height],table,thead,tbody,tr,th,td,blockquote,div[class],span[class]',
-                invalid_elements: 'script,object,embed,iframe',
-                mentions: {
-                    source: availablePlaceholders.map(placeholder => ({
-                        id: placeholder.value,
-                        text: placeholder.text,
-                        description: placeholder.description
-                    })),
-                    delimiter: '@',
-                    insert: function (item) {
-                        return '<span class="placeholder">' + item.id + '</span>';
+                placeholders: availablePlaceholders,
+                onChange: function(content) {
+                    // Sync content with Livewire
+                    if (window.livewire && window.livewire.find) {
+                        window.livewire.find('{{ $this->id }}').set('content', content);
                     }
                 },
-                
-                setup: function (editor) {
-                    // Add custom placeholder button
-                    editor.ui.registry.addMenuButton('placeholders', {
-                        text: 'Placeholders',
-                        icon: 'template',
-                        fetch: function (callback) {
-                            const items = availablePlaceholders.map(placeholder => ({
-                                type: 'menuitem',
-                                text: placeholder.text,
-                                onAction: function () {
-                                    editor.insertContent('<span class="placeholder">' + placeholder.value + '</span>');
-                                }
-                            }));
-                            callback(items);
+                onKeyup: function(content) {
+                    // Sync content with Livewire
+                    if (window.livewire && window.livewire.find) {
+                        window.livewire.find('{{ $this->id }}').set('content', content);
+                    }
+                },
+                onInit: function(editorInstance) {
+                    // Set initial content from Livewire
+                    if (window.livewire && window.livewire.find) {
+                        const initialContent = window.livewire.find('{{ $this->id }}').get('content');
+                        if (initialContent) {
+                            editorInstance.setContent(initialContent);
+                        }
+                    }
+                }
+            });
+
+            // Listen for Livewire updates to sync content
+            window.addEventListener('livewire:load', function () {
+                if (window.Livewire && window.Livewire.hook) {
+                    Livewire.hook('message.processed', (message, component) => {
+                        if (component.fingerprint.name === 'admin.broadcast-composer') {
+                            const currentContent = editor.getContent();
+                            const livewireContent = window.livewire.find('{{ $this->id }}').get('content');
+                            if (currentContent !== livewireContent) {
+                                editor.setContent(livewireContent || '');
+                            }
                         }
                     });
-
-                    // Sync content with Livewire
-                    editor.on('change', function () {
-                        window.livewire.find('{{ $this->id }}').set('content', editor.getContent());
-                    });
-                    
-                    editor.on('keyup', function () {
-                        window.livewire.find('{{ $this->id }}').set('content', editor.getContent());
-                    });
-
-                    // Listen for Livewire updates to sync content
-                    window.addEventListener('livewire:load', function () {
-                        Livewire.hook('message.processed', (message, component) => {
-                            if (component.fingerprint.name === 'admin.broadcast-composer') {
-                                const currentContent = editor.getContent();
-                                const livewireContent = window.livewire.find('{{ $this->id }}').get('content');
-                                if (currentContent !== livewireContent) {
-                                    editor.setContent(livewireContent || '');
-                                }
-                            }
-                        });
-                    });
-                },
-                
-                init_instance_callback: function(editor) {
-                    // Set initial content from Livewire
-                    const initialContent = window.livewire.find('{{ $this->id }}').get('content');
-                    if (initialContent) {
-                        editor.setContent(initialContent);
-                    }
                 }
             });
         });

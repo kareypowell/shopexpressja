@@ -526,8 +526,10 @@ class BroadcastMessageService
                 \Log::info('Placeholder replacement debug', [
                     'customer_id' => $recipient->id,
                     'customer_first_name' => $recipient->first_name,
-                    'original_content' => substr($broadcastMessage->content, 0, 200),
-                    'processed_content' => substr($personalizedContent, 0, 200)
+                    'original_content' => $broadcastMessage->content,
+                    'processed_content' => $personalizedContent,
+                    'contains_placeholder_spans' => strpos($broadcastMessage->content, 'class="placeholder') !== false,
+                    'contains_raw_placeholders' => strpos($broadcastMessage->content, '{customer.first_name}') !== false,
                 ]);
                 
                 // Send the email using the CustomerBroadcastEmail mailable with personalized content
@@ -594,10 +596,19 @@ class BroadcastMessageService
         // Replace placeholders in content
         $processedContent = str_replace(array_keys($placeholders), array_values($placeholders), $content);
         
-        // Also handle placeholders wrapped in span tags (from TinyMCE)
+        // Also handle placeholders wrapped in span tags (from HTML5 Editor and TinyMCE)
         foreach ($placeholders as $placeholder => $value) {
-            $spanPattern = '/<span[^>]*class="[^"]*placeholder[^"]*"[^>]*>' . preg_quote($placeholder, '/') . '<\/span>/i';
-            $processedContent = preg_replace($spanPattern, $value, $processedContent);
+            // More flexible pattern to match span tags with placeholder class
+            $patterns = [
+                // Match span with class containing "placeholder"
+                '/<span[^>]*class="[^"]*placeholder[^"]*"[^>]*>' . preg_quote($placeholder, '/') . '<\/span>/i',
+                // Match span with any attributes containing placeholder text
+                '/<span[^>]*>' . preg_quote($placeholder, '/') . '<\/span>/i'
+            ];
+            
+            foreach ($patterns as $pattern) {
+                $processedContent = preg_replace($pattern, $value, $processedContent);
+            }
         }
         
         return $processedContent;
