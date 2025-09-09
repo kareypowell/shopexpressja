@@ -25,6 +25,13 @@ class Manifest extends Model
         'is_open',
     ];
 
+    protected $casts = [
+        'is_open' => 'boolean',
+        'shipment_date' => 'date',
+        'estimated_arrival_date' => 'date',
+        'exchange_rate' => 'decimal:4',
+    ];
+
     public function scopeSearch($query, $term)
     {
         return $query->where(

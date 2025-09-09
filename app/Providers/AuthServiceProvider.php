@@ -17,6 +17,8 @@ use App\Models\Office;
 use App\Policies\OfficePolicy;
 use App\Models\Address;
 use App\Policies\AddressPolicy;
+use App\Models\Manifest;
+use App\Policies\ManifestPolicy;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 
@@ -34,6 +36,7 @@ class AuthServiceProvider extends ServiceProvider
         BroadcastMessage::class => BroadcastMessagePolicy::class,
         Office::class => OfficePolicy::class,
         Address::class => AddressPolicy::class,
+        Manifest::class => ManifestPolicy::class,
     ];
 
     /**
