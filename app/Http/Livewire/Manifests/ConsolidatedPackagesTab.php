@@ -7,6 +7,7 @@ use App\Models\ConsolidatedPackage;
 use App\Models\Manifest;
 use App\Services\PackageConsolidationService;
 use App\Services\PackageFeeService;
+use App\Services\ManifestLockService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -47,7 +48,8 @@ class ConsolidatedPackagesTab extends Component
         'preserveTabState' => 'handlePreserveState',
         'tabSwitched' => 'handleTabSwitch',
         'refreshConsolidatedPackages' => '$refresh',
-        'packageStatusUpdated' => '$refresh'
+        'packageStatusUpdated' => '$refresh',
+        'manifestUnlocked' => '$refresh'
     ];
 
     protected $rules = [
@@ -61,6 +63,20 @@ class ConsolidatedPackagesTab extends Component
         $this->manifest = $manifest;
     }
 
+    /**
+     * Check if the current user can edit the manifest
+     */
+    public function getCanEditManifestProperty(): bool
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return false;
+        }
+        
+        $lockService = app(ManifestLockService::class);
+        return $lockService->canEdit($this->manifest, $user);
+    }
+
     public function render()
     {
         $consolidatedPackages = $this->getConsolidatedPackages();
@@ -69,6 +85,7 @@ class ConsolidatedPackagesTab extends Component
         return view('livewire.manifests.consolidated-packages-tab', [
             'consolidatedPackages' => $consolidatedPackages,
             'statusOptions' => $statusOptions,
+            'canEdit' => $this->canEditManifest,
         ]);
     }
 
@@ -176,6 +193,13 @@ class ConsolidatedPackagesTab extends Component
 
     public function confirmBulkStatusUpdate()
     {
+        if (!$this->canEditManifest) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Cannot update package status on a closed manifest.',
+            ]);
+            return;
+        }
+
         $this->validate([
             'bulkStatus' => 'required|string',
             'selectedConsolidatedPackages' => 'required|array|min:1',
@@ -261,6 +285,13 @@ class ConsolidatedPackagesTab extends Component
 
     public function updateConsolidatedPackageStatus($consolidatedPackageId, $newStatus)
     {
+        if (!$this->canEditManifest) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Cannot update package status on a closed manifest.',
+            ]);
+            return;
+        }
+
         try {
             $consolidatedPackage = ConsolidatedPackage::findOrFail($consolidatedPackageId);
             
@@ -388,6 +419,13 @@ class ConsolidatedPackagesTab extends Component
 
     public function showUnconsolidationModal($consolidatedPackageId)
     {
+        if (!$this->canEditManifest) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Cannot unconsolidate packages on a closed manifest.',
+            ]);
+            return;
+        }
+
         $this->unconsolidatingPackageId = $consolidatedPackageId;
         $this->unconsolidationNotes = '';
         $this->showUnconsolidationModal = true;
@@ -402,6 +440,13 @@ class ConsolidatedPackagesTab extends Component
 
     public function confirmUnconsolidation()
     {
+        if (!$this->canEditManifest) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Cannot unconsolidate packages on a closed manifest.',
+            ]);
+            return;
+        }
+
         $this->validate([
             'unconsolidationNotes' => 'nullable|string|max:500'
         ]);

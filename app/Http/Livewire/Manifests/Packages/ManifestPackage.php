@@ -21,11 +21,14 @@ use App\Rules\ValidPackageItems;
 use App\Exceptions\SeaRateNotFoundException;
 use App\Enums\PackageStatus;
 use App\Services\PackageStatusService;
+use App\Services\ManifestLockService;
 use Livewire\WithPagination;
 
 class ManifestPackage extends Component
 {
     use WithPagination;
+
+    protected $listeners = ['manifestUnlocked' => 'refreshManifestData'];
 
     public bool $isOpen = false;
     public int $user_id = 0;
@@ -66,6 +69,7 @@ class ManifestPackage extends Component
 
     // Services
     protected $packageStatusService;
+    protected $manifestLockService;
     
     // Customer search properties
     public string $customerSearch = '';
@@ -113,6 +117,9 @@ class ManifestPackage extends Component
         // Initialize package status service
         $this->packageStatusService = app(PackageStatusService::class);
         
+        // Initialize manifest lock service
+        $this->manifestLockService = app(ManifestLockService::class);
+        
         // Ensure selected packages array is properly initialized
         $this->selectedPackages = [];
         $this->selectAll = false;
@@ -129,8 +136,26 @@ class ManifestPackage extends Component
         return $this->packageStatusService;
     }
 
+    /**
+     * Get the manifest lock service instance
+     */
+    protected function getManifestLockService(): ManifestLockService
+    {
+        if (!$this->manifestLockService) {
+            $this->manifestLockService = app(ManifestLockService::class);
+        }
+        return $this->manifestLockService;
+    }
+
     public function create()
     {
+        if (!$this->canEditManifest) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Cannot add packages to a closed manifest.',
+            ]);
+            return;
+        }
+
         $this->resetInputFields();
         $this->openModal();
     }
@@ -507,6 +532,13 @@ class ManifestPackage extends Component
      */
     public function showBulkStatusUpdate()
     {
+        if (!$this->canEditManifest) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Cannot update package status on a closed manifest.',
+            ]);
+            return;
+        }
+
         if (empty($this->selectedPackages)) {
             $this->dispatchBrowserEvent('toastr:warning', [
                 'message' => 'Please select packages to update.',
@@ -533,6 +565,13 @@ class ManifestPackage extends Component
      */
     public function confirmBulkStatusUpdate()
     {
+        if (!$this->canEditManifest) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Cannot update package status on a closed manifest.',
+            ]);
+            return;
+        }
+
         if (empty($this->bulkStatus)) {
             $this->dispatchBrowserEvent('toastr:error', [
                 'message' => 'Please select a status to update to.',
@@ -628,6 +667,13 @@ class ManifestPackage extends Component
      */
     public function updateConsolidatedPackageStatus($consolidatedPackageId, $newStatus)
     {
+        if (!$this->canEditManifest) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Cannot update package status on a closed manifest.',
+            ]);
+            return;
+        }
+
         try {
             $consolidatedPackage = ConsolidatedPackage::findOrFail($consolidatedPackageId);
             
@@ -672,6 +718,13 @@ class ManifestPackage extends Component
      */
     public function showConsolidationModal()
     {
+        if (!$this->canEditManifest) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Cannot consolidate packages on a closed manifest.',
+            ]);
+            return;
+        }
+
         if (empty($this->selectedPackages)) {
             $this->dispatchBrowserEvent('toastr:warning', [
                 'message' => 'Please select at least 2 packages to consolidate.',
@@ -754,6 +807,13 @@ class ManifestPackage extends Component
      */
     public function confirmConsolidation()
     {
+        if (!$this->canEditManifest) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Cannot consolidate packages on a closed manifest.',
+            ]);
+            return;
+        }
+
         if (empty($this->selectedPackages) || count($this->selectedPackages) < 2) {
             $this->dispatchBrowserEvent('toastr:error', [
                 'message' => 'Please select at least 2 packages to consolidate.',
@@ -798,6 +858,13 @@ class ManifestPackage extends Component
      */
     public function unconsolidatePackage($consolidatedPackageId)
     {
+        if (!$this->canEditManifest) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Cannot unconsolidate packages on a closed manifest.',
+            ]);
+            return;
+        }
+
         try {
             $consolidatedPackage = ConsolidatedPackage::findOrFail($consolidatedPackageId);
             $consolidationService = app(\App\Services\PackageConsolidationService::class);
@@ -1433,12 +1500,41 @@ class ManifestPackage extends Component
         return Manifest::find($this->manifest_id);
     }
 
+    /**
+     * Check if the current user can edit the manifest
+     */
+    public function getCanEditManifestProperty(): bool
+    {
+        $manifest = $this->manifest;
+        $user = auth()->user();
+        
+        if (!$manifest || !$user) {
+            return false;
+        }
+
+        $lockService = $this->getManifestLockService();
+        return $lockService->canEdit($manifest, $user);
+    }
+
+    /**
+     * Refresh manifest data when unlocked
+     */
+    public function refreshManifestData()
+    {
+        // Clear any cached manifest data
+        unset($this->manifest);
+        
+        // Refresh the component to show updated editing capabilities
+        $this->emit('$refresh');
+    }
+
     public function render()
     {
         $manifest = Manifest::find($this->manifest_id);
         
         return view('livewire.manifests.packages.manifest-package', [
-            'manifest' => $manifest
+            'manifest' => $manifest,
+            'canEdit' => $this->canEditManifest
         ]);
     }
 }

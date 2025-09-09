@@ -7,6 +7,19 @@
             @if($manifest && $manifest->name)
                 <p class="text-sm text-gray-600 mt-1">{{ $manifest->name }}</p>
             @endif
+            
+            <!-- Manifest Status Indicator -->
+            @if($manifest)
+                <div class="flex items-center mt-2">
+                    <span class="text-sm font-medium text-gray-700 mr-2">Status:</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $manifest->status_badge_class }}">
+                        {{ $manifest->status_label }}
+                    </span>
+                    @if(!$manifest->is_open)
+                        <span class="text-xs text-gray-500 ml-2">(Read Only)</span>
+                    @endif
+                </div>
+            @endif
         </div>
 
         <div class="flex space-x-3">
@@ -14,11 +27,27 @@
                 Package Workflow
             </button>
 
-            <button wire:click="create()" class="bg-wax-flower-500 hover:bg-wax-flower-700 text-white font-bold py-2 px-4 rounded">
-                Add Package
-            </button>
+            @if($canEdit)
+                <button wire:click="create()" class="bg-wax-flower-500 hover:bg-wax-flower-700 text-white font-bold py-2 px-4 rounded">
+                    Add Package
+                </button>
+            @else
+                <div class="relative">
+                    <button disabled class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed">
+                        Add Package
+                    </button>
+                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                        Manifest is closed
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
+
+    <!-- Manifest Lock Status Component -->
+    @if($manifest)
+        @livewire('manifests.manifest-lock-status', ['manifest' => $manifest], key('lock-status-'.$manifest->id))
+    @endif
 
     <!-- Package Status Legend -->
     <div class="mb-6">
@@ -26,7 +55,7 @@
     </div>
 
     <!-- Bulk Actions Bar -->
-    @if($showBulkActions)
+    @if($showBulkActions && $canEdit)
     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
         <div class="flex items-center justify-between">
             <div class="flex items-center">
@@ -55,15 +84,56 @@
             </div>
         </div>
     </div>
+    @elseif($showBulkActions && !$canEdit)
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <span class="text-sm font-medium text-gray-700">
+                    {{ count($selectedPackages) }} package(s) selected
+                </span>
+                <span class="text-xs text-gray-500 ml-2">(Manifest is closed - no actions available)</span>
+            </div>
+            <div class="flex space-x-2">
+                <button wire:click="clearSelections()" 
+                        class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm">
+                    Clear Selection
+                </button>
+            </div>
+        </div>
+    </div>
     @endif
 
     <!-- Enhanced Manifest Summary -->
-    @livewire('manifests.enhanced-manifest-summary', ['manifest' => $this->manifest], key('summary-'.$manifest_id))
+    @if($manifest)
+        @livewire('manifests.enhanced-manifest-summary', ['manifest' => $manifest], key('summary-'.$manifest_id))
+    @endif
+
+    <!-- Read-only Notice for Closed Manifests -->
+    @if(!$canEdit)
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+            <div>
+                <h4 class="text-sm font-medium text-yellow-800">Manifest is Closed</h4>
+                <p class="text-sm text-yellow-700 mt-1">
+                    This manifest is locked and cannot be edited. Package information is displayed in read-only mode.
+                    @if(auth()->user() && auth()->user()->can('unlock', $manifest))
+                        Use the unlock button above to make changes if needed.
+                    @endif
+                </p>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <br>
     
     <!-- Tabbed Interface for Packages -->
-    @livewire('manifests.manifest-tabs-container', ['manifest' => $this->manifest], key('tabs-'.$manifest_id))
+    @if($manifest)
+        @livewire('manifests.manifest-tabs-container', ['manifest' => $manifest], key('tabs-'.$manifest_id))
+    @endif
 
     <!-- Status Update Modal -->
     @if($showStatusUpdateModal)

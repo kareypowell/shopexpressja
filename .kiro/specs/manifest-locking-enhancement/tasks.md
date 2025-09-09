@@ -46,7 +46,7 @@
   - Create responsive design for various screen sizes
   - _Requirements: 3.2, 3.6, 5.3, 5.4_
 
-- [ ] 8. Update ManifestPackage component for conditional editing
+- [x] 8. Update ManifestPackage component for conditional editing
   - Modify existing component to check manifest lock status
   - Hide edit controls when manifest is closed
   - Display read-only view for locked manifests
