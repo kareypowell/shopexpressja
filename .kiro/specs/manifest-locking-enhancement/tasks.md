@@ -19,14 +19,14 @@
   - Add error handling and logging for auto-closure operations
   - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 4. Enhance Manifest model with locking-related methods
+- [x] 4. Enhance Manifest model with locking-related methods
   - Add audits relationship to ManifestAudit model
   - Implement getStatusLabelAttribute and getStatusBadgeClassAttribute methods
   - Create canBeEdited method to check if manifest allows modifications
   - Add allPackagesDelivered method to check completion status
   - _Requirements: 1.1, 2.5, 5.1, 5.2_
 
-- [ ] 5. Update Manifest authorization policy for lock/unlock permissions
+- [x] 5. Update Manifest authorization policy for lock/unlock permissions
   - Enhance ManifestPolicy with edit method that checks is_open status
   - Add unlock method to control who can unlock closed manifests
   - Implement viewAudit method for audit trail access control
