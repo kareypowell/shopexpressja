@@ -42,6 +42,14 @@ class Manifest extends Model
     }
 
     /**
+     * Get the audit records for this manifest
+     */
+    public function audits()
+    {
+        return $this->hasMany(ManifestAudit::class)->orderBy('performed_at', 'desc');
+    }
+
+    /**
      * Check if this is a sea manifest
      */
     public function isSeaManifest(): bool
@@ -151,5 +159,38 @@ class Manifest extends Model
             });
 
         return $packagesWithCompleteVolumeData === $totalPackages;
+    }
+
+    /**
+     * Get the status label for display
+     */
+    public function getStatusLabelAttribute(): string
+    {
+        return $this->is_open ? 'Open' : 'Closed';
+    }
+
+    /**
+     * Get the CSS class for status badge
+     */
+    public function getStatusBadgeClassAttribute(): string
+    {
+        return $this->is_open ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+    }
+
+    /**
+     * Check if the manifest can be edited
+     */
+    public function canBeEdited(): bool
+    {
+        return $this->is_open;
+    }
+
+    /**
+     * Check if all packages in this manifest are delivered
+     */
+    public function allPackagesDelivered(): bool
+    {
+        return $this->packages()->where('status', '!=', 'delivered')->count() === 0 
+               && $this->packages()->count() > 0;
     }
 }
