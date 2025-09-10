@@ -67,14 +67,14 @@
   - Add lock status to manifest search and sorting
   - _Requirements: 5.1, 5.2_
 
-- [ ] 11. Create comprehensive test suite for locking functionality
+- [x] 11. Create comprehensive test suite for locking functionality
   - Write unit tests for ManifestLockService methods and validation
   - Create tests for Package Observer auto-closure functionality
   - Test ManifestAudit model relationships and query methods
   - Implement policy tests for edit and unlock permissions
   - _Requirements: All requirements - testing coverage_
 
-- [ ] 12. Create feature tests for complete locking workflows
+- [x] 12. Create feature tests for complete locking workflows
   - Test auto-closure when all packages marked as delivered
   - Test unlock process with reason validation and audit logging
   - Test conditional editing based on manifest lock status

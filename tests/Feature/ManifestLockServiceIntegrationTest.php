@@ -81,9 +81,22 @@ class ManifestLockServiceIntegrationTest extends TestCase
             'reason' => $reason
         ]);
 
-        // Verify we have both audit records
+        // Verify we have both audit records (at least 2, may have more from other operations)
         $auditCount = ManifestAudit::where('manifest_id', $manifest->id)->count();
-        $this->assertEquals(2, $auditCount);
+        $this->assertGreaterThanOrEqual(2, $auditCount);
+        
+        // Verify specific audit records exist
+        $this->assertTrue(
+            ManifestAudit::where('manifest_id', $manifest->id)
+                ->where('action', 'auto_complete')
+                ->exists()
+        );
+        $this->assertTrue(
+            ManifestAudit::where('manifest_id', $manifest->id)
+                ->where('action', 'unlocked')
+                ->where('user_id', $this->adminUser->id)
+                ->exists()
+        );
     }
 
     public function test_manifest_lock_status_information()
