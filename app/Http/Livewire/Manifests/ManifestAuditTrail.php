@@ -189,12 +189,16 @@ class ManifestAuditTrail extends Component
 
     private function getActionLabel($action)
     {
-        return match($action) {
-            'closed' => 'Closed',
-            'unlocked' => 'Unlocked',
-            'auto_complete' => 'Auto-closed (All Delivered)',
-            default => ucfirst($action)
-        };
+        switch ($action) {
+            case 'closed':
+                return 'Closed';
+            case 'unlocked':
+                return 'Unlocked';
+            case 'auto_complete':
+                return 'Auto-closed (All Delivered)';
+            default:
+                return ucfirst($action);
+        }
     }
 
     private function generateCsvContent($audits)

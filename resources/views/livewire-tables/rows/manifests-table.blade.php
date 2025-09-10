@@ -6,7 +6,7 @@
 
 <x-livewire-tables::table.cell>
   <div>
-    {{ $row->shipment_date }}
+    {{ $row->shipment_date->format('F j, Y') }}
   </div>
 </x-livewire-tables::table.cell>
 

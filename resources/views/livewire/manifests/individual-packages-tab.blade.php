@@ -240,6 +240,13 @@
                                                 Toggle Details
                                             </button>
                                             @if($canEdit)
+                                                <a 
+                                                    href="{{ route('admin.manifests.packages.edit', [$manifest->id, $package->id]) }}"
+                                                    onclick="event.stopPropagation(); closeIndividualDropdown('individual-dropdown-{{ $package->id }}')"
+                                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                >
+                                                    Edit Package
+                                                </a>
                                                 <button 
                                                     onclick="event.stopPropagation(); @this.showFeeEntryModal({{ $package->id }}); closeIndividualDropdown('individual-dropdown-{{ $package->id }}')"
                                                     class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
