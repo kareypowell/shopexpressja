@@ -239,12 +239,14 @@
                                             >
                                                 Toggle Details
                                             </button>
-                                            <button 
-                                                onclick="event.stopPropagation(); @this.showFeeEntryModal({{ $package->id }}); closeIndividualDropdown('individual-dropdown-{{ $package->id }}')"
-                                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                            >
-                                                Update Fees
-                                            </button>
+                                            @if($canEdit)
+                                                <button 
+                                                    onclick="event.stopPropagation(); @this.showFeeEntryModal({{ $package->id }}); closeIndividualDropdown('individual-dropdown-{{ $package->id }}')"
+                                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                >
+                                                    Update Fees
+                                                </button>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>

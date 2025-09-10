@@ -44,12 +44,16 @@ class ManifestAudit extends Model
      */
     public function getActionLabelAttribute(): string
     {
-        return match($this->action) {
-            'closed' => 'Closed',
-            'unlocked' => 'Unlocked',
-            'auto_complete' => 'Auto-closed (All Delivered)',
-            default => ucfirst($this->action)
-        };
+        switch ($this->action) {
+            case 'closed':
+                return 'Closed';
+            case 'unlocked':
+                return 'Unlocked';
+            case 'auto_complete':
+                return 'Auto-closed (All Delivered)';
+            default:
+                return ucfirst($this->action);
+        }
     }
 
     /**

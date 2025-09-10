@@ -139,6 +139,94 @@ class ManifestLockService
     }
 
     /**
+     * Manually lock/close a manifest with reason validation and audit logging
+     */
+    public function lockManifest(Manifest $manifest, User $user, string $reason): array
+    {
+        try {
+            // Validate that manifest is actually open first
+            if (!$manifest->is_open) {
+                return [
+                    'success' => false, 
+                    'message' => 'Manifest is already closed.'
+                ];
+            }
+
+            // Check if user has permission to edit (which includes closing)
+            if (!$user->can('edit', $manifest)) {
+                return [
+                    'success' => false, 
+                    'message' => 'You do not have permission to close this manifest.'
+                ];
+            }
+
+            // Validate reason
+            $trimmedReason = trim($reason);
+            if (empty($trimmedReason)) {
+                return [
+                    'success' => false, 
+                    'message' => 'A reason is required to close the manifest.'
+                ];
+            }
+
+            if (strlen($trimmedReason) < 10) {
+                return [
+                    'success' => false, 
+                    'message' => 'Reason must be at least 10 characters long.'
+                ];
+            }
+
+            if (strlen($trimmedReason) > 500) {
+                return [
+                    'success' => false, 
+                    'message' => 'Reason cannot exceed 500 characters.'
+                ];
+            }
+
+            // Perform lock operation in transaction
+            DB::transaction(function() use ($manifest, $user, $trimmedReason) {
+                // Update manifest to closed
+                $manifest->update(['is_open' => false]);
+
+                // Log the lock action
+                ManifestAudit::create([
+                    'manifest_id' => $manifest->id,
+                    'user_id' => $user->id,
+                    'action' => 'closed',
+                    'reason' => $trimmedReason,
+                    'performed_at' => now()
+                ]);
+            });
+
+            // Log successful lock
+            Log::info('Manifest locked successfully', [
+                'manifest_id' => $manifest->id,
+                'manifest_name' => $manifest->name,
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'reason' => $trimmedReason,
+            ]);
+
+            return [
+                'success' => true, 
+                'message' => 'Manifest locked successfully.'
+            ];
+
+        } catch (Exception $e) {
+            Log::error('Failed to lock manifest', [
+                'manifest_id' => $manifest->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false, 
+                'message' => 'An error occurred while locking the manifest. Please try again.'
+            ];
+        }
+    }
+
+    /**
      * Close a manifest with consistent handling and audit logging
      */
     private function closeManifest(Manifest $manifest, string $action, string $reason): bool

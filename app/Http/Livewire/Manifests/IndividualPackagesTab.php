@@ -340,6 +340,13 @@ class IndividualPackagesTab extends Component
 
     public function showFeeEntryModal($packageId)
     {
+        if (!$this->canEditManifest) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Cannot update package fees on a closed manifest.',
+            ]);
+            return;
+        }
+
         $this->feePackageId = $packageId;
         $this->feePackage = Package::with(['user.profile'])->findOrFail($packageId);
         
@@ -370,6 +377,13 @@ class IndividualPackagesTab extends Component
 
     public function processFeeUpdate()
     {
+        if (!$this->canEditManifest) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Cannot update package fees on a closed manifest.',
+            ]);
+            return;
+        }
+
         $this->validate([
             'customsDuty' => 'required|numeric|min:0',
             'storageFee' => 'required|numeric|min:0',

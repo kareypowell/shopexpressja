@@ -14,6 +14,7 @@ class ManifestsTable extends DataTableComponent
 
     public array $filterNames = [
         'type' => 'Type',
+        'status' => 'Status',
     ];
 
     public function filters(): array
@@ -24,6 +25,12 @@ class ManifestsTable extends DataTableComponent
                     '' => 'Any',
                     'air' => 'Air',
                     'sea' => 'Sea',
+                ]),
+            'status' => Filter::make('Status')
+                ->select([
+                    '' => 'Any',
+                    '1' => 'Open',
+                    '0' => 'Closed',
                 ]),
         ];
     }
@@ -51,7 +58,7 @@ class ManifestsTable extends DataTableComponent
                 ->sortable(),
             Column::make("Type", "type")
                 ->sortable(),
-            Column::make("Is open", "is_open")
+            Column::make("Status", "is_open")
                 ->sortable(),
             Column::make("Created at", "created_at")
                 ->sortable(),
@@ -68,7 +75,8 @@ class ManifestsTable extends DataTableComponent
                     ->when($this->getFilter('name'), fn($query, $name) => $query->where('name', $name))
                     ->when($this->getFilter('reservation_number'), fn($query, $reservation_number) => $query->where('reservation_number', $reservation_number))
                     ->when($this->getFilter('flight_number'), fn($query, $flight_number) => $query->where('flight_number', $flight_number))
-                    ->when($this->getFilter('type'), fn($query, $type) => $query->where('type', $type));
+                    ->when($this->getFilter('type'), fn($query, $type) => $query->where('type', $type))
+                    ->when($this->getFilter('status'), fn($query, $status) => $query->where('is_open', (bool) $status));
     }
 
     public function rowView(): string

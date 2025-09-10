@@ -342,6 +342,13 @@ class ConsolidatedPackagesTab extends Component
 
     public function showConsolidatedFeeEntryModal($consolidatedPackageId)
     {
+        if (!$this->canEditManifest) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Cannot update package fees on a closed manifest.',
+            ]);
+            return;
+        }
+
         $this->feeConsolidatedPackageId = $consolidatedPackageId;
         $this->feeConsolidatedPackage = ConsolidatedPackage::with(['packages.user.profile'])->findOrFail($consolidatedPackageId);
         
@@ -379,6 +386,13 @@ class ConsolidatedPackagesTab extends Component
 
     public function processConsolidatedFeeUpdate()
     {
+        if (!$this->canEditManifest) {
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Cannot update package fees on a closed manifest.',
+            ]);
+            return;
+        }
+
         try {
             $consolidatedPackage = ConsolidatedPackage::findOrFail($this->feeConsolidatedPackageId);
             

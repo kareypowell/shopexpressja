@@ -21,15 +21,27 @@ class ManifestLockStatusComponentTest extends TestCase
         parent::setUp();
         
         // Create roles manually
-        Role::create(['id' => 1, 'name' => 'Admin', 'description' => 'Administrator']);
-        Role::create(['id' => 2, 'name' => 'Super Admin', 'description' => 'Super Administrator']);
-        Role::create(['id' => 3, 'name' => 'Customer', 'description' => 'Customer']);
+        Role::create(['id' => 1, 'name' => 'admin', 'description' => 'Administrator']);
+        Role::create(['id' => 2, 'name' => 'superadmin', 'description' => 'Super Administrator']);
+        Role::create(['id' => 3, 'name' => 'customer', 'description' => 'Customer']);
+    }
+
+    private function createAdminUser(): User
+    {
+        $adminRole = Role::where('name', 'admin')->first();
+        return User::factory()->create(['role_id' => $adminRole->id]);
+    }
+
+    private function createCustomerUser(): User
+    {
+        $customerRole = Role::where('name', 'customer')->first();
+        return User::factory()->create(['role_id' => $customerRole->id]);
     }
 
     /** @test */
     public function it_displays_open_manifest_status_correctly()
     {
-        $user = User::factory()->create(['role_id' => 1]); // Admin
+        $user = $this->createAdminUser();
         $manifest = Manifest::factory()->create(['is_open' => true]);
 
         $this->actingAs($user);
@@ -43,7 +55,7 @@ class ManifestLockStatusComponentTest extends TestCase
     /** @test */
     public function it_displays_closed_manifest_status_correctly()
     {
-        $user = User::factory()->create(['role_id' => 1]); // Admin
+        $user = $this->createAdminUser();
         $manifest = Manifest::factory()->create(['is_open' => false]);
 
         $this->actingAs($user);
@@ -57,7 +69,7 @@ class ManifestLockStatusComponentTest extends TestCase
     /** @test */
     public function it_shows_unlock_modal_when_button_clicked()
     {
-        $user = User::factory()->create(['role_id' => 1]); // Admin
+        $user = $this->createAdminUser();
         $manifest = Manifest::factory()->create(['is_open' => false]);
 
         $this->actingAs($user);
@@ -71,7 +83,7 @@ class ManifestLockStatusComponentTest extends TestCase
     /** @test */
     public function it_validates_unlock_reason_is_required()
     {
-        $user = User::factory()->create(['role_id' => 1]); // Admin
+        $user = $this->createAdminUser();
         $manifest = Manifest::factory()->create(['is_open' => false]);
 
         $this->actingAs($user);
@@ -86,7 +98,7 @@ class ManifestLockStatusComponentTest extends TestCase
     /** @test */
     public function it_validates_unlock_reason_minimum_length()
     {
-        $user = User::factory()->create(['role_id' => 1]); // Admin
+        $user = $this->createAdminUser();
         $manifest = Manifest::factory()->create(['is_open' => false]);
 
         $this->actingAs($user);
@@ -101,7 +113,7 @@ class ManifestLockStatusComponentTest extends TestCase
     /** @test */
     public function it_validates_unlock_reason_maximum_length()
     {
-        $user = User::factory()->create(['role_id' => 1]); // Admin
+        $user = $this->createAdminUser();
         $manifest = Manifest::factory()->create(['is_open' => false]);
 
         $this->actingAs($user);
@@ -118,18 +130,19 @@ class ManifestLockStatusComponentTest extends TestCase
     /** @test */
     public function it_successfully_unlocks_manifest_with_valid_reason()
     {
-        $user = User::factory()->create(['role_id' => 1]); // Admin
+        $user = $this->createAdminUser();
         $manifest = Manifest::factory()->create(['is_open' => false]);
 
         $this->actingAs($user);
 
         $validReason = 'Need to update package information due to customer request';
 
-        Livewire::test(ManifestLockStatus::class, ['manifest' => $manifest])
+        $component = Livewire::test(ManifestLockStatus::class, ['manifest' => $manifest])
             ->set('showUnlockModal', true)
             ->set('unlockReason', $validReason)
-            ->call('unlockManifest')
-            ->assertSet('showUnlockModal', false)
+            ->call('unlockManifest');
+            
+        $component->assertSet('showUnlockModal', false)
             ->assertSet('unlockReason', '')
             ->assertEmitted('manifestUnlocked');
 
@@ -148,7 +161,7 @@ class ManifestLockStatusComponentTest extends TestCase
     /** @test */
     public function it_prevents_unauthorized_users_from_unlocking()
     {
-        $user = User::factory()->create(['role_id' => 3]); // Customer
+        $user = $this->createCustomerUser();
         $manifest = Manifest::factory()->create(['is_open' => false]);
 
         $this->actingAs($user);
@@ -161,7 +174,7 @@ class ManifestLockStatusComponentTest extends TestCase
     /** @test */
     public function it_cancels_unlock_modal_correctly()
     {
-        $user = User::factory()->create(['role_id' => 1]); // Admin
+        $user = $this->createAdminUser();
         $manifest = Manifest::factory()->create(['is_open' => false]);
 
         $this->actingAs($user);
@@ -177,7 +190,7 @@ class ManifestLockStatusComponentTest extends TestCase
     /** @test */
     public function it_validates_unlock_reason_on_input_change()
     {
-        $user = User::factory()->create(['role_id' => 1]); // Admin
+        $user = $this->createAdminUser();
         $manifest = Manifest::factory()->create(['is_open' => false]);
 
         $this->actingAs($user);
@@ -192,7 +205,7 @@ class ManifestLockStatusComponentTest extends TestCase
     /** @test */
     public function it_does_not_show_unlock_button_for_unauthorized_users()
     {
-        $user = User::factory()->create(['role_id' => 3]); // Customer
+        $user = $this->createCustomerUser();
         $manifest = Manifest::factory()->create(['is_open' => false]);
 
         $this->actingAs($user);
@@ -204,7 +217,7 @@ class ManifestLockStatusComponentTest extends TestCase
     /** @test */
     public function it_refreshes_manifest_after_successful_unlock()
     {
-        $user = User::factory()->create(['role_id' => 1]); // Admin
+        $user = $this->createAdminUser();
         $manifest = Manifest::factory()->create(['is_open' => false]);
 
         $this->actingAs($user);

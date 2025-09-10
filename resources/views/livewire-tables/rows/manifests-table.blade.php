@@ -60,10 +60,20 @@
 
 <x-livewire-tables::table.cell>
   <div>
-    @if($row->is_open == true)
-    <x-badges.primary>Yes</x-badges.primary>
-    @elseif($row->is_open == false)
-    <x-badges.success>No</x-badges.success>
+    @if($row->is_open)
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+        </svg>
+        Open
+      </span>
+    @else
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
+        </svg>
+        Closed
+      </span>
     @endif
   </div>
 </x-livewire-tables::table.cell>

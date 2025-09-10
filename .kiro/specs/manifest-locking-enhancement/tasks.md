@@ -60,7 +60,7 @@
   - Add styling to distinguish from editable interface
   - _Requirements: 1.3, 1.4, 5.3, 5.4, 5.5_
 
-- [ ] 10. Update manifest list views to show lock status
+- [x] 10. Update manifest list views to show lock status
   - Add status column to manifest index with visual indicators
   - Implement status badge styling for open/closed states
   - Update filtering options to include manifest status
