@@ -5,12 +5,19 @@ namespace App\Services;
 use App\Models\Manifest;
 use App\Models\ManifestAudit;
 use App\Models\User;
+use App\Services\ManifestNotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
 class ManifestLockService
 {
+    protected ManifestNotificationService $notificationService;
+
+    public function __construct(ManifestNotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
     /**
      * Check if a manifest can be edited by a user
      */
@@ -110,6 +117,13 @@ class ManifestLockService
                 ]);
             });
 
+            // Send unlock notification to stakeholders
+            $notificationResult = $this->notificationService->sendUnlockNotification(
+                $manifest, 
+                $user, 
+                $trimmedReason
+            );
+
             // Log successful unlock
             Log::info('Manifest unlocked successfully', [
                 'manifest_id' => $manifest->id,
@@ -117,11 +131,21 @@ class ManifestLockService
                 'user_id' => $user->id,
                 'user_name' => $user->name,
                 'reason' => $trimmedReason,
+                'notification_sent' => $notificationResult['success'],
+                'notification_recipients' => $notificationResult['recipients_count'] ?? 0,
             ]);
+
+            $message = 'Manifest unlocked successfully.';
+            if ($notificationResult['success'] && $notificationResult['recipients_count'] > 0) {
+                $message .= ' Notification sent to ' . $notificationResult['recipients_count'] . ' stakeholder(s).';
+            } elseif (!$notificationResult['success']) {
+                $message .= ' Warning: Notification delivery failed.';
+            }
 
             return [
                 'success' => true, 
-                'message' => 'Manifest unlocked successfully.'
+                'message' => $message,
+                'notification_result' => $notificationResult
             ];
 
         } catch (Exception $e) {

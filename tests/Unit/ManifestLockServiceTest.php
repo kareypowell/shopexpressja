@@ -25,7 +25,7 @@ class ManifestLockServiceTest extends TestCase
     {
         parent::setUp();
         
-        $this->service = new ManifestLockService();
+        $this->service = app(ManifestLockService::class);
         
         // Create roles
         $adminRole = Role::factory()->create(['name' => 'admin']);

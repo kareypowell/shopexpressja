@@ -51,7 +51,7 @@ class ManifestLockStatus extends Component
 
     public function unlockManifest()
     {
-        $this->validate();
+        $this->validate(['unlockReason' => 'required|string|min:10|max:500']);
 
         if (!auth()->user()->can('unlock', $this->manifest)) {
             $this->addError('unlock', 'You do not have permission to unlock this manifest.');
