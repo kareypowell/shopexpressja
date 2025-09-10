@@ -88,11 +88,18 @@ class IndividualPackagesTab extends Component
     {
         $packages = $this->getIndividualPackages();
         $statusOptions = $this->getStatusOptions();
+        $canEdit = $this->canEditManifest;
         
-        return view('livewire.manifests.individual-packages-tab', [
+        // Use read-only template when manifest is closed
+        $template = $canEdit 
+            ? 'livewire.manifests.individual-packages-tab'
+            : 'livewire.manifests.packages.read-only-package-display';
+        
+        return view($template, [
             'packages' => $packages,
             'statusOptions' => $statusOptions,
-            'canEdit' => $this->canEditManifest,
+            'canEdit' => $canEdit,
+            'manifest' => $this->manifest,
         ]);
     }
 

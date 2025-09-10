@@ -81,11 +81,18 @@ class ConsolidatedPackagesTab extends Component
     {
         $consolidatedPackages = $this->getConsolidatedPackages();
         $statusOptions = $this->getStatusOptions();
+        $canEdit = $this->canEditManifest;
         
-        return view('livewire.manifests.consolidated-packages-tab', [
+        // Use read-only template when manifest is closed
+        $template = $canEdit 
+            ? 'livewire.manifests.consolidated-packages-tab'
+            : 'livewire.manifests.packages.read-only-consolidated-display';
+        
+        return view($template, [
             'consolidatedPackages' => $consolidatedPackages,
             'statusOptions' => $statusOptions,
-            'canEdit' => $this->canEditManifest,
+            'canEdit' => $canEdit,
+            'manifest' => $this->manifest,
         ]);
     }
 
