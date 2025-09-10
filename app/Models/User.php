@@ -53,6 +53,13 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
+     * Cache for the user's role to avoid repeated database queries.
+     *
+     * @var Role|null
+     */
+    protected $roleCache = null;
+
+    /**
      * The attributes that should be mutated to dates.
      *
      * @var array
@@ -226,6 +233,78 @@ class User extends Authenticatable implements MustVerifyEmail
             default:
                 return $query->activeCustomers();
         }
+    }
+
+    /**
+     * Scope to get users with a specific role.
+     */
+    public function scopeWithRole($query, $roleName)
+    {
+        return $query->whereHas('role', function($q) use ($roleName) {
+            $q->where('name', strtolower($roleName));
+        });
+    }
+
+    /**
+     * Scope to get only admin users.
+     */
+    public function scopeAdmins($query)
+    {
+        return $query->withRole('admin');
+    }
+
+    /**
+     * Scope to get only superadmin users.
+     */
+    public function scopeSuperAdmins($query)
+    {
+        return $query->withRole('superadmin');
+    }
+
+    /**
+     * Scope to get only purchaser users.
+     */
+    public function scopePurchasers($query)
+    {
+        return $query->withRole('purchaser');
+    }
+
+    /**
+     * Scope to get only customer users (using new role-based approach).
+     */
+    public function scopeCustomerUsers($query)
+    {
+        return $query->withRole('customer');
+    }
+
+    /**
+     * Scope to get users with any of the given roles.
+     */
+    public function scopeWithAnyRole($query, array $roles)
+    {
+        return $query->whereHas('role', function($q) use ($roles) {
+            $q->whereIn('name', array_map('strtolower', $roles));
+        });
+    }
+
+    /**
+     * Scope to get users excluding specific roles.
+     */
+    public function scopeWithoutRole($query, $roleName)
+    {
+        return $query->whereDoesntHave('role', function($q) use ($roleName) {
+            $q->where('name', strtolower($roleName));
+        });
+    }
+
+    /**
+     * Scope to get users excluding any of the given roles.
+     */
+    public function scopeWithoutAnyRole($query, array $roles)
+    {
+        return $query->whereDoesntHave('role', function($q) use ($roles) {
+            $q->whereIn('name', array_map('strtolower', $roles));
+        });
     }
 
     /**
@@ -735,35 +814,103 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Check if the user has the given role.
      *
-     * @param string $role
+     * @param string|array $role
      * @return bool
      */
     public function hasRole($role)
     {
-        // Load role relationship if not already loaded
-        if (!$this->relationLoaded('role')) {
-            $this->load('role');
-        }
+        $userRole = $this->getCachedRole();
 
-        // Return false if user has no role assigned or role relationship is null
-        if (!$this->role) {
+        // Return false if user has no role assigned
+        if (!$userRole) {
             return false;
         }
 
         // Convert the input role string to an array if it's a comma-separated string
         if (is_string($role) && strpos($role, ',') !== false) {
             $roles = array_map('trim', explode(',', $role));
-            return in_array($this->role->name, $roles);
+            return in_array(strtolower($userRole->name), array_map('strtolower', $roles));
         }
 
         // If checking for a single role as a string
         if (is_string($role)) {
-            return $this->role->name === $role;
+            return strtolower($userRole->name) === strtolower($role);
         }
 
         // If checking for multiple roles passed as an array
         if (is_array($role)) {
-            return in_array($this->role->name, $role);
+            return in_array(strtolower($userRole->name), array_map('strtolower', $role));
+        }
+
+        return false;
+    }
+
+    /**
+     * Get the cached role for the user to avoid repeated database queries.
+     *
+     * @return Role|null
+     */
+    public function getCachedRole()
+    {
+        if ($this->roleCache === null) {
+            // Load role relationship if not already loaded
+            if (!$this->relationLoaded('role')) {
+                $this->load('role');
+            }
+            $this->roleCache = $this->role;
+        }
+
+        return $this->roleCache;
+    }
+
+    /**
+     * Clear the role cache. Useful when role is changed.
+     *
+     * @return void
+     */
+    public function clearRoleCache()
+    {
+        $this->roleCache = null;
+        $this->unsetRelation('role');
+    }
+
+    /**
+     * Check if the user has any of the given roles.
+     *
+     * @param array $roles
+     * @return bool
+     */
+    public function hasAnyRole(array $roles)
+    {
+        $userRole = $this->getCachedRole();
+
+        if (!$userRole) {
+            return false;
+        }
+
+        return in_array(strtolower($userRole->name), array_map('strtolower', $roles));
+    }
+
+    /**
+     * Check if the user has all of the given roles.
+     * Note: Since a user can only have one role in this system, this will only return true
+     * if the array contains exactly one role that matches the user's role.
+     *
+     * @param array $roles
+     * @return bool
+     */
+    public function hasAllRoles(array $roles)
+    {
+        $userRole = $this->getCachedRole();
+
+        if (!$userRole || empty($roles)) {
+            return false;
+        }
+
+        // Since users can only have one role, they can only have "all roles" 
+        // if the array contains exactly one role that matches theirs
+        if (count($roles) === 1) {
+            return in_array(strtolower($userRole->name), array_map('strtolower', $roles));
         }
 
         return false;
@@ -827,6 +974,58 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isPurchaser()
     {
         return $this->hasRole('purchaser');
+    }
+
+    /**
+     * Check if the user can manage other users.
+     *
+     * @return bool
+     */
+    public function canManageUsers()
+    {
+        return $this->hasAnyRole(['admin', 'superadmin']);
+    }
+
+    /**
+     * Check if the user can manage roles.
+     *
+     * @return bool
+     */
+    public function canManageRoles()
+    {
+        return $this->isSuperAdmin();
+    }
+
+    /**
+     * Check if the user can access the admin panel.
+     *
+     * @return bool
+     */
+    public function canAccessAdminPanel()
+    {
+        return $this->hasAnyRole(['admin', 'superadmin']);
+    }
+
+    /**
+     * Get the user's role name.
+     *
+     * @return string|null
+     */
+    public function getRoleName()
+    {
+        $role = $this->getCachedRole();
+        return $role ? $role->name : null;
+    }
+
+    /**
+     * Get the user's role description.
+     *
+     * @return string|null
+     */
+    public function getRoleDescription()
+    {
+        $role = $this->getCachedRole();
+        return $role ? $role->description : null;
     }
 
     /**
