@@ -15,7 +15,7 @@
   - Write unit tests for audit logging functionality
   - _Requirements: 3.4, 6.1, 6.2_
 
-- [ ] 3. Transform CustomerCreate component into UserCreate component
+- [x] 3. Transform CustomerCreate component into UserCreate component
   - Rename CustomerCreate to UserCreate and update class references
   - Add role selection dropdown with all available roles (admin, purchaser, customer, superadmin)
   - Implement role-specific field visibility (customer fields for customers, basic fields for admin/purchaser)

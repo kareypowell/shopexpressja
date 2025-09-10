@@ -146,4 +146,106 @@ trait HasBreadcrumbs
             ]
         ]);
     }
+
+    /**
+     * Get the users index breadcrumb item
+     *
+     * @return array
+     */
+    protected function getUsersIndexBreadcrumb(): array
+    {
+        return [
+            'title' => 'Users',
+            'url' => \Route::has('admin.users.index') ? route('admin.users.index') : null
+        ];
+    }
+
+    /**
+     * Generate breadcrumbs for user index page
+     *
+     * @return void
+     */
+    protected function setUserIndexBreadcrumbs()
+    {
+        $this->setBreadcrumbs([
+            $this->getHomeBreadcrumb(),
+            [
+                'title' => 'Users',
+                'url' => null
+            ]
+        ]);
+    }
+
+    /**
+     * Generate breadcrumbs for user create page
+     *
+     * @return void
+     */
+    protected function setUserCreateBreadcrumbs()
+    {
+        $this->setBreadcrumbs([
+            $this->getHomeBreadcrumb(),
+            $this->getUsersIndexBreadcrumb(),
+            [
+                'title' => 'Create User',
+                'url' => null
+            ]
+        ]);
+    }
+
+    /**
+     * Get a user-specific breadcrumb item
+     *
+     * @param \App\Models\User $user
+     * @param string|null $url
+     * @return array
+     */
+    protected function getUserBreadcrumb(\App\Models\User $user, ?string $url = null): array
+    {
+        $name = 'User';
+        if ($user->first_name && $user->last_name) {
+            $name = $user->first_name . ' ' . $user->last_name;
+        } elseif ($user->email) {
+            $name = $user->email;
+        }
+        
+        return [
+            'title' => $name,
+            'url' => $url
+        ];
+    }
+
+    /**
+     * Generate breadcrumbs for user profile page
+     *
+     * @param \App\Models\User $user
+     * @return void
+     */
+    protected function setUserProfileBreadcrumbs(\App\Models\User $user)
+    {
+        $this->setBreadcrumbs([
+            $this->getHomeBreadcrumb(),
+            $this->getUsersIndexBreadcrumb(),
+            $this->getUserBreadcrumb($user, null)
+        ]);
+    }
+
+    /**
+     * Generate breadcrumbs for user edit page
+     *
+     * @param \App\Models\User $user
+     * @return void
+     */
+    protected function setUserEditBreadcrumbs(\App\Models\User $user)
+    {
+        $this->setBreadcrumbs([
+            $this->getHomeBreadcrumb(),
+            $this->getUsersIndexBreadcrumb(),
+            $this->getUserBreadcrumb($user, route('admin.users.show', $user)),
+            [
+                'title' => 'Edit',
+                'url' => null
+            ]
+        ]);
+    }
 }

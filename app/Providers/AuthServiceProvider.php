@@ -57,6 +57,7 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
         $this->registerCustomerPolicyGates();
+        $this->registerUserPolicyGates();
 
         // Define superadmin gate
         Gate::define('super-admin-access', function ($user) {
@@ -100,5 +101,23 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('customer.export', [CustomerPolicy::class, 'export']);
         Gate::define('customer.sendEmail', [CustomerPolicy::class, 'sendEmail']);
         Gate::define('customer.viewDeleted', [CustomerPolicy::class, 'viewDeleted']);
+    }
+
+    /**
+     * Register user-specific policy gates.
+     * These gates use the UserPolicy for user management operations.
+     *
+     * @return void
+     */
+    protected function registerUserPolicyGates()
+    {
+        // User management gates
+        Gate::define('user.viewAny', [UserPolicy::class, 'viewAny']);
+        Gate::define('user.view', [UserPolicy::class, 'view']);
+        Gate::define('user.create', [UserPolicy::class, 'create']);
+        Gate::define('user.update', [UserPolicy::class, 'update']);
+        Gate::define('user.delete', [UserPolicy::class, 'delete']);
+        Gate::define('user.restore', [UserPolicy::class, 'restore']);
+        Gate::define('user.forceDelete', [UserPolicy::class, 'forceDelete']);
     }
 }
