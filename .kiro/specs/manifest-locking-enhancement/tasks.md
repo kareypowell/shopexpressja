@@ -95,7 +95,7 @@
   - Test notification delivery and error handling
   - _Requirements: 3.5_
 
-- [ ] 15. Add audit trail viewing interface
+- [x] 15. Add audit trail viewing interface
   - Create component to display manifest audit history
   - Implement chronological display of lock/unlock events
   - Add filtering and search functionality for audit records

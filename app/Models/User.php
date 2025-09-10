@@ -780,6 +780,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get the user's name (alias for full_name for compatibility).
+     *
+     * @return string
+     */
+    public function getNameAttribute()
+    {
+        return $this->getFullNameAttribute();
+    }
+
+    /**
      * Check if the user has superadmin role.
      *
      * @return bool

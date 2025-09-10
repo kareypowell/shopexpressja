@@ -68,6 +68,8 @@ class ManifestTabsContainer extends Component
                     $this->emit('refreshIndividualPackages');
                 } else if ($this->activeTab === 'consolidated') {
                     $this->emit('refreshConsolidatedPackages');
+                } else if ($this->activeTab === 'audit') {
+                    $this->emit('refreshAuditTrail');
                 }
                 
                 // Update browser history
@@ -182,8 +184,11 @@ class ManifestTabsContainer extends Component
             ->whereNotNull('consolidated_package_id')
             ->distinct('consolidated_package_id')
             ->count('consolidated_package_id');
+
+        // Get audit trail count
+        $auditTrailCount = $this->manifest->audits()->count();
         
-        return [
+        $tabs = [
             'individual' => [
                 'name' => 'Individual Packages',
                 'icon' => 'cube',
@@ -197,6 +202,18 @@ class ManifestTabsContainer extends Component
                 'aria_label' => 'View consolidated packages for this manifest'
             ]
         ];
+
+        // Only show audit trail tab if user has permission to view audits
+        if (auth()->user()->can('viewAudit', $this->manifest)) {
+            $tabs['audit'] = [
+                'name' => 'Audit Trail',
+                'icon' => 'document-text',
+                'count' => $auditTrailCount,
+                'aria_label' => 'View audit trail for this manifest'
+            ];
+        }
+        
+        return $tabs;
     }
 
     public function getActiveTabDataProperty()
@@ -208,6 +225,11 @@ class ManifestTabsContainer extends Component
     protected function validateTab(string $tab): string
     {
         $validTabs = ['consolidated', 'individual'];
+        
+        // Add audit tab if user has permission
+        if (auth()->user()->can('viewAudit', $this->manifest)) {
+            $validTabs[] = 'audit';
+        }
         
         // Sanitize input
         $tab = trim(strtolower($tab));

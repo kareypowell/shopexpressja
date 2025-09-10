@@ -16,7 +16,7 @@ class CreateManifestAuditsTable extends Migration
         Schema::create('manifest_audits', function (Blueprint $table) {
             $table->id();
             $table->foreignId('manifest_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('action'); // 'closed', 'unlocked', 'auto_complete'
             $table->text('reason');
             $table->timestamp('performed_at');

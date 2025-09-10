@@ -60,6 +60,9 @@
                     @elseif($tabData['icon'] === 'cube')
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                               d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    @elseif($tabData['icon'] === 'document-text')
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     @endif
                 </svg>
                 
@@ -169,21 +172,46 @@
                      x-transition:enter-end="opacity-100 transform translate-y-0">
                     @livewire('manifests.consolidated-packages-tab', ['manifest' => $manifest], key('consolidated-'.$manifest->id))
                 </div>
+
+                <!-- Audit Trail Tab Content -->
+                @can('viewAudit', $manifest)
+                    <div class="audit-trail-content"
+                         id="tabpanel-audit"
+                         role="tabpanel"
+                         aria-labelledby="tab-audit"
+                         aria-label="Audit trail view"
+                         aria-hidden="{{ $activeTab !== 'audit' ? 'true' : 'false' }}"
+                         x-show="$wire.activeTab === 'audit'"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 transform translate-y-2"
+                         x-transition:enter-end="opacity-100 transform translate-y-0">
+                        @livewire('manifests.manifest-audit-trail', ['manifest' => $manifest], key('audit-'.$manifest->id))
+                    </div>
+                @endcan
             </div>
         @endif
         
         <!-- Empty State Message -->
         @if(($activeTab === 'consolidated' && $tabs['consolidated']['count'] === 0) || 
-            ($activeTab === 'individual' && $tabs['individual']['count'] === 0))
+            ($activeTab === 'individual' && $tabs['individual']['count'] === 0) ||
+            ($activeTab === 'audit' && isset($tabs['audit']) && $tabs['audit']['count'] === 0))
             <div class="text-center py-12 px-4" role="status">
                 <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2M4 13h2m13-8V4a1 1 0 00-1-1H7a1 1 0 00-1 1v1m8 0V4.5"/>
+                    @if($activeTab === 'audit')
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    @else
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2M4 13h2m13-8V4a1 1 0 00-1-1H7a1 1 0 00-1 1v1m8 0V4.5"/>
+                    @endif
                 </svg>
                 <h3 class="text-lg font-medium text-gray-900 mb-2">
                     No {{ strtolower($activeTabData['name']) }} found
                 </h3>
                 <p class="text-gray-500">
-                    There are currently no {{ strtolower($activeTabData['name']) }} for this manifest.
+                    @if($activeTab === 'audit')
+                        No locking operations have been performed on this manifest yet.
+                    @else
+                        There are currently no {{ strtolower($activeTabData['name']) }} for this manifest.
+                    @endif
                 </p>
             </div>
         @endif
@@ -272,7 +300,7 @@ function manifestTabs() {
         },
         
         nextTab() {
-            const tabs = ['individual', 'consolidated'];
+            const tabs = this.getAvailableTabs();
             const currentIndex = tabs.indexOf(this.$wire.activeTab);
             const nextIndex = (currentIndex + 1) % tabs.length;
             this.focusedTabIndex = nextIndex;
@@ -280,7 +308,7 @@ function manifestTabs() {
         },
         
         prevTab() {
-            const tabs = ['individual', 'consolidated'];
+            const tabs = this.getAvailableTabs();
             const currentIndex = tabs.indexOf(this.$wire.activeTab);
             const prevIndex = currentIndex === 0 ? tabs.length - 1 : currentIndex - 1;
             this.focusedTabIndex = prevIndex;
@@ -288,44 +316,47 @@ function manifestTabs() {
         },
         
         firstTab() {
+            const tabs = this.getAvailableTabs();
             this.focusedTabIndex = 0;
-            this.$wire.switchTab('individual');
+            this.$wire.switchTab(tabs[0]);
         },
         
         lastTab() {
-            this.focusedTabIndex = 1;
-            this.$wire.switchTab('consolidated');
+            const tabs = this.getAvailableTabs();
+            this.focusedTabIndex = tabs.length - 1;
+            this.$wire.switchTab(tabs[tabs.length - 1]);
+        },
+
+        getAvailableTabs() {
+            const tabs = ['individual', 'consolidated'];
+            // Check if audit tab is available
+            if (document.getElementById('tab-audit')) {
+                tabs.push('audit');
+            }
+            return tabs;
         },
         
         updateFocusedTabIndex(tab) {
-            const tabs = ['individual', 'consolidated'];
+            const tabs = this.getAvailableTabs();
             this.focusedTabIndex = tabs.indexOf(tab);
         },
         
         updateTabVisibility(activeTab) {
             // Update visibility of tab panels
-            const consolidatedPanel = document.getElementById('tabpanel-consolidated');
-            const individualPanel = document.getElementById('tabpanel-individual');
+            const panels = ['consolidated', 'individual', 'audit'];
             
-            if (consolidatedPanel) {
-                if (activeTab === 'consolidated') {
-                    consolidatedPanel.classList.remove('hidden');
-                    consolidatedPanel.setAttribute('aria-hidden', 'false');
-                } else {
-                    consolidatedPanel.classList.add('hidden');
-                    consolidatedPanel.setAttribute('aria-hidden', 'true');
+            panels.forEach(panelName => {
+                const panel = document.getElementById(`tabpanel-${panelName}`);
+                if (panel) {
+                    if (activeTab === panelName) {
+                        panel.classList.remove('hidden');
+                        panel.setAttribute('aria-hidden', 'false');
+                    } else {
+                        panel.classList.add('hidden');
+                        panel.setAttribute('aria-hidden', 'true');
+                    }
                 }
-            }
-            
-            if (individualPanel) {
-                if (activeTab === 'individual') {
-                    individualPanel.classList.remove('hidden');
-                    individualPanel.setAttribute('aria-hidden', 'false');
-                } else {
-                    individualPanel.classList.add('hidden');
-                    individualPanel.setAttribute('aria-hidden', 'true');
-                }
-            }
+            });
         },
         
         scrollTabIntoView(tabElement) {
@@ -346,13 +377,20 @@ function manifestTabs() {
         announceTabChange(tab) {
             const tabNames = {
                 'consolidated': 'Consolidated Packages',
-                'individual': 'Individual Packages'
+                'individual': 'Individual Packages',
+                'audit': 'Audit Trail'
             };
             
-            // Get package count for more informative announcement
+            // Get count for more informative announcement
             const tabData = this.getTabData(tab);
             const count = tabData ? tabData.count : 0;
-            const countText = count === 1 ? '1 package' : `${count} packages`;
+            
+            let countText;
+            if (tab === 'audit') {
+                countText = count === 1 ? '1 audit record' : `${count} audit records`;
+            } else {
+                countText = count === 1 ? '1 package' : `${count} packages`;
+            }
             
             this.announcement = `Switched to ${tabNames[tab]} tab. ${countText} available.`;
             
@@ -570,7 +608,7 @@ function manifestTabs() {
         
         cleanupInactiveTabContent(activeTab) {
             // Clean up content from inactive tabs to save memory
-            const inactiveTabs = ['consolidated', 'individual'].filter(tab => tab !== activeTab);
+            const inactiveTabs = ['consolidated', 'individual', 'audit'].filter(tab => tab !== activeTab);
             
             inactiveTabs.forEach(tabName => {
                 const tabPanel = document.getElementById(`tabpanel-${tabName}`);
