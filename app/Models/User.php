@@ -448,6 +448,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(Role::class);
     }
 
+    public function roleChangeAudits()
+    {
+        return $this->hasMany(RoleChangeAudit::class, 'user_id');
+    }
+
+    public function changedRoleAudits()
+    {
+        return $this->hasMany(RoleChangeAudit::class, 'changed_by_user_id');
+    }
+
     /**
      * Get the total amount spent by the customer across all packages.
      *

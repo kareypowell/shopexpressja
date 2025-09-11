@@ -7,6 +7,7 @@ use App\Http\Livewire\Auth\Passwords\{Confirm, Email, Reset};
 use App\Http\Livewire\Customers\AdminCustomer;
 use App\Http\Livewire\Customers\{CustomerCreate, CustomerProfile, CustomerEdit};
 use App\Http\Livewire\Admin\CustomerBalanceManager;
+use App\Http\Livewire\Users\{UserManagement, UserCreate, UserEdit};
 use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\{Dashboard, Invoice};
 use App\Http\Livewire\Manifests\Manifest;
@@ -115,6 +116,17 @@ Route::middleware(['auth', 'verified', 'customer.management'])->prefix('admin')-
     
     // Customer balance management
     Route::get('/customers/{customer}/balance', CustomerBalanceManager::class)->name('customers.balance');
+});
+
+// User Management routes (both superadmin and admin can access)
+Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    // User management routes - accessible by both admin and superadmin with policy checks
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/', UserManagement::class)->name('index');
+        Route::get('/create', UserCreate::class)->name('create');
+        Route::get('/{user}', UserManagement::class)->name('show'); // For now, redirect to index with user selected
+        Route::get('/{user}/edit', UserEdit::class)->name('edit');
+    });
 });
 
 // Admin routes (both superadmin and admin can access)
