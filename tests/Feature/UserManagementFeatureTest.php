@@ -26,11 +26,11 @@ class UserManagementFeatureTest extends TestCase
     {
         parent::setUp();
 
-        // Create roles
-        $superAdminRole = Role::factory()->create(['name' => 'superadmin']);
-        $adminRole = Role::factory()->create(['name' => 'admin']);
-        $customerRole = Role::factory()->create(['name' => 'customer']);
-        $purchaserRole = Role::factory()->create(['name' => 'purchaser']);
+        // Get roles from database (created by parent TestCase)
+        $superAdminRole = Role::where('name', 'superadmin')->first();
+        $adminRole = Role::where('name', 'admin')->first();
+        $customerRole = Role::where('name', 'customer')->first();
+        $purchaserRole = Role::where('name', 'purchaser')->first();
 
         // Create users with different roles
         $this->superAdmin = User::factory()->create(['role_id' => $superAdminRole->id]);

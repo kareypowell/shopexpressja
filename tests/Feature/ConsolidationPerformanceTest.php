@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Package;
 use App\Models\ConsolidatedPackage;
 use App\Models\ConsolidationHistory;
@@ -32,8 +33,10 @@ class ConsolidationPerformanceTest extends TestCase
         $this->cacheService = app(ConsolidationCacheService::class);
         
         // Create test users
-        $this->admin = User::factory()->create(['role_id' => 1]);
-        $this->customer = User::factory()->create(['role_id' => 2]);
+        $adminRole = Role::where('name', 'superadmin')->first();
+        $customerRole = Role::where('name', 'customer')->first();
+        $this->admin = User::factory()->create(['role_id' => $adminRole->id]);
+        $this->customer = User::factory()->create(['role_id' => $customerRole->id]);
     }
 
     /**
@@ -218,7 +221,8 @@ class ConsolidationPerformanceTest extends TestCase
         $consolidationsPerCustomer = 10;
         $packagesPerConsolidation = 20;
 
-        $customers = User::factory()->count($customerCount)->create(['role_id' => 2]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $customers = User::factory()->count($customerCount)->create(['role_id' => $customerRole->id]);
 
         foreach ($customers as $customer) {
             for ($i = 0; $i < $consolidationsPerCustomer; $i++) {
@@ -355,7 +359,8 @@ class ConsolidationPerformanceTest extends TestCase
         $customerCount = 5;
         $packagesPerCustomer = 20;
         
-        $customers = User::factory()->count($customerCount)->create(['role_id' => 2]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $customers = User::factory()->count($customerCount)->create(['role_id' => $customerRole->id]);
         $packageSets = [];
 
         foreach ($customers as $customer) {

@@ -5,6 +5,7 @@ namespace Tests\Browser;
 use Tests\DuskTestCase;
 use Laravel\Dusk\Browser;
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 
 class TransactionManagementSearchTest extends DuskTestCase
@@ -15,9 +16,11 @@ class TransactionManagementSearchTest extends DuskTestCase
     public function user_can_search_and_select_customers()
     {
         // Create admin and customer users
-        $admin = User::factory()->create(['role_id' => 1]);
+        $adminRole = Role::where('name', 'superadmin')->first();
+        $customerRole = Role::where('name', 'customer')->first();
+        $admin = User::factory()->create(['role_id' => $adminRole->id]);
         $customer = User::factory()->create([
-            'role_id' => 3,
+            'role_id' => $customerRole->id,
             'first_name' => 'John',
             'last_name' => 'Doe'
         ]);
@@ -38,7 +41,8 @@ class TransactionManagementSearchTest extends DuskTestCase
     /** @test */
     public function dropdown_shows_no_results_message()
     {
-        $admin = User::factory()->create(['role_id' => 1]);
+        $adminRole = Role::where('name', 'superadmin')->first();
+        $admin = User::factory()->create(['role_id' => $adminRole->id]);
 
         $this->browse(function (Browser $browser) use ($admin) {
             $browser->loginAs($admin)

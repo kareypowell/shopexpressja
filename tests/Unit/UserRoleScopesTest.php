@@ -21,11 +21,11 @@ class UserRoleScopesTest extends TestCase
     {
         parent::setUp();
         
-        // Create roles
-        $this->superAdminRole = Role::factory()->create(['name' => 'superadmin']);
-        $this->adminRole = Role::factory()->create(['name' => 'admin']);
-        $this->customerRole = Role::factory()->create(['name' => 'customer']);
-        $this->purchaserRole = Role::factory()->create(['name' => 'purchaser']);
+        // Get roles from database (created by parent TestCase)
+        $this->superAdminRole = Role::where('name', 'superadmin')->first();
+        $this->adminRole = Role::where('name', 'admin')->first();
+        $this->customerRole = Role::where('name', 'customer')->first();
+        $this->purchaserRole = Role::where('name', 'purchaser')->first();
     }
 
     /** @test */

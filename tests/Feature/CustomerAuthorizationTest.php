@@ -21,17 +21,16 @@ class CustomerAuthorizationTest extends TestCase
     {
         parent::setUp();
         
-        // Create roles
-        Role::create(['name' => 'superadmin', 'description' => 'Super Administrator']);
-        Role::create(['name' => 'admin', 'description' => 'Administrator']);
-        Role::create(['name' => 'customer', 'description' => 'Customer']);
+        // Roles are created by the parent TestCase
     }
 
     /** @test */
     public function superadmin_can_access_all_customer_operations()
     {
-        $superadmin = User::factory()->create(['role_id' => 1]);
-        $customer = User::factory()->create(['role_id' => 3]);
+        $superadminRole = Role::where('name', 'superadmin')->first();
+        $customerRole = Role::where('name', 'customer')->first();
+        $superadmin = User::factory()->create(['role_id' => $superadminRole->id]);
+        $customer = User::factory()->create(['role_id' => $customerRole->id]);
 
         $this->actingAs($superadmin);
 
@@ -69,8 +68,10 @@ class CustomerAuthorizationTest extends TestCase
     /** @test */
     public function admin_can_access_all_customer_operations()
     {
-        $admin = User::factory()->create(['role_id' => 2]);
-        $customer = User::factory()->create(['role_id' => 3]);
+        $adminRole = Role::where('name', 'admin')->first();
+        $customerRole = Role::where('name', 'customer')->first();
+        $admin = User::factory()->create(['role_id' => $adminRole->id]);
+        $customer = User::factory()->create(['role_id' => $customerRole->id]);
 
         $this->actingAs($admin);
 
@@ -108,8 +109,9 @@ class CustomerAuthorizationTest extends TestCase
     /** @test */
     public function customer_can_only_view_own_profile()
     {
-        $customer1 = User::factory()->create(['role_id' => 3]);
-        $customer2 = User::factory()->create(['role_id' => 3]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $customer1 = User::factory()->create(['role_id' => $customerRole->id]);
+        $customer2 = User::factory()->create(['role_id' => $customerRole->id]);
 
         $this->actingAs($customer1);
 
@@ -157,7 +159,8 @@ class CustomerAuthorizationTest extends TestCase
     /** @test */
     public function customer_management_middleware_blocks_unauthorized_users()
     {
-        $customer = User::factory()->create(['role_id' => 3]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $customer = User::factory()->create(['role_id' => $customerRole->id]);
 
         $this->actingAs($customer);
 
@@ -172,7 +175,8 @@ class CustomerAuthorizationTest extends TestCase
     /** @test */
     public function admin_can_access_customer_management_routes()
     {
-        $admin = User::factory()->create(['role_id' => 2]);
+        $adminRole = Role::where('name', 'admin')->first();
+        $admin = User::factory()->create(['role_id' => $adminRole->id]);
 
         $this->actingAs($admin);
 
@@ -187,7 +191,8 @@ class CustomerAuthorizationTest extends TestCase
     /** @test */
     public function superadmin_can_access_customer_management_routes()
     {
-        $superadmin = User::factory()->create(['role_id' => 1]);
+        $superadminRole = Role::where('name', 'superadmin')->first();
+        $superadmin = User::factory()->create(['role_id' => $superadminRole->id]);
 
         $this->actingAs($superadmin);
 
@@ -202,8 +207,10 @@ class CustomerAuthorizationTest extends TestCase
     /** @test */
     public function admin_customers_table_enforces_authorization()
     {
-        $admin = User::factory()->create(['role_id' => 2]);
-        $customer = User::factory()->create(['role_id' => 3]);
+        $adminRole = Role::where('name', 'admin')->first();
+        $customerRole = Role::where('name', 'customer')->first();
+        $admin = User::factory()->create(['role_id' => $adminRole->id]);
+        $customer = User::factory()->create(['role_id' => $customerRole->id]);
 
         $this->actingAs($admin);
 
@@ -215,8 +222,10 @@ class CustomerAuthorizationTest extends TestCase
     /** @test */
     public function customer_profile_enforces_authorization()
     {
-        $admin = User::factory()->create(['role_id' => 2]);
-        $customer = User::factory()->create(['role_id' => 3]);
+        $adminRole = Role::where('name', 'admin')->first();
+        $customerRole = Role::where('name', 'customer')->first();
+        $admin = User::factory()->create(['role_id' => $adminRole->id]);
+        $customer = User::factory()->create(['role_id' => $customerRole->id]);
 
         $this->actingAs($admin);
 
@@ -228,8 +237,10 @@ class CustomerAuthorizationTest extends TestCase
     /** @test */
     public function customer_edit_enforces_authorization()
     {
-        $admin = User::factory()->create(['role_id' => 2]);
-        $customer = User::factory()->create(['role_id' => 3]);
+        $adminRole = Role::where('name', 'admin')->first();
+        $customerRole = Role::where('name', 'customer')->first();
+        $admin = User::factory()->create(['role_id' => $adminRole->id]);
+        $customer = User::factory()->create(['role_id' => $customerRole->id]);
 
         $this->actingAs($admin);
 
@@ -241,7 +252,8 @@ class CustomerAuthorizationTest extends TestCase
     /** @test */
     public function customer_create_enforces_authorization()
     {
-        $admin = User::factory()->create(['role_id' => 2]);
+        $adminRole = Role::where('name', 'admin')->first();
+        $admin = User::factory()->create(['role_id' => $adminRole->id]);
 
         $this->actingAs($admin);
 
@@ -253,8 +265,9 @@ class CustomerAuthorizationTest extends TestCase
     /** @test */
     public function unauthorized_user_cannot_access_customer_components()
     {
-        $customer = User::factory()->create(['role_id' => 3]);
-        $otherCustomer = User::factory()->create(['role_id' => 3]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $customer = User::factory()->create(['role_id' => $customerRole->id]);
+        $otherCustomer = User::factory()->create(['role_id' => $customerRole->id]);
 
         $this->actingAs($customer);
 

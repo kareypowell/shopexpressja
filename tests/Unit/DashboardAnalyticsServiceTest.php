@@ -7,6 +7,7 @@ use App\Services\DashboardAnalyticsService;
 use App\Services\DashboardCacheService;
 use App\Models\User;
 use App\Models\Package;
+use App\Models\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class DashboardAnalyticsServiceTest extends TestCase
@@ -27,9 +28,10 @@ class DashboardAnalyticsServiceTest extends TestCase
     /** @test */
     public function it_can_get_customer_metrics()
     {
-        // Create test customers (role_id = 3)
+        // Create test customers
+        $customerRole = Role::where('name', 'customer')->first();
         User::factory()->count(5)->create([
-            'role_id' => 3, // Customer role
+            'role_id' => $customerRole->id,
             'created_at' => now()->subDays(15),
             'email_verified_at' => now(),
         ]);

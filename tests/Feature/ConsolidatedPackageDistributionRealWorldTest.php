@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Package;
 use App\Models\ConsolidatedPackage;
 use App\Services\PackageDistributionService;
@@ -18,8 +19,10 @@ class ConsolidatedPackageDistributionRealWorldTest extends TestCase
     public function it_properly_updates_individual_packages_when_consolidated_package_is_distributed()
     {
         // Setup users
-        $admin = User::factory()->create(['role_id' => 1]);
-        $customer = User::factory()->create(['role_id' => 2]);
+        $adminRole = Role::where('name', 'superadmin')->first();
+        $customerRole = Role::where('name', 'customer')->first();
+        $admin = User::factory()->create(['role_id' => $adminRole->id]);
+        $customer = User::factory()->create(['role_id' => $customerRole->id]);
         $this->actingAs($admin);
 
         // Create consolidated package with READY status

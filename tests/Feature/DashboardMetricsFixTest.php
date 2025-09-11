@@ -78,7 +78,7 @@ class DashboardMetricsFixTest extends TestCase
         $filters = ['period' => 'month'];
         $metrics = $this->analyticsService->getCustomerMetrics($filters);
         
-        // Should only count customers (role_id = 3), not admins or staff
+        // Should only count customers, not admins or staff
         $this->assertEquals(6, $metrics['total']); // 5 active + 1 inactive customer
         $this->assertEquals(5, $metrics['active']); // Only verified customers
         $this->assertEquals(1, $metrics['inactive']); // Unverified customer

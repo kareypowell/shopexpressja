@@ -6,6 +6,7 @@ use App\Models\BroadcastMessage;
 use App\Models\BroadcastRecipient;
 use App\Models\BroadcastDelivery;
 use App\Models\User;
+use App\Models\Role;
 use App\Services\BroadcastMessageService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,14 +24,16 @@ class ProcessScheduledBroadcastsCommandTest extends TestCase
         parent::setUp();
         
         // Create admin user
+        $adminRole = Role::where('name', 'admin')->first();
         $this->admin = User::factory()->create([
-            'role_id' => 2, // Admin role
+            'role_id' => $adminRole->id,
             'email' => 'admin@test.com'
         ]);
         
         // Create test customers
+        $customerRole = Role::where('name', 'customer')->first();
         $this->customers = User::factory()->count(5)->create([
-            'role_id' => 3, // Customer role
+            'role_id' => $customerRole->id,
             'deleted_at' => null
         ]);
         

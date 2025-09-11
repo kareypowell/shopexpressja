@@ -29,8 +29,10 @@ class ConsolidationAuditLoggingBasicTest extends TestCase
         Role::create(['id' => 2, 'name' => 'Customer', 'description' => 'Customer']);
         
         $this->consolidationService = app(PackageConsolidationService::class);
-        $this->admin = User::factory()->create(['role_id' => 1]);
-        $this->customer = User::factory()->create(['role_id' => 2]);
+        $adminRole = Role::where('name', 'superadmin')->first();
+        $customerRole = Role::where('name', 'customer')->first();
+        $this->admin = User::factory()->create(['role_id' => $adminRole->id]);
+        $this->customer = User::factory()->create(['role_id' => $customerRole->id]);
     }
 
     /** @test */

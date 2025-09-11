@@ -24,7 +24,8 @@ class UserModelEnhancementsTest extends TestCase
     /** @test */
     public function it_can_soft_delete_users()
     {
-        $user = User::factory()->create(['role_id' => 3]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $user = User::factory()->create(['role_id' => $customerRole->id]);
         
         $this->assertNull($user->deleted_at);
         
@@ -38,7 +39,8 @@ class UserModelEnhancementsTest extends TestCase
     /** @test */
     public function it_can_restore_soft_deleted_users()
     {
-        $user = User::factory()->create(['role_id' => 3]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $user = User::factory()->create(['role_id' => $customerRole->id]);
         $user->delete();
         
         $this->assertTrue($user->trashed());
@@ -53,10 +55,13 @@ class UserModelEnhancementsTest extends TestCase
     /** @test */
     public function customers_scope_returns_only_customers()
     {
-        User::factory()->create(['role_id' => 1]); // superadmin
-        User::factory()->create(['role_id' => 2]); // admin
-        $customer1 = User::factory()->create(['role_id' => 3]); // customer
-        $customer2 = User::factory()->create(['role_id' => 3]); // customer
+        $superadminRole = Role::where('name', 'superadmin')->first();
+        $adminRole = Role::where('name', 'admin')->first();
+        $customerRole = Role::where('name', 'customer')->first();
+        User::factory()->create(['role_id' => $superadminRole->id]); // superadmin
+        User::factory()->create(['role_id' => $adminRole->id]); // admin
+        $customer1 = User::factory()->create(['role_id' => $customerRole->id]); // customer
+        $customer2 = User::factory()->create(['role_id' => $customerRole->id]); // customer
 
         $customers = User::customers()->get();
 
@@ -68,8 +73,9 @@ class UserModelEnhancementsTest extends TestCase
     /** @test */
     public function active_customers_scope_excludes_soft_deleted()
     {
-        $activeCustomer = User::factory()->create(['role_id' => 3]);
-        $deletedCustomer = User::factory()->create(['role_id' => 3]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $activeCustomer = User::factory()->create(['role_id' => $customerRole->id]);
+        $deletedCustomer = User::factory()->create(['role_id' => $customerRole->id]);
         $deletedCustomer->delete();
 
         $activeCustomers = User::activeCustomers()->get();
@@ -82,8 +88,9 @@ class UserModelEnhancementsTest extends TestCase
     /** @test */
     public function deleted_customers_scope_returns_only_soft_deleted()
     {
-        $activeCustomer = User::factory()->create(['role_id' => 3]);
-        $deletedCustomer = User::factory()->create(['role_id' => 3]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $activeCustomer = User::factory()->create(['role_id' => $customerRole->id]);
+        $deletedCustomer = User::factory()->create(['role_id' => $customerRole->id]);
         $deletedCustomer->delete();
 
         $deletedCustomers = User::deletedCustomers()->get();
@@ -96,7 +103,8 @@ class UserModelEnhancementsTest extends TestCase
     /** @test */
     public function it_calculates_total_spent_correctly()
     {
-        $user = User::factory()->create(['role_id' => 3]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $user = User::factory()->create(['role_id' => $customerRole->id]);
         
         // Create packages with different costs
         Package::factory()->create([
@@ -124,7 +132,8 @@ class UserModelEnhancementsTest extends TestCase
     /** @test */
     public function it_calculates_package_count_correctly()
     {
-        $user = User::factory()->create(['role_id' => 3]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $user = User::factory()->create(['role_id' => $customerRole->id]);
         
         Package::factory()->count(3)->create(['user_id' => $user->id]);
 
@@ -134,7 +143,8 @@ class UserModelEnhancementsTest extends TestCase
     /** @test */
     public function it_calculates_average_package_value_correctly()
     {
-        $user = User::factory()->create(['role_id' => 3]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $user = User::factory()->create(['role_id' => $customerRole->id]);
         
         Package::factory()->create([
             'user_id' => $user->id,
@@ -161,7 +171,8 @@ class UserModelEnhancementsTest extends TestCase
     /** @test */
     public function it_returns_zero_average_for_users_with_no_packages()
     {
-        $user = User::factory()->create(['role_id' => 3]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $user = User::factory()->create(['role_id' => $customerRole->id]);
 
         $this->assertEquals(0.0, $user->average_package_value);
         $this->assertEquals(0, $user->package_count);
@@ -171,7 +182,8 @@ class UserModelEnhancementsTest extends TestCase
     /** @test */
     public function it_gets_last_shipment_date_correctly()
     {
-        $user = User::factory()->create(['role_id' => 3]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $user = User::factory()->create(['role_id' => $customerRole->id]);
         
         $oldPackage = Package::factory()->create([
             'user_id' => $user->id,

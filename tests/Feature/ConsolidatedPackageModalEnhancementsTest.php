@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Package;
 use App\Models\ConsolidatedPackage;
 use App\Models\Manifest;
@@ -19,15 +20,17 @@ class ConsolidatedPackageModalEnhancementsTest extends TestCase
     public function test_consolidated_by_shows_admin_user_name()
     {
         // Create admin user
+        $adminRole = Role::where('name', 'superadmin')->first();
         $admin = User::factory()->create([
-            'role_id' => 1,
+            'role_id' => $adminRole->id,
             'first_name' => 'John',
             'last_name' => 'Admin',
             'full_name' => 'John Admin'
         ]);
         
         // Create customer
-        $customer = User::factory()->create(['role_id' => 3]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $customer = User::factory()->create(['role_id' => $customerRole->id]);
         
         // Create consolidated package
         $consolidatedPackage = ConsolidatedPackage::factory()->create([
@@ -53,7 +56,8 @@ class ConsolidatedPackageModalEnhancementsTest extends TestCase
     public function test_shipping_information_matches_individual_package_format()
     {
         // Create customer
-        $customer = User::factory()->create(['role_id' => 3]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $customer = User::factory()->create(['role_id' => $customerRole->id]);
         
         // Create manifest, shipper, and office
         $manifest = Manifest::factory()->create(['type' => 'air']);
@@ -103,7 +107,8 @@ class ConsolidatedPackageModalEnhancementsTest extends TestCase
     public function test_individual_package_breakdown_includes_freight_cost()
     {
         // Create customer
-        $customer = User::factory()->create(['role_id' => 3]);
+        $customerRole = Role::where('name', 'customer')->first();
+        $customer = User::factory()->create(['role_id' => $customerRole->id]);
         
         // Create manifest, shipper, and office
         $manifest = Manifest::factory()->create(['type' => 'air']);

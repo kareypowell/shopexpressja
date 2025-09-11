@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Package;
 use App\Models\PackageDistribution;
 use App\Services\ReceiptGeneratorService;
@@ -28,14 +29,16 @@ class ReceiptGenerationTest extends TestCase
         $this->receiptGenerator = app(ReceiptGeneratorService::class);
         $this->distributionService = app(PackageDistributionService::class);
         
+        $adminRole = Role::where('name', 'superadmin')->first();
         $this->admin = User::factory()->create([
-            'role_id' => 1,
+            'role_id' => $adminRole->id,
             'first_name' => 'John',
             'last_name' => 'Admin',
         ]);
         
+        $customerRole = Role::where('name', 'customer')->first();
         $this->customer = User::factory()->create([
-            'role_id' => 3,
+            'role_id' => $customerRole->id,
             'first_name' => 'Simba',
             'last_name' => 'Powell',
             'email' => 'simba.powell@example.com',
@@ -138,8 +141,9 @@ class ReceiptGenerationTest extends TestCase
     public function it_shows_credit_and_account_balance_when_applied()
     {
         // Customer with both balances
+        $customerRole = Role::where('name', 'customer')->first();
         $customer = User::factory()->create([
-            'role_id' => 3,
+            'role_id' => $customerRole->id,
             'first_name' => 'Test',
             'last_name' => 'Customer',
             'account_balance' => 200.00,
@@ -220,8 +224,9 @@ class ReceiptGenerationTest extends TestCase
     public function it_handles_missing_customer_profile_gracefully()
     {
         // Customer without profile
+        $customerRole = Role::where('name', 'customer')->first();
         $customer = User::factory()->create([
-            'role_id' => 3,
+            'role_id' => $customerRole->id,
             'first_name' => 'No',
             'last_name' => 'Profile',
         ]);

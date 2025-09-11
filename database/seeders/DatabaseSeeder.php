@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
         $this->call(ShippersTableSeeder::class);
         $this->call(RatesTableSeeder::class);
         $this->call(RolesTableSeeder::class);
+        $this->call(SuperAdminSeeder::class);
         $this->call(CustomerAnalyticsTestDataSeeder::class);
         
         // Comprehensive package distribution and account balance test data

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Package;
 use App\Models\ConsolidatedPackage;
 use App\Models\ConsolidationHistory;
@@ -26,8 +27,10 @@ class ConsolidationAuditLoggingTest extends TestCase
         $this->seed();
         
         $this->consolidationService = app(PackageConsolidationService::class);
-        $this->admin = User::factory()->create(['role_id' => 1]); // Admin role
-        $this->customer = User::factory()->create(['role_id' => 2]); // Customer role
+        $adminRole = Role::where('name', 'superadmin')->first();
+        $customerRole = Role::where('name', 'customer')->first();
+        $this->admin = User::factory()->create(['role_id' => $adminRole->id]);
+        $this->customer = User::factory()->create(['role_id' => $customerRole->id]);
     }
 
     /** @test */

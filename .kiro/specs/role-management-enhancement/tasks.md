@@ -66,7 +66,7 @@
   - Update existing scopes and queries to use role names instead of IDs
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 6.3_
 
-- [ ] 9. Update and fix existing tests
+- [x] 9. Update and fix existing tests
   - Review all existing tests for hardcoded role ID usage
   - Update tests to use role names and helper methods instead of IDs
   - Remove or update unrealistic test conditions to reflect actual business scenarios

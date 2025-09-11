@@ -22,21 +22,21 @@ abstract class TestCase extends BaseTestCase
      */
     protected function createBasicRoles(): void
     {
-        // Create roles with specific IDs to match existing test expectations
-        if (!Role::find(1)) {
-            Role::factory()->create(['id' => 1, 'name' => 'superadmin']);
+        // Create roles only if they don't exist to prevent unique constraint violations
+        if (!Role::where('name', 'superadmin')->exists()) {
+            Role::create(['name' => 'superadmin', 'description' => 'Super Administrator']);
         }
         
-        if (!Role::find(2)) {
-            Role::factory()->create(['id' => 2, 'name' => 'admin']);
+        if (!Role::where('name', 'admin')->exists()) {
+            Role::create(['name' => 'admin', 'description' => 'Administrator']);
         }
         
-        if (!Role::find(3)) {
-            Role::factory()->create(['id' => 3, 'name' => 'customer']);
+        if (!Role::where('name', 'customer')->exists()) {
+            Role::create(['name' => 'customer', 'description' => 'Customer']);
         }
         
-        if (!Role::find(4)) {
-            Role::factory()->create(['id' => 4, 'name' => 'purchaser']);
+        if (!Role::where('name', 'purchaser')->exists()) {
+            Role::create(['name' => 'purchaser', 'description' => 'Purchaser']);
         }
     }
 }

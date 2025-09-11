@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Package;
 use App\Services\PackageDistributionService;
 use App\Enums\PackageStatus;
@@ -23,8 +24,9 @@ class CompleteReceiptIntegrationTest extends TestCase
         
         $this->distributionService = app(PackageDistributionService::class);
         
+        $adminRole = Role::where('name', 'superadmin')->first();
         $this->admin = User::factory()->create([
-            'role_id' => 1,
+            'role_id' => $adminRole->id,
             'first_name' => 'Admin',
             'last_name' => 'User',
         ]);
@@ -37,8 +39,9 @@ class CompleteReceiptIntegrationTest extends TestCase
     public function it_generates_complete_receipt_for_simba_powell_scenario()
     {
         // Create Simba Powell with the exact scenario from the original issue
+        $customerRole = Role::where('name', 'customer')->first();
         $customer = User::factory()->create([
-            'role_id' => 3,
+            'role_id' => $customerRole->id,
             'first_name' => 'Simba',
             'last_name' => 'Powell',
             'email' => 'simba.powell@example.com',
@@ -108,8 +111,9 @@ class CompleteReceiptIntegrationTest extends TestCase
     public function it_generates_receipt_with_granular_balance_application()
     {
         // Customer with both account and credit balance
+        $customerRole = Role::where('name', 'customer')->first();
         $customer = User::factory()->create([
-            'role_id' => 3,
+            'role_id' => $customerRole->id,
             'first_name' => 'Balance',
             'last_name' => 'Customer',
             'email' => 'balance@example.com',
@@ -161,8 +165,9 @@ class CompleteReceiptIntegrationTest extends TestCase
     /** @test */
     public function it_generates_receipt_with_write_off_discount()
     {
+        $customerRole = Role::where('name', 'customer')->first();
         $customer = User::factory()->create([
-            'role_id' => 3,
+            'role_id' => $customerRole->id,
             'first_name' => 'Discount',
             'last_name' => 'Customer',
             'account_balance' => 0.00,
@@ -210,8 +215,9 @@ class CompleteReceiptIntegrationTest extends TestCase
     public function it_handles_customer_without_profile_in_receipt()
     {
         // Customer without profile
+        $customerRole = Role::where('name', 'customer')->first();
         $customer = User::factory()->create([
-            'role_id' => 3,
+            'role_id' => $customerRole->id,
             'first_name' => 'No',
             'last_name' => 'Profile',
             'email' => 'noprofile@example.com',
