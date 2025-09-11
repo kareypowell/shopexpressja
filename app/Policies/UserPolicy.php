@@ -156,6 +156,7 @@ class UserPolicy
 
     /**
      * Determine whether the user can permanently delete the model.
+     * Only superadmin can permanently delete users
      *
      * @param  \App\Models\User  $authenticatedUser
      * @param  \App\Models\User  $user
@@ -163,6 +164,85 @@ class UserPolicy
      */
     public function forceDelete(User $authenticatedUser, User $user)
     {
-        //
+        return $authenticatedUser->isSuperAdmin() && $authenticatedUser->id !== $user->id;
+    }
+
+    /**
+     * Determine whether the user can change roles.
+     * Superadmin: Can change any user's role
+     * Admin: Can change customer roles only
+     * Customer: Cannot change roles
+     *
+     * @param  \App\Models\User  $authenticatedUser
+     * @param  \App\Models\User  $targetUser
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function changeRole(User $authenticatedUser, User $targetUser)
+    {
+        // Users cannot change their own role
+        if ($authenticatedUser->id === $targetUser->id) {
+            return false;
+        }
+
+        // Superadmin can change anyone's role
+        if ($authenticatedUser->isSuperAdmin()) {
+            return true;
+        }
+
+        // Admin can change customer roles only
+        if ($authenticatedUser->isAdmin()) {
+            return $targetUser->isCustomer();
+        }
+
+        // Customers cannot change roles
+        return false;
+    }
+
+    /**
+     * Determine whether the user can manage user roles.
+     * Only superadmin and admin can manage user roles
+     *
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function manageRoles(User $user)
+    {
+        return $user->isSuperAdmin() || $user->isAdmin();
+    }
+
+    /**
+     * Determine whether the user can view user statistics.
+     * Only superadmin and admin can view user statistics
+     *
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function viewStatistics(User $user)
+    {
+        return $user->isSuperAdmin() || $user->isAdmin();
+    }
+
+    /**
+     * Determine whether the user can create users with specific roles.
+     * Superadmin: Can create any role
+     * Admin: Can create customer roles only
+     *
+     * @param  \App\Models\User  $user
+     * @param  string  $roleName
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function createWithRole(User $user, string $roleName)
+    {
+        // Superadmin can create any role
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        // Admin can create customer roles only
+        if ($user->isAdmin()) {
+            return $roleName === 'customer';
+        }
+
+        return false;
     }
 }

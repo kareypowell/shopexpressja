@@ -94,10 +94,15 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->gro
     
     Route::get('/package-distribution', \App\Http\Livewire\PackageDistribution::class)->name('package-distribution');
     Route::get('/transactions', \App\Http\Livewire\Admin\TransactionManagement::class)->name('transactions');
-    Route::get('/roles', Role::class)->name('roles');
-    
     // Role management routes - accessible only by superadmin
-    Route::get('/admin/roles', Role::class)->name('admin.roles');
+    Route::prefix('roles')->name('roles.')->group(function () {
+        Route::get('/', Role::class)->name('index')->middleware('can:role.viewAny');
+        Route::get('/create', Role::class)->name('create')->middleware('can:role.create');
+        Route::get('/{role}', Role::class)->name('show')->middleware('can:role.view,role');
+        Route::get('/{role}/edit', Role::class)->name('edit')->middleware('can:role.update,role');
+        Route::get('/assignments', Role::class)->name('assignments')->middleware('can:role.manageAssignments');
+        Route::get('/audit-trail', Role::class)->name('audit-trail')->middleware('can:role.viewAuditTrail');
+    });
     Route::get('/rates', Rate::class)->name('view-rates');
     Route::get('/pre-alerts', AdminPreAlert::class)->name('view-pre-alerts');
     Route::get('/purchase-requests', AdminPurchaseRequest::class)->name('view-purchase-requests');
@@ -125,10 +130,10 @@ Route::middleware(['auth', 'verified', 'customer.management'])->prefix('admin')-
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
     // User management routes - accessible by both admin and superadmin with policy checks
     Route::prefix('users')->name('users.')->group(function () {
-        Route::get('/', UserManagement::class)->name('index');
-        Route::get('/create', UserCreate::class)->name('create');
-        Route::get('/{user}', UserManagement::class)->name('show'); // For now, redirect to index with user selected
-        Route::get('/{user}/edit', UserEdit::class)->name('edit');
+        Route::get('/', UserManagement::class)->name('index')->middleware('can:user.viewAny');
+        Route::get('/create', UserCreate::class)->name('create')->middleware('can:user.create');
+        Route::get('/{user}', UserManagement::class)->name('show')->middleware('can:user.view,user'); // For now, redirect to index with user selected
+        Route::get('/{user}/edit', UserEdit::class)->name('edit')->middleware('can:user.update,user');
     });
 });
 

@@ -51,7 +51,7 @@
   - Write browser tests for navigation visibility based on user roles
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 7. Create routes and policies for user and role management
+- [x] 7. Create routes and policies for user and role management
   - Define routes for user creation, editing, listing, and role management
   - Create or update UserPolicy with methods for user management permissions
   - Create RolePolicy for role management permissions

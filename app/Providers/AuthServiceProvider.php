@@ -61,6 +61,7 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
         $this->registerCustomerPolicyGates();
         $this->registerUserPolicyGates();
+        $this->registerRolePolicyGates();
 
         // Define superadmin gate
         Gate::define('super-admin-access', function ($user) {
@@ -122,5 +123,29 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('user.delete', [UserPolicy::class, 'delete']);
         Gate::define('user.restore', [UserPolicy::class, 'restore']);
         Gate::define('user.forceDelete', [UserPolicy::class, 'forceDelete']);
+
+        // User role management gates
+        Gate::define('user.changeRole', [UserPolicy::class, 'changeRole']);
+        Gate::define('user.manageRoles', [UserPolicy::class, 'manageRoles']);
+        Gate::define('user.viewStatistics', [UserPolicy::class, 'viewStatistics']);
+        Gate::define('user.createWithRole', [UserPolicy::class, 'createWithRole']);
+    }
+
+    /**
+     * Register role-specific policy gates.
+     * These gates use the RolePolicy for role management operations.
+     *
+     * @return void
+     */
+    protected function registerRolePolicyGates()
+    {
+        // Role management gates
+        Gate::define('role.viewAny', [RolePolicy::class, 'viewAny']);
+        Gate::define('role.view', [RolePolicy::class, 'view']);
+        Gate::define('role.create', [RolePolicy::class, 'create']);
+        Gate::define('role.update', [RolePolicy::class, 'update']);
+        Gate::define('role.delete', [RolePolicy::class, 'delete']);
+        Gate::define('role.manageAssignments', [RolePolicy::class, 'manageAssignments']);
+        Gate::define('role.viewAuditTrail', [RolePolicy::class, 'viewAuditTrail']);
     }
 }
