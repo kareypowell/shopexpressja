@@ -43,7 +43,7 @@
   - Write unit and feature tests for role management operations
   - _Requirements: 1.1, 6.1, 6.2_
 
-- [ ] 6. Update sidebar navigation with role-based links
+- [x] 6. Update sidebar navigation with role-based links
   - Modify sidebar-nav.blade.php to include User Management section (Create User, Manage Users, User Statistics)
   - Add Role Management section visible only to superadmins (Manage Roles, Role Assignments, Role Audit Trail)
   - Implement permission-based visibility using role helper methods

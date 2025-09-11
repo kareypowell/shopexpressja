@@ -95,6 +95,9 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->gro
     Route::get('/package-distribution', \App\Http\Livewire\PackageDistribution::class)->name('package-distribution');
     Route::get('/transactions', \App\Http\Livewire\Admin\TransactionManagement::class)->name('transactions');
     Route::get('/roles', Role::class)->name('roles');
+    
+    // Role management routes - accessible only by superadmin
+    Route::get('/admin/roles', Role::class)->name('admin.roles');
     Route::get('/rates', Rate::class)->name('view-rates');
     Route::get('/pre-alerts', AdminPreAlert::class)->name('view-pre-alerts');
     Route::get('/purchase-requests', AdminPurchaseRequest::class)->name('view-purchase-requests');
