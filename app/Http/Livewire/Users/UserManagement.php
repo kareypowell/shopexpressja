@@ -27,6 +27,11 @@ class UserManagement extends Component
     public $showFilters = false;
     public $selectedUsers = [];
     public $selectAll = false;
+    
+    // Delete confirmation modal
+    public $showDeleteModal = false;
+    public $userToDelete = null;
+    public $bulkDeleteMode = false;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -193,20 +198,79 @@ class UserManagement extends Component
         return redirect()->route('admin.users.show', $user);
     }
 
-    public function deleteUser($userId)
+    public function confirmDelete($userId)
     {
         $user = User::findOrFail($userId);
         
         // Check if user can delete this user
         $this->authorize('delete', $user);
         
+        $this->userToDelete = $user;
+        $this->bulkDeleteMode = false;
+        $this->showDeleteModal = true;
+    }
+
+    public function confirmBulkDelete()
+    {
+        if (empty($this->selectedUsers)) {
+            session()->flash('warning', 'No users selected for deletion.');
+            return;
+        }
+
+        $this->bulkDeleteMode = true;
+        $this->userToDelete = null;
+        $this->showDeleteModal = true;
+    }
+
+    public function executeDelete()
+    {
+        if ($this->bulkDeleteMode) {
+            $this->performBulkDelete();
+        } else {
+            $this->performSingleDelete();
+        }
+        
+        $this->cancelDelete();
+    }
+
+    public function cancelDelete()
+    {
+        $this->showDeleteModal = false;
+        $this->userToDelete = null;
+        $this->bulkDeleteMode = false;
+    }
+
+    private function performSingleDelete()
+    {
+        if (!$this->userToDelete) {
+            return;
+        }
+
+        $user = $this->userToDelete;
+        
+        // Additional safety checks
+        if ($user->isSuperAdmin()) {
+            $superAdminCount = User::withRole('superadmin')->count();
+            if ($superAdminCount <= 1) {
+                session()->flash('error', 'Cannot delete the last superadmin user. At least one superadmin must remain in the system.');
+                return;
+            }
+        }
+        
+        // Prevent users from deleting themselves
+        if ($user->id === auth()->id()) {
+            session()->flash('error', 'You cannot delete your own account.');
+            return;
+        }
+        
         try {
+            $userName = $user->full_name;
             $user->delete();
             
-            session()->flash('success', "User {$user->full_name} has been deleted successfully.");
+            session()->flash('success', "User {$userName} has been deleted successfully.");
             
             // Reset selection if this user was selected
-            $this->selectedUsers = array_diff($this->selectedUsers, [$userId]);
+            $this->selectedUsers = array_diff($this->selectedUsers, [$user->id]);
             
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to delete user: ' . $e->getMessage());
@@ -230,7 +294,7 @@ class UserManagement extends Component
         }
     }
 
-    public function bulkDelete()
+    private function performBulkDelete()
     {
         if (empty($this->selectedUsers)) {
             session()->flash('warning', 'No users selected for deletion.');
@@ -240,8 +304,36 @@ class UserManagement extends Component
         $users = User::whereIn('id', $this->selectedUsers)->get();
         $deletedCount = 0;
         $errors = [];
+        $skippedCount = 0;
+
+        // Check if current user is trying to delete themselves
+        if (in_array(auth()->id(), $this->selectedUsers)) {
+            $errors[] = "Cannot delete your own account.";
+            $skippedCount++;
+        }
+
+        // Check superadmin count before deletion
+        $superAdminsToDelete = $users->filter(function ($user) {
+            return $user->isSuperAdmin();
+        });
+        
+        if ($superAdminsToDelete->count() > 0) {
+            $totalSuperAdmins = User::withRole('superadmin')->count();
+            if ($totalSuperAdmins - $superAdminsToDelete->count() < 1) {
+                $errors[] = "Cannot delete all superadmin users. At least one superadmin must remain in the system.";
+                $this->selectedUsers = [];
+                $this->selectAll = false;
+                session()->flash('error', implode('<br>', $errors));
+                return;
+            }
+        }
 
         foreach ($users as $user) {
+            // Skip current user
+            if ($user->id === auth()->id()) {
+                continue;
+            }
+            
             try {
                 $this->authorize('delete', $user);
                 $user->delete();
@@ -253,6 +345,10 @@ class UserManagement extends Component
 
         if ($deletedCount > 0) {
             session()->flash('success', "Successfully deleted {$deletedCount} user(s).");
+        }
+
+        if ($skippedCount > 0) {
+            session()->flash('warning', "Skipped {$skippedCount} user(s) that cannot be deleted.");
         }
 
         if (!empty($errors)) {
