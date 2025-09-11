@@ -41,7 +41,7 @@ class RoleManagementAuthorizationTest extends TestCase
     {
         $this->actingAs($this->superAdmin);
         
-        $response = $this->get(route('roles.index'));
+        $response = $this->get(route('admin.roles'));
         $response->assertSuccessful();
         
         Livewire::test(RoleComponent::class)
@@ -53,7 +53,7 @@ class RoleManagementAuthorizationTest extends TestCase
     {
         $this->actingAs($this->admin);
         
-        $response = $this->get(route('roles.index'));
+        $response = $this->get(route('admin.roles'));
         $response->assertStatus(403);
     }
 
@@ -62,7 +62,7 @@ class RoleManagementAuthorizationTest extends TestCase
     {
         $this->actingAs($this->customer);
         
-        $response = $this->get(route('roles.index'));
+        $response = $this->get(route('admin.roles'));
         $response->assertStatus(403);
     }
 
@@ -235,47 +235,15 @@ class RoleManagementAuthorizationTest extends TestCase
     public function role_management_routes_require_proper_authorization()
     {
         // Test role index route
-        $response = $this->get(route('roles.index'));
+        $response = $this->get(route('admin.roles'));
         $response->assertRedirect(route('login'));
         
         $this->actingAs($this->admin);
-        $response = $this->get(route('roles.index'));
+        $response = $this->get(route('admin.roles'));
         $response->assertStatus(403);
         
         $this->actingAs($this->superAdmin);
-        $response = $this->get(route('roles.index'));
-        $response->assertSuccessful();
-    }
-
-    /** @test */
-    public function role_audit_trail_route_requires_proper_authorization()
-    {
-        // Test audit trail route
-        $response = $this->get(route('roles.audit-trail'));
-        $response->assertRedirect(route('login'));
-        
-        $this->actingAs($this->admin);
-        $response = $this->get(route('roles.audit-trail'));
-        $response->assertStatus(403);
-        
-        $this->actingAs($this->superAdmin);
-        $response = $this->get(route('roles.audit-trail'));
-        $response->assertSuccessful();
-    }
-
-    /** @test */
-    public function role_assignments_route_requires_proper_authorization()
-    {
-        // Test assignments route
-        $response = $this->get(route('roles.assignments'));
-        $response->assertRedirect(route('login'));
-        
-        $this->actingAs($this->admin);
-        $response = $this->get(route('roles.assignments'));
-        $response->assertStatus(403);
-        
-        $this->actingAs($this->superAdmin);
-        $response = $this->get(route('roles.assignments'));
+        $response = $this->get(route('admin.roles'));
         $response->assertSuccessful();
     }
 }

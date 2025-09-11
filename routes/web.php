@@ -95,14 +95,7 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->gro
     Route::get('/package-distribution', \App\Http\Livewire\PackageDistribution::class)->name('package-distribution');
     Route::get('/transactions', \App\Http\Livewire\Admin\TransactionManagement::class)->name('transactions');
     // Role management routes - accessible only by superadmin
-    Route::prefix('roles')->name('roles.')->group(function () {
-        Route::get('/', Role::class)->name('index')->middleware('can:role.viewAny');
-        Route::get('/create', Role::class)->name('create')->middleware('can:role.create');
-        Route::get('/{role}', Role::class)->name('show')->middleware('can:role.view,role');
-        Route::get('/{role}/edit', Role::class)->name('edit')->middleware('can:role.update,role');
-        Route::get('/assignments', Role::class)->name('assignments')->middleware('can:role.manageAssignments');
-        Route::get('/audit-trail', Role::class)->name('audit-trail')->middleware('can:role.viewAuditTrail');
-    });
+    Route::get('/roles', Role::class)->name('admin.roles')->middleware('can:role.viewAny');
     Route::get('/rates', Rate::class)->name('view-rates');
     Route::get('/pre-alerts', AdminPreAlert::class)->name('view-pre-alerts');
     Route::get('/purchase-requests', AdminPurchaseRequest::class)->name('view-purchase-requests');
