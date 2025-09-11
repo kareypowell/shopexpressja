@@ -59,7 +59,7 @@
   - Write tests for policy authorization methods
   - _Requirements: 1.1, 3.1, 5.4, 6.3_
 
-- [ ] 8. Update existing code to use role helper methods
+- [x] 8. Update existing code to use role helper methods
   - Replace any hardcoded role ID checks with role name-based methods
   - Update policies, middleware, and components to use new role helper methods
   - Ensure consistent role checking across the entire application

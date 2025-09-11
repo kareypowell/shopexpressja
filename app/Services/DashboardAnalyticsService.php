@@ -29,8 +29,8 @@ class DashboardAnalyticsService
             $dateRange = $this->getDateRange($filters);
             $previousRange = $this->getPreviousDateRange($filters);
 
-            // Only count customers (role_id = 3), exclude admins and staff
-            $customerQuery = User::where('role_id', 3);
+            // Only count customers, exclude admins and staff
+            $customerQuery = User::customerUsers();
 
             // Current period metrics
             $currentCustomers = $customerQuery->clone()
@@ -143,9 +143,13 @@ class DashboardAnalyticsService
             // Current period revenue from service charges only
             // Revenue = charges made for services (what the business actually earned)
             // Note: We don't count payments as they just cover the charges
+            // Get customer role ID for join
+            $customerRole = \App\Models\Role::where('name', 'customer')->first();
+            $customerRoleId = $customerRole ? $customerRole->id : 3; // fallback to 3 if role not found
+            
             $currentRevenue = DB::table('customer_transactions')
                 ->join('users', 'customer_transactions.user_id', '=', 'users.id')
-                ->where('users.role_id', 3) // Only customers, not admins
+                ->where('users.role_id', $customerRoleId) // Only customers, not admins
                 ->whereBetween('customer_transactions.created_at', $dateRange)
                 ->where('customer_transactions.type', \App\Models\CustomerTransaction::TYPE_CHARGE)
                 ->sum('customer_transactions.amount') ?? 0;
@@ -153,7 +157,7 @@ class DashboardAnalyticsService
             // Previous period revenue from service charges only
             $previousRevenue = DB::table('customer_transactions')
                 ->join('users', 'customer_transactions.user_id', '=', 'users.id')
-                ->where('users.role_id', 3) // Only customers, not admins
+                ->where('users.role_id', $customerRoleId) // Only customers, not admins
                 ->whereBetween('customer_transactions.created_at', $previousRange)
                 ->where('customer_transactions.type', \App\Models\CustomerTransaction::TYPE_CHARGE)
                 ->sum('customer_transactions.amount') ?? 0;
@@ -166,7 +170,7 @@ class DashboardAnalyticsService
             // Use charges only to avoid double counting
             $totalOrders = DB::table('customer_transactions')
                 ->join('users', 'customer_transactions.user_id', '=', 'users.id')
-                ->where('users.role_id', 3) // Only customers, not admins
+                ->where('users.role_id', $customerRoleId) // Only customers, not admins
                 ->whereBetween('customer_transactions.created_at', $dateRange)
                 ->where('customer_transactions.reference_type', 'package_distribution')
                 ->where('customer_transactions.type', \App\Models\CustomerTransaction::TYPE_CHARGE)

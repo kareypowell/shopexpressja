@@ -208,7 +208,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function scopeDeletedCustomers($query)
     {
-        return $query->onlyTrashed()->where('role_id', 3);
+        return $query->onlyTrashed()->customerUsers();
     }
 
     /**
@@ -216,7 +216,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function scopeAllCustomers($query)
     {
-        return $query->withTrashed()->where('role_id', 3);
+        return $query->withTrashed()->customerUsers();
     }
 
     /**

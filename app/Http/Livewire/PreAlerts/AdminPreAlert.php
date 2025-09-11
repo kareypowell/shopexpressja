@@ -35,7 +35,7 @@ class AdminPreAlert extends Component
     {
         $this->shipperList = Shipper::orderBy('name', 'asc')->get();
 
-        $this->customerList = User::where('role_id', 3)
+        $this->customerList = User::customerUsers()
                                     ->where('email_verified_at', '!=', '')
                                     ->orderBy('last_name', 'asc')->get();
 

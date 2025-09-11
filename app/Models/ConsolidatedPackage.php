@@ -229,8 +229,8 @@ class ConsolidatedPackage extends Model
         $updateUser = $user ?? auth()->user();
         
         if (!$updateUser) {
-            // Try to find an admin user
-            $updateUser = \App\Models\User::where('role_id', 1)->first();
+            // Try to find a superadmin user
+            $updateUser = \App\Models\User::superAdmins()->first();
             
             // If no admin user exists, create a system user for testing
             if (!$updateUser) {

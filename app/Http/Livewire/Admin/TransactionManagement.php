@@ -251,7 +251,7 @@ class TransactionManagement extends Component
 
     public function getCustomersProperty()
     {
-        $query = User::where('role_id', 3);
+        $query = User::customerUsers();
         
         if ($this->customerSearch) {
             $searchTerm = trim($this->customerSearch);

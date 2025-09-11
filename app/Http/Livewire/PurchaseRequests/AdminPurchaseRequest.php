@@ -24,7 +24,7 @@ class AdminPurchaseRequest extends Component
         $this->shipping_fee = 0.0;
         $this->tax = 0.0;
 
-        $this->customerList = User::where('role_id', 3)
+        $this->customerList = User::customerUsers()
                                     ->where('email_verified_at', '!=', '')
                                     ->orderBy('last_name', 'asc')->get();
     }

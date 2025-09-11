@@ -56,7 +56,7 @@ class EditManifestPackage extends Component
 
     public function mount()
     {
-        $this->customerList = User::where('role_id', 3)
+        $this->customerList = User::customerUsers()
             ->where('email_verified_at', '!=', '')
             ->orderBy('last_name', 'asc')->get();
 
@@ -220,7 +220,7 @@ class EditManifestPackage extends Component
     public function updatedCustomerSearch()
     {
         if (strlen($this->customerSearch) >= 1) {
-            $this->filteredCustomers = User::where('role_id', 3)
+            $this->filteredCustomers = User::customerUsers()
                 ->where('email_verified_at', '!=', '')
                 ->search($this->customerSearch)
                 ->orderBy('last_name', 'asc')
@@ -260,7 +260,7 @@ class EditManifestPackage extends Component
     public function showAllCustomers()
     {
         if (empty($this->customerSearch)) {
-            $this->filteredCustomers = User::where('role_id', 3)
+            $this->filteredCustomers = User::customerUsers()
                 ->where('email_verified_at', '!=', '')
                 ->orderBy('last_name', 'asc')
                 ->limit(10)

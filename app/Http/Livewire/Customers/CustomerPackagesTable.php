@@ -143,13 +143,13 @@ class CustomerPackagesTable extends DataTableComponent
         $currentUser = auth()->user();
         
         // Admins and superadmins can always see costs
-        if ($currentUser->role_id == 1 || $currentUser->role_id == 2) { // superadmin = 1, admin = 2
+        if ($currentUser->isSuperAdmin() || $currentUser->isAdmin()) {
             return true;
         }
         
         // For customers, they can only see costs for their own packages
         // This method determines column visibility, individual row visibility is handled in the template
-        return $currentUser->role_id == 3 && $currentUser->id === $this->customer->id; // customer = 3
+        return $currentUser->isCustomer() && $currentUser->id === $this->customer->id;
     }
 
     /**
@@ -165,12 +165,12 @@ class CustomerPackagesTable extends DataTableComponent
         $currentUser = auth()->user();
         
         // Admins and superadmins can always see costs
-        if ($currentUser->role_id == 1 || $currentUser->role_id == 2) { // superadmin = 1, admin = 2
+        if ($currentUser->isSuperAdmin() || $currentUser->isAdmin()) {
             return true;
         }
         
         // For customers, only show costs when package is ready for pickup or delivered
-        if ($currentUser->role_id == 3 && $currentUser->id === $this->customer->id) { // customer = 3
+        if ($currentUser->isCustomer() && $currentUser->id === $this->customer->id) {
             return in_array($package->status->value, ['ready', 'ready_for_pickup', 'delivered']);
         }
         

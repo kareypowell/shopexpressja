@@ -205,8 +205,8 @@
                                         @php
                                             $currentUser = auth()->user();
                                             $packageStatus = $package->status_value;
-                                            $canSeeCosts = $currentUser->role_id == 1 || $currentUser->role_id == 2 || 
-                                                          ($currentUser->role_id == 3 && in_array($packageStatus, ['ready', 'delivered']));
+                                            $canSeeCosts = $currentUser->isSuperAdmin() || $currentUser->isAdmin() || 
+                                                          ($currentUser->isCustomer() && in_array($packageStatus, ['ready', 'delivered']));
                                         @endphp
                                         @if($canSeeCosts && $package->total_cost > 0)
                                             ${{ number_format($package->total_cost, 2) }}
@@ -300,8 +300,8 @@
                                     @php
                                         $currentUser = auth()->user();
                                         $packageStatus = $package->status_value;
-                                        $canSeeCosts = $currentUser->role_id == 1 || $currentUser->role_id == 2 || 
-                                                      ($currentUser->role_id == 3 && in_array($packageStatus, ['ready', 'delivered']));
+                                        $canSeeCosts = $currentUser->isSuperAdmin() || $currentUser->isAdmin() || 
+                                                      ($currentUser->isCustomer() && in_array($packageStatus, ['ready', 'delivered']));
                                     @endphp
                                     @if($canSeeCosts && $package->total_cost > 0)
                                         <span class="text-sm font-semibold text-gray-900">${{ number_format($package->total_cost, 2) }}</span>

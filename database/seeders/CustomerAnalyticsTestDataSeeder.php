@@ -19,8 +19,8 @@ class CustomerAnalyticsTestDataSeeder extends Seeder
      */
     public function run()
     {
-        // Ensure customer role exists (role_id = 3)
-        $customerRole = Role::firstOrCreate(['id' => 3], ['name' => 'customer']);
+        // Ensure customer role exists
+        $customerRole = Role::firstOrCreate(['name' => 'customer']);
 
         // Create test customers with varied registration dates over the last 90 days
         $customers = [];
@@ -42,7 +42,7 @@ class CustomerAnalyticsTestDataSeeder extends Seeder
                 'last_name' => 'Analytics' . $i,
                 'email' => $email,
                 'password' => Hash::make('password'),
-                'role_id' => 3,
+                'role_id' => $customerRole->id,
                 'email_verified_at' => rand(0, 10) > 2 ? $registrationDate->addHours(rand(1, 48)) : null, // 80% verified
                 'created_at' => $registrationDate,
                 'updated_at' => $registrationDate,
