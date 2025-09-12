@@ -60,6 +60,7 @@
                                                 @case('ready') Ready @break
                                                 @case('in-transit') In Transit @break
                                                 @case('delivered') Delivered @break
+                                                @case('delayed') Delayed @break
                                                 @default All Packages
                                             @endswitch
                                         </span>
@@ -70,6 +71,7 @@
                                                 @case('ready') Ready @break
                                                 @case('in-transit') Transit @break
                                                 @case('delivered') Delivered @break
+                                                @case('delayed') Delayed @break
                                                 @default All
                                             @endswitch
                                         </span>
@@ -106,6 +108,15 @@
                                                 <button wire:click="setPackageFilter('delivered')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ $packageFilter === 'delivered' ? 'bg-blue-50 text-blue-700' : '' }}">
                                                     Delivered
                                                 </button>
+                                                @if($delayedPackages > 0)
+                                                    <div class="border-t border-gray-100"></div>
+                                                    <button wire:click="setPackageFilter('delayed')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ $packageFilter === 'delayed' ? 'bg-red-50 text-red-700' : '' }}">
+                                                        <svg class="w-4 h-4 inline mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                                        </svg>
+                                                        Delayed ({{ $delayedPackages }})
+                                                    </button>
+                                                @endif
                                             </div>
                                         </div>
                                     @endif

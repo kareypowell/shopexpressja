@@ -68,8 +68,18 @@ class Dashboard extends Component
         $this->pendingPackageCharges = $user->pending_package_charges ?? 0.0;
         $this->totalAmountNeeded = $user->total_amount_needed ?? 0.0;
 
-        $this->delayedPackages = Package::where('user_id', auth()->id())
-                                        ->where('status', 'delayed')->count();
+        // Count delayed packages: individual packages + consolidated packages in delayed status
+        $individualDelayedPackages = Package::where('user_id', auth()->id())
+                                           ->where('status', 'delayed')
+                                           ->whereNull('consolidated_package_id') // Only count individual packages not in consolidated packages
+                                           ->count();
+        
+        $consolidatedDelayedPackages = ConsolidatedPackage::where('customer_id', auth()->id())
+                                                         ->where('status', 'delayed')
+                                                         ->active()
+                                                         ->count();
+        
+        $this->delayedPackages = $individualDelayedPackages + $consolidatedDelayedPackages;
     }
 
     public function showPackageDetails($packageId)
@@ -122,6 +132,9 @@ class Dashboard extends Component
                 break;
             case 'delivered':
                 $individualQuery->where('status', 'delivered');
+                break;
+            case 'delayed':
+                $individualQuery->where('status', 'delayed');
                 break;
             default:
                 // 'all' - no additional filtering
@@ -179,6 +192,8 @@ class Dashboard extends Component
                         return in_array($package->status, ['processing', 'shipped', 'customs']);
                     case 'delivered':
                         return $package->status === 'delivered';
+                    case 'delayed':
+                        return $package->status === 'delayed';
                     default:
                         return true;
                 }
