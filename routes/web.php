@@ -8,6 +8,7 @@ use App\Http\Livewire\Customers\AdminCustomer;
 use App\Http\Livewire\Customers\{CustomerCreate, CustomerProfile, CustomerEdit};
 use App\Http\Livewire\Admin\CustomerBalanceManager;
 use App\Http\Livewire\Users\{UserManagement, UserCreate, UserEdit};
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\{Dashboard, Invoice};
 use App\Http\Livewire\Manifests\Manifest;
@@ -125,8 +126,8 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', UserManagement::class)->name('index')->middleware('can:user.viewAny');
         Route::get('/create', UserCreate::class)->name('create')->middleware('can:user.create');
-        Route::get('/{user}', UserManagement::class)->name('show')->middleware('can:user.view,user'); // For now, redirect to index with user selected
-        Route::get('/{user}/edit', UserEdit::class)->name('edit')->middleware('can:user.update,user');
+        Route::get('/{user}', [UserController::class, 'show'])->name('show');
+        Route::get('/{user}/edit', UserEdit::class)->name('edit');
     });
 });
 

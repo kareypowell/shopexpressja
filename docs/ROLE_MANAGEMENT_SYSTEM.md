@@ -376,7 +376,7 @@ The system maintains a comprehensive audit trail of all role changes:
 #### Usage
 ```php
 // Get role change history for a user
-$auditTrail = $user->roleChangeAudits()->with(['oldRole', 'newRole', 'changedByUser'])->get();
+$auditTrail = $user->roleChangeAudits()->with(['oldRole', 'newRole', 'changedBy'])->get();
 
 // Get all role changes made by a user
 $changesMade = $user->changedRoleAudits()->with(['user', 'oldRole', 'newRole'])->get();
@@ -388,7 +388,7 @@ The service handles automatic logging of role changes:
 
 ```php
 // Automatically called when user role is changed
-RoleChangeAuditService::logRoleChange($user, $oldRole, $newRole, $reason, $changedByUser);
+RoleChangeAuditService::logRoleChange($user, $oldRole, $newRole, $reason, $changedBy);
 ```
 
 ## Navigation Integration

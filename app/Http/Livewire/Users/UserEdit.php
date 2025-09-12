@@ -69,7 +69,7 @@ class UserEdit extends Component
     public function mount(User $user)
     {
         // Check if user can update this user
-        $this->authorize('update', $user);
+        $this->authorize('user.update', $user);
         
         $this->user = $user;
         $this->firstName = $user->first_name;
@@ -119,7 +119,7 @@ class UserEdit extends Component
     public function update()
     {
         // Re-check authorization before updating
-        $this->authorize('update', $this->user);
+        $this->authorize('user.update', $this->user);
         
         $this->isUpdating = true;
 

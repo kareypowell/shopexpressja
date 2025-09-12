@@ -9,7 +9,7 @@
                         <p class="mt-1 text-sm text-gray-500">Manage system users and their roles</p>
                     </div>
                     <div class="mt-4 md:mt-0">
-                        @can('create', App\Models\User::class)
+                        @can('user.create')
                             <a href="{{ route('admin.users.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
                                 <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
@@ -24,28 +24,23 @@
     </div>
 
     <!-- Stats Overview -->
-    <div class="bg-gray-50 py-6">
+    <div class="bg-gray-50 py-4">
         <div class="px-4 sm:px-6 lg:max-w-7xl lg:mx-auto lg:px-8">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-medium text-gray-900">User Overview</h3>
-                    <div class="text-3xl font-bold text-indigo-600">{{ $users->total() }}</div>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-base font-medium text-gray-900">User Overview</h3>
+                    <div class="text-2xl font-bold text-indigo-600">{{ $users->total() }}</div>
                 </div>
                 
                 @if($roleStats && count($roleStats) > 0)
-                    <div class="space-y-3">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         @foreach($roleStats as $role => $count)
-                            <div class="flex items-center justify-between py-2">
+                            <div class="flex items-center justify-between p-2 bg-gray-50 rounded-md">
                                 <div class="flex items-center">
-                                    <div class="w-3 h-3 rounded-full mr-3 bg-{{ $role === 'superadmin' ? 'red' : ($role === 'admin' ? 'blue' : ($role === 'purchaser' ? 'green' : 'gray')) }}-500"></div>
-                                    <span class="text-sm font-medium text-gray-700">{{ ucfirst($role) }}</span>
+                                    <div class="w-2 h-2 rounded-full mr-2 bg-{{ $role === 'superadmin' ? 'red' : ($role === 'admin' ? 'blue' : ($role === 'purchaser' ? 'green' : 'gray')) }}-500"></div>
+                                    <span class="text-xs font-medium text-gray-700">{{ ucfirst($role) }}</span>
                                 </div>
-                                <div class="flex items-center">
-                                    <span class="text-sm font-semibold text-gray-900 mr-2">{{ $count }}</span>
-                                    <div class="w-16 bg-gray-200 rounded-full h-2">
-                                        <div class="bg-{{ $role === 'superadmin' ? 'red' : ($role === 'admin' ? 'blue' : ($role === 'purchaser' ? 'green' : 'gray')) }}-500 h-2 rounded-full" style="width: {{ $users->total() > 0 ? ($count / $users->total()) * 100 : 0 }}%"></div>
-                                    </div>
-                                </div>
+                                <span class="text-sm font-semibold text-gray-900">{{ $count }}</span>
                             </div>
                         @endforeach
                     </div>
@@ -145,94 +140,94 @@
     <div class="bg-white">
         <div class="px-4 sm:px-6 lg:max-w-7xl lg:mx-auto lg:px-8">
             @if($users->count() > 0)
-                <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                <div class="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
                     <table class="min-w-full divide-y divide-gray-300">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th scope="col" class="relative px-6 py-4 sm:w-12 sm:px-6">
+                                <th scope="col" class="relative w-12 px-6 py-3 sm:px-6">
                                     <input type="checkbox" wire:model="selectAll" class="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                 </th>
-                                <th scope="col" class="min-w-[12rem] py-4 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+                                <th scope="col" class="min-w-[12rem] py-3 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider sm:pl-6">
                                     <button wire:click="sortBy('name')" class="group inline-flex items-center hover:text-gray-700">
                                         User
                                         @if($sortField === 'name')
                                             @if($sortDirection === 'asc')
-                                                <svg class="ml-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="ml-1 h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                                                 </svg>
                                             @else
-                                                <svg class="ml-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="ml-1 h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                                 </svg>
                                             @endif
                                         @else
-                                            <svg class="ml-2 h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="ml-1 h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/>
                                             </svg>
                                         @endif
                                     </button>
                                 </th>
-                                <th scope="col" class="px-3 py-4 text-left text-sm font-semibold text-gray-900">
+                                <th scope="col" class="px-3 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">
                                     <button wire:click="sortBy('email')" class="group inline-flex items-center hover:text-gray-700">
                                         Email
                                         @if($sortField === 'email')
                                             @if($sortDirection === 'asc')
-                                                <svg class="ml-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="ml-1 h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                                                 </svg>
                                             @else
-                                                <svg class="ml-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="ml-1 h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                                 </svg>
                                             @endif
                                         @else
-                                            <svg class="ml-2 h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="ml-1 h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/>
                                             </svg>
                                         @endif
                                     </button>
                                 </th>
-                                <th scope="col" class="px-3 py-4 text-left text-sm font-semibold text-gray-900">
+                                <th scope="col" class="px-3 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">
                                     <button wire:click="sortBy('role')" class="group inline-flex items-center hover:text-gray-700">
                                         Role
                                         @if($sortField === 'role')
                                             @if($sortDirection === 'asc')
-                                                <svg class="ml-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="ml-1 h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                                                 </svg>
                                             @else
-                                                <svg class="ml-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="ml-1 h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                                 </svg>
                                             @endif
                                         @else
-                                            <svg class="ml-2 h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="ml-1 h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/>
                                             </svg>
                                         @endif
                                     </button>
                                 </th>
-                                <th scope="col" class="px-3 py-4 text-left text-sm font-semibold text-gray-900">
+                                <th scope="col" class="px-3 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">
                                     <button wire:click="sortBy('created_at')" class="group inline-flex items-center hover:text-gray-700">
                                         Created
                                         @if($sortField === 'created_at')
                                             @if($sortDirection === 'asc')
-                                                <svg class="ml-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="ml-1 h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                                                 </svg>
                                             @else
-                                                <svg class="ml-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="ml-1 h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                                 </svg>
                                             @endif
                                         @else
-                                            <svg class="ml-2 h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="ml-1 h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/>
                                             </svg>
                                         @endif
                                     </button>
                                 </th>
-                                <th scope="col" class="relative py-4 pl-3 pr-4 sm:pr-6">
+                                <th scope="col" class="relative py-3 pl-3 pr-4 sm:pr-6 w-20">
                                     <span class="sr-only">Actions</span>
                                 </th>
                             </tr>
@@ -260,8 +255,8 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                        <div class="text-gray-900">{{ $user->email }}</div>
+                                    <td class="px-3 py-4 text-sm text-gray-500">
+                                        <div class="text-gray-900 truncate max-w-xs">{{ $user->email }}</div>
                                         <div class="flex items-center mt-1">
                                             @if($user->email_verified_at)
                                                 <svg class="h-3 w-3 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -290,33 +285,32 @@
                                         <div>{{ $user->created_at->format('M j, Y') }}</div>
                                         <div class="text-xs text-gray-400">{{ $user->created_at->format('g:i A') }}</div>
                                     </td>
-                                    <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                                        <div class="flex items-center justify-end space-x-2">
-                                            @can('view', $user)
-                                                <button wire:click="viewUser({{ $user->id }})" class="text-indigo-600 hover:text-indigo-900 transition-colors duration-150">
+                                    <td class="relative py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                        <div class="flex items-center justify-end space-x-1">
+                                            @can('user.view', $user)
+                                                <button wire:click="viewUser({{ $user->id }})" class="text-indigo-600 hover:text-indigo-900 transition-colors duration-150 px-2 py-1 text-xs">
                                                     View
                                                 </button>
                                             @endcan
                                             
-                                            @can('update', $user)
-                                                <button wire:click="editUser({{ $user->id }})" class="text-indigo-600 hover:text-indigo-900 transition-colors duration-150">
-                                                    Edit
-                                                </button>
-                                            @endcan
-                                            
                                             @if($user->trashed())
-                                                @can('restore', $user)
-                                                    <button wire:click="restoreUser({{ $user->id }})" wire:confirm="Are you sure you want to restore this user?" class="text-green-600 hover:text-green-900 transition-colors duration-150">
+                                                @can('user.restore', $user)
+                                                    <button wire:click="restoreUser({{ $user->id }})" wire:confirm="Are you sure you want to restore this user?" class="text-green-600 hover:text-green-900 transition-colors duration-150 px-2 py-1 text-xs">
                                                         Restore
                                                     </button>
                                                 @endcan
                                             @else
-                                                @can('delete', $user)
+                                                @can('user.update', $user)
+                                                    <button wire:click="editUser({{ $user->id }})" class="text-indigo-600 hover:text-indigo-900 transition-colors duration-150 px-2 py-1 text-xs">
+                                                        Edit
+                                                    </button>
+                                                @endcan
+                                                
+                                                @can('user.delete', $user)
                                                     <button wire:click="confirmDelete({{ $user->id }})" class="inline-flex items-center px-2 py-1 text-xs font-medium text-red-700 bg-red-100 border border-red-300 rounded hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors duration-150">
-                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                         </svg>
-                                                        Delete
                                                     </button>
                                                 @endcan
                                             @endif
@@ -329,49 +323,7 @@
                 </div>
 
                 <!-- Pagination -->
-                <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
-                    <div class="flex flex-1 justify-between sm:hidden">
-                        @if ($users->hasPages())
-                            <div class="flex justify-between flex-1">
-                                @if ($users->onFirstPage())
-                                    <span class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 cursor-default leading-5 rounded-md">
-                                        Previous
-                                    </span>
-                                @else
-                                    <a href="{{ $users->previousPageUrl() }}" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 leading-5 rounded-md hover:text-gray-500 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150">
-                                        Previous
-                                    </a>
-                                @endif
-
-                                @if ($users->hasMorePages())
-                                    <a href="{{ $users->nextPageUrl() }}" class="relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 leading-5 rounded-md hover:text-gray-500 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150">
-                                        Next
-                                    </a>
-                                @else
-                                    <span class="relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium text-gray-500 bg-white border border-gray-300 cursor-default leading-5 rounded-md">
-                                        Next
-                                    </span>
-                                @endif
-                            </div>
-                        @endif
-                    </div>
-                    <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                        <div>
-                            <p class="text-sm text-gray-700">
-                                Showing
-                                <span class="font-medium">{{ $users->firstItem() ?? 0 }}</span>
-                                to
-                                <span class="font-medium">{{ $users->lastItem() ?? 0 }}</span>
-                                of
-                                <span class="font-medium">{{ $users->total() }}</span>
-                                results
-                            </p>
-                        </div>
-                        <div>
-                            {{ $users->links() }}
-                        </div>
-                    </div>
-                </div>
+                {{ $users->links() }}
             @else
                 <div class="text-center py-16">
                     <div class="mx-auto h-24 w-24 bg-gray-100 rounded-full flex items-center justify-center">
@@ -404,7 +356,7 @@
                             </button>
                         @endif
                         
-                        @can('create', App\Models\User::class)
+                        @can('user.create')
                             <a href="{{ route('admin.users.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
                                 <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>

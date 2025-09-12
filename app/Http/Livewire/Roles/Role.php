@@ -232,7 +232,7 @@ class Role extends Component
     {
         $this->authorize('viewAuditTrail', RoleModel::class);
         
-        $query = RoleChangeAudit::with(['user', 'changedByUser', 'oldRole', 'newRole'])
+        $query = RoleChangeAudit::with(['user', 'changedBy', 'oldRole', 'newRole'])
             ->orderBy('created_at', 'desc');
             
         if ($roleId) {

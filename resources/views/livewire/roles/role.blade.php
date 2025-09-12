@@ -228,7 +228,7 @@
                                                     <span class="font-semibold">{{ $audit['new_role']['name'] ?? 'Unknown' }}</span>
                                                 </p>
                                                 <p class="text-xs text-gray-500">
-                                                    Changed by: {{ $audit['changed_by_user']['first_name'] ?? 'System' }} {{ $audit['changed_by_user']['last_name'] ?? '' }}
+                                                    Changed by: {{ $audit['changed_by']['first_name'] ?? 'System' }} {{ $audit['changed_by']['last_name'] ?? '' }}
                                                 </p>
                                                 @if($audit['reason'])
                                                     <p class="text-xs text-gray-600 mt-1">

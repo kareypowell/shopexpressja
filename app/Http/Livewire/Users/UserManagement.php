@@ -45,7 +45,7 @@ class UserManagement extends Component
     public function mount()
     {
         // Check if user can view users
-        $this->authorize('viewAny', User::class);
+        $this->authorize('user.viewAny');
         
         $this->setUserManagementBreadcrumbs();
     }
@@ -183,7 +183,7 @@ class UserManagement extends Component
         $user = User::findOrFail($userId);
         
         // Check if user can update this user
-        $this->authorize('update', $user);
+        $this->authorize('user.update', $user);
         
         return redirect()->route('admin.users.edit', $user);
     }
@@ -193,7 +193,7 @@ class UserManagement extends Component
         $user = User::findOrFail($userId);
         
         // Check if user can view this user
-        $this->authorize('view', $user);
+        $this->authorize('user.view', $user);
         
         return redirect()->route('admin.users.show', $user);
     }
@@ -203,7 +203,7 @@ class UserManagement extends Component
         $user = User::findOrFail($userId);
         
         // Check if user can delete this user
-        $this->authorize('delete', $user);
+        $this->authorize('user.delete', $user);
         
         $this->userToDelete = $user;
         $this->bulkDeleteMode = false;
@@ -282,7 +282,7 @@ class UserManagement extends Component
         $user = User::withTrashed()->findOrFail($userId);
         
         // Check if user can restore this user
-        $this->authorize('restore', $user);
+        $this->authorize('user.restore', $user);
         
         try {
             $user->restore();
@@ -335,7 +335,7 @@ class UserManagement extends Component
             }
             
             try {
-                $this->authorize('delete', $user);
+                $this->authorize('user.delete', $user);
                 $user->delete();
                 $deletedCount++;
             } catch (\Exception $e) {
@@ -372,7 +372,7 @@ class UserManagement extends Component
 
         foreach ($users as $user) {
             try {
-                $this->authorize('restore', $user);
+                $this->authorize('user.restore', $user);
                 $user->restore();
                 $restoredCount++;
             } catch (\Exception $e) {
