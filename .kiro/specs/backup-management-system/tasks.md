@@ -7,7 +7,7 @@
   - Create Backup, BackupSchedule, and RestoreLog Eloquent models with relationships
   - _Requirements: 1.3, 6.3, 7.2_
 
-- [ ] 2. Create backup configuration system
+- [x] 2. Create backup configuration system
   - Create config/backup.php configuration file with all backup settings
   - Add backup-related environment variables to .env.example
   - Create BackupConfig service class to manage configuration access
