@@ -69,32 +69,23 @@ class BackupSchedule extends Model
     {
         $baseTime = Carbon::today()->setTimeFromTimeString($this->time->format('H:i:s'));
         
-        switch ($this->frequency) {
-            case 'daily':
-                $nextRun = $baseTime->addDay();
-                break;
-            case 'weekly':
-                $nextRun = $baseTime->addWeek();
-                break;
-            case 'monthly':
-                $nextRun = $baseTime->addMonth();
-                break;
-            default:
-                $nextRun = $baseTime->addDay();
-        }
-
-        // If the calculated time is in the past, move to the next occurrence
-        while ($nextRun->isPast()) {
+        // If today's scheduled time hasn't passed yet, use today
+        if ($baseTime->isFuture()) {
+            $nextRun = $baseTime;
+        } else {
+            // Otherwise, calculate the next occurrence
             switch ($this->frequency) {
                 case 'daily':
-                    $nextRun->addDay();
+                    $nextRun = $baseTime->addDay();
                     break;
                 case 'weekly':
-                    $nextRun->addWeek();
+                    $nextRun = $baseTime->addWeek();
                     break;
                 case 'monthly':
-                    $nextRun->addMonth();
+                    $nextRun = $baseTime->addMonth();
                     break;
+                default:
+                    $nextRun = $baseTime->addDay();
             }
         }
 

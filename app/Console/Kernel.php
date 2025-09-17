@@ -32,6 +32,18 @@ class Kernel extends ConsoleKernel
             ->onFailure(function () {
                 \Log::error('Scheduled broadcast processing failed');
             });
+
+        // Execute scheduled backups every hour
+        $schedule->command('backup:scheduled')
+            ->hourly()
+            ->withoutOverlapping(30) // Prevent overlapping runs, timeout after 30 minutes
+            ->runInBackground()
+            ->onSuccess(function () {
+                \Log::info('Scheduled backup check completed successfully');
+            })
+            ->onFailure(function () {
+                \Log::error('Scheduled backup check failed');
+            });
     }
 
     /**

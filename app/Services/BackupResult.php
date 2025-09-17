@@ -117,4 +117,44 @@ class BackupResult
     {
         return json_encode($this->toArray());
     }
+
+    /**
+     * Check if the backup operation was successful (alias for isSuccessful)
+     *
+     * @return bool
+     */
+    public function isSuccess(): bool
+    {
+        return $this->success;
+    }
+
+    /**
+     * Get the file path of the backup
+     *
+     * @return string|null
+     */
+    public function getFilePath(): ?string
+    {
+        return $this->backup?->file_path ?? $this->metadata['file_path'] ?? null;
+    }
+
+    /**
+     * Get the file size of the backup
+     *
+     * @return int
+     */
+    public function getFileSize(): int
+    {
+        return $this->backup?->file_size ?? $this->metadata['file_size'] ?? 0;
+    }
+
+    /**
+     * Get the error message (alias for getMessage when failed)
+     *
+     * @return string
+     */
+    public function getErrorMessage(): string
+    {
+        return $this->message;
+    }
 }
