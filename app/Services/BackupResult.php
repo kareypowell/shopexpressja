@@ -163,4 +163,43 @@ class BackupResult
     {
         return $this->message;
     }
+
+    /**
+     * Get the backup type
+     *
+     * @return string
+     */
+    public function getType()
+    {
+        if ($this->backup && $this->backup->type) {
+            return $this->backup->type;
+        }
+        return $this->metadata['type'] ?? 'unknown';
+    }
+
+    /**
+     * Get the backup duration in seconds
+     *
+     * @return float
+     */
+    public function getDuration()
+    {
+        if ($this->backup && $this->backup->created_at && $this->backup->completed_at) {
+            return $this->backup->created_at->diffInSeconds($this->backup->completed_at);
+        }
+        return $this->metadata['duration'] ?? 0;
+    }
+
+    /**
+     * Get the backup creation timestamp
+     *
+     * @return \Carbon\Carbon|null
+     */
+    public function getCreatedAt()
+    {
+        if ($this->backup && $this->backup->created_at) {
+            return $this->backup->created_at;
+        }
+        return null;
+    }
 }

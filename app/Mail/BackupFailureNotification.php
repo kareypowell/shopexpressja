@@ -34,6 +34,7 @@ class BackupFailureNotification extends Mailable
             ->view('emails.backup-failure')
             ->with([
                 'backup' => $this->backup,
+                'error' => $this->errorMessage,
                 'errorMessage' => $this->errorMessage,
                 'systemHealth' => $this->systemHealth,
                 'failedAt' => $this->backup->updated_at,

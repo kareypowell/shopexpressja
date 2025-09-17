@@ -1,31 +1,33 @@
 @component('mail::message')
 # Backup Completed Successfully
 
-The backup **{{ $backup->name }}** has been completed successfully.
+A backup operation has completed successfully on {{ config('app.name') }}.
 
-@component('mail::panel')
 **Backup Details:**
-- **Type:** {{ ucfirst($backup->type) }}
-- **File Size:** {{ $fileSizeMB }} MB
-- **Duration:** {{ $duration }}
-- **Created:** {{ $backup->created_at->format('Y-m-d H:i:s') }}
-- **File Path:** {{ $backup->file_path }}
-@endcomponent
+- **Backup ID:** {{ $backup->id }}
+- **Backup Name:** {{ $backup->name }}
+- **Backup Type:** {{ ucfirst($backup->type) }}
+- **Completed At:** {{ $backup->completed_at->format('Y-m-d H:i:s') }}
+- **File Size:** {{ $backup->formatted_file_size }}
 
-@if(!empty($systemHealth))
-## System Health Summary
-
-@component('mail::table')
-| Metric | Value |
-|:-------|:------|
-| Recent Success Rate | {{ $systemHealth['recent_backups']['success_rate'] ?? 'N/A' }}% |
-| Storage Usage | {{ $systemHealth['storage_usage']['usage_percentage'] ?? 'N/A' }}% |
-| Active Schedules | {{ $systemHealth['schedule_health']['total_schedules'] ?? 'N/A' }} |
-@endcomponent
+@if($backup->metadata && isset($backup->metadata['backup_paths']))
+**Backup Contents:**
+@if(isset($backup->metadata['backup_paths']['database']))
+- Database backup created
+@endif
+@if(isset($backup->metadata['backup_paths']['files']) && count($backup->metadata['backup_paths']['files']) > 0)
+- {{ count($backup->metadata['backup_paths']['files']) }} file archive(s) created
+@endif
 @endif
 
-This is an automated notification from the ShipSharkLtd backup system.
+**System Information:**
+- **Server:** {{ request()->getHost() }}
+- **Environment:** {{ config('app.env') }}
+
+@component('mail::button', ['url' => route('admin.backup.dashboard')])
+View Backup Dashboard
+@endcomponent
 
 Thanks,<br>
-{{ config('app.name') }}
+{{ config('app.name') }} Backup System
 @endcomponent

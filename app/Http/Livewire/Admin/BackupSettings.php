@@ -3,6 +3,8 @@
 namespace App\Http\Livewire\Admin;
 
 use App\Models\BackupSchedule;
+use App\Models\BackupSetting;
+use App\Services\BackupSettingsService;
 use Livewire\Component;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Artisan;
@@ -34,6 +36,7 @@ class BackupSettings extends Component
     public $showAddScheduleModal = false;
     public $editingScheduleId = null;
     public $showDeleteConfirm = null;
+    public $isLoading = false;
 
     protected $rules = [
         'newSchedule.name' => 'required|string|max:255',
@@ -68,19 +71,22 @@ class BackupSettings extends Component
 
     public function loadRetentionSettings()
     {
-        $this->retentionSettings = [
-            'database_days' => config('backup.retention.database_days', 30),
-            'files_days' => config('backup.retention.files_days', 14)
-        ];
+        $this->retentionSettings = BackupSettingsService::getRetentionSettings();
     }
 
     public function loadNotificationSettings()
     {
-        $this->notificationSettings = [
-            'email' => config('backup.notifications.email', ''),
-            'notify_on_success' => config('backup.notifications.notify_on_success', false),
-            'notify_on_failure' => config('backup.notifications.notify_on_failure', true)
-        ];
+        $this->notificationSettings = BackupSettingsService::getNotificationSettings();
+    }
+
+    public function getBackupDirectories()
+    {
+        return config('backup.files.directories', []);
+    }
+
+    public function getExcludePatterns()
+    {
+        return config('backup.files.exclude_patterns', []);
     }
 
     public function openAddScheduleModal()
@@ -123,10 +129,14 @@ class BackupSettings extends Component
             if ($this->editingScheduleId) {
                 $schedule = BackupSchedule::findOrFail($this->editingScheduleId);
                 $schedule->update($this->newSchedule);
-                $this->emit('scheduleUpdated', 'Backup schedule updated successfully');
+                $this->dispatchBrowserEvent('toastr:success', [
+                    'message' => 'Backup schedule updated successfully'
+                ]);
             } else {
                 BackupSchedule::create($this->newSchedule);
-                $this->emit('scheduleCreated', 'Backup schedule created successfully');
+                $this->dispatchBrowserEvent('toastr:success', [
+                    'message' => 'Backup schedule created successfully'
+                ]);
             }
 
             $this->loadSchedules();
@@ -135,6 +145,9 @@ class BackupSettings extends Component
         } catch (\Exception $e) {
             Log::error('Failed to save backup schedule: ' . $e->getMessage());
             $this->addError('general', 'Failed to save backup schedule. Please try again.');
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Failed to save backup schedule. Please try again.'
+            ]);
         }
     }
 
@@ -157,10 +170,15 @@ class BackupSettings extends Component
             BackupSchedule::findOrFail($this->showDeleteConfirm)->delete();
             $this->loadSchedules();
             $this->showDeleteConfirm = null;
-            $this->emit('scheduleDeleted', 'Backup schedule deleted successfully');
+            $this->dispatchBrowserEvent('toastr:success', [
+                'message' => 'Backup schedule deleted successfully'
+            ]);
         } catch (\Exception $e) {
             Log::error('Failed to delete backup schedule: ' . $e->getMessage());
             $this->addError('general', 'Failed to delete backup schedule. Please try again.');
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Failed to delete backup schedule. Please try again.'
+            ]);
         }
     }
 
@@ -177,29 +195,59 @@ class BackupSettings extends Component
             $this->loadSchedules();
             
             $status = $schedule->is_active ? 'activated' : 'deactivated';
-            $this->emit('scheduleToggled', "Backup schedule {$status} successfully");
+            $this->dispatchBrowserEvent('toastr:success', [
+                'message' => "Backup schedule {$status} successfully"
+            ]);
         } catch (\Exception $e) {
             Log::error('Failed to toggle backup schedule status: ' . $e->getMessage());
             $this->addError('general', 'Failed to update schedule status. Please try again.');
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Failed to update schedule status. Please try again.'
+            ]);
         }
     }
 
     public function saveRetentionSettings()
     {
+        $this->isLoading = true;
+        
         $this->validate([
             'retentionSettings.database_days' => 'required|integer|min:1|max:365',
             'retentionSettings.files_days' => 'required|integer|min:1|max:365'
         ]);
 
         try {
-            // In a real implementation, you would save these to a configuration file or database
-            // For now, we'll just emit a success message
-            $this->emit('retentionSettingsSaved', 'Retention settings saved successfully');
+            // Save retention settings to database
+            BackupSetting::set(
+                'retention.database_days', 
+                $this->retentionSettings['database_days'], 
+                'integer',
+                'Number of days to retain database backups'
+            );
+            
+            BackupSetting::set(
+                'retention.files_days', 
+                $this->retentionSettings['files_days'], 
+                'integer',
+                'Number of days to retain file backups'
+            );
+            
+            $this->dispatchBrowserEvent('toastr:success', [
+                'message' => 'Retention settings saved successfully'
+            ]);
             
             Log::info('Backup retention settings updated', $this->retentionSettings);
+            
+            // Reload settings to ensure UI reflects saved values
+            $this->loadRetentionSettings();
         } catch (\Exception $e) {
             Log::error('Failed to save retention settings: ' . $e->getMessage());
             $this->addError('retention', 'Failed to save retention settings. Please try again.');
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Failed to save retention settings. Please try again.'
+            ]);
+        } finally {
+            $this->isLoading = false;
         }
     }
 
@@ -212,14 +260,42 @@ class BackupSettings extends Component
         ]);
 
         try {
-            // In a real implementation, you would save these to a configuration file or database
-            // For now, we'll just emit a success message
-            $this->emit('notificationSettingsSaved', 'Notification settings saved successfully');
+            // Save notification settings to database
+            BackupSetting::set(
+                'notifications.email', 
+                $this->notificationSettings['email'], 
+                'string',
+                'Email address for backup notifications'
+            );
+            
+            BackupSetting::set(
+                'notifications.notify_on_success', 
+                $this->notificationSettings['notify_on_success'], 
+                'boolean',
+                'Send notifications for successful backups'
+            );
+            
+            BackupSetting::set(
+                'notifications.notify_on_failure', 
+                $this->notificationSettings['notify_on_failure'], 
+                'boolean',
+                'Send notifications for failed backups'
+            );
+            
+            $this->dispatchBrowserEvent('toastr:success', [
+                'message' => 'Notification settings saved successfully'
+            ]);
             
             Log::info('Backup notification settings updated', $this->notificationSettings);
+            
+            // Reload settings to ensure UI reflects saved values
+            $this->loadNotificationSettings();
         } catch (\Exception $e) {
             Log::error('Failed to save notification settings: ' . $e->getMessage());
             $this->addError('notifications', 'Failed to save notification settings. Please try again.');
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Failed to save notification settings. Please try again.'
+            ]);
         }
     }
 
@@ -227,17 +303,25 @@ class BackupSettings extends Component
     {
         if (empty($this->notificationSettings['email'])) {
             $this->addError('notifications', 'Please enter an email address first.');
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Please enter an email address first.'
+            ]);
             return;
         }
 
         try {
             // In a real implementation, you would send a test email
-            $this->emit('testEmailSent', 'Test notification email sent successfully');
+            $this->dispatchBrowserEvent('toastr:success', [
+                'message' => 'Test notification email sent successfully'
+            ]);
             
             Log::info('Test backup notification email sent to: ' . $this->notificationSettings['email']);
         } catch (\Exception $e) {
             Log::error('Failed to send test notification email: ' . $e->getMessage());
             $this->addError('notifications', 'Failed to send test email. Please check your email configuration.');
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Failed to send test email. Please check your email configuration.'
+            ]);
         }
     }
 
@@ -245,12 +329,17 @@ class BackupSettings extends Component
     {
         try {
             Artisan::call('backup:cleanup');
-            $this->emit('cleanupCompleted', 'Backup cleanup completed successfully');
+            $this->dispatchBrowserEvent('toastr:success', [
+                'message' => 'Backup cleanup completed successfully'
+            ]);
             
             Log::info('Manual backup cleanup executed');
         } catch (\Exception $e) {
             Log::error('Failed to run backup cleanup: ' . $e->getMessage());
             $this->addError('general', 'Failed to run cleanup. Please try again.');
+            $this->dispatchBrowserEvent('toastr:error', [
+                'message' => 'Failed to run cleanup. Please try again.'
+            ]);
         }
     }
 }

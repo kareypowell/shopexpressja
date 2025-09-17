@@ -6,13 +6,15 @@
                 <h1 class="text-2xl font-bold text-gray-900">Backup Settings</h1>
                 <p class="mt-1 text-sm text-gray-600">Configure automated backup schedules, retention policies, and notifications</p>
             </div>
-            <button 
-                wire:click="openAddScheduleModal"
-                dusk="add-schedule-button"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-                Add Schedule
-            </button>
+            <div class="space-x-2">
+                <button 
+                    wire:click="openAddScheduleModal"
+                    dusk="add-schedule-button"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                    Add Schedule
+                </button>
+            </div>
         </div>
     </div>
 
@@ -185,17 +187,23 @@
                 <div class="flex items-center space-x-4">
                     <button 
                         wire:click="saveRetentionSettings"
+                        wire:loading.attr="disabled"
+                        wire:loading.class="opacity-50 cursor-not-allowed"
                         dusk="save-retention-button"
                         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                     >
-                        Save Retention Settings
+                        <span wire:loading.remove wire:target="saveRetentionSettings">Save Retention Settings</span>
+                        <span wire:loading wire:target="saveRetentionSettings">Saving...</span>
                     </button>
                     <button 
                         wire:click="runCleanupNow"
+                        wire:loading.attr="disabled"
+                        wire:loading.class="opacity-50 cursor-not-allowed"
                         dusk="cleanup-now-button"
                         class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                     >
-                        Run Cleanup Now
+                        <span wire:loading.remove wire:target="runCleanupNow">Run Cleanup Now</span>
+                        <span wire:loading wire:target="runCleanupNow">Running...</span>
                     </button>
                 </div>
             </div>
@@ -203,6 +211,66 @@
             @error('retention')
                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
             @enderror
+        </div>
+    </div>
+
+    <!-- File Backup Configuration Section -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900">File Backup Configuration</h2>
+            <p class="mt-1 text-sm text-gray-600">Directories and files included in file backups</p>
+        </div>
+        
+        <div class="p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-900 mb-3">Included Directories</h3>
+                    <div class="bg-gray-50 rounded-md p-3">
+                        <ul class="space-y-1 text-sm text-gray-600">
+                            @foreach($this->getBackupDirectories() as $directory)
+                                <li class="flex items-center">
+                                    <svg class="h-4 w-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <code class="text-xs bg-white px-2 py-1 rounded">{{ $directory }}</code>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-sm font-medium text-gray-900 mb-3">Excluded Patterns</h3>
+                    <div class="bg-gray-50 rounded-md p-3">
+                        <ul class="space-y-1 text-sm text-gray-600">
+                            @foreach($this->getExcludePatterns() as $pattern)
+                                <li class="flex items-center">
+                                    <svg class="h-4 w-4 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <code class="text-xs bg-white px-2 py-1 rounded">{{ $pattern }}</code>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 p-4 bg-blue-50 rounded-md">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-blue-800">File Backup Configuration</h3>
+                        <div class="mt-2 text-sm text-blue-700">
+                            <p>File backups will include all files and subdirectories from the listed directories, excluding files matching the exclude patterns. To modify these settings, update the <code>config/backup.php</code> file.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -261,17 +329,23 @@
                 <div class="flex items-center space-x-4">
                     <button 
                         wire:click="saveNotificationSettings"
+                        wire:loading.attr="disabled"
+                        wire:loading.class="opacity-50 cursor-not-allowed"
                         dusk="save-notification-button"
                         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                     >
-                        Save Notification Settings
+                        <span wire:loading.remove wire:target="saveNotificationSettings">Save Notification Settings</span>
+                        <span wire:loading wire:target="saveNotificationSettings">Saving...</span>
                     </button>
                     <button 
                         wire:click="testNotificationEmail"
+                        wire:loading.attr="disabled"
+                        wire:loading.class="opacity-50 cursor-not-allowed"
                         dusk="test-email-button"
                         class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                     >
-                        Send Test Email
+                        <span wire:loading.remove wire:target="testNotificationEmail">Send Test Email</span>
+                        <span wire:loading wire:target="testNotificationEmail">Sending...</span>
                     </button>
                 </div>
 
@@ -445,89 +519,3 @@
         </div>
     @endif
 </div>
-
-@push('scripts')
-<script>
-    document.addEventListener('livewire:load', function () {
-        Livewire.on('scheduleCreated', message => {
-            showNotification(message, 'success');
-        });
-        
-        Livewire.on('scheduleUpdated', message => {
-            showNotification(message, 'success');
-        });
-        
-        Livewire.on('scheduleDeleted', message => {
-            showNotification(message, 'success');
-        });
-        
-        Livewire.on('scheduleToggled', message => {
-            showNotification(message, 'success');
-        });
-        
-        Livewire.on('retentionSettingsSaved', message => {
-            showNotification(message, 'success');
-        });
-        
-        Livewire.on('notificationSettingsSaved', message => {
-            showNotification(message, 'success');
-        });
-        
-        Livewire.on('testEmailSent', message => {
-            showNotification(message, 'success');
-        });
-        
-        Livewire.on('cleanupCompleted', message => {
-            showNotification(message, 'success');
-        });
-    });
-
-    function showNotification(message, type = 'success') {
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = `fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg transition-all duration-300 transform translate-x-full ${
-            type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
-        }`;
-        
-        notification.innerHTML = `
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 ${type === 'success' ? 'text-green-400' : 'text-red-400'}" viewBox="0 0 20 20" fill="currentColor">
-                        ${type === 'success' 
-                            ? '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />'
-                            : '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />'
-                        }
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm ${type === 'success' ? 'text-green-800' : 'text-red-800'}">${message}</p>
-                </div>
-                <div class="ml-auto pl-3">
-                    <button onclick="this.parentElement.parentElement.parentElement.remove()" class="${type === 'success' ? 'text-green-400 hover:text-green-600' : 'text-red-400 hover:text-red-600'}">
-                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Animate in
-        setTimeout(() => {
-            notification.classList.remove('translate-x-full');
-        }, 100);
-        
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            notification.classList.add('translate-x-full');
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 5000);
-    }
-</script>
-@endpush

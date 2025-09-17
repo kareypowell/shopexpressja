@@ -210,6 +210,94 @@ Finally, set the correct permissions for the project
 sudo chown www-data: -R /var/www/html/example.com
 ```
 
+## Backup Management System
+
+The application includes a comprehensive backup management system to protect your business data and ensure business continuity.
+
+### Overview
+
+The backup system provides:
+- **Automated Backups**: Scheduled database and file backups
+- **Manual Backups**: On-demand backup creation for maintenance
+- **Restoration**: Complete database and file restoration capabilities
+- **Retention Management**: Automatic cleanup of old backup files
+- **Monitoring**: Dashboard and notifications for backup status
+
+### Quick Start
+
+#### Creating Manual Backups
+
+```bash
+# Create a full backup (database + files)
+php artisan backup:create
+
+# Database only backup
+php artisan backup:create --database
+
+# Files only backup
+php artisan backup:create --files
+
+# Custom named backup
+php artisan backup:create --name="pre-maintenance-backup"
+```
+
+#### Restoration
+
+```bash
+# Restore database from backup
+php artisan backup:restore backup-file.sql --database
+
+# Restore files from backup
+php artisan backup:restore backup-files.zip --files
+
+# Force restore (skip confirmations)
+php artisan backup:restore backup-file.sql --database --force
+```
+
+#### Maintenance Commands
+
+```bash
+# Check backup system status
+php artisan backup:status
+
+# Clean old backups according to retention policy
+php artisan backup:cleanup
+
+# Run backup health check
+php artisan backup:health-check
+```
+
+### Configuration
+
+Add these environment variables to your `.env` file:
+
+```env
+# Backup Storage
+BACKUP_STORAGE_PATH=storage/app/backups
+BACKUP_DATABASE_RETENTION_DAYS=30
+BACKUP_FILES_RETENTION_DAYS=14
+
+# Notifications
+BACKUP_NOTIFICATION_EMAIL=admin@example.com
+BACKUP_NOTIFY_ON_FAILURE=true
+```
+
+### Admin Interface
+
+Access the backup management interface through:
+1. Log in as an administrator
+2. Navigate to **System** → **Backup Management**
+3. Use the dashboard to monitor status and create backups
+4. View backup history and download files
+5. Configure automated backup schedules
+
+### Documentation
+
+For detailed information, see:
+- [Backup User Guide](docs/BACKUP_USER_GUIDE.md) - End-user documentation
+- [Backup Admin Guide](docs/BACKUP_ADMIN_GUIDE.md) - System administrator guide
+- [Backup Deployment Guide](docs/BACKUP_DEPLOYMENT_GUIDE.md) - Setup and deployment
+
 ## Performance Optimization
 
 The application includes a powerful query optimization tool to help monitor and improve database performance for customer-related operations.

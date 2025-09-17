@@ -44,15 +44,34 @@ return [
     */
     'files' => [
         'directories' => [
-            'storage/app/public/pre-alerts',
-            'storage/app/public/receipts',
+            // User uploaded files and important storage
+            'storage/app/public',
+            
+            // Application configuration
+            'config',
+            
+            // Public uploads directory
+            // 'public/uploads',
+            
+            // Custom application assets
+            'public/img',
+            'public/css',
+            'public/js',
         ],
         'compression_level' => env('BACKUP_COMPRESSION_LEVEL', 6), // 0-9
         'exclude_patterns' => [
             '*.tmp',
             '*.log',
+            '*.cache',
             '.DS_Store',
             'Thumbs.db',
+            'node_modules',
+            'vendor',
+            '.git',
+            'storage/logs/*',
+            'storage/framework/cache/*',
+            'storage/framework/sessions/*',
+            'storage/framework/views/*',
         ],
     ],
 

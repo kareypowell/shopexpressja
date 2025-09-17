@@ -28,11 +28,25 @@ class BackupController extends Controller
                 abort(404, 'Backup file not available for download.');
             }
 
-            // Verify the physical file exists
-            if (!Storage::exists($backup->file_path)) {
-                Log::error('Backup file not found on disk', [
+            // Parse backup file paths
+            $filePaths = $this->parseBackupFilePaths($backup->file_path);
+            
+            if (empty($filePaths)) {
+                abort(404, 'No backup files found.');
+            }
+
+            // Verify at least one physical file exists
+            $existingFiles = [];
+            foreach ($filePaths as $path) {
+                if (file_exists($path)) {
+                    $existingFiles[] = $path;
+                }
+            }
+
+            if (empty($existingFiles)) {
+                Log::error('Backup files not found on disk', [
                     'backup_id' => $backup->id,
-                    'file_path' => $backup->file_path,
+                    'file_paths' => $filePaths,
                     'user_id' => auth()->id(),
                 ]);
                 
@@ -43,7 +57,7 @@ class BackupController extends Controller
             Log::info('Backup file downloaded', [
                 'backup_id' => $backup->id,
                 'backup_name' => $backup->name,
-                'file_path' => $backup->file_path,
+                'file_count' => count($existingFiles),
                 'file_size' => $backup->file_size,
                 'user_id' => auth()->id(),
                 'user_email' => auth()->user()->email,
@@ -52,26 +66,30 @@ class BackupController extends Controller
                 'download_time' => now(),
             ]);
 
-            // Get the file path and determine the appropriate filename
-            $filePath = Storage::path($backup->file_path);
-            $downloadName = $backup->name ?: basename($backup->file_path);
+            // Handle single file download
+            if (count($existingFiles) === 1) {
+                $filePath = $existingFiles[0];
+                $downloadName = $backup->name ?: basename($filePath);
 
-            // Ensure the download name has the correct extension
-            if (!pathinfo($downloadName, PATHINFO_EXTENSION)) {
-                $extension = pathinfo($backup->file_path, PATHINFO_EXTENSION);
-                if ($extension) {
-                    $downloadName .= '.' . $extension;
+                // Ensure the download name has the correct extension
+                if (!pathinfo($downloadName, PATHINFO_EXTENSION)) {
+                    $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+                    if ($extension) {
+                        $downloadName .= '.' . $extension;
+                    }
                 }
+
+                return Response::download($filePath, $downloadName, [
+                    'Content-Type' => $this->getMimeType($backup->type),
+                    'Content-Disposition' => 'attachment; filename="' . $downloadName . '"',
+                    'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                    'Pragma' => 'no-cache',
+                    'Expires' => '0',
+                ]);
             }
 
-            // Return a streamed response for large files
-            return Response::download($filePath, $downloadName, [
-                'Content-Type' => $this->getMimeType($backup->type),
-                'Content-Disposition' => 'attachment; filename="' . $downloadName . '"',
-                'Cache-Control' => 'no-cache, no-store, must-revalidate',
-                'Pragma' => 'no-cache',
-                'Expires' => '0',
-            ]);
+            // Handle multiple files - create a ZIP archive
+            return $this->downloadMultipleFiles($backup, $existingFiles);
 
         } catch (\Exception $e) {
             Log::error('Failed to download backup file', [
@@ -83,6 +101,63 @@ class BackupController extends Controller
 
             abort(500, 'Failed to download backup file. Please try again.');
         }
+    }
+
+    /**
+     * Parse backup file paths from JSON or single path
+     */
+    private function parseBackupFilePaths($filePath)
+    {
+        // Try to decode as JSON first
+        $paths = json_decode($filePath, true);
+        
+        if (json_last_error() === JSON_ERROR_NONE && is_array($paths)) {
+            // Handle JSON format: {"database": "path", "files": ["path1", "path2"]}
+            $allPaths = [];
+            
+            foreach ($paths as $type => $typePaths) {
+                if (is_array($typePaths)) {
+                    $allPaths = array_merge($allPaths, $typePaths);
+                } else {
+                    $allPaths[] = $typePaths;
+                }
+            }
+            
+            return $allPaths;
+        }
+        
+        // Handle single file path (legacy format)
+        return [$filePath];
+    }
+
+    /**
+     * Download multiple files as a ZIP archive
+     */
+    private function downloadMultipleFiles(Backup $backup, array $filePaths)
+    {
+        $zipName = $backup->name . '_complete.zip';
+        
+        return response()->streamDownload(function () use ($filePaths) {
+            $zip = new \ZipArchive();
+            $tempZipPath = tempnam(sys_get_temp_dir(), 'backup_download_');
+            
+            if ($zip->open($tempZipPath, \ZipArchive::CREATE) === TRUE) {
+                foreach ($filePaths as $filePath) {
+                    if (file_exists($filePath)) {
+                        $zip->addFile($filePath, basename($filePath));
+                    }
+                }
+                $zip->close();
+                
+                readfile($tempZipPath);
+                unlink($tempZipPath);
+            }
+        }, $zipName, [
+            'Content-Type' => 'application/zip',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
     }
 
     /**

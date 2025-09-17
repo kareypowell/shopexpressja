@@ -89,6 +89,75 @@ php artisan admin:create-superadmin --email=admin@example.com --name="John Doe" 
 php artisan admin:create-superadmin --email=admin@example.com --force
 ```
 
+## Backup System Setup
+
+The application includes a comprehensive backup management system. After completing the basic setup, configure the backup system:
+
+### 1. Environment Configuration
+
+Add backup configuration to your `.env` file:
+
+```env
+# Backup Storage Configuration
+BACKUP_STORAGE_PATH=storage/app/backups
+BACKUP_DATABASE_RETENTION_DAYS=30
+BACKUP_FILES_RETENTION_DAYS=14
+BACKUP_MAX_FILE_SIZE=2048
+
+# Database Backup Settings
+DB_BACKUP_TIMEOUT=300
+DB_BACKUP_SINGLE_TRANSACTION=true
+
+# Notification Settings
+BACKUP_NOTIFICATION_EMAIL=admin@example.com
+BACKUP_NOTIFY_ON_FAILURE=true
+```
+
+### 2. Initialize Backup System
+
+```bash
+# Seed backup settings
+php artisan db:seed --class=BackupSettingsSeeder
+
+# Create backup directory with proper permissions
+mkdir -p storage/app/backups
+chmod 755 storage/app/backups
+```
+
+### 3. Test Backup System
+
+```bash
+# Create a test backup
+php artisan backup:create --database
+
+# Check backup status
+php artisan backup:status
+
+# Verify backup files
+ls -la storage/app/backups/
+```
+
+### 4. Configure Automated Backups
+
+For automated backups, ensure the Laravel scheduler is configured in your crontab:
+
+```bash
+# Add to crontab (crontab -e)
+* * * * * cd /path/to/your/project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Then configure automated backups through the admin interface:
+1. Login as an administrator
+2. Navigate to **System** → **Backup Management** → **Settings**
+3. Enable automated backups and set your preferred schedule
+
+### 5. Backup System Documentation
+
+For detailed backup system information, see:
+- [Backup User Guide](docs/BACKUP_USER_GUIDE.md)
+- [Backup Admin Guide](docs/BACKUP_ADMIN_GUIDE.md)
+- [Backup Deployment Guide](docs/BACKUP_DEPLOYMENT_GUIDE.md)
+
 ## Starting the Application
 
 ### Development Server

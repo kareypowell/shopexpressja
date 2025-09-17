@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\BackupSchedule;
+use App\Models\BackupSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -73,7 +74,7 @@ class BackupSettingsFeatureTest extends TestCase
             ->set('newSchedule.retention_days', 30)
             ->set('newSchedule.is_active', true)
             ->call('saveSchedule')
-            ->assertEmitted('scheduleCreated');
+            ->assertDispatchedBrowserEvent('toastr:success');
 
         $this->assertDatabaseHas('backup_schedules', [
             'name' => 'Daily Database Backup',
@@ -109,7 +110,7 @@ class BackupSettingsFeatureTest extends TestCase
             ->set('newSchedule.time', '03:00')
             ->set('newSchedule.retention_days', 60)
             ->call('saveSchedule')
-            ->assertEmitted('scheduleUpdated');
+            ->assertDispatchedBrowserEvent('toastr:success');
 
         $this->assertDatabaseHas('backup_schedules', [
             'id' => $schedule->id,
@@ -140,7 +141,7 @@ class BackupSettingsFeatureTest extends TestCase
             ->test(\App\Http\Livewire\Admin\BackupSettings::class)
             ->call('confirmDeleteSchedule', $schedule->id)
             ->call('deleteSchedule')
-            ->assertEmitted('scheduleDeleted');
+            ->assertDispatchedBrowserEvent('toastr:success');
 
         $this->assertDatabaseMissing('backup_schedules', [
             'id' => $schedule->id
@@ -165,7 +166,7 @@ class BackupSettingsFeatureTest extends TestCase
         Livewire::actingAs($user)
             ->test(\App\Http\Livewire\Admin\BackupSettings::class)
             ->call('toggleScheduleStatus', $schedule->id)
-            ->assertEmitted('scheduleToggled');
+            ->assertDispatchedBrowserEvent('toastr:success');
 
         $this->assertDatabaseHas('backup_schedules', [
             'id' => $schedule->id,
@@ -184,7 +185,11 @@ class BackupSettingsFeatureTest extends TestCase
             ->set('retentionSettings.database_days', 45)
             ->set('retentionSettings.files_days', 21)
             ->call('saveRetentionSettings')
-            ->assertEmitted('retentionSettingsSaved');
+            ->assertDispatchedBrowserEvent('toastr:success');
+
+        // Verify settings were saved to database
+        $this->assertEquals(45, BackupSetting::get('retention.database_days'));
+        $this->assertEquals(21, BackupSetting::get('retention.files_days'));
     }
 
     /** @test */
@@ -199,7 +204,12 @@ class BackupSettingsFeatureTest extends TestCase
             ->set('notificationSettings.notify_on_success', true)
             ->set('notificationSettings.notify_on_failure', false)
             ->call('saveNotificationSettings')
-            ->assertEmitted('notificationSettingsSaved');
+            ->assertDispatchedBrowserEvent('toastr:success');
+
+        // Verify settings were saved to database
+        $this->assertEquals('admin@example.com', BackupSetting::get('notifications.email'));
+        $this->assertTrue(BackupSetting::get('notifications.notify_on_success'));
+        $this->assertFalse(BackupSetting::get('notifications.notify_on_failure'));
     }
 
     /** @test */
@@ -212,7 +222,7 @@ class BackupSettingsFeatureTest extends TestCase
             ->test(\App\Http\Livewire\Admin\BackupSettings::class)
             ->set('notificationSettings.email', 'test@example.com')
             ->call('testNotificationEmail')
-            ->assertEmitted('testEmailSent');
+            ->assertDispatchedBrowserEvent('toastr:success');
     }
 
     /** @test */
@@ -224,7 +234,7 @@ class BackupSettingsFeatureTest extends TestCase
         Livewire::actingAs($user)
             ->test(\App\Http\Livewire\Admin\BackupSettings::class)
             ->call('runCleanupNow')
-            ->assertEmitted('cleanupCompleted');
+            ->assertDispatchedBrowserEvent('toastr:success');
     }
 
     /** @test */
@@ -360,5 +370,37 @@ class BackupSettingsFeatureTest extends TestCase
             ->assertSet('showDeleteConfirm', $schedule->id)
             ->call('cancelDelete')
             ->assertSet('showDeleteConfirm', null);
+    }
+
+    /** @test */
+    public function settings_persist_across_component_reloads()
+    {
+        $superadminRole = Role::where('name', 'superadmin')->first();
+        $user = User::factory()->create(['role_id' => $superadminRole->id]);
+
+        // Save some settings
+        Livewire::actingAs($user)
+            ->test(\App\Http\Livewire\Admin\BackupSettings::class)
+            ->set('retentionSettings.database_days', 60)
+            ->set('retentionSettings.files_days', 30)
+            ->call('saveRetentionSettings');
+
+        Livewire::actingAs($user)
+            ->test(\App\Http\Livewire\Admin\BackupSettings::class)
+            ->set('notificationSettings.email', 'test@example.com')
+            ->set('notificationSettings.notify_on_success', true)
+            ->set('notificationSettings.notify_on_failure', false)
+            ->call('saveNotificationSettings');
+
+        // Create a new component instance to simulate page reload
+        $component = Livewire::actingAs($user)
+            ->test(\App\Http\Livewire\Admin\BackupSettings::class);
+
+        // Verify settings are loaded correctly
+        $component->assertSet('retentionSettings.database_days', 60)
+                  ->assertSet('retentionSettings.files_days', 30)
+                  ->assertSet('notificationSettings.email', 'test@example.com')
+                  ->assertSet('notificationSettings.notify_on_success', true)
+                  ->assertSet('notificationSettings.notify_on_failure', false);
     }
 }

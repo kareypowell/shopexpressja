@@ -97,15 +97,30 @@ class BackupHistory extends Component
         try {
             $backup = Backup::findOrFail($backupId);
             
-            // Verify file exists
-            if (!Storage::exists($backup->file_path)) {
+            // Parse file path (could be JSON or single path)
+            $filePaths = $this->parseBackupFilePaths($backup->file_path);
+            
+            if (empty($filePaths)) {
+                $this->addError('download', 'No backup files found.');
+                return;
+            }
+
+            // Verify at least one file exists
+            $existingFiles = [];
+            foreach ($filePaths as $path) {
+                if (file_exists($path)) {
+                    $existingFiles[] = $path;
+                }
+            }
+
+            if (empty($existingFiles)) {
                 $this->addError('download', 'Backup file not found.');
                 return;
             }
 
             // Generate secure, time-limited download URL (valid for 1 hour)
             $downloadUrl = URL::temporarySignedRoute(
-                'admin.backup.download',
+                'backup.download',
                 now()->addHour(),
                 ['backup' => $backup->id]
             );
@@ -114,6 +129,7 @@ class BackupHistory extends Component
             Log::info('Backup download link generated', [
                 'backup_id' => $backup->id,
                 'backup_name' => $backup->name,
+                'file_count' => count($existingFiles),
                 'user_id' => auth()->id(),
                 'user_email' => auth()->user()->email,
                 'ip_address' => request()->ip(),
@@ -153,11 +169,21 @@ class BackupHistory extends Component
 
             $downloadLinks = [];
             foreach ($backups as $backup) {
-                if (Storage::exists($backup->file_path)) {
+                $filePaths = $this->parseBackupFilePaths($backup->file_path);
+                $hasValidFiles = false;
+                
+                foreach ($filePaths as $path) {
+                    if (file_exists($path)) {
+                        $hasValidFiles = true;
+                        break;
+                    }
+                }
+                
+                if ($hasValidFiles) {
                     $downloadLinks[] = [
                         'name' => $backup->name,
                         'url' => URL::temporarySignedRoute(
-                            'admin.backup.download',
+                            'backup.download',
                             now()->addHour(),
                             ['backup' => $backup->id]
                         )
@@ -194,9 +220,15 @@ class BackupHistory extends Component
         try {
             $backup = Backup::findOrFail($backupId);
             
-            // Delete physical file
-            if (Storage::exists($backup->file_path)) {
-                Storage::delete($backup->file_path);
+            // Delete physical files
+            $filePaths = $this->parseBackupFilePaths($backup->file_path);
+            $deletedFiles = [];
+            
+            foreach ($filePaths as $path) {
+                if (file_exists($path)) {
+                    unlink($path);
+                    $deletedFiles[] = $path;
+                }
             }
 
             // Delete database record
@@ -206,7 +238,7 @@ class BackupHistory extends Component
             Log::info('Backup deleted', [
                 'backup_id' => $backup->id,
                 'backup_name' => $backup->name,
-                'file_path' => $backup->file_path,
+                'deleted_files' => $deletedFiles,
                 'deleted_by' => auth()->id(),
             ]);
 
@@ -282,5 +314,29 @@ class BackupHistory extends Component
         }
 
         return round($bytes, $precision) . ' ' . $units[$i];
+    }
+
+    private function parseBackupFilePaths($filePath)
+    {
+        // Try to decode as JSON first
+        $paths = json_decode($filePath, true);
+        
+        if (json_last_error() === JSON_ERROR_NONE && is_array($paths)) {
+            // Handle JSON format: {"database": "path", "files": ["path1", "path2"]}
+            $allPaths = [];
+            
+            foreach ($paths as $type => $typePaths) {
+                if (is_array($typePaths)) {
+                    $allPaths = array_merge($allPaths, $typePaths);
+                } else {
+                    $allPaths[] = $typePaths;
+                }
+            }
+            
+            return $allPaths;
+        }
+        
+        // Handle single file path (legacy format)
+        return [$filePath];
     }
 }

@@ -118,7 +118,7 @@
   - Write browser tests for settings management functionality
   - _Requirements: 2.1, 6.1, 7.5_
 
-- [ ] 16. Create restoration management interface
+- [x] 16. Create restoration management interface
   - Create RestoreManager Livewire component for restoration operations
   - Implement backup file selection interface with validation
   - Implement restoration confirmation and progress display
@@ -150,7 +150,7 @@
   - Create security tests for access control and file permissions
   - _Requirements: 1.4, 2.4, 3.5, 4.5, 5.5_
 
-- [ ] 20. Add backup system documentation and finalization
+- [x] 20. Add backup system documentation and finalization
   - Create user documentation for backup management features
   - Create administrator guide for backup system configuration
   - Add backup system information to existing documentation
