@@ -15,15 +15,18 @@ class BackupService
     private DatabaseBackupHandler $databaseHandler;
     private FileBackupHandler $fileHandler;
     private BackupConfig $config;
+    private BackupNotificationService $notificationService;
 
     public function __construct(
         DatabaseBackupHandler $databaseHandler,
         FileBackupHandler $fileHandler,
-        BackupConfig $config
+        BackupConfig $config,
+        BackupNotificationService $notificationService = null
     ) {
         $this->databaseHandler = $databaseHandler;
         $this->fileHandler = $fileHandler;
         $this->config = $config;
+        $this->notificationService = $notificationService;
     }
 
     /**
@@ -118,6 +121,11 @@ class BackupService
                 'paths' => $backupPaths
             ]);
 
+            // Send success notification
+            if ($this->notificationService) {
+                $this->notificationService->notifyBackupSuccess($backup);
+            }
+
             return new BackupResult(true, 'Backup completed successfully', $backup);
 
         } catch (Exception $e) {
@@ -134,6 +142,11 @@ class BackupService
                 'backup_id' => $backup->id,
                 'error' => $e->getMessage()
             ]);
+
+            // Send failure notification
+            if ($this->notificationService) {
+                $this->notificationService->notifyBackupFailure($backup, $e->getMessage());
+            }
 
             return new BackupResult(false, 'Backup failed: ' . $e->getMessage(), $backup);
         }

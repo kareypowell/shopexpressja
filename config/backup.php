@@ -84,6 +84,8 @@ return [
         'notify_on_success' => env('BACKUP_NOTIFY_ON_SUCCESS', false),
         'notify_on_failure' => env('BACKUP_NOTIFY_ON_FAILURE', true),
         'notify_on_cleanup' => env('BACKUP_NOTIFY_ON_CLEANUP', false),
+        'daily_summary' => env('BACKUP_DAILY_SUMMARY', false),
+        'health_alerts' => env('BACKUP_HEALTH_ALERTS', true),
         'channels' => ['mail'], // Future: could include 'slack', 'discord', etc.
     ],
 
@@ -97,9 +99,12 @@ return [
     */
     'monitoring' => [
         'enabled' => env('BACKUP_MONITORING_ENABLED', true),
-        'storage_warning_threshold' => env('BACKUP_STORAGE_WARNING_THRESHOLD', 80), // percentage
+        'storage_warning_threshold' => env('BACKUP_STORAGE_WARNING_THRESHOLD', 75), // percentage
+        'storage_critical_threshold' => env('BACKUP_STORAGE_CRITICAL_THRESHOLD', 90), // percentage
         'max_backup_age_hours' => env('BACKUP_MAX_AGE_HOURS', 48), // hours
         'health_check_enabled' => env('BACKUP_HEALTH_CHECK_ENABLED', true),
+        'schedule_grace_period_hours' => env('BACKUP_SCHEDULE_GRACE_PERIOD', 2), // hours
+        'recent_failure_threshold_hours' => env('BACKUP_RECENT_FAILURE_THRESHOLD', 24), // hours
     ],
 
     /*
