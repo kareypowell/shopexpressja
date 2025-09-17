@@ -12,6 +12,7 @@ return [
     'storage' => [
         'path' => env('BACKUP_STORAGE_PATH', storage_path('app/backups')),
         'max_file_size' => env('BACKUP_MAX_FILE_SIZE', 2048), // MB
+        'max_storage_size' => env('BACKUP_MAX_STORAGE_SIZE', 10240), // MB (10GB default)
         'disk' => env('BACKUP_DISK', 'local'),
     ],
 

@@ -38,6 +38,17 @@ class BackupConfig
     }
 
     /**
+     * Get maximum storage size in bytes.
+     *
+     * @return int
+     */
+    public function getMaxStorageSize(): int
+    {
+        $maxSizeMB = Config::get('backup.storage.max_storage_size', 0);
+        return $maxSizeMB * 1024 * 1024; // Convert MB to bytes
+    }
+
+    /**
      * Get backup storage disk.
      *
      * @return string
@@ -190,7 +201,8 @@ class BackupConfig
      */
     public function getMinBackupsToKeep(): int
     {
-        return Config::get('backup.retention.min_backups_to_keep') ?: 3;
+        $value = Config::get('backup.retention.min_backups_to_keep');
+        return $value !== null ? $value : 3;
     }
 
     /**

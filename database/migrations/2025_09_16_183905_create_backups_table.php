@@ -19,7 +19,7 @@ class CreateBackupsTable extends Migration
             $table->enum('type', ['database', 'files', 'full']);
             $table->string('file_path');
             $table->bigInteger('file_size')->nullable();
-            $table->enum('status', ['pending', 'completed', 'failed'])->default('pending');
+            $table->enum('status', ['pending', 'completed', 'failed', 'cleaned_up'])->default('pending');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->json('metadata')->nullable();
             $table->string('checksum')->nullable();
