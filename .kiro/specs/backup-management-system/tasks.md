@@ -78,7 +78,7 @@
   - Write integration tests for file restoration workflows
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 11. Create restore console command
+- [x] 11. Create restore console command
   - Create RestoreCommand for command-line restoration operations
   - Implement backup file selection and validation
   - Implement confirmation prompts for destructive operations
