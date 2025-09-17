@@ -136,6 +136,6 @@ return [
         'default_time' => env('BACKUP_DEFAULT_TIME', '02:00'),
         'max_concurrent_backups' => env('BACKUP_MAX_CONCURRENT', 1),
         'retry_attempts' => env('BACKUP_RETRY_ATTEMPTS', 1),
-        'retry_delay' => env('BACKUP_RETRY_DELAY', 300), // seconds
+        'retry_delay' => env('BACKUP_RETRY_DELAY', 10), // seconds
     ],
 ];

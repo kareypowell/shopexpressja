@@ -81,15 +81,26 @@ class BackupService
             'include_files' => $includeFiles
         ]);
 
+        // Set a reasonable time limit for backup operations
+        set_time_limit(600); // 10 minutes
+
         try {
             $backupPaths = [];
             $totalSize = 0;
 
             // Create database backup if requested
             if ($includeDatabase) {
-                $dbBackupPath = $this->createDatabaseBackupWithRetry($backup);
-                $backupPaths['database'] = $dbBackupPath;
-                $totalSize += File::size($dbBackupPath);
+                try {
+                    $dbBackupPath = $this->createDatabaseBackupWithRetry($backup);
+                    $backupPaths['database'] = $dbBackupPath;
+                    $totalSize += File::size($dbBackupPath);
+                } catch (Exception $e) {
+                    // If mysqldump is not found, provide helpful error message
+                    if (strpos($e->getMessage(), 'mysqldump command not found') !== false) {
+                        throw new Exception('Database backup failed: mysqldump is not installed or not in PATH. Please install MySQL client tools.');
+                    }
+                    throw $e;
+                }
             }
 
             // Create file backups if requested
@@ -202,7 +213,7 @@ class BackupService
      * @param string $backupPath Path to backup file or JSON string of paths
      * @return bool
      */
-    public function validateBackupIntegrity(string $backupPath): bool
+    public function validateBackupIntegrity(string $backupPath)
     {
         try {
             // Handle JSON encoded paths (for full backups)
@@ -230,7 +241,7 @@ class BackupService
      * @return string Path to created backup
      * @throws Exception
      */
-    private function createDatabaseBackupWithRetry(Backup $backup): string
+    private function createDatabaseBackupWithRetry(Backup $backup)
     {
         $maxRetries = $this->config->getRetryAttempts();
         $retryDelay = $this->config->getRetryDelay();
@@ -263,11 +274,13 @@ class BackupService
 
                 // If this is not the last attempt, wait before retrying
                 if ($attempt <= $maxRetries) {
+                    // Use a shorter delay to avoid timeouts (max 10 seconds)
+                    $actualDelay = min($retryDelay, 10);
                     Log::info('Retrying database backup', [
                         'backup_id' => $backup->id,
-                        'retry_delay' => $retryDelay
+                        'retry_delay' => $actualDelay
                     ]);
-                    sleep($retryDelay);
+                    sleep($actualDelay);
                 }
             }
         }
@@ -282,7 +295,7 @@ class BackupService
      * @return array Array of backup file paths
      * @throws Exception
      */
-    private function createFileBackupsWithRetry(Backup $backup): array
+    private function createFileBackupsWithRetry(Backup $backup)
     {
         $directories = $this->config->getBackupDirectories();
         $backupPaths = [];
@@ -356,7 +369,7 @@ class BackupService
      * @param array $paths Array of backup paths
      * @return bool
      */
-    private function validateMultipleBackupPaths(array $paths): bool
+    private function validateMultipleBackupPaths(array $paths)
     {
         foreach ($paths as $type => $typePaths) {
             if (is_array($typePaths)) {
@@ -380,16 +393,16 @@ class BackupService
      * @param string $path Backup file path
      * @return bool
      */
-    private function validateSingleBackupPath(string $path): bool
+    private function validateSingleBackupPath(string $path)
     {
         if (!File::exists($path)) {
             return false;
         }
 
         // Determine file type and validate accordingly
-        if (str_ends_with($path, '.sql')) {
+        if (substr($path, -4) === '.sql') {
             return $this->databaseHandler->validateDump($path);
-        } elseif (str_ends_with($path, '.zip')) {
+        } elseif (substr($path, -4) === '.zip') {
             return $this->fileHandler->validateArchive($path);
         }
 
@@ -401,7 +414,7 @@ class BackupService
      *
      * @return array Storage usage information
      */
-    private function calculateStorageUsage(): array
+    private function calculateStorageUsage()
     {
         $storagePath = $this->config->getStoragePath();
         $totalSize = 0;
@@ -429,7 +442,7 @@ class BackupService
      * @param int $bytes
      * @return string
      */
-    private function formatBytes(int $bytes): string
+    private function formatBytes(int $bytes)
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         

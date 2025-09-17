@@ -92,7 +92,7 @@ class Backup extends Model
     /**
      * Check if backup is completed.
      */
-    public function isCompleted(): bool
+    public function isCompleted()
     {
         return $this->status === 'completed';
     }
@@ -100,7 +100,7 @@ class Backup extends Model
     /**
      * Check if backup failed.
      */
-    public function isFailed(): bool
+    public function isFailed()
     {
         return $this->status === 'failed';
     }
@@ -108,7 +108,7 @@ class Backup extends Model
     /**
      * Check if backup is pending.
      */
-    public function isPending(): bool
+    public function isPending()
     {
         return $this->status === 'pending';
     }

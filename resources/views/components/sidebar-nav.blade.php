@@ -181,6 +181,31 @@
           Rates
         </a>
 
+        <!-- Backup Management Expandable Menu (visible only to superadmin) -->
+        @if(auth()->user()->isSuperAdmin())
+        <div x-data="{ open: {{ (\Route::is('backup-dashboard') || \Route::is('backup-history')) ? 'true' : 'false' }} }" class="space-y-1">
+          <button @click="open = !open" class="{{ (\Route::is('backup-dashboard') || \Route::is('backup-history')) ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group w-full flex items-center pl-2 pr-1 py-2 text-left text-base font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <!-- Heroicon name: outline/server -->
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-6 w-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 17.25v-.228a4.5 4.5 0 0 0-.12-1.03l-2.268-9.64a3.375 3.375 0 0 0-3.285-2.602H7.923a3.375 3.375 0 0 0-3.285 2.602l-2.268 9.64a4.5 4.5 0 0 0-.12 1.03v.228m21.75 0a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3m21.75 0a3 3 0 0 0-3-3H5.25a3 3 0 0 0-3 3m5.25 0v.375c0 .414.336.75.75.75s.75-.336.75-.75V17.25m-9 0v.375c0 .414.336.75.75.75s.75-.336.75-.75V17.25" />
+            </svg>
+            <span class="flex-1">Backup Management</span>
+            <!-- Expand/collapse icon -->
+            <svg class="ml-3 h-5 w-5 transform transition-colors duration-150 ease-in-out group-hover:text-gray-400" :class="{'rotate-90 text-gray-400': open, 'text-gray-300': !open}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" class="space-y-1">
+            <a href="{{ route('backup-dashboard') }}" class="{{ \Route::is('backup-dashboard') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group w-full flex items-center pl-11 pr-2 py-2 text-sm font-medium rounded-md">
+              Dashboard
+            </a>
+            <a href="{{ route('backup-history') }}" class="{{ \Route::is('backup-history') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group w-full flex items-center pl-11 pr-2 py-2 text-sm font-medium rounded-md">
+              Backup History
+            </a>
+          </div>
+        </div>
+        @endif
+
         <!-- 6. ANALYTICS & REPORTING -->
         <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-2 py-2 text-base font-medium rounded-md">
           <!-- Heroicon name: outline/chart-bar -->
@@ -427,6 +452,31 @@
             </svg>
             Rates
           </a>
+
+          <!-- Backup Management Expandable Menu (Mobile - visible only to superadmin) -->
+          @if(auth()->user()->isSuperAdmin())
+          <div x-data="{ open: {{ (\Route::is('backup-dashboard') || \Route::is('backup-history')) ? 'true' : 'false' }} }" class="space-y-1">
+            <button @click="open = !open" class="{{ (\Route::is('backup-dashboard') || \Route::is('backup-history')) ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group w-full flex items-center pl-2 pr-1 py-2 text-left text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <!-- Heroicon name: outline/server -->
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="text-gray-400 group-hover:text-gray-300 mr-4 flex-shrink-0 h-6 w-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 17.25v-.228a4.5 4.5 0 0 0-.12-1.03l-2.268-9.64a3.375 3.375 0 0 0-3.285-2.602H7.923a3.375 3.375 0 0 0-3.285 2.602l-2.268 9.64a4.5 4.5 0 0 0-.12 1.03v.228m21.75 0a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3m21.75 0a3 3 0 0 0-3-3H5.25a3 3 0 0 0-3 3m5.25 0v.375c0 .414.336.75.75.75s.75-.336.75-.75V17.25m-9 0v.375c0 .414.336.75.75.75s.75-.336.75-.75V17.25" />
+              </svg>
+              <span class="flex-1">Backup Management</span>
+              <!-- Expand/collapse icon -->
+              <svg class="ml-3 h-5 w-5 transform transition-colors duration-150 ease-in-out group-hover:text-gray-400" :class="{'rotate-90 text-gray-400': open, 'text-gray-300': !open}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" class="space-y-1">
+              <a href="{{ route('backup-dashboard') }}" class="{{ \Route::is('backup-dashboard') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group w-full flex items-center pl-11 pr-2 py-2 text-sm font-medium rounded-md">
+                Dashboard
+              </a>
+              <a href="{{ route('backup-history') }}" class="{{ \Route::is('backup-history') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group w-full flex items-center pl-11 pr-2 py-2 text-sm font-medium rounded-md">
+                Backup History
+              </a>
+            </div>
+          </div>
+          @endif
 
           <!-- 6. ANALYTICS & REPORTING -->
           <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md">

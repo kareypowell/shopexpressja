@@ -130,11 +130,11 @@ class RestoreService
             Log::error("Database restoration failed", [
                 'error' => $e->getMessage(),
                 'backup_path' => $backupPath,
-                'restore_log_id' => $restoreLog?->id
+                'restore_log_id' => $restoreLog ? $restoreLog->id : null
             ]);
 
             return new RestoreResult(false, $e->getMessage(), [
-                'restore_log_id' => $restoreLog?->id,
+                'restore_log_id' => $restoreLog ? $restoreLog->id : null,
                 'pre_restore_backup' => $preRestoreBackupPath
             ]);
 
@@ -147,7 +147,7 @@ class RestoreService
     /**
      * Create pre-restore backup
      */
-    private function createPreRestoreBackup(): string
+    private function createPreRestoreBackup()
     {
         $timestamp = now()->format('Y-m-d_H-i-s');
         $filename = "pre-restore-backup_{$timestamp}.sql";
@@ -165,7 +165,7 @@ class RestoreService
     /**
      * Perform the actual database restoration
      */
-    private function performDatabaseRestore(string $backupPath): void
+    private function performDatabaseRestore(string $backupPath)
     {
         $config = config('database.connections.' . config('database.default'));
         
@@ -196,7 +196,7 @@ class RestoreService
     /**
      * Verify database integrity after restoration
      */
-    private function verifyDatabaseIntegrity(): void
+    private function verifyDatabaseIntegrity()
     {
         try {
             // Test database connection
@@ -219,7 +219,7 @@ class RestoreService
     /**
      * Enable maintenance mode
      */
-    public function enableMaintenanceMode(): void
+    public function enableMaintenanceMode()
     {
         try {
             Artisan::call('down', [
@@ -239,7 +239,7 @@ class RestoreService
     /**
      * Disable maintenance mode
      */
-    public function disableMaintenanceMode(): void
+    public function disableMaintenanceMode()
     {
         try {
             Artisan::call('up');
@@ -256,7 +256,7 @@ class RestoreService
     /**
      * Rollback restore using pre-restore backup
      */
-    public function rollbackRestore(string $preRestoreBackup): bool
+    public function rollbackRestore(string $preRestoreBackup)
     {
         try {
             if (!file_exists($preRestoreBackup)) {
@@ -402,11 +402,11 @@ class RestoreService
                 'error' => $e->getMessage(),
                 'backup_path' => $backupPath,
                 'directories' => $directories,
-                'restore_log_id' => $restoreLog?->id
+                'restore_log_id' => $restoreLog ? $restoreLog->id : null
             ]);
 
             return new RestoreResult(false, $e->getMessage(), [
-                'restore_log_id' => $restoreLog?->id,
+                'restore_log_id' => $restoreLog ? $restoreLog->id : null,
                 'pre_restore_backup' => $preRestoreBackupPath,
                 'directories' => $directories
             ]);
@@ -416,7 +416,7 @@ class RestoreService
     /**
      * Create pre-restore backup of files
      */
-    private function createPreRestoreFileBackup(array $directories): string
+    private function createPreRestoreFileBackup(array $directories)
     {
         $existingDirectories = array_filter($directories, function ($directory) {
             return file_exists($directory) && is_dir($directory);
@@ -441,7 +441,7 @@ class RestoreService
     /**
      * Perform the actual file restoration
      */
-    private function performFileRestore(string $backupPath, array $directories): void
+    private function performFileRestore(string $backupPath, array $directories)
     {
         // Create temporary extraction directory
         $tempDir = storage_path('app/temp/restore_' . uniqid());
@@ -477,14 +477,14 @@ class RestoreService
     /**
      * Restore a specific directory from extracted files
      */
-    private function restoreDirectoryFromExtraction(string $tempDir, string $targetDirectory, array $archiveContents): void
+    private function restoreDirectoryFromExtraction(string $tempDir, string $targetDirectory, array $archiveContents)
     {
         $targetBasename = basename($targetDirectory);
         
         // Find matching directory in extracted files
         $sourceDir = null;
         foreach ($archiveContents as $content) {
-            if (str_starts_with($content['name'], $targetBasename . '/')) {
+            if (substr($content['name'], 0, strlen($targetBasename . '/')) === $targetBasename . '/') {
                 $sourceDir = $tempDir . '/' . $targetBasename;
                 break;
             }
@@ -527,7 +527,7 @@ class RestoreService
     /**
      * Restore file permissions for a directory
      */
-    private function restoreFilePermissions(string $directory): void
+    private function restoreFilePermissions(string $directory)
     {
         try {
             // Set directory permissions
@@ -560,7 +560,7 @@ class RestoreService
     /**
      * Verify file restoration
      */
-    private function verifyFileRestoration(array $directories): void
+    private function verifyFileRestoration(array $directories)
     {
         foreach ($directories as $directory) {
             if (!file_exists($directory)) {
@@ -584,7 +584,7 @@ class RestoreService
     /**
      * Rollback file restore using pre-restore backup
      */
-    public function rollbackFileRestore(string $preRestoreBackup, array $directories): bool
+    public function rollbackFileRestore(string $preRestoreBackup, array $directories)
     {
         try {
             if (!file_exists($preRestoreBackup)) {
@@ -633,7 +633,7 @@ class RestoreService
     /**
      * Recursively remove a directory and all its contents
      */
-    private function removeDirectory(string $directory): void
+    private function removeDirectory(string $directory)
     {
         if (!file_exists($directory)) {
             return;
@@ -658,7 +658,7 @@ class RestoreService
     /**
      * Get restoration history
      */
-    public function getRestorationHistory(int $limit = 50): array
+    public function getRestorationHistory(int $limit = 50)
     {
         $restoreLogs = RestoreLog::with('backup')
             ->orderBy('created_at', 'desc')

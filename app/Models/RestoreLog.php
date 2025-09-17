@@ -80,7 +80,7 @@ class RestoreLog extends Model
     /**
      * Check if restore is completed.
      */
-    public function isCompleted(): bool
+    public function isCompleted()
     {
         return $this->status === 'completed';
     }
@@ -88,7 +88,7 @@ class RestoreLog extends Model
     /**
      * Check if restore failed.
      */
-    public function isFailed(): bool
+    public function isFailed()
     {
         return $this->status === 'failed';
     }
@@ -96,7 +96,7 @@ class RestoreLog extends Model
     /**
      * Check if restore is pending.
      */
-    public function isPending(): bool
+    public function isPending()
     {
         return $this->status === 'pending';
     }
@@ -116,7 +116,7 @@ class RestoreLog extends Model
     /**
      * Get formatted duration.
      */
-    public function getFormattedDurationAttribute(): string
+    public function getFormattedDurationAttribute()
     {
         $duration = $this->duration;
         
@@ -136,20 +136,24 @@ class RestoreLog extends Model
     /**
      * Get the restore type in human readable format.
      */
-    public function getRestoreTypeLabelAttribute(): string
+    public function getRestoreTypeLabelAttribute()
     {
-        return match($this->restore_type) {
-            'database' => 'Database Only',
-            'files' => 'Files Only',
-            'full' => 'Full Restore',
-            default => ucfirst($this->restore_type)
-        };
+        switch ($this->restore_type) {
+            case 'database':
+                return 'Database Only';
+            case 'files':
+                return 'Files Only';
+            case 'full':
+                return 'Full Restore';
+            default:
+                return ucfirst($this->restore_type);
+        }
     }
 
     /**
      * Mark the restore as started.
      */
-    public function markAsStarted(): void
+    public function markAsStarted()
     {
         $this->started_at = now();
         $this->status = 'pending';
@@ -159,7 +163,7 @@ class RestoreLog extends Model
     /**
      * Mark the restore as completed.
      */
-    public function markAsCompleted(): void
+    public function markAsCompleted()
     {
         $this->completed_at = now();
         $this->status = 'completed';
@@ -169,7 +173,7 @@ class RestoreLog extends Model
     /**
      * Mark the restore as failed.
      */
-    public function markAsFailed(string $errorMessage = null): void
+    public function markAsFailed(string $errorMessage = null)
     {
         $this->completed_at = now();
         $this->status = 'failed';

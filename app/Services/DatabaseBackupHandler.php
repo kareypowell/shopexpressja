@@ -47,10 +47,23 @@ class DatabaseBackupHandler
         $result = $this->executeCommand($command);
 
         if ($result['return_code'] !== 0) {
-            $errorMessage = 'Database backup failed: ' . implode("\n", $result['output']);
+            $errorOutput = implode("\n", $result['output']);
+            
+            // Provide specific error messages for common issues
+            if ($result['return_code'] === 127) {
+                $errorMessage = 'mysqldump command not found. Please install MySQL client tools or ensure mysqldump is in your PATH.';
+            } elseif (strpos($errorOutput, 'Access denied') !== false) {
+                $errorMessage = 'Database access denied. Please check your database credentials.';
+            } elseif (strpos($errorOutput, 'Unknown database') !== false) {
+                $errorMessage = 'Database not found. Please check your database name configuration.';
+            } else {
+                $errorMessage = 'Database backup failed: ' . $errorOutput;
+            }
+            
             Log::error($errorMessage, [
                 'return_code' => $result['return_code'],
-                'filename' => $filename
+                'filename' => $filename,
+                'output' => $errorOutput
             ]);
             throw new Exception($errorMessage);
         }
@@ -121,8 +134,9 @@ class DatabaseBackupHandler
             while (($line = fgets($handle)) !== false && $lineCount < 20) {
                 $line = trim($line);
                 
-                // Look for mysqldump header indicators
+                // Look for mysqldump header indicators (MySQL or MariaDB)
                 if (strpos($line, '-- MySQL dump') !== false || 
+                    strpos($line, '-- MariaDB dump') !== false ||
                     strpos($line, '-- Dump completed on') !== false ||
                     strpos($line, 'CREATE TABLE') !== false ||
                     strpos($line, 'INSERT INTO') !== false) {
@@ -136,7 +150,7 @@ class DatabaseBackupHandler
             fclose($handle);
 
             if (!$validHeaders) {
-                Log::warning('Dump file does not contain valid MySQL dump headers', ['path' => $filePath]);
+                Log::warning('Dump file does not contain valid MySQL/MariaDB dump headers', ['path' => $filePath]);
                 return false;
             }
 
@@ -198,7 +212,9 @@ class DatabaseBackupHandler
      */
     private function buildMysqldumpCommand(array $dbConfig, string $outputPath): string
     {
-        $command = 'mysqldump';
+        // Try to find mysqldump in common locations
+        $mysqldumpPath = $this->findMysqldumpPath();
+        $command = $mysqldumpPath;
         
         // Connection parameters
         $command .= ' --host=' . escapeshellarg($dbConfig['host']);
@@ -234,6 +250,87 @@ class DatabaseBackupHandler
         $command .= ' > ' . escapeshellarg($outputPath);
 
         return $command;
+    }
+
+    /**
+     * Find mysqldump executable path
+     *
+     * @return string Path to mysqldump
+     * @throws Exception If mysqldump is not found
+     */
+    private function findMysqldumpPath(): string
+    {
+        // Common paths where mysqldump might be located
+        $commonPaths = [
+            'mysqldump', // In PATH
+            '/usr/bin/mysqldump',
+            '/usr/local/bin/mysqldump',
+            '/opt/homebrew/bin/mysqldump', // Homebrew on Apple Silicon
+            '/usr/local/mysql/bin/mysqldump',
+            '/Applications/XAMPP/xamppfiles/bin/mysqldump', // XAMPP on macOS
+            '/Applications/MAMP/Library/bin/mysqldump', // MAMP on macOS
+        ];
+
+        foreach ($commonPaths as $path) {
+            if ($this->commandExists($path)) {
+                return $path;
+            }
+        }
+
+        $installInstructions = $this->getMysqldumpInstallInstructions();
+        throw new Exception("mysqldump command not found. Please install MySQL client tools or ensure mysqldump is in your PATH.\n\n" . $installInstructions);
+    }
+
+    /**
+     * Check if a command exists
+     *
+     * @param string $command Command to check
+     * @return bool True if command exists
+     */
+    private function commandExists(string $command): bool
+    {
+        // If it's a full path, check if the file exists and is executable
+        if (strpos($command, '/') !== false) {
+            return file_exists($command) && is_executable($command);
+        }
+        
+        // Otherwise, use which to find it in PATH
+        $result = shell_exec("which $command 2>/dev/null");
+        return !empty($result);
+    }
+
+    /**
+     * Get installation instructions for mysqldump based on the operating system
+     *
+     * @return string Installation instructions
+     */
+    private function getMysqldumpInstallInstructions(): string
+    {
+        $os = PHP_OS_FAMILY;
+        
+        switch (strtolower($os)) {
+            case 'darwin': // macOS
+                return "Installation options for macOS:\n" .
+                       "• Homebrew: brew install mysql-client\n" .
+                       "• MacPorts: sudo port install mysql8 +client\n" .
+                       "• Download from: https://dev.mysql.com/downloads/mysql/";
+                       
+            case 'linux':
+                return "Installation options for Linux:\n" .
+                       "• Ubuntu/Debian: sudo apt-get install mysql-client\n" .
+                       "• CentOS/RHEL: sudo yum install mysql\n" .
+                       "• Fedora: sudo dnf install mysql\n" .
+                       "• Arch: sudo pacman -S mysql-clients";
+                       
+            case 'windows':
+                return "Installation options for Windows:\n" .
+                       "• Download MySQL Installer from: https://dev.mysql.com/downloads/installer/\n" .
+                       "• Or install via Chocolatey: choco install mysql.utilities";
+                       
+            default:
+                return "Please install MySQL client tools for your operating system.\n" .
+                       "Visit: https://dev.mysql.com/downloads/";
+        }
     }
 
     /**

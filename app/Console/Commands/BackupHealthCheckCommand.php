@@ -79,12 +79,20 @@ class BackupHealthCheckCommand extends Command
         $overallStatus = $systemHealth['overall_status'];
         
         // Display overall status with color coding
-        $statusColor = match($overallStatus) {
-            'healthy' => 'green',
-            'warning' => 'yellow',
-            'critical' => 'red',
-            default => 'white'
-        };
+        switch ($overallStatus) {
+            case 'healthy':
+                $statusColor = 'green';
+                break;
+            case 'warning':
+                $statusColor = 'yellow';
+                break;
+            case 'critical':
+                $statusColor = 'red';
+                break;
+            default:
+                $statusColor = 'white';
+                break;
+        }
 
         $this->line('');
         $this->line('<fg=' . $statusColor . '>Overall Status: ' . strtoupper($overallStatus) . '</>');
@@ -193,13 +201,17 @@ class BackupHealthCheckCommand extends Command
     /**
      * Get appropriate exit code based on system health
      */
-    protected function getExitCode(array $systemHealth): int
+    protected function getExitCode(array $systemHealth)
     {
-        return match($systemHealth['overall_status']) {
-            'critical' => 2,
-            'warning' => 1,
-            'healthy' => 0,
-            default => 0
-        };
+        switch ($systemHealth['overall_status']) {
+            case 'critical':
+                return 2;
+            case 'warning':
+                return 1;
+            case 'healthy':
+                return 0;
+            default:
+                return 0;
+        }
     }
 }

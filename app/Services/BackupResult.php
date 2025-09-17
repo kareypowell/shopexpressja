@@ -24,7 +24,7 @@ class BackupResult
      *
      * @return bool
      */
-    public function isSuccessful(): bool
+    public function isSuccessful()
     {
         return $this->success;
     }
@@ -34,7 +34,7 @@ class BackupResult
      *
      * @return bool
      */
-    public function isFailed(): bool
+    public function isFailed()
     {
         return !$this->success;
     }
@@ -44,7 +44,7 @@ class BackupResult
      *
      * @return string
      */
-    public function getMessage(): string
+    public function getMessage()
     {
         return $this->message;
     }
@@ -64,9 +64,9 @@ class BackupResult
      *
      * @return int|null
      */
-    public function getBackupId(): ?int
+    public function getBackupId()
     {
-        return $this->backup?->id;
+        return $this->backup ? $this->backup->id : null;
     }
 
     /**
@@ -74,7 +74,7 @@ class BackupResult
      *
      * @return array
      */
-    public function getMetadata(): array
+    public function getMetadata()
     {
         return $this->metadata;
     }
@@ -97,13 +97,13 @@ class BackupResult
      *
      * @return array
      */
-    public function toArray(): array
+    public function toArray()
     {
         return [
             'success' => $this->success,
             'message' => $this->message,
             'backup_id' => $this->getBackupId(),
-            'backup' => $this->backup?->toArray(),
+            'backup' => $this->backup ? $this->backup->toArray() : null,
             'metadata' => $this->metadata
         ];
     }
@@ -113,7 +113,7 @@ class BackupResult
      *
      * @return string
      */
-    public function toJson(): string
+    public function toJson()
     {
         return json_encode($this->toArray());
     }
@@ -123,7 +123,7 @@ class BackupResult
      *
      * @return bool
      */
-    public function isSuccess(): bool
+    public function isSuccess()
     {
         return $this->success;
     }
@@ -133,9 +133,12 @@ class BackupResult
      *
      * @return string|null
      */
-    public function getFilePath(): ?string
+    public function getFilePath()
     {
-        return $this->backup?->file_path ?? $this->metadata['file_path'] ?? null;
+        if ($this->backup && $this->backup->file_path) {
+            return $this->backup->file_path;
+        }
+        return $this->metadata['file_path'] ?? null;
     }
 
     /**
@@ -143,9 +146,12 @@ class BackupResult
      *
      * @return int
      */
-    public function getFileSize(): int
+    public function getFileSize()
     {
-        return $this->backup?->file_size ?? $this->metadata['file_size'] ?? 0;
+        if ($this->backup && $this->backup->file_size) {
+            return $this->backup->file_size;
+        }
+        return $this->metadata['file_size'] ?? 0;
     }
 
     /**
@@ -153,7 +159,7 @@ class BackupResult
      *
      * @return string
      */
-    public function getErrorMessage(): string
+    public function getErrorMessage()
     {
         return $this->message;
     }

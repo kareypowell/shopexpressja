@@ -65,7 +65,7 @@ class BackupSchedule extends Model
     /**
      * Calculate and set the next run time based on frequency.
      */
-    public function calculateNextRun(): void
+    public function calculateNextRun()
     {
         $baseTime = Carbon::today()->setTimeFromTimeString($this->time->format('H:i:s'));
         
@@ -95,7 +95,7 @@ class BackupSchedule extends Model
     /**
      * Mark the schedule as run and calculate next run time.
      */
-    public function markAsRun(): void
+    public function markAsRun()
     {
         $this->last_run_at = now();
         $this->calculateNextRun();
@@ -105,7 +105,7 @@ class BackupSchedule extends Model
     /**
      * Check if the schedule is due to run.
      */
-    public function isDue(): bool
+    public function isDue()
     {
         return $this->is_active && 
                $this->next_run_at && 
@@ -115,7 +115,7 @@ class BackupSchedule extends Model
     /**
      * Get the frequency in human readable format.
      */
-    public function getFrequencyLabelAttribute(): string
+    public function getFrequencyLabelAttribute()
     {
         return ucfirst($this->frequency);
     }
@@ -123,13 +123,17 @@ class BackupSchedule extends Model
     /**
      * Get the type in human readable format.
      */
-    public function getTypeLabelAttribute(): string
+    public function getTypeLabelAttribute()
     {
-        return match($this->type) {
-            'database' => 'Database Only',
-            'files' => 'Files Only',
-            'full' => 'Full Backup',
-            default => ucfirst($this->type)
-        };
+        switch ($this->type) {
+            case 'database':
+                return 'Database Only';
+            case 'files':
+                return 'Files Only';
+            case 'full':
+                return 'Full Backup';
+            default:
+                return ucfirst($this->type);
+        }
     }
 }

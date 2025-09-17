@@ -102,7 +102,7 @@
   - Write browser tests for dashboard functionality
   - _Requirements: 7.1, 7.4, 8.1_
 
-- [ ] 14. Create backup history management component
+- [x] 14. Create backup history management component
   - Create BackupHistory Livewire component for backup file management
   - Implement backup file listing with metadata display
   - Implement secure download link generation for backup files
@@ -126,7 +126,7 @@
   - Write browser tests for restoration interface functionality
   - _Requirements: 4.1, 4.3, 5.1, 5.3_
 
-- [ ] 17. Implement backup file download and export functionality
+- [x] 17. Implement backup file download and export functionality
   - Extend BackupHistory component with secure download capabilities
   - Implement time-limited download link generation
   - Implement batch download functionality for multiple backups
@@ -134,7 +134,7 @@
   - Write tests for download functionality and security measures
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-- [ ] 18. Add backup management to admin navigation
+- [x] 18. Add backup management to admin navigation
   - Update admin navigation to include backup management section
   - Create backup management route definitions
   - Implement role-based access control for backup features
