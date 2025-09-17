@@ -70,7 +70,7 @@
   - Write integration tests for database restoration workflows
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 10. Implement file restoration functionality
+- [x] 10. Implement file restoration functionality
   - Extend RestoreService with file restoration capabilities
   - Implement restoreFiles method with pre-restore file backup
   - Implement file extraction and permission restoration
