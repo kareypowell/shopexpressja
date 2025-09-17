@@ -162,13 +162,16 @@ class BackupService
     {
         $recentBackups = Backup::where('created_at', '>=', now()->subDays(7))->get();
         
+        $lastSuccessfulBackup = Backup::where('status', 'completed')->latest()->first();
+        
         $stats = [
             'total_backups' => Backup::count(),
             'recent_backups' => $recentBackups->count(),
             'successful_backups' => $recentBackups->where('status', 'completed')->count(),
             'failed_backups' => $recentBackups->where('status', 'failed')->count(),
             'pending_backups' => Backup::where('status', 'pending')->count(),
-            'last_backup' => Backup::completed()->latest()->first(),
+            'last_backup' => Backup::latest()->first(),
+            'last_successful_backup_date' => $lastSuccessfulBackup ? $lastSuccessfulBackup->created_at : null,
             'storage_usage' => $this->calculateStorageUsage(),
             'storage_path' => $this->config->getStoragePath(),
             'retention_policy' => [

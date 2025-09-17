@@ -244,6 +244,66 @@ class BackupStatus
     }
 
     /**
+     * Get the date of the last backup
+     *
+     * @return Carbon|null
+     */
+    public function getLastBackupDate(): ?Carbon
+    {
+        $lastBackup = $this->getLastBackup();
+        return $lastBackup ? $lastBackup->created_at : null;
+    }
+
+    /**
+     * Get the date of the last successful backup
+     *
+     * @return Carbon|null
+     */
+    public function getLastSuccessfulBackupDate(): ?Carbon
+    {
+        return $this->stats['last_successful_backup_date'] ?? null;
+    }
+
+    /**
+     * Get number of recent failures (last 7 days)
+     *
+     * @return int
+     */
+    public function getRecentFailures(): int
+    {
+        return $this->getFailedBackups();
+    }
+
+    /**
+     * Get health issues as array
+     *
+     * @return array
+     */
+    public function getHealthIssues(): array
+    {
+        if ($this->isHealthy()) {
+            return [];
+        }
+
+        $issues = [];
+
+        if ($this->getPendingBackups() > 0) {
+            $issues[] = $this->getPendingBackups() . ' backup(s) are still pending';
+        }
+
+        if ($this->getSuccessRate() < 80.0) {
+            $issues[] = 'Success rate is low (' . $this->getSuccessRate() . '%)';
+        }
+
+        $lastBackup = $this->getLastBackup();
+        if ($lastBackup && $lastBackup->created_at->diffInHours(now()) > 48) {
+            $issues[] = 'Last backup was ' . $lastBackup->created_at->diffForHumans();
+        }
+
+        return $issues;
+    }
+
+    /**
      * Convert status to JSON
      *
      * @return string

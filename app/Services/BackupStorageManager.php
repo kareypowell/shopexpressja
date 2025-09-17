@@ -298,6 +298,105 @@ class BackupStorageManager
     }
 
     /**
+     * Clean up old backups with detailed results for command interface
+     */
+    public function cleanupOldBackups(bool $dryRun = false): array
+    {
+        $deletedFiles = [];
+        $errors = [];
+        $totalFreedSpace = 0;
+
+        foreach (['database', 'files'] as $type) {
+            $retentionDays = $type === 'database' 
+                ? $this->config->getDatabaseRetentionDays() 
+                : $this->config->getFilesRetentionDays();
+            
+            $cutoffDate = Carbon::now()->subDays($retentionDays);
+            
+            $oldBackups = Backup::where('type', $type)
+                ->where('created_at', '<', $cutoffDate)
+                ->where('status', 'completed')
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            foreach ($oldBackups as $backup) {
+                try {
+                    $fileSize = 0;
+                    $ageInDays = Carbon::now()->diffInDays($backup->created_at);
+                    
+                    if (File::exists($backup->file_path)) {
+                        $fileSize = File::size($backup->file_path);
+                        
+                        if (!$dryRun) {
+                            if (File::delete($backup->file_path)) {
+                                $backup->update(['status' => 'cleaned_up']);
+                                $totalFreedSpace += $fileSize;
+                            } else {
+                                throw new \Exception("Failed to delete file");
+                            }
+                        } else {
+                            $totalFreedSpace += $fileSize;
+                        }
+                    } else {
+                        if (!$dryRun) {
+                            $backup->update(['status' => 'cleaned_up']);
+                        }
+                    }
+
+                    $deletedFiles[] = [
+                        'name' => basename($backup->file_path),
+                        'type' => $backup->type,
+                        'size' => $fileSize,
+                        'age_days' => $ageInDays,
+                        'path' => $backup->file_path
+                    ];
+
+                } catch (\Exception $e) {
+                    $errors[] = "Failed to " . ($dryRun ? "analyze" : "delete") . " {$backup->file_path}: " . $e->getMessage();
+                }
+            }
+        }
+
+        return [
+            'success' => true,
+            'deleted_files' => $deletedFiles,
+            'errors' => $errors,
+            'total_freed_space' => $totalFreedSpace,
+            'retention' => [
+                'database' => $this->config->getDatabaseRetentionDays(),
+                'files' => $this->config->getFilesRetentionDays()
+            ]
+        ];
+    }
+
+    /**
+     * Get comprehensive storage information for status display
+     */
+    public function getStorageInfo(): array
+    {
+        $usage = $this->getStorageUsage();
+        $availableSpace = $this->getAvailableDiskSpace();
+        $totalDiskSpace = disk_total_space($this->storagePath) ?: 0;
+        
+        $diskUsagePercent = $totalDiskSpace > 0 
+            ? round(($totalDiskSpace - $availableSpace) / $totalDiskSpace * 100, 1)
+            : 0;
+
+        return [
+            'path' => $this->storagePath,
+            'total_files' => $usage['total_files'],
+            'total_size' => $usage['total_size'],
+            'available_space' => $availableSpace,
+            'disk_usage_percent' => $diskUsagePercent,
+            'retention' => [
+                'database' => $this->config->getDatabaseRetentionDays(),
+                'files' => $this->config->getFilesRetentionDays()
+            ],
+            'breakdown' => $usage['breakdown']
+        ];
+    }
+
+    /**
      * Format bytes into human readable format
      */
     private function formatBytes(int $bytes): string

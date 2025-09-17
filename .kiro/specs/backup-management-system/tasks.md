@@ -46,7 +46,7 @@
   - Write unit tests for storage management and cleanup
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 7. Create console commands for backup operations
+- [x] 7. Create console commands for backup operations
   - Create BackupCommand for manual backup creation via artisan
   - Create BackupCleanupCommand for manual retention policy execution
   - Create BackupStatusCommand to display backup system status
