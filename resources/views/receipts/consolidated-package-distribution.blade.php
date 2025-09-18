@@ -219,8 +219,17 @@
             font-size: 18px;
         }
 
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 25px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+
         .items-table {
             width: 100%;
+            min-width: 800px;
             border-collapse: collapse;
             margin-bottom: 0;
         }
@@ -431,7 +440,8 @@
         <!-- Items Table -->
         <div class="items-section">
             <h3>Individual Packages in Consolidation</h3>
-            <table class="items-table">
+            <div class="table-container">
+                <table class="items-table">
                 <thead>
                     <tr>
                         <th>Tracking</th>
@@ -478,6 +488,7 @@
                     @endforeach
                 </tbody>
             </table>
+            </div>
         </div>
 
         <!-- Payment Summary -->

@@ -228,7 +228,12 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th scope="col" class="relative px-6 py-3">
-                                            <span class="sr-only">Select</span>
+                                            <input 
+                                                type="checkbox" 
+                                                wire:model="selectAllConsolidatedPackages"
+                                                class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                                title="Select All"
+                                            >
                                         </th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Consolidated Tracking
@@ -332,7 +337,12 @@
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th scope="col" class="relative px-6 py-3">
-                                        <span class="sr-only">Select</span>
+                                        <input 
+                                            type="checkbox" 
+                                            wire:model="selectAllPackages"
+                                            class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                            title="Select All"
+                                        >
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Tracking Number

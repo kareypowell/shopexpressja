@@ -22,6 +22,8 @@ class PackageDistribution extends Component
     public $selectedPackages = [];
     public $selectedConsolidatedPackages = [];
     public $showConsolidatedView = false;
+    public $selectAllPackages = false;
+    public $selectAllConsolidatedPackages = false;
     public $amountCollected = 0;
     public $applyCreditBalance = false;
     public $applyAccountBalance = false;
@@ -110,6 +112,8 @@ class PackageDistribution extends Component
     {
         $this->selectedPackages = [];
         $this->selectedConsolidatedPackages = [];
+        $this->selectAllPackages = false;
+        $this->selectAllConsolidatedPackages = false;
         $this->resetPage();
         $this->resetForm();
     }
@@ -161,6 +165,8 @@ class PackageDistribution extends Component
         $this->showConsolidatedView = !$this->showConsolidatedView;
         $this->selectedPackages = [];
         $this->selectedConsolidatedPackages = [];
+        $this->selectAllPackages = false;
+        $this->selectAllConsolidatedPackages = false;
         $this->calculateTotals();
         $this->updatePaymentStatus();
     }
@@ -174,12 +180,60 @@ class PackageDistribution extends Component
     {
         $this->calculateTotals();
         $this->updatePaymentStatus();
+        $this->updateSelectAllPackages();
     }
 
     public function updatedSelectedConsolidatedPackages()
     {
         $this->calculateTotals();
         $this->updatePaymentStatus();
+        $this->updateSelectAllConsolidatedPackages();
+    }
+
+    public function updatedSelectAllPackages()
+    {
+        if ($this->selectAllPackages) {
+            $this->selectedPackages = $this->packages->pluck('id')->toArray();
+        } else {
+            $this->selectedPackages = [];
+        }
+        $this->calculateTotals();
+        $this->updatePaymentStatus();
+    }
+
+    public function updatedSelectAllConsolidatedPackages()
+    {
+        if ($this->selectAllConsolidatedPackages) {
+            $this->selectedConsolidatedPackages = $this->consolidatedPackages->pluck('id')->toArray();
+        } else {
+            $this->selectedConsolidatedPackages = [];
+        }
+        $this->calculateTotals();
+        $this->updatePaymentStatus();
+    }
+
+    private function updateSelectAllPackages()
+    {
+        $totalPackages = $this->packages->count();
+        $selectedCount = count($this->selectedPackages);
+        
+        if ($totalPackages > 0 && $selectedCount === $totalPackages) {
+            $this->selectAllPackages = true;
+        } else {
+            $this->selectAllPackages = false;
+        }
+    }
+
+    private function updateSelectAllConsolidatedPackages()
+    {
+        $totalConsolidatedPackages = $this->consolidatedPackages->count();
+        $selectedCount = count($this->selectedConsolidatedPackages);
+        
+        if ($totalConsolidatedPackages > 0 && $selectedCount === $totalConsolidatedPackages) {
+            $this->selectAllConsolidatedPackages = true;
+        } else {
+            $this->selectAllConsolidatedPackages = false;
+        }
     }
 
     public function updatedAmountCollected()
@@ -617,6 +671,8 @@ class PackageDistribution extends Component
     {
         $this->selectedPackages = [];
         $this->selectedConsolidatedPackages = [];
+        $this->selectAllPackages = false;
+        $this->selectAllConsolidatedPackages = false;
         $this->amountCollected = 0;
         $this->applyCreditBalance = false;
         $this->applyAccountBalance = false;
