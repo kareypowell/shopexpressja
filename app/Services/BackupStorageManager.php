@@ -306,10 +306,14 @@ class BackupStorageManager
         $errors = [];
         $totalFreedSpace = 0;
 
-        foreach (['database', 'files'] as $type) {
-            $retentionDays = $type === 'database' 
-                ? $this->config->getDatabaseRetentionDays() 
-                : $this->config->getFilesRetentionDays();
+        foreach (['database', 'files', 'full'] as $type) {
+            if ($type === 'database') {
+                $retentionDays = $this->config->getDatabaseRetentionDays();
+            } elseif ($type === 'files') {
+                $retentionDays = $this->config->getFilesRetentionDays();
+            } else { // 'full' type
+                $retentionDays = min($this->config->getDatabaseRetentionDays(), $this->config->getFilesRetentionDays());
+            }
             
             $cutoffDate = Carbon::now()->subDays($retentionDays);
             
@@ -321,38 +325,47 @@ class BackupStorageManager
 
             foreach ($oldBackups as $backup) {
                 try {
-                    $fileSize = 0;
                     $ageInDays = Carbon::now()->diffInDays($backup->created_at);
-                    
-                    if (File::exists($backup->file_path)) {
-                        $fileSize = File::size($backup->file_path);
-                        
-                        if (!$dryRun) {
-                            if (File::delete($backup->file_path)) {
-                                $backup->update(['status' => 'cleaned_up']);
-                                $totalFreedSpace += $fileSize;
+                    $backupFiles = $this->getBackupFilePaths($backup);
+                    $totalBackupSize = 0;
+                    $deletedFilesList = [];
+                    $allFilesDeleted = true;
+
+                    foreach ($backupFiles as $filePath) {
+                        if (File::exists($filePath)) {
+                            $fileSize = File::size($filePath);
+                            $totalBackupSize += $fileSize;
+                            
+                            if (!$dryRun) {
+                                if (File::delete($filePath)) {
+                                    $deletedFilesList[] = basename($filePath);
+                                } else {
+                                    $allFilesDeleted = false;
+                                    $errors[] = "Failed to delete file: {$filePath}";
+                                }
                             } else {
-                                throw new \Exception("Failed to delete file");
+                                $deletedFilesList[] = basename($filePath);
                             }
-                        } else {
-                            $totalFreedSpace += $fileSize;
-                        }
-                    } else {
-                        if (!$dryRun) {
-                            $backup->update(['status' => 'cleaned_up']);
                         }
                     }
 
-                    $deletedFiles[] = [
-                        'name' => basename($backup->file_path),
-                        'type' => $backup->type,
-                        'size' => $fileSize,
-                        'age_days' => $ageInDays,
-                        'path' => $backup->file_path
-                    ];
+                    if (!$dryRun && $allFilesDeleted) {
+                        $backup->update(['status' => 'cleaned_up']);
+                    }
+
+                    if (!empty($deletedFilesList)) {
+                        $totalFreedSpace += $totalBackupSize;
+                        $deletedFiles[] = [
+                            'name' => implode(', ', $deletedFilesList),
+                            'type' => $backup->type,
+                            'size' => $totalBackupSize,
+                            'age_days' => $ageInDays,
+                            'path' => $backup->file_path
+                        ];
+                    }
 
                 } catch (\Exception $e) {
-                    $errors[] = "Failed to " . ($dryRun ? "analyze" : "delete") . " {$backup->file_path}: " . $e->getMessage();
+                    $errors[] = "Failed to " . ($dryRun ? "analyze" : "delete") . " backup {$backup->id}: " . $e->getMessage();
                 }
             }
         }
@@ -367,6 +380,52 @@ class BackupStorageManager
                 'files' => $this->config->getFilesRetentionDays()
             ]
         ];
+    }
+
+    /**
+     * Get file paths for a backup, handling different backup types
+     */
+    private function getBackupFilePaths(Backup $backup): array
+    {
+        $filePaths = [];
+        
+        if ($backup->type === 'full') {
+            // For full backups, file_path contains JSON with database and files paths
+            $paths = json_decode($backup->file_path, true);
+            
+            if (isset($paths['database']) && !empty($paths['database'])) {
+                $filePaths[] = $paths['database'];
+            }
+            
+            if (isset($paths['files']) && is_array($paths['files'])) {
+                $filePaths = array_merge($filePaths, $paths['files']);
+            }
+        } else {
+            // For database and files backups, file_path might be JSON or a simple string
+            if ($this->isJson($backup->file_path)) {
+                $paths = json_decode($backup->file_path, true);
+                
+                if (isset($paths['database'])) {
+                    $filePaths[] = $paths['database'];
+                } elseif (isset($paths['files']) && is_array($paths['files'])) {
+                    $filePaths = $paths['files'];
+                }
+            } else {
+                // Simple string path
+                $filePaths[] = $backup->file_path;
+            }
+        }
+        
+        return array_filter($filePaths); // Remove empty values
+    }
+
+    /**
+     * Check if a string is valid JSON
+     */
+    private function isJson(string $string): bool
+    {
+        json_decode($string);
+        return json_last_error() === JSON_ERROR_NONE;
     }
 
     /**

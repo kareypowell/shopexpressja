@@ -30,4 +30,8 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'mailersend' => [
+        'api_key' => env('MAILERSEND_API_KEY'),
+    ],
+
 ];

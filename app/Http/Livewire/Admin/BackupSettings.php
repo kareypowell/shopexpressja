@@ -5,10 +5,12 @@ namespace App\Http\Livewire\Admin;
 use App\Models\BackupSchedule;
 use App\Models\BackupSetting;
 use App\Services\BackupSettingsService;
+use App\Mail\BackupTestNotification;
 use Livewire\Component;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class BackupSettings extends Component
 {
@@ -310,7 +312,10 @@ class BackupSettings extends Component
         }
 
         try {
-            // In a real implementation, you would send a test email
+            // Send actual test email
+            Mail::to($this->notificationSettings['email'])
+                ->send(new BackupTestNotification());
+            
             $this->dispatchBrowserEvent('toastr:success', [
                 'message' => 'Test notification email sent successfully'
             ]);
