@@ -150,6 +150,7 @@ class PackageDistributionService
                 'credit_applied' => $creditApplied,
                 'account_balance_applied' => $accountBalanceApplied,
                 'write_off_amount' => $writeOffAmount,
+                'write_off_reason' => $options['writeOffReason'] ?? null,
                 'payment_status' => $paymentStatus,
                 'notes' => ($options['notes'] ?? '') . " [Consolidated Package: {$consolidatedPackage->consolidated_tracking_number}]",
                 'receipt_path' => '',
@@ -402,6 +403,7 @@ class PackageDistributionService
                 'credit_applied' => $creditApplied,
                 'account_balance_applied' => $accountBalanceApplied,
                 'write_off_amount' => $writeOffAmount,
+                'write_off_reason' => $options['writeOffReason'] ?? null,
                 'payment_status' => $paymentStatus,
                 'notes' => $options['notes'] ?? null,
                 'receipt_path' => '', // Will be set after PDF generation

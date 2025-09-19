@@ -96,6 +96,7 @@ class ReceiptGeneratorService
             'credit_applied' => number_format($distribution->credit_applied, 2),
             'account_balance_applied' => number_format($distribution->account_balance_applied ?? 0, 2),
             'write_off_amount' => number_format($distribution->write_off_amount, 2),
+            'write_off_reason' => $distribution->write_off_reason,
             'total_paid' => number_format($totalPaid, 2),
             'outstanding_balance' => number_format($outstandingBalance, 2),
             'payment_status' => ucfirst($distribution->payment_status),

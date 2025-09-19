@@ -516,31 +516,84 @@
 
                                         <!-- Write-off/Discount -->
                                         <div>
-                                            <label for="write-off-amount" class="block text-sm font-medium text-gray-700 mb-1">
-                                                Write-off/Discount Amount
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                Write-off/Discount
                                             </label>
-                                            <div class="relative">
-                                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                    <span class="text-gray-500 sm:text-sm">$</span>
-                                                </div>
-                                                <input 
-                                                    type="number" 
-                                                    id="write-off-amount"
-                                                    wire:model="writeOffAmount"
-                                                    step="0.01"
-                                                    min="0"
-                                                    max="{{ $totalCost }}"
-                                                    placeholder="0.00"
-                                                    class="block w-full pl-7 pr-12 border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
-                                                >
+                                            
+                                            <!-- Write-off Type Selection -->
+                                            <div class="flex space-x-4 mb-3">
+                                                <label class="flex items-center">
+                                                    <input 
+                                                        type="radio" 
+                                                        wire:model="writeOffType" 
+                                                        value="fixed"
+                                                        class="focus:ring-wax-flower-500 h-4 w-4 text-wax-flower-600 border-gray-300"
+                                                    >
+                                                    <span class="ml-2 text-sm text-gray-700">Fixed Amount</span>
+                                                </label>
+                                                <label class="flex items-center">
+                                                    <input 
+                                                        type="radio" 
+                                                        wire:model="writeOffType" 
+                                                        value="percentage"
+                                                        class="focus:ring-wax-flower-500 h-4 w-4 text-wax-flower-600 border-gray-300"
+                                                    >
+                                                    <span class="ml-2 text-sm text-gray-700">Percentage</span>
+                                                </label>
                                             </div>
-                                            @error('writeOffAmount')
-                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                            @enderror
+
+                                            <!-- Fixed Amount Input -->
+                                            @if($writeOffType === 'fixed')
+                                                <div class="relative">
+                                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                        <span class="text-gray-500 sm:text-sm">$</span>
+                                                    </div>
+                                                    <input 
+                                                        type="number" 
+                                                        id="write-off-amount"
+                                                        wire:model="writeOffAmount"
+                                                        step="0.01"
+                                                        min="0"
+                                                        max="{{ $totalCost }}"
+                                                        placeholder="0.00"
+                                                        class="block w-full pl-7 pr-12 border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                                    >
+                                                </div>
+                                                @error('writeOffAmount')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            @endif
+
+                                            <!-- Percentage Input -->
+                                            @if($writeOffType === 'percentage')
+                                                <div class="relative">
+                                                    <input 
+                                                        type="number" 
+                                                        id="write-off-percentage"
+                                                        wire:model="writeOffPercentage"
+                                                        step="0.1"
+                                                        min="0"
+                                                        max="100"
+                                                        placeholder="0.0"
+                                                        class="block w-full pr-8 border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                                    >
+                                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                                        <span class="text-gray-500 sm:text-sm">%</span>
+                                                    </div>
+                                                </div>
+                                                @error('writeOffPercentage')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                                @if($writeOffPercentage > 0)
+                                                    <p class="mt-1 text-sm text-gray-600">
+                                                        {{ $writeOffPercentage }}% of ${{ number_format($totalCost, 2) }} = ${{ number_format(($totalCost * $writeOffPercentage) / 100, 2) }}
+                                                    </p>
+                                                @endif
+                                            @endif
                                         </div>
 
                                         <!-- Write-off Reason -->
-                                        @if($writeOffAmount > 0)
+                                        @if(($writeOffType === 'fixed' && $writeOffAmount > 0) || ($writeOffType === 'percentage' && $writeOffPercentage > 0))
                                             <div>
                                                 <label for="write-off-reason" class="block text-sm font-medium text-gray-700 mb-1">
                                                     Write-off Reason <span class="text-red-500">*</span>
@@ -591,17 +644,26 @@
                                         <span class="font-medium">${{ number_format($totalCost, 2) }}</span>
                                     </div>
                                     
-                                    @if($writeOffAmount > 0)
+                                    @php
+                                        $calculatedWriteOff = 0;
+                                        if ($writeOffType === 'percentage' && $writeOffPercentage > 0) {
+                                            $calculatedWriteOff = ($totalCost * $writeOffPercentage) / 100;
+                                        } elseif ($writeOffType === 'fixed' && $writeOffAmount > 0) {
+                                            $calculatedWriteOff = $writeOffAmount;
+                                        }
+                                    @endphp
+                                    
+                                    @if($calculatedWriteOff > 0)
                                         <div class="flex justify-between text-yellow-600">
                                             <span>Write-off/Discount:</span>
-                                            <span class="font-medium">-${{ number_format($writeOffAmount, 2) }}</span>
+                                            <span class="font-medium">-${{ number_format($calculatedWriteOff, 2) }}</span>
                                         </div>
                                     @endif
                                     
-                                    @if($writeOffAmount > 0)
+                                    @if($calculatedWriteOff > 0)
                                         <div class="flex justify-between border-t border-gray-200 pt-2">
                                             <span class="text-gray-600">Net Total:</span>
-                                            <span class="font-medium">${{ number_format($totalCost - $writeOffAmount, 2) }}</span>
+                                            <span class="font-medium">${{ number_format($totalCost - $calculatedWriteOff, 2) }}</span>
                                         </div>
                                     @endif
                                     
@@ -611,7 +673,7 @@
                                     </div>
                                     
                                     @php
-                                        $netTotal = $totalCost - ($writeOffAmount ?? 0);
+                                        $netTotal = $totalCost - $calculatedWriteOff;
                                         $remainingAfterCash = max(0, $netTotal - ($amountCollected ?? 0));
                                         $creditApplied = 0;
                                         $accountApplied = 0;
@@ -648,10 +710,9 @@
                                     @if($paymentStatus !== 'paid')
                                         @php
                                             $amountCollectedNum = (float) ($amountCollected ?? 0);
-                                            $writeOffAmountNum = (float) ($writeOffAmount ?? 0);
                                             $totalCostNum = (float) ($totalCost ?? 0);
                                             
-                                            $netTotal = $totalCostNum - $writeOffAmountNum;
+                                            $netTotal = $totalCostNum - $calculatedWriteOff;
                                             $balanceApplied = 0;
                                             if ($applyCreditBalance && $this->customerTotalAvailableBalance > 0) {
                                                 $balanceApplied = min($this->customerTotalAvailableBalance, max(0, $netTotal - $amountCollectedNum));

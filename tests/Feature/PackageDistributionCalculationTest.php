@@ -310,6 +310,55 @@ class PackageDistributionCalculationTest extends TestCase
     }
 
     /** @test */
+    public function it_handles_percentage_write_off_correctly()
+    {
+        // Set package fees
+        $this->package->update([
+            'freight_price' => 80.00,
+            'customs_duty' => 20.00,
+            'storage_fee' => 0.00,
+            'delivery_fee' => 0.00
+        ]);
+        
+        $originalTotal = 100.00;
+        $writeOffPercentage = 25; // 25%
+        $expectedWriteOffAmount = ($originalTotal * $writeOffPercentage) / 100; // 25.00
+        $expectedChargeAmount = $originalTotal - $expectedWriteOffAmount; // 75.00
+        
+        // Distribute with percentage write-off
+        $result = $this->distributionService->distributePackages(
+            [$this->package->id],
+            0.00, // No cash payment
+            $this->admin,
+            ['credit' => false, 'account' => true],
+            [
+                'writeOff' => $expectedWriteOffAmount, // Service expects calculated amount
+                'writeOffReason' => 'Customer loyalty discount - 25%',
+                'notes' => 'Test percentage write-off for Simba Powell'
+            ]
+        );
+        
+        $this->assertTrue($result['success']);
+        $distribution = $result['distribution'];
+        
+        // Verify write-off was applied correctly
+        $this->assertEquals($originalTotal, $distribution->total_amount); // Original total
+        $this->assertEquals($expectedWriteOffAmount, $distribution->write_off_amount);
+        $this->assertEquals('paid', $distribution->payment_status); // Account balance covers remaining amount after write-off
+        
+        // Verify write-off transaction was created with correct amount
+        $writeOffTransaction = CustomerTransaction::where('user_id', $this->customer->id)
+            ->where('reference_type', 'package_distribution')
+            ->where('reference_id', $distribution->id)
+            ->where('type', 'write_off')
+            ->first();
+            
+        $this->assertNotNull($writeOffTransaction);
+        $this->assertEquals($expectedWriteOffAmount, $writeOffTransaction->amount);
+        $this->assertEquals(25.00, $writeOffTransaction->amount); // Verify exact amount
+    }
+
+    /** @test */
     public function it_maintains_audit_trail_correctly()
     {
         // Set package fees

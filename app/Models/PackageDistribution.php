@@ -21,6 +21,7 @@ class PackageDistribution extends Model
         'credit_applied',
         'account_balance_applied',
         'write_off_amount',
+        'write_off_reason',
         'payment_status',
         'notes',
         'disputed',

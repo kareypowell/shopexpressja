@@ -449,6 +449,14 @@
                                 <td class="summary-amount">-${{ $write_off_amount }}</td>
                             </tr>
                         </table>
+                        @if($write_off_reason)
+                        <table class="summary-row">
+                            <tr>
+                                <td class="summary-label" style="font-size: 12px; color: #6b7280; font-style: italic;">Reason:</td>
+                                <td class="summary-amount" style="font-size: 12px; color: #6b7280; font-style: italic; text-align: right;">{{ $write_off_reason }}</td>
+                            </tr>
+                        </table>
+                        @endif
                         @endif
                         <table class="summary-row summary-paid">
                             <tr>

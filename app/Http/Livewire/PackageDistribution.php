@@ -28,6 +28,8 @@ class PackageDistribution extends Component
     public $applyCreditBalance = false;
     public $applyAccountBalance = false;
     public $writeOffAmount = 0;
+    public $writeOffType = 'fixed'; // 'fixed' or 'percentage'
+    public $writeOffPercentage = 0;
     public $writeOffReason = '';
     public $distributionNotes = '';
     public $showAdvancedOptions = false;
@@ -55,6 +57,8 @@ class PackageDistribution extends Component
         'selectedConsolidatedPackages.*' => 'exists:consolidated_packages,id',
         'selectedCustomerId' => 'required|exists:users,id',
         'writeOffAmount' => 'nullable|numeric|min:0',
+        'writeOffType' => 'required|in:fixed,percentage',
+        'writeOffPercentage' => 'nullable|numeric|min:0|max:100',
         'writeOffReason' => 'nullable|string|max:500',
         'distributionNotes' => 'nullable|string|max:1000',
     ];
@@ -65,6 +69,8 @@ class PackageDistribution extends Component
             'amountCollected' => 'required|numeric|min:0',
             'selectedCustomerId' => 'required|exists:users,id',
             'writeOffAmount' => 'nullable|numeric|min:0',
+            'writeOffType' => 'required|in:fixed,percentage',
+            'writeOffPercentage' => 'nullable|numeric|min:0|max:100',
             'writeOffReason' => 'nullable|string|max:500',
             'distributionNotes' => 'nullable|string|max:1000',
         ];
@@ -79,9 +85,16 @@ class PackageDistribution extends Component
         }
         
         // Only require write-off reason if write-off amount is greater than 0
-        $writeOffAmount = (float) ($this->writeOffAmount ?: 0);
+        $writeOffAmount = $this->getCalculatedWriteOffAmount();
         if ($writeOffAmount > 0) {
             $rules['writeOffReason'] = 'required|string|max:500';
+        }
+        
+        // Validate write-off type specific fields
+        if ($this->writeOffType === 'percentage') {
+            $rules['writeOffPercentage'] = 'required|numeric|min:0|max:100';
+        } else {
+            $rules['writeOffAmount'] = 'nullable|numeric|min:0|max:' . $this->totalCost;
         }
         
         return $rules;
@@ -249,11 +262,43 @@ class PackageDistribution extends Component
         $this->writeOffAmount = (float) ($this->writeOffAmount ?: 0);
         
         // Clear write-off reason if amount is 0
-        if ($this->writeOffAmount == 0) {
+        if ($this->getCalculatedWriteOffAmount() == 0) {
             $this->writeOffReason = '';
         }
         
         $this->updatePaymentStatus();
+    }
+
+    public function updatedWriteOffType()
+    {
+        // Reset values when switching types
+        $this->writeOffAmount = 0;
+        $this->writeOffPercentage = 0;
+        $this->writeOffReason = '';
+        $this->updatePaymentStatus();
+    }
+
+    public function updatedWriteOffPercentage()
+    {
+        // Ensure writeOffPercentage is always numeric and within bounds
+        $this->writeOffPercentage = max(0, min(100, (float) ($this->writeOffPercentage ?: 0)));
+        
+        // Clear write-off reason if amount is 0
+        if ($this->getCalculatedWriteOffAmount() == 0) {
+            $this->writeOffReason = '';
+        }
+        
+        $this->updatePaymentStatus();
+    }
+
+    public function getCalculatedWriteOffAmount()
+    {
+        if ($this->writeOffType === 'percentage') {
+            $percentage = (float) ($this->writeOffPercentage ?: 0);
+            return ($this->totalCost * $percentage) / 100;
+        } else {
+            return (float) ($this->writeOffAmount ?: 0);
+        }
     }
 
     public function updatedApplyCreditBalance()
@@ -411,7 +456,7 @@ class PackageDistribution extends Component
 
         // Ensure numeric values
         $amountCollected = (float) ($this->amountCollected ?: 0);
-        $writeOffAmount = (float) ($this->writeOffAmount ?: 0);
+        $writeOffAmount = $this->getCalculatedWriteOffAmount();
         $totalCost = (float) ($this->totalCost ?: 0);
 
         // Calculate net total after write-off
@@ -469,7 +514,7 @@ class PackageDistribution extends Component
 
         // Calculate advanced payment details
         $amountCollected = (float) ($this->amountCollected ?: 0);
-        $writeOffAmount = (float) ($this->writeOffAmount ?: 0);
+        $writeOffAmount = $this->getCalculatedWriteOffAmount();
         $totalCost = (float) ($this->totalCost ?: 0);
         
         $netTotal = $totalCost - $writeOffAmount;
@@ -580,9 +625,19 @@ class PackageDistribution extends Component
             // Prepare distribution options
             $options = [];
             
-            if ($this->writeOffAmount > 0) {
-                $options['writeOff'] = $this->writeOffAmount;
-                $options['writeOffReason'] = $this->writeOffReason;
+            $calculatedWriteOff = $this->getCalculatedWriteOffAmount();
+            if ($calculatedWriteOff > 0) {
+                $options['writeOff'] = $calculatedWriteOff;
+                
+                // Format write-off reason with type information
+                $writeOffReason = $this->writeOffReason;
+                if ($this->writeOffType === 'percentage') {
+                    $writeOffReason .= " ({$this->writeOffPercentage}% discount = $" . number_format($calculatedWriteOff, 2) . ")";
+                } else {
+                    $writeOffReason .= " (Fixed amount discount)";
+                }
+                
+                $options['writeOffReason'] = $writeOffReason;
             }
             
             if ($this->distributionNotes) {
@@ -677,6 +732,8 @@ class PackageDistribution extends Component
         $this->applyCreditBalance = false;
         $this->applyAccountBalance = false;
         $this->writeOffAmount = 0;
+        $this->writeOffType = 'fixed';
+        $this->writeOffPercentage = 0;
         $this->writeOffReason = '';
         $this->distributionNotes = '';
         $this->showAdvancedOptions = false;

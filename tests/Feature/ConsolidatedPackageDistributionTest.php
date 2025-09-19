@@ -243,6 +243,34 @@ class ConsolidatedPackageDistributionTest extends TestCase
     }
 
     /** @test */
+    public function it_applies_percentage_write_off_to_consolidated_packages()
+    {
+        $this->actingAs($this->admin);
+
+        // Test percentage write-off (20% of $300 = $60)
+        Livewire::test(PackageDistributionComponent::class)
+            ->set('selectedCustomerId', $this->customer->id)
+            ->set('showConsolidatedView', true)
+            ->set('selectedConsolidatedPackages', [$this->consolidatedPackage->id])
+            ->set('amountCollected', 240.00)
+            ->set('writeOffType', 'percentage')
+            ->set('writeOffPercentage', 20.0)
+            ->set('writeOffReason', 'Customer loyalty discount - 20%')
+            ->call('showDistributionConfirmation')
+            ->call('processDistribution')
+            ->assertSet('successMessage', 'Consolidated packages distributed successfully');
+
+        // Verify distribution was created with correct write-off amount (20% of $300 = $60)
+        $this->assertDatabaseHas('package_distributions', [
+            'customer_id' => $this->customer->id,
+            'total_amount' => 300.00,
+            'amount_collected' => 240.00,
+            'write_off_amount' => 60.00, // 20% of $300
+            'payment_status' => 'paid',
+        ]);
+    }
+
+    /** @test */
     public function it_searches_consolidated_packages_by_tracking_number()
     {
         $this->actingAs($this->admin);
