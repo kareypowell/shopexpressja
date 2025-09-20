@@ -77,33 +77,18 @@ Route::post('/email/verification-notification', function (Request $request) {
 
 // Super Admin routes
 Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->group(function () {
-    Route::get('/dashboard', \App\Http\Livewire\AdminDashboard::class)->name('admin.dashboard');
     
-    // Manifest routes with new navigation structure
-    Route::prefix('manifests')->name('admin.manifests.')->group(function () {
-        Route::get('/', Manifest::class)->name('index');
-        Route::get('/create', Manifest::class)->name('create');
-        Route::get('/{manifest}/edit', EditManifest::class)->name('edit');
-        Route::get('/{manifest}/packages', ManifestPackage::class)->name('packages');
-        Route::get('/{manifest}/packages/{package}/edit', EditManifestPackage::class)->name('packages.edit');
-        
-        // Package workflow routes
-        Route::get('/{manifest}/workflow', \App\Http\Livewire\Manifests\PackageWorkflow::class)->name('workflow');
-        Route::get('/{manifest}/distribution', \App\Http\Livewire\Manifests\PackageDistribution::class)->name('distribution');
-    });
+
     
-    
-    Route::get('/package-distribution', \App\Http\Livewire\PackageDistribution::class)->name('package-distribution');
-    Route::get('/transactions', \App\Http\Livewire\Admin\TransactionManagement::class)->name('transactions');
-    Route::get('/backup-dashboard', \App\Http\Livewire\Admin\BackupDashboard::class)->name('backup-dashboard');
-    Route::get('/backup-history', \App\Http\Livewire\Admin\BackupHistory::class)->name('backup-history');
-    Route::get('/backup-settings', \App\Http\Livewire\Admin\BackupSettings::class)->name('backup-settings');
-    Route::get('/backup/{backup}/download', [App\Http\Controllers\BackupController::class, 'download'])->name('backup.download');
+    // Backup management routes - accessible only by superadmin
+    Route::get('/backup-dashboard', \App\Http\Livewire\Admin\BackupDashboard::class)->name('backup-dashboard')->middleware('admin.restriction');
+    Route::get('/backup-history', \App\Http\Livewire\Admin\BackupHistory::class)->name('backup-history')->middleware('admin.restriction');
+    Route::get('/backup-settings', \App\Http\Livewire\Admin\BackupSettings::class)->name('backup-settings')->middleware('admin.restriction');
+    Route::get('/backup/{backup}/download', [App\Http\Controllers\BackupController::class, 'download'])->name('backup.download')->middleware('admin.restriction');
     // Role management routes - accessible only by superadmin
-    Route::get('/roles', Role::class)->name('admin.roles')->middleware('can:role.viewAny');
-    Route::get('/rates', Rate::class)->name('view-rates');
-    Route::get('/pre-alerts', AdminPreAlert::class)->name('view-pre-alerts');
-    Route::get('/purchase-requests', AdminPurchaseRequest::class)->name('view-purchase-requests');
+    Route::get('/roles', Role::class)->name('admin.roles')->middleware(['can:role.viewAny', 'admin.restriction']);
+
+
 });
 
 // Customer Management routes (both superadmin and admin can access)
@@ -167,6 +152,35 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     });
 });
 
+// Admin and Operations routes (both superadmin and admin can access)
+Route::middleware(['auth', 'verified', 'admin.access'])->prefix('admin')->group(function () {
+    // Dashboard - accessible by both admin and superadmin
+    Route::get('/dashboard', \App\Http\Livewire\AdminDashboard::class)->name('admin.dashboard');
+    
+    // Operations routes - accessible by both admin and superadmin
+    Route::get('/package-distribution', \App\Http\Livewire\PackageDistribution::class)->name('package-distribution');
+    
+    // Manifest routes with new navigation structure
+    Route::prefix('manifests')->name('admin.manifests.')->group(function () {
+        Route::get('/', Manifest::class)->name('index');
+        Route::get('/create', Manifest::class)->name('create');
+        Route::get('/{manifest}/edit', EditManifest::class)->name('edit');
+        Route::get('/{manifest}/packages', ManifestPackage::class)->name('packages');
+        Route::get('/{manifest}/packages/{package}/edit', EditManifestPackage::class)->name('packages.edit');
+        
+        // Package workflow routes
+        Route::get('/{manifest}/workflow', \App\Http\Livewire\Manifests\PackageWorkflow::class)->name('workflow');
+        Route::get('/{manifest}/distribution', \App\Http\Livewire\Manifests\PackageDistribution::class)->name('distribution');
+    });
+    
+    // Financial routes - accessible by both admin and superadmin
+    Route::get('/transactions', \App\Http\Livewire\Admin\TransactionManagement::class)->name('transactions');
+    Route::get('/rates', Rate::class)->name('view-rates');
+    Route::get('/purchase-requests', AdminPurchaseRequest::class)->name('view-purchase-requests');
+    Route::get('/pre-alerts', AdminPreAlert::class)->name('view-pre-alerts');
+
+});
+
 // Customer routes
 Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
     Route::get('/packages', \App\Http\Livewire\Customers\CustomerPackages::class)->name('packages.index');
@@ -185,7 +199,7 @@ Route::middleware(['auth', 'verified', 'role:purchaser'])->prefix('staff')->grou
     // Route::get('/rates', Rate::class)->name('rates');
 });
 
-// Test routes (only in non-production environments)
+// Debug routes (only in non-production environments)
 if (app()->environment(['local', 'testing'])) {
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/test-consolidation-toggle', function () {
@@ -195,5 +209,6 @@ if (app()->environment(['local', 'testing'])) {
         Route::get('/test-html5-editor', function () {
             return view('test-editor');
         })->name('test.html5-editor');
+
     });
 }

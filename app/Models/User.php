@@ -1461,4 +1461,57 @@ class User extends Authenticatable implements MustVerifyEmail
             'recent_transactions' => $recentTransactions,
         ];
     }
+
+    /**
+     * Check if user can access role management
+     *
+     * @return bool
+     */
+    public function canAccessRoleManagement(): bool
+    {
+        return $this->isSuperAdmin();
+    }
+
+    /**
+     * Check if user can access backup management
+     *
+     * @return bool
+     */
+    public function canAccessBackupManagement(): bool
+    {
+        return $this->isSuperAdmin();
+    }
+
+    /**
+     * Check if user can access administration section
+     *
+     * @return bool
+     */
+    public function canAccessAdministration(): bool
+    {
+        return $this->isAdmin() || $this->isSuperAdmin();
+    }
+
+    /**
+     * Get allowed administration sections for the user
+     *
+     * @return array
+     */
+    public function getAllowedAdministrationSections(): array
+    {
+        $sections = [];
+        
+        if ($this->canAccessAdministration()) {
+            $sections[] = 'user_management';
+            $sections[] = 'offices';
+            $sections[] = 'shipping_addresses';
+            
+            if ($this->isSuperAdmin()) {
+                $sections[] = 'role_management';
+                $sections[] = 'backup_management';
+            }
+        }
+        
+        return $sections;
+    }
 }

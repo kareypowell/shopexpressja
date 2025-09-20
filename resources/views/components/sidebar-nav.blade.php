@@ -136,7 +136,7 @@
         </div>
 
         <!-- ⚙️ ADMINISTRATION -->
-        @if(auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
+        @if(auth()->user()->canAccessAdministration())
         <div x-data="{ open: {{ (\Route::is('admin.users.*') || \Route::is('admin.roles') || \Route::is('admin.offices.*') || \Route::is('admin.addresses.*') || \Route::is('backup-dashboard') || \Route::is('backup-history') || \Route::is('backup-settings')) ? 'true' : 'false' }} }" class="space-y-1">
           <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white group w-full flex items-center px-2 py-2 text-left text-base font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <span class="mr-3 text-lg">⚙️</span>
@@ -146,7 +146,8 @@
             </svg>
           </button>
           <div x-show="open" x-transition class="space-y-1 pl-4">
-            <!-- User Management Submenu -->
+            <!-- User Management Submenu - Available to all admins -->
+            @if(in_array('user_management', auth()->user()->getAllowedAdministrationSections()))
             <div x-data="{ userOpen: {{ \Route::is('admin.users.*') ? 'true' : 'false' }} }" class="space-y-1">
               <button @click="userOpen = !userOpen" class="{{ \Route::is('admin.users.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group w-full flex items-center px-2 py-2 text-sm font-medium rounded-md text-left">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5">
@@ -166,9 +167,10 @@
                 </a>
               </div>
             </div>
+            @endif
 
-            @if(auth()->user()->isSuperAdmin())
-            <!-- Role Management Submenu -->
+            <!-- Role Management Submenu - Only for superadmins -->
+            @if(auth()->user()->canAccessRoleManagement())
             <div x-data="{ roleOpen: {{ \Route::is('admin.roles') ? 'true' : 'false' }} }" class="space-y-1">
               <button @click="roleOpen = !roleOpen" class="{{ \Route::is('admin.roles') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group w-full flex items-center px-2 py-2 text-sm font-medium rounded-md text-left">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5">
@@ -187,13 +189,18 @@
             </div>
             @endif
 
+            <!-- Offices - Available to all admins -->
+            @if(in_array('offices', auth()->user()->getAllowedAdministrationSections()))
             <a href="{{ route('admin.offices.index') }}" class="{{ \Route::is('admin.offices.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
               </svg>
               Offices
             </a>
+            @endif
 
+            <!-- Shipping Addresses - Available to all admins -->
+            @if(in_array('shipping_addresses', auth()->user()->getAllowedAdministrationSections()))
             <a href="{{ route('admin.addresses.index') }}" class="{{ \Route::is('admin.addresses.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -201,9 +208,12 @@
               </svg>
               Shipping Addresses
             </a>
+            @endif
 
-            @if(auth()->user()->isSuperAdmin())
-            <!-- Backup Management Submenu -->
+
+
+            <!-- Backup Management Submenu - Only for superadmins -->
+            @if(auth()->user()->canAccessBackupManagement())
             <div x-data="{ backupOpen: {{ (\Route::is('backup-dashboard') || \Route::is('backup-history') || \Route::is('backup-settings')) ? 'true' : 'false' }} }" class="space-y-1">
               <button @click="backupOpen = !backupOpen" class="{{ (\Route::is('backup-dashboard') || \Route::is('backup-history') || \Route::is('backup-settings')) ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group w-full flex items-center px-2 py-2 text-sm font-medium rounded-md text-left">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5">

@@ -59,7 +59,15 @@ class UserCreate extends Component
             'lastName' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required_if:generatePassword,false|min:8|same:passwordConfirmation',
-            'selectedRole' => 'required|exists:roles,name',
+            'selectedRole' => [
+                'required',
+                'exists:roles,name',
+                function ($attribute, $value, $fail) {
+                    if (!auth()->user()->can('user.createWithRole', $value)) {
+                        $fail('You do not have permission to create users with the selected role.');
+                    }
+                },
+            ],
         ];
 
         // Add customer-specific validation rules if customer role is selected
@@ -157,6 +165,9 @@ class UserCreate extends Component
             if (!$role) {
                 throw new \Exception("Role '{$this->selectedRole}' not found in the system.");
             }
+
+            // Check if user can create users with this role
+            $this->authorize('user.createWithRole', $this->selectedRole);
 
             // Create the user
             $user = User::create([
@@ -459,12 +470,21 @@ class UserCreate extends Component
 
     /**
      * Get the list of available roles for user creation.
+     * Filters roles based on current user's permissions.
      *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getAvailableRolesProperty()
     {
-        return Role::orderBy('name')->get();
+        $currentUser = auth()->user();
+        
+        // Get all roles
+        $allRoles = Role::orderBy('name')->get();
+        
+        // Filter roles based on user permissions
+        return $allRoles->filter(function ($role) use ($currentUser) {
+            return $currentUser->can('user.createWithRole', $role->name);
+        });
     }
 
     /**

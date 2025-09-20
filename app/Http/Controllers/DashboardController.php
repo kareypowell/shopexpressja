@@ -10,12 +10,12 @@ class DashboardController extends Controller
     {
         $user = auth()->user()->load('role');
         
-        if ($user->isSuperAdmin()) {
-            // Redirect admin users to the dedicated admin dashboard
+        if ($user->isAdmin() || $user->isSuperAdmin()) {
+            // Redirect admin and superadmin users to the dedicated admin dashboard
             return redirect()->route('admin.dashboard');
         }
         
-        // For regular users, render the dashboard Livewire component
+        // For regular users (customers), render the dashboard Livewire component
         return view('dashboard');
     }
 }

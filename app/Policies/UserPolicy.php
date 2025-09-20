@@ -70,7 +70,7 @@ class UserPolicy
     /**
      * Determine whether the user can update the model.
      * Superadmin: Can update any user
-     * Admin: Can update customer users and their own profile
+     * Admin: Can update admin, customer, purchaser users and their own profile (not superadmin)
      * Customer: Can only update their own profile
      *
      * @param  \App\Models\User  $authenticatedUser
@@ -84,9 +84,16 @@ class UserPolicy
             return true;
         }
 
-        // Admin can update customers and their own profile
+        // Admin can update admin, customer, purchaser users and their own profile (not superadmin)
         if ($authenticatedUser->isAdmin()) {
-            return $targetUser->isCustomer() || $authenticatedUser->id === $targetUser->id;
+            // Can always update their own profile
+            if ($authenticatedUser->id === $targetUser->id) {
+                return true;
+            }
+            
+            // Can update admin, customer, and purchaser users (not superadmin)
+            $allowedRoles = ['admin', 'customer', 'purchaser'];
+            return in_array($targetUser->role->name ?? '', $allowedRoles);
         }
 
         // Customer can only update their own profile
@@ -100,7 +107,7 @@ class UserPolicy
     /**
      * Determine whether the user can delete the model.
      * Superadmin: Can delete any user (except themselves)
-     * Admin: Can delete customer users only (not themselves)
+     * Admin: Can delete admin, customer, purchaser users (not superadmin or themselves)
      * Customer: Cannot delete users
      *
      * @param  \App\Models\User  $authenticatedUser
@@ -119,9 +126,10 @@ class UserPolicy
             return true;
         }
 
-        // Admin can delete customers only
+        // Admin can delete admin, customer, purchaser users (not superadmin)
         if ($authenticatedUser->isAdmin()) {
-            return $targetUser->isCustomer();
+            $allowedRoles = ['admin', 'customer', 'purchaser'];
+            return in_array($targetUser->role->name ?? '', $allowedRoles);
         }
 
         // Customers cannot delete users
@@ -170,7 +178,7 @@ class UserPolicy
     /**
      * Determine whether the user can change roles.
      * Superadmin: Can change any user's role
-     * Admin: Can change customer roles only
+     * Admin: Can change admin, customer, purchaser roles (not superadmin or their own)
      * Customer: Cannot change roles
      *
      * @param  \App\Models\User  $authenticatedUser
@@ -189,9 +197,10 @@ class UserPolicy
             return true;
         }
 
-        // Admin can change customer roles only
+        // Admin can change admin, customer, purchaser roles (not superadmin)
         if ($authenticatedUser->isAdmin()) {
-            return $targetUser->isCustomer();
+            $allowedRoles = ['admin', 'customer', 'purchaser'];
+            return in_array($targetUser->role->name ?? '', $allowedRoles);
         }
 
         // Customers cannot change roles
@@ -225,7 +234,7 @@ class UserPolicy
     /**
      * Determine whether the user can create users with specific roles.
      * Superadmin: Can create any role
-     * Admin: Can create customer roles only
+     * Admin: Can create admin, customer, and purchaser roles only
      *
      * @param  \App\Models\User  $user
      * @param  string  $roleName
@@ -238,9 +247,10 @@ class UserPolicy
             return true;
         }
 
-        // Admin can create customer roles only
+        // Admin can create admin, customer, and purchaser roles only (not superadmin)
         if ($user->isAdmin()) {
-            return $roleName === 'customer';
+            $allowedRoles = ['admin', 'customer', 'purchaser'];
+            return in_array(strtolower($roleName), $allowedRoles);
         }
 
         return false;
