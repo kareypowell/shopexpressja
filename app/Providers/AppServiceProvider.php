@@ -22,6 +22,9 @@ class AppServiceProvider extends ServiceProvider
         // Register dashboard services
         $this->app->singleton(\App\Services\DashboardCacheService::class);
         $this->app->singleton(\App\Services\DashboardAnalyticsService::class);
+        
+        // Register audit service
+        $this->app->singleton(\App\Services\AuditService::class);
     }
 
     /**
