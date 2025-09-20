@@ -199,7 +199,7 @@ class PackageStatus
             case self::DELIVERED:
                 return []; // Terminal state
             case self::DELAYED:
-                return [self::PROCESSING(), self::SHIPPED(), self::CUSTOMS()]; // Can recover from delay
+                return [self::PROCESSING(), self::SHIPPED(), self::CUSTOMS(), self::READY()]; // Can recover from delay
             default:
                 return [];
         }

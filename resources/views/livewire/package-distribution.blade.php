@@ -755,19 +755,7 @@
                         </div>
                     </div>
     @else
-                <div class="px-6 py-8 text-center">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2M4 13h2m13-8V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v1M7 6V4a1 1 0 011-1h4a1 1 0 011 1v2"></path>
-                    </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">No packages ready for distribution</h3>
-                    <p class="mt-1 text-sm text-gray-500">
-                        @if($search)
-                            No packages match your search criteria.
-                        @else
-                            This customer has no packages with "Ready for Pickup" status.
-                        @endif
-                    </p>
-                </div>
+                
             @endif
         </div>
     @else
