@@ -5,19 +5,23 @@ namespace App\Observers;
 use App\Models\Package;
 use App\Services\CustomerCacheInvalidationService;
 use App\Services\ManifestLockService;
+use App\Services\ManifestSummaryCacheService;
 use Illuminate\Support\Facades\Log;
 
 class PackageObserver
 {
     protected CustomerCacheInvalidationService $cacheInvalidationService;
     protected ManifestLockService $manifestLockService;
+    protected ManifestSummaryCacheService $manifestCacheService;
 
     public function __construct(
         CustomerCacheInvalidationService $cacheInvalidationService,
-        ManifestLockService $manifestLockService
+        ManifestLockService $manifestLockService,
+        ManifestSummaryCacheService $manifestCacheService
     ) {
         $this->cacheInvalidationService = $cacheInvalidationService;
         $this->manifestLockService = $manifestLockService;
+        $this->manifestCacheService = $manifestCacheService;
     }
 
     /**
@@ -29,6 +33,7 @@ class PackageObserver
     public function created(Package $package)
     {
         $this->cacheInvalidationService->handlePackageCreation($package);
+        $this->invalidateManifestCache($package);
     }
 
     /**
@@ -42,6 +47,7 @@ class PackageObserver
         // Get the changes that were made
         $changes = $package->getChanges();
         $this->cacheInvalidationService->handlePackageUpdate($package, $changes);
+        $this->invalidateManifestCache($package);
 
         // Check for automatic manifest closure when package status changes to "delivered"
         $this->handleManifestAutoClosure($package);
@@ -56,6 +62,7 @@ class PackageObserver
     public function deleted(Package $package)
     {
         $this->cacheInvalidationService->handlePackageDeletion($package);
+        $this->invalidateManifestCache($package);
     }
 
     /**
@@ -67,6 +74,7 @@ class PackageObserver
     public function restored(Package $package)
     {
         $this->cacheInvalidationService->handlePackageCreation($package);
+        $this->invalidateManifestCache($package);
     }
 
     /**
@@ -78,6 +86,7 @@ class PackageObserver
     public function forceDeleted(Package $package)
     {
         $this->cacheInvalidationService->handlePackageDeletion($package);
+        $this->invalidateManifestCache($package);
     }
 
     /**
@@ -132,6 +141,37 @@ class PackageObserver
                 'manifest_id' => $package->manifest_id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
+            ]);
+        }
+    }
+
+    /**
+     * Invalidate manifest cache when package changes
+     *
+     * @param Package $package
+     * @return void
+     */
+    protected function invalidateManifestCache(Package $package): void
+    {
+        try {
+            // Only invalidate if package belongs to a manifest
+            if ($package->manifest_id && $package->manifest) {
+                $this->manifestCacheService->invalidateManifestCache($package->manifest);
+                
+                Log::info('Invalidated manifest cache due to package change', [
+                    'package_id' => $package->id,
+                    'package_tracking' => $package->tracking_number,
+                    'manifest_id' => $package->manifest_id,
+                    'manifest_name' => $package->manifest->name ?? 'Unknown',
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Log error but don't throw to avoid breaking package operations
+            Log::error('Failed to invalidate manifest cache', [
+                'package_id' => $package->id,
+                'package_tracking' => $package->tracking_number,
+                'manifest_id' => $package->manifest_id,
+                'error' => $e->getMessage(),
             ]);
         }
     }

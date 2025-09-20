@@ -209,6 +209,49 @@ if (app()->environment(['local', 'testing'])) {
         Route::get('/test-html5-editor', function () {
             return view('test-editor');
         })->name('test.html5-editor');
+        
+        // Debug route to check manifest values
+        Route::get('/debug/manifest/{manifest}', function (\App\Models\Manifest $manifest) {
+            $packages = $manifest->packages;
+            
+            $totalEstimatedValue = $packages->sum('estimated_value');
+            $totalCost = $packages->sum(function($package) {
+                return ($package->freight_price ?? 0) + 
+                       ($package->customs_duty ?? 0) + 
+                       ($package->storage_fee ?? 0) + 
+                       ($package->delivery_fee ?? 0);
+            });
+            
+            // Get cached summary
+            $cacheService = app(\App\Services\ManifestSummaryCacheService::class);
+            $cachedSummary = $cacheService->getCachedDisplaySummary($manifest);
+            
+            // Get fresh summary (bypass cache)
+            $summaryService = app(\App\Services\ManifestSummaryService::class);
+            $freshSummary = $summaryService->getDisplaySummary($manifest);
+            
+            return response()->json([
+                'manifest_name' => $manifest->name,
+                'package_count' => $packages->count(),
+                'total_estimated_value' => number_format($totalEstimatedValue, 2),
+                'total_cost_calculated' => number_format($totalCost, 2),
+                'cached_summary_total' => $cachedSummary['total_value'] ?? 'N/A',
+                'fresh_summary_total' => $freshSummary['total_value'] ?? 'N/A',
+                'cache_vs_fresh_match' => ($cachedSummary['total_value'] ?? 0) == ($freshSummary['total_value'] ?? 0),
+                'difference' => number_format($totalEstimatedValue - $totalCost, 2),
+            ]);
+        })->name('debug.manifest');
+        
+        // Route to clear manifest cache
+        Route::get('/debug/manifest/{manifest}/clear-cache', function (\App\Models\Manifest $manifest) {
+            $cacheService = app(\App\Services\ManifestSummaryCacheService::class);
+            $cacheService->invalidateManifestCache($manifest);
+            
+            return response()->json([
+                'message' => 'Cache cleared for manifest: ' . $manifest->name,
+                'manifest_id' => $manifest->id,
+            ]);
+        })->name('debug.manifest.clear-cache');
 
     });
 }
