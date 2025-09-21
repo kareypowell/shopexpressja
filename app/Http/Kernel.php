@@ -67,5 +67,7 @@ class Kernel extends HttpKernel
         'customer.management' => \App\Http\Middleware\CustomerManagementMiddleware::class,
         'admin.restriction' => \App\Http\Middleware\AdminRoleRestriction::class,
         'admin.access' => \App\Http\Middleware\AdminAccessMiddleware::class,
+        'audit' => \App\Http\Middleware\AuditMiddleware::class,
+        'auth.block' => \App\Http\Middleware\BlockFailedAuthenticationMiddleware::class,
     ];
 }
