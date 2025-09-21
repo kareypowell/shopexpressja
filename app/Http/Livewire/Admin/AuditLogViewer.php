@@ -4,10 +4,12 @@ namespace App\Http\Livewire\Admin;
 
 use App\Models\AuditLog;
 use Livewire\Component;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Carbon\Carbon;
 
 class AuditLogViewer extends Component
 {
+    use AuthorizesRequests;
     public $auditLogId;
     public $auditLog;
     public $relatedLogs;
@@ -18,6 +20,9 @@ class AuditLogViewer extends Component
 
     public function mount($auditLogId = null)
     {
+        // Check authorization
+        $this->authorize('viewAny', AuditLog::class);
+        
         $this->relatedLogs = collect();
         
         if ($auditLogId) {
@@ -43,6 +48,9 @@ class AuditLogViewer extends Component
             $this->addError('auditLog', 'Audit log entry not found.');
             return;
         }
+
+        // Check authorization for viewing specific audit log
+        $this->authorize('view', $this->auditLog);
 
         $this->loadRelatedLogs();
     }

@@ -65,6 +65,7 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerCustomerPolicyGates();
         $this->registerUserPolicyGates();
         $this->registerRolePolicyGates();
+        $this->registerAuditPolicyGates();
 
         // Define superadmin gate
         Gate::define('super-admin-access', function ($user) {
@@ -150,5 +151,23 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('role.delete', [RolePolicy::class, 'delete']);
         Gate::define('role.manageAssignments', [RolePolicy::class, 'manageAssignments']);
         Gate::define('role.viewAuditTrail', [RolePolicy::class, 'viewAuditTrail']);
+    }
+
+    /**
+     * Register audit-specific policy gates.
+     * These gates use the AuditLogPolicy for audit log operations.
+     *
+     * @return void
+     */
+    protected function registerAuditPolicyGates()
+    {
+        // Audit log management gates
+        Gate::define('audit.viewAny', [AuditLogPolicy::class, 'viewAny']);
+        Gate::define('audit.view', [AuditLogPolicy::class, 'view']);
+        Gate::define('audit.export', [AuditLogPolicy::class, 'export']);
+        Gate::define('audit.generateComplianceReport', [AuditLogPolicy::class, 'generateComplianceReport']);
+        Gate::define('audit.manageSettings', [AuditLogPolicy::class, 'manageSettings']);
+        Gate::define('audit.createExportTemplate', [AuditLogPolicy::class, 'createExportTemplate']);
+        Gate::define('audit.scheduleReports', [AuditLogPolicy::class, 'scheduleReports']);
     }
 }

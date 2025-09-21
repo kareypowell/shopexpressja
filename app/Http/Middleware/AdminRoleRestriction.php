@@ -30,7 +30,10 @@ class AdminRoleRestriction
                 'admin.roles',
                 'backup-dashboard',
                 'backup-history', 
-                'backup-settings'
+                'backup-settings',
+                'admin.audit-logs.index',
+                'admin.audit-logs.download',
+                'audit-settings'
             ];
             
             $currentRoute = $request->route()->getName();

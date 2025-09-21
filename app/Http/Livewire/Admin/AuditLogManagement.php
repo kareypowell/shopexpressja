@@ -7,12 +7,13 @@ use App\Models\User;
 use App\Services\AuditExportService;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 class AuditLogManagement extends Component
 {
-    use WithPagination;
+    use WithPagination, AuthorizesRequests;
 
     public $search = '';
     public $eventType = '';
@@ -83,6 +84,9 @@ class AuditLogManagement extends Component
 
     public function mount()
     {
+        // Check authorization
+        $this->authorize('viewAny', AuditLog::class);
+        
         // Set default date range to last 30 days if not already set
         if (empty($this->dateTo)) {
             $this->dateTo = Carbon::now()->format('Y-m-d');
@@ -389,10 +393,7 @@ class AuditLogManagement extends Component
     {
         try {
             // Check authorization
-            if (!auth()->user()->can('viewAny', AuditLog::class)) {
-                $this->addError('export', 'You do not have permission to export audit data.');
-                return;
-            }
+            $this->authorize('export', AuditLog::class);
 
             $exportService = new AuditExportService();
             
@@ -454,10 +455,7 @@ class AuditLogManagement extends Component
     {
         try {
             // Check authorization
-            if (!auth()->user()->can('viewAny', AuditLog::class)) {
-                $this->addError('export', 'You do not have permission to generate compliance reports.');
-                return;
-            }
+            $this->authorize('generateComplianceReport', AuditLog::class);
 
             $exportService = new AuditExportService();
             

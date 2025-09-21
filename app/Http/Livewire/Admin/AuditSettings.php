@@ -10,10 +10,12 @@ use Livewire\Component;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Carbon\Carbon;
 
 class AuditSettings extends Component
 {
+    use AuthorizesRequests;
     public $retentionSettings = [];
     public $alertThresholds = [];
     public $notificationSettings = [];
@@ -59,6 +61,9 @@ class AuditSettings extends Component
 
     public function mount()
     {
+        // Check authorization
+        $this->authorize('manageSettings', AuditLog::class);
+        
         $this->loadAllSettings();
         $this->loadSystemHealth();
         $this->loadAuditStatistics();
