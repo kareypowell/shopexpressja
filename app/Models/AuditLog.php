@@ -123,6 +123,83 @@ class AuditLog extends Model
     }
 
     /**
+     * Scope for performance-optimized queries with proper indexing
+     */
+    public function scopeOptimizedFilter($query, array $filters)
+    {
+        // Apply filters in order of index efficiency
+        if (isset($filters['event_type'])) {
+            $query->where('event_type', $filters['event_type']);
+        }
+
+        if (isset($filters['user_id'])) {
+            $query->where('user_id', $filters['user_id']);
+        }
+
+        if (isset($filters['date_from'], $filters['date_to'])) {
+            $query->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
+        } elseif (isset($filters['date_from'])) {
+            $query->where('created_at', '>=', $filters['date_from']);
+        } elseif (isset($filters['date_to'])) {
+            $query->where('created_at', '<=', $filters['date_to']);
+        }
+
+        if (isset($filters['action'])) {
+            $query->where('action', $filters['action']);
+        }
+
+        if (isset($filters['auditable_type'])) {
+            $query->where('auditable_type', $filters['auditable_type']);
+        }
+
+        if (isset($filters['ip_address'])) {
+            $query->where('ip_address', $filters['ip_address']);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Scope for security monitoring queries
+     */
+    public function scopeSecurityEvents($query, int $hours = 24)
+    {
+        return $query->where('event_type', 'security_event')
+            ->where('created_at', '>=', Carbon::now()->subHours($hours))
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Scope for user activity analysis
+     */
+    public function scopeUserActivity($query, int $userId, int $days = 30)
+    {
+        return $query->where('user_id', $userId)
+            ->where('created_at', '>=', Carbon::now()->subDays($days))
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Scope for model audit trail
+     */
+    public function scopeModelTrail($query, string $modelType, int $modelId)
+    {
+        return $query->where('auditable_type', $modelType)
+            ->where('auditable_id', $modelId)
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Scope for bulk operations analysis
+     */
+    public function scopeBulkOperations($query, int $hours = 24)
+    {
+        return $query->where('created_at', '>=', Carbon::now()->subHours($hours))
+            ->whereJsonContains('additional_data->batch_processed', true)
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
      * Get formatted old values for display.
      */
     public function getFormattedOldValuesAttribute(): ?string

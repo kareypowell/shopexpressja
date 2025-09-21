@@ -17,6 +17,14 @@ class RoleFactory extends Factory
         ];
     }
 
+    public function superadmin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'name' => 'superadmin',
+            'description' => 'Super Administrator role',
+        ]);
+    }
+
     public function admin(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -30,6 +38,14 @@ class RoleFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'name' => 'customer',
             'description' => 'Customer role',
+        ]);
+    }
+
+    public function purchaser(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'name' => 'purchaser',
+            'description' => 'Purchaser role',
         ]);
     }
 }

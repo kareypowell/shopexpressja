@@ -80,6 +80,30 @@ class Kernel extends ConsoleKernel
             ->onFailure(function () {
                 \Log::error('Scheduled audit cleanup failed');
             });
+
+        // Warm up audit caches every 30 minutes during business hours
+        $schedule->command('audit:performance warmup-cache')
+            ->cron('*/30 6-18 * * 1-5') // Every 30 minutes, 6 AM to 6 PM, Monday to Friday
+            ->withoutOverlapping(10)
+            ->runInBackground()
+            ->onSuccess(function () {
+                \Log::info('Audit cache warmup completed successfully');
+            })
+            ->onFailure(function () {
+                \Log::error('Audit cache warmup failed');
+            });
+
+        // Performance analysis weekly (Sundays at 1 AM)
+        $schedule->command('audit:performance analyze-performance')
+            ->weeklyOn(0, '01:00')
+            ->withoutOverlapping(15)
+            ->runInBackground()
+            ->onSuccess(function () {
+                \Log::info('Audit performance analysis completed successfully');
+            })
+            ->onFailure(function () {
+                \Log::error('Audit performance analysis failed');
+            });
     }
 
     /**

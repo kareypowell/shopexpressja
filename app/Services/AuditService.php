@@ -4,15 +4,22 @@ namespace App\Services;
 
 use App\Models\AuditLog;
 use App\Models\User;
+use App\Services\AuditCacheService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class AuditService
 {
+    protected AuditCacheService $cacheService;
+
+    public function __construct(AuditCacheService $cacheService)
+    {
+        $this->cacheService = $cacheService;
+    }
     /**
      * Create a standardized audit log entry
      */
@@ -215,12 +222,74 @@ class AuditService
     public function logBatch(array $auditEntries): array
     {
         $results = [];
+        $batchSize = 50; // Process in smaller batches for memory efficiency
         
-        foreach ($auditEntries as $entry) {
-            $results[] = $this->log($entry);
+        $chunks = array_chunk($auditEntries, $batchSize);
+        
+        foreach ($chunks as $chunk) {
+            try {
+                // Process each entry in the chunk without wrapping in transaction
+                // since individual log() calls may already handle transactions
+                foreach ($chunk as $entry) {
+                    $results[] = $this->log($entry);
+                }
+            } catch (\Exception $e) {
+                Log::error('Batch audit logging failed for chunk', [
+                    'error' => $e->getMessage(),
+                    'chunk_size' => count($chunk)
+                ]);
+                
+                // Continue with other chunks even if one fails
+                foreach ($chunk as $entry) {
+                    $results[] = null;
+                }
+            }
         }
         
         return $results;
+    }
+
+    /**
+     * High-performance bulk insert for large datasets
+     */
+    public function logBulk(array $auditEntries): int
+    {
+        if (empty($auditEntries)) {
+            return 0;
+        }
+
+        try {
+            $insertData = [];
+            
+            foreach ($auditEntries as $entry) {
+                $validated = $this->validateAndPrepareForBulkInsert($entry);
+                if ($validated) {
+                    $insertData[] = $validated;
+                }
+            }
+
+            if (empty($insertData)) {
+                return 0;
+            }
+
+            // Use chunked bulk insert for very large datasets
+            $chunks = array_chunk($insertData, 500);
+            $totalInserted = 0;
+
+            foreach ($chunks as $chunk) {
+                AuditLog::insert($chunk);
+                $totalInserted += count($chunk);
+            }
+
+            return $totalInserted;
+
+        } catch (\Exception $e) {
+            Log::error('Bulk audit logging failed', [
+                'error' => $e->getMessage(),
+                'total_entries' => count($auditEntries)
+            ]);
+            return 0;
+        }
     }
 
     /**
@@ -236,7 +305,51 @@ class AuditService
      */
     public function logBatchAsync(array $auditEntries): void
     {
-        \App\Jobs\ProcessAuditLogJob::dispatch($auditEntries, true);
+        if (count($auditEntries) > 100) {
+            // Use bulk processing job for large batches
+            \App\Jobs\BulkAuditProcessingJob::dispatch($auditEntries);
+        } else {
+            \App\Jobs\ProcessAuditLogJob::dispatch($auditEntries, true);
+        }
+    }
+
+    /**
+     * Optimized batch processing for model events
+     */
+    public function logModelEventsBatch(array $modelEvents): int
+    {
+        $auditEntries = [];
+        
+        foreach ($modelEvents as $event) {
+            $entry = $this->prepareModelEventEntry($event);
+            if ($entry) {
+                $auditEntries[] = $entry;
+            }
+        }
+
+        return $this->logBulk($auditEntries);
+    }
+
+    /**
+     * Batch log authentication events (useful for import/migration scenarios)
+     */
+    public function logAuthenticationEventsBatch(array $authEvents): int
+    {
+        $auditEntries = [];
+        
+        foreach ($authEvents as $event) {
+            $auditEntries[] = [
+                'user_id' => $event['user_id'] ?? null,
+                'event_type' => 'authentication',
+                'action' => $event['action'],
+                'ip_address' => $event['ip_address'] ?? null,
+                'user_agent' => $event['user_agent'] ?? null,
+                'created_at' => $event['timestamp'] ?? now(),
+                'additional_data' => $event['additional_data'] ?? []
+            ];
+        }
+
+        return $this->logBulk($auditEntries);
     }
 
     /**
@@ -468,6 +581,67 @@ class AuditService
                 ->limit(10)
                 ->with('user')
                 ->get()
+        ];
+    }
+
+    /**
+     * Validate and prepare entry for bulk insert
+     */
+    private function validateAndPrepareForBulkInsert(array $entry): ?array
+    {
+        try {
+            // Required fields validation
+            if (!isset($entry['event_type']) || !isset($entry['action'])) {
+                return null;
+            }
+
+            return [
+                'user_id' => $entry['user_id'] ?? null,
+                'event_type' => $entry['event_type'],
+                'auditable_type' => $entry['auditable_type'] ?? null,
+                'auditable_id' => $entry['auditable_id'] ?? null,
+                'action' => $entry['action'],
+                'old_values' => isset($entry['old_values']) ? json_encode($entry['old_values']) : null,
+                'new_values' => isset($entry['new_values']) ? json_encode($entry['new_values']) : null,
+                'url' => $entry['url'] ?? null,
+                'ip_address' => $entry['ip_address'] ?? null,
+                'user_agent' => $entry['user_agent'] ?? null,
+                'additional_data' => isset($entry['additional_data']) ? json_encode($entry['additional_data']) : null,
+                'created_at' => $entry['created_at'] ?? now(),
+            ];
+        } catch (\Exception $e) {
+            Log::warning('Invalid audit entry in bulk processing', [
+                'entry' => $entry,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Prepare model event entry for batch processing
+     */
+    private function prepareModelEventEntry(array $event): ?array
+    {
+        if (!isset($event['model'], $event['action'])) {
+            return null;
+        }
+
+        $model = $event['model'];
+        
+        return [
+            'user_id' => $event['user_id'] ?? auth()->id(),
+            'event_type' => 'model_' . $event['action'],
+            'auditable_type' => get_class($model),
+            'auditable_id' => $model->getKey(),
+            'action' => $event['action'],
+            'old_values' => $event['old_values'] ?? null,
+            'new_values' => $event['new_values'] ?? $this->getModelAttributes($model),
+            'created_at' => $event['timestamp'] ?? now(),
+            'additional_data' => [
+                'model_name' => class_basename($model),
+                'batch_processed' => true
+            ]
         ];
     }
 }
