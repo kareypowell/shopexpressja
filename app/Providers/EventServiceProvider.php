@@ -5,10 +5,12 @@ namespace App\Providers;
 use App\Events\RoleChanged;
 use App\Listeners\AuthenticationAuditListener;
 use App\Listeners\RoleChangeAuditListener;
+use App\Listeners\SecurityMonitoringListener;
 use Illuminate\Auth\Events\Attempting;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
+use Illuminate\Auth\Events\Lockout;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Verified;
@@ -30,18 +32,25 @@ class EventServiceProvider extends ServiceProvider
         ],
         Login::class => [
             AuthenticationAuditListener::class . '@handleLogin',
+            SecurityMonitoringListener::class . '@handleLogin',
         ],
         Logout::class => [
             AuthenticationAuditListener::class . '@handleLogout',
+            SecurityMonitoringListener::class . '@handleLogout',
         ],
         Failed::class => [
             AuthenticationAuditListener::class . '@handleFailed',
+            SecurityMonitoringListener::class . '@handleFailed',
+        ],
+        Lockout::class => [
+            SecurityMonitoringListener::class . '@handleLockout',
         ],
         Attempting::class => [
             AuthenticationAuditListener::class . '@handleAttempting',
         ],
         PasswordReset::class => [
             AuthenticationAuditListener::class . '@handlePasswordReset',
+            SecurityMonitoringListener::class . '@handlePasswordReset',
         ],
         Verified::class => [
             AuthenticationAuditListener::class . '@handleVerified',

@@ -361,4 +361,113 @@ class AuditService
 
         return $changes;
     }
+
+    /**
+     * Log authentication events with enhanced context
+     */
+    public function logAuthenticationEvent(string $action, ?User $user = null, array $additionalData = []): ?AuditLog
+    {
+        return $this->log([
+            'user_id' => $user->id ?? null,
+            'event_type' => 'authentication',
+            'action' => $action,
+            'additional_data' => array_merge([
+                'timestamp' => now()->toISOString(),
+                'user_agent' => request()->userAgent(),
+                'ip_address' => request()->ip(),
+                'session_id' => session()->getId()
+            ], $additionalData)
+        ]);
+    }
+
+    /**
+     * Get user's recent IP addresses
+     */
+    public function getUserRecentIPs(int $userId, int $days = 30): array
+    {
+        return AuditLog::where('user_id', $userId)
+            ->where('created_at', '>=', now()->subDays($days))
+            ->whereNotNull('ip_address')
+            ->distinct('ip_address')
+            ->pluck('ip_address')
+            ->toArray();
+    }
+
+    /**
+     * Get user's recent login times
+     */
+    public function getUserRecentLogins(int $userId, int $minutes = 60): array
+    {
+        return AuditLog::where('user_id', $userId)
+            ->where('event_type', 'authentication')
+            ->where('action', 'login')
+            ->where('created_at', '>=', now()->subMinutes($minutes))
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->toArray();
+    }
+
+    /**
+     * Get last login time for user
+     */
+    public function getLastLoginTime(int $userId): ?Carbon
+    {
+        $lastLogin = AuditLog::where('user_id', $userId)
+            ->where('event_type', 'authentication')
+            ->where('action', 'login')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        return $lastLogin ? $lastLogin->created_at : null;
+    }
+
+    /**
+     * Get security events summary for dashboard
+     */
+    public function getSecurityEventsSummary(int $hours = 24): array
+    {
+        $since = now()->subHours($hours);
+        
+        $events = AuditLog::where('event_type', 'security_event')
+            ->where('created_at', '>=', $since)
+            ->get();
+
+        return [
+            'total_events' => $events->count(),
+            'failed_logins' => $events->where('action', 'failed_authentication')->count(),
+            'suspicious_activities' => $events->where('action', 'suspicious_activity_detected')->count(),
+            'security_alerts' => $events->where('action', 'security_alert_generated')->count(),
+            'unique_ips' => $events->pluck('ip_address')->filter()->unique()->count(),
+            'events_by_severity' => $events->groupBy('additional_data.severity')->map->count(),
+            'recent_events' => $events->sortByDesc('created_at')->take(10)->values()
+        ];
+    }
+
+    /**
+     * Get audit statistics for performance monitoring
+     */
+    public function getAuditStatistics(int $days = 7): array
+    {
+        $since = now()->subDays($days);
+        
+        return [
+            'total_entries' => AuditLog::where('created_at', '>=', $since)->count(),
+            'entries_by_type' => AuditLog::where('created_at', '>=', $since)
+                ->groupBy('event_type')
+                ->selectRaw('event_type, count(*) as count')
+                ->pluck('count', 'event_type'),
+            'entries_by_day' => AuditLog::where('created_at', '>=', $since)
+                ->groupBy(\DB::raw('DATE(created_at)'))
+                ->selectRaw('DATE(created_at) as date, count(*) as count')
+                ->pluck('count', 'date'),
+            'top_users' => AuditLog::where('created_at', '>=', $since)
+                ->whereNotNull('user_id')
+                ->groupBy('user_id')
+                ->selectRaw('user_id, count(*) as count')
+                ->orderByDesc('count')
+                ->limit(10)
+                ->with('user:id,name,email')
+                ->get()
+        ];
+    }
 }

@@ -37,6 +37,7 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\SecurityMonitoringMiddleware::class,
         ],
 
         'api' => [
@@ -69,5 +70,6 @@ class Kernel extends HttpKernel
         'admin.access' => \App\Http\Middleware\AdminAccessMiddleware::class,
         'audit' => \App\Http\Middleware\AuditMiddleware::class,
         'auth.block' => \App\Http\Middleware\BlockFailedAuthenticationMiddleware::class,
+        'security.monitor' => \App\Http\Middleware\SecurityMonitoringMiddleware::class,
     ];
 }
