@@ -82,6 +82,7 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->prefix('admin')->gro
     
     // Audit log management routes - accessible only by superadmin
     Route::get('/audit-logs', [App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('admin.audit-logs.index')->middleware('admin.restriction');
+    Route::get('/audit-logs/download/{filename}', [App\Http\Controllers\Admin\AuditLogController::class, 'download'])->name('admin.audit-logs.download')->middleware('admin.restriction');
 
     // Backup management routes - accessible only by superadmin
     Route::get('/backup-dashboard', \App\Http\Livewire\Admin\BackupDashboard::class)->name('backup-dashboard')->middleware('admin.restriction');

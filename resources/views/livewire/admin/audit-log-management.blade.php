@@ -6,11 +6,85 @@
                 <h1 class="text-2xl font-bold text-gray-900">Audit Logs</h1>
                 <p class="mt-1 text-sm text-gray-600">Monitor and review system activities and user actions</p>
             </div>
-            <div class="text-sm text-gray-500">
-                Total: {{ $auditLogs->total() }} entries
+            <div class="flex items-center space-x-4">
+                <div class="text-sm text-gray-500">
+                    Total: {{ $auditLogs->total() }} entries
+                </div>
+                
+                <!-- Export Actions -->
+                <div class="flex items-center space-x-2">
+                    <button wire:click="showExportModal" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Export
+                    </button>
+                    
+                    <button wire:click="generateComplianceReport" 
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Compliance Report
+                    </button>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Download Link Section -->
+    @if($showDownloadLink)
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">{{ $downloadType }} Ready</h3>
+                        <p class="text-sm text-gray-600">Your export has been generated successfully.</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <a href="{{ $downloadLink }}" 
+                       target="_blank"
+                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Download {{ $downloadFilename }}
+                    </a>
+                    <button wire:click="hideDownloadLink" 
+                            class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Dismiss
+                    </button>
+                </div>
+            </div>
+            <div class="mt-4 bg-green-50 border border-green-200 rounded-md p-3">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-green-800">
+                            <strong>File Information:</strong> {{ $downloadType }} • {{ $downloadFilename }}
+                        </p>
+                        <p class="text-xs text-green-700 mt-1">
+                            Click the download button above to save the file to your computer. The file will be available for download for 24 hours.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- Search and Filters -->
     <div class="bg-white shadow rounded-lg" x-data="{ showFilters: false }">
@@ -459,6 +533,98 @@
             </div>
         @endif
     </div>
+
+    <!-- Export Modal -->
+    @if($showExportModal)
+        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" wire:click="hideExportModal"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                    Export Audit Logs
+                                </h3>
+                                <div class="mt-4">
+                                    <p class="text-sm text-gray-500 mb-4">
+                                        Export filtered audit logs in your preferred format. Current filters will be applied to the export.
+                                    </p>
+                                    
+                                    @if($search || $eventType || $action || $userId || $auditableType || $ipAddress)
+                                        <div class="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+                                            <div class="flex">
+                                                <div class="flex-shrink-0">
+                                                    <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                </div>
+                                                <div class="ml-3">
+                                                    <p class="text-sm text-blue-800">
+                                                        <strong>{{ $auditLogs->total() }}</strong> records will be exported with current filters applied.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label for="exportFormat" class="block text-sm font-medium text-gray-700 mb-2">
+                                                Export Format
+                                            </label>
+                                            <select wire:model="exportFormat" 
+                                                    id="exportFormat"
+                                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                                <option value="csv">CSV (Comma Separated Values)</option>
+                                                <option value="pdf">PDF (Portable Document Format)</option>
+                                            </select>
+                                            <p class="mt-1 text-xs text-gray-500">
+                                                @if($exportFormat === 'csv')
+                                                    CSV format is ideal for data analysis and spreadsheet applications.
+                                                @else
+                                                    PDF format is suitable for compliance reports and documentation.
+                                                @endif
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    @error('export')
+                                        <div class="mt-3 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
+                                            {{ $message }}
+                                        </div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button wire:click="exportAuditLogs" 
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Export
+                        </button>
+                        <button wire:click="hideExportModal" 
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+
 
     <!-- Audit Log Viewer Modal -->
     @livewire('admin.audit-log-viewer')

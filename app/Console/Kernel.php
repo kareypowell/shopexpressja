@@ -44,6 +44,18 @@ class Kernel extends ConsoleKernel
             ->onFailure(function () {
                 \Log::error('Scheduled backup check failed');
             });
+
+        // Generate scheduled audit reports every hour
+        $schedule->command('audit:generate-scheduled-reports')
+            ->hourly()
+            ->withoutOverlapping(15) // Prevent overlapping runs, timeout after 15 minutes
+            ->runInBackground()
+            ->onSuccess(function () {
+                \Log::info('Scheduled audit report generation completed successfully');
+            })
+            ->onFailure(function () {
+                \Log::error('Scheduled audit report generation failed');
+            });
     }
 
     /**

@@ -4,9 +4,11 @@ namespace App\Http\Livewire\Admin;
 
 use App\Models\AuditLog;
 use App\Models\User;
+use App\Services\AuditExportService;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class AuditLogManagement extends Component
 {
@@ -41,6 +43,17 @@ class AuditLogManagement extends Component
     
     // UI state
     public $showFilters = false;
+    
+    // Export options
+    public $exportFormat = 'csv';
+    public $exportTemplate = '';
+    public $showExportModal = false;
+    
+    // Download link
+    public $downloadLink = '';
+    public $downloadFilename = '';
+    public $downloadType = '';
+    public $showDownloadLink = false;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -60,6 +73,11 @@ class AuditLogManagement extends Component
         'sortDirection' => ['except' => 'desc'],
         'quickFilter' => ['except' => ''],
         'filterPreset' => ['except' => ''],
+        'exportFormat' => ['except' => 'csv'],
+        'downloadLink' => ['except' => ''],
+        'downloadFilename' => ['except' => ''],
+        'downloadType' => ['except' => ''],
+        'showDownloadLink' => ['except' => false],
         'page' => ['except' => 1],
     ];
 
@@ -270,6 +288,217 @@ class AuditLogManagement extends Component
 
     public function getAuditLogsProperty()
     {
+        return $this->getFilteredAuditLogs(true);
+    }
+
+    public function getEventTypesProperty()
+    {
+        return AuditLog::select('event_type')
+            ->distinct()
+            ->orderBy('event_type')
+            ->pluck('event_type')
+            ->filter()
+            ->values();
+    }
+
+    public function getActionsProperty()
+    {
+        return AuditLog::select('action')
+            ->distinct()
+            ->orderBy('action')
+            ->pluck('action')
+            ->filter()
+            ->values();
+    }
+
+    public function getAuditableTypesProperty()
+    {
+        return AuditLog::select('auditable_type')
+            ->distinct()
+            ->orderBy('auditable_type')
+            ->pluck('auditable_type')
+            ->filter()
+            ->values();
+    }
+
+    public function getUsersProperty()
+    {
+        return User::select('id', 'first_name', 'last_name', 'email')
+            ->whereIn('id', AuditLog::select('user_id')->distinct()->whereNotNull('user_id'))
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get();
+    }
+
+    public function getFilterPresetsProperty()
+    {
+        return [
+            'security_events' => 'Security Events',
+            'authentication' => 'Authentication Events',
+            'failed_logins' => 'Failed Login Attempts',
+            'model_changes' => 'Model Changes',
+            'financial_transactions' => 'Financial Transactions',
+            'business_actions' => 'Business Actions',
+            'admin_actions' => 'Admin Actions',
+        ];
+    }
+
+    public function getQuickFiltersProperty()
+    {
+        return [
+            'today' => 'Today',
+            'yesterday' => 'Yesterday',
+            'last_7_days' => 'Last 7 Days',
+            'last_30_days' => 'Last 30 Days',
+            'this_month' => 'This Month',
+            'last_month' => 'Last Month',
+        ];
+    }
+
+    public function showExportModal()
+    {
+        $this->showExportModal = true;
+    }
+
+    public function hideExportModal()
+    {
+        $this->showExportModal = false;
+    }
+
+    public function showDownloadLink($data)
+    {
+        $this->downloadLink = $data['url'];
+        $this->downloadFilename = $data['filename'];
+        $this->downloadType = $data['type'];
+        $this->showDownloadLink = true;
+    }
+
+    public function hideDownloadLink()
+    {
+        $this->downloadLink = '';
+        $this->downloadFilename = '';
+        $this->downloadType = '';
+        $this->showDownloadLink = false;
+    }
+
+    protected $listeners = [
+        'showDownloadLink' => 'showDownloadLink',
+    ];
+
+    public function exportAuditLogs()
+    {
+        try {
+            // Check authorization
+            if (!auth()->user()->can('viewAny', AuditLog::class)) {
+                $this->addError('export', 'You do not have permission to export audit data.');
+                return;
+            }
+
+            $exportService = new AuditExportService();
+            
+            // Get all filtered audit logs (without pagination)
+            $auditLogs = $this->getFilteredAuditLogs(false);
+            
+            // Prepare filters for context
+            $filters = [
+                'search' => $this->search,
+                'event_type' => $this->eventType,
+                'action' => $this->action,
+                'user_id' => $this->userId,
+                'auditable_type' => $this->auditableType,
+                'ip_address' => $this->ipAddress,
+                'date_from' => $this->dateFrom,
+                'date_to' => $this->dateTo,
+            ];
+
+            if ($this->exportFormat === 'csv') {
+                $content = $exportService->exportToCsv($auditLogs, $filters);
+                $filename = 'audit_logs_' . Carbon::now()->format('Y-m-d_H-i-s') . '.csv';
+                
+                // Save CSV to storage
+                Storage::disk('public')->put('exports/' . $filename, $content);
+                $downloadUrl = route('admin.audit-logs.download', ['filename' => $filename]);
+                
+                $this->emit('showDownloadLink', [
+                    'url' => $downloadUrl,
+                    'filename' => $filename,
+                    'type' => 'CSV Export'
+                ]);
+                
+            } elseif ($this->exportFormat === 'pdf') {
+                $options = [
+                    'title' => 'Audit Log Report - ' . Carbon::now()->format('F j, Y'),
+                ];
+                
+                $filePath = $exportService->exportToPdf($auditLogs, $filters, $options);
+                $downloadUrl = route('admin.audit-logs.download', ['filename' => basename($filePath)]);
+                
+                $this->emit('showDownloadLink', [
+                    'url' => $downloadUrl,
+                    'filename' => basename($filePath),
+                    'type' => 'PDF Report'
+                ]);
+            }
+
+            $this->hideExportModal();
+            $this->dispatchBrowserEvent('toastr:success', [
+                'message' => 'Export generated successfully! Download link provided below.'
+            ]);
+
+        } catch (\Exception $e) {
+            $this->addError('export', 'Failed to export audit logs: ' . $e->getMessage());
+        }
+    }
+
+    public function generateComplianceReport()
+    {
+        try {
+            // Check authorization
+            if (!auth()->user()->can('viewAny', AuditLog::class)) {
+                $this->addError('export', 'You do not have permission to generate compliance reports.');
+                return;
+            }
+
+            $exportService = new AuditExportService();
+            
+            // Prepare filters for context
+            $filters = [
+                'search' => $this->search,
+                'event_type' => $this->eventType,
+                'action' => $this->action,
+                'user_id' => $this->userId,
+                'auditable_type' => $this->auditableType,
+                'ip_address' => $this->ipAddress,
+                'date_from' => $this->dateFrom,
+                'date_to' => $this->dateTo,
+            ];
+
+            $reportData = $exportService->generateComplianceReport($filters);
+            
+            $options = [
+                'title' => 'Compliance Audit Report - ' . Carbon::now()->format('F j, Y'),
+            ];
+            
+            $filePath = $exportService->exportToPdf($reportData['audit_logs'], $filters, $options);
+            $downloadUrl = route('admin.audit-logs.download', ['filename' => basename($filePath)]);
+            
+            $this->emit('showDownloadLink', [
+                'url' => $downloadUrl,
+                'filename' => basename($filePath),
+                'type' => 'Compliance Report'
+            ]);
+
+            $this->dispatchBrowserEvent('toastr:success', [
+                'message' => 'Compliance report generated successfully! Download link provided below.'
+            ]);
+
+        } catch (\Exception $e) {
+            $this->addError('export', 'Failed to generate compliance report: ' . $e->getMessage());
+        }
+    }
+
+    protected function getFilteredAuditLogs($paginate = true)
+    {
         $query = AuditLog::with(['user'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
@@ -346,71 +575,7 @@ class AuditLogManagement extends Component
             $query->orderBy('audit_logs.created_at', 'desc');
         }
 
-        return $query->paginate($this->perPage);
-    }
-
-    public function getEventTypesProperty()
-    {
-        return AuditLog::select('event_type')
-            ->distinct()
-            ->orderBy('event_type')
-            ->pluck('event_type')
-            ->filter()
-            ->values();
-    }
-
-    public function getActionsProperty()
-    {
-        return AuditLog::select('action')
-            ->distinct()
-            ->orderBy('action')
-            ->pluck('action')
-            ->filter()
-            ->values();
-    }
-
-    public function getAuditableTypesProperty()
-    {
-        return AuditLog::select('auditable_type')
-            ->distinct()
-            ->orderBy('auditable_type')
-            ->pluck('auditable_type')
-            ->filter()
-            ->values();
-    }
-
-    public function getUsersProperty()
-    {
-        return User::select('id', 'first_name', 'last_name', 'email')
-            ->whereIn('id', AuditLog::select('user_id')->distinct()->whereNotNull('user_id'))
-            ->orderBy('first_name')
-            ->orderBy('last_name')
-            ->get();
-    }
-
-    public function getFilterPresetsProperty()
-    {
-        return [
-            'security_events' => 'Security Events',
-            'authentication' => 'Authentication Events',
-            'failed_logins' => 'Failed Login Attempts',
-            'model_changes' => 'Model Changes',
-            'financial_transactions' => 'Financial Transactions',
-            'business_actions' => 'Business Actions',
-            'admin_actions' => 'Admin Actions',
-        ];
-    }
-
-    public function getQuickFiltersProperty()
-    {
-        return [
-            'today' => 'Today',
-            'yesterday' => 'Yesterday',
-            'last_7_days' => 'Last 7 Days',
-            'last_30_days' => 'Last 30 Days',
-            'this_month' => 'This Month',
-            'last_month' => 'Last Month',
-        ];
+        return $paginate ? $query->paginate($this->perPage) : $query->get();
     }
 
     public function render()
