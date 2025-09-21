@@ -29,5 +29,8 @@ class DatabaseSeeder extends Seeder
         
         // Consolidated package test data
         $this->call(ConsolidatedPackageTestDataSeeder::class);
+        
+        // Audit system configuration
+        $this->call(AuditSystemSeeder::class);
     }
 }

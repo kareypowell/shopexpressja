@@ -1,0 +1,151 @@
+# ShipSharkLtd Audit System Environment Configuration Examples
+# Add these variables to your .env file to configure the audit system
+
+# =============================================================================
+# BASIC AUDIT SYSTEM CONFIGURATION
+# =============================================================================
+
+# Enable/disable the entire audit system
+AUDIT_ENABLED=true
+
+# Enable asynchronous processing for better performance
+AUDIT_ASYNC_ENABLED=true
+
+# Queue name for audit processing (requires Redis/database queue)
+AUDIT_QUEUE_NAME=audit-processing
+
+# Cache settings for audit summaries
+AUDIT_CACHE_TTL=3600
+AUDIT_CACHE_ENABLED=true
+
+# Maximum records per export operation
+AUDIT_MAX_EXPORT_RECORDS=10000
+
+# =============================================================================
+# RETENTION POLICIES (in days)
+# =============================================================================
+
+# Authentication events (login, logout, password changes)
+AUDIT_RETENTION_AUTHENTICATION=365
+
+# Security events (failed logins, unauthorized access)
+AUDIT_RETENTION_SECURITY_EVENTS=1095
+
+# Model changes (create, update, delete operations)
+AUDIT_RETENTION_MODEL_CHANGES=730
+
+# Business actions (consolidation, manifest operations)
+AUDIT_RETENTION_BUSINESS_ACTIONS=1095
+
+# Financial transactions (payments, balance changes)
+AUDIT_RETENTION_FINANCIAL_TRANSACTIONS=2555
+
+# System events (maintenance, backups)
+AUDIT_RETENTION_SYSTEM_EVENTS=365
+
+# Default retention for uncategorized events
+AUDIT_RETENTION_DEFAULT=365
+
+# =============================================================================
+# SECURITY MONITORING THRESHOLDS
+# =============================================================================
+
+# Number of failed login attempts before alert
+AUDIT_FAILED_LOGIN_THRESHOLD=5
+
+# Number of suspicious activities before alert
+AUDIT_SUSPICIOUS_ACTIVITY_THRESHOLD=10
+
+# Number of bulk operations before alert
+AUDIT_BULK_OPERATION_THRESHOLD=50
+
+# Enable IP address change detection
+AUDIT_IP_CHANGE_DETECTION=true
+
+# Email address for security alerts
+AUDIT_SECURITY_ALERT_EMAIL=security@shipsharkltd.com
+
+# Email address for system administration alerts
+AUDIT_ADMIN_EMAIL=admin@shipsharkltd.com
+
+# =============================================================================
+# PERFORMANCE OPTIMIZATION
+# =============================================================================
+
+# Batch size for bulk audit operations
+AUDIT_BATCH_SIZE=100
+
+# Enable database index optimization
+AUDIT_INDEX_OPTIMIZATION=true
+
+# Separate database connection for audit logs (optional)
+# AUDIT_DB_CONNECTION=audit
+# AUDIT_DB_HOST=127.0.0.1
+# AUDIT_DB_PORT=3306
+# AUDIT_DB_DATABASE=audit_logs
+# AUDIT_DB_USERNAME=audit_user
+# AUDIT_DB_PASSWORD=secure_password
+
+# =============================================================================
+# DEVELOPMENT AND TESTING
+# =============================================================================
+
+# Enable verbose logging in development
+# AUDIT_VERBOSE_LOGGING=true
+
+# Enable test mode features
+# AUDIT_TEST_MODE=true
+
+# =============================================================================
+# EXTERNAL INTEGRATION (Advanced)
+# =============================================================================
+
+# External SIEM system integration
+# EXTERNAL_AUDIT_ENABLED=false
+# EXTERNAL_AUDIT_ENDPOINT=https://siem.company.com/api/logs
+# EXTERNAL_AUDIT_TOKEN=your_api_token_here
+
+# =============================================================================
+# COMPLIANCE SETTINGS
+# =============================================================================
+
+# Enable compliance mode for regulatory requirements
+# AUDIT_COMPLIANCE_MODE=false
+# AUDIT_COMPLIANCE_STANDARD=SOX
+# AUDIT_EXTENDED_RETENTION=true
+
+# =============================================================================
+# PRODUCTION ENVIRONMENT EXAMPLE
+# =============================================================================
+
+# For production environments, consider these settings:
+# AUDIT_ENABLED=true
+# AUDIT_ASYNC_ENABLED=true
+# AUDIT_CACHE_ENABLED=true
+# AUDIT_RETENTION_SECURITY_EVENTS=2555  # 7 years for compliance
+# AUDIT_RETENTION_FINANCIAL_TRANSACTIONS=2555  # 7 years for financial records
+# AUDIT_FAILED_LOGIN_THRESHOLD=3  # Stricter security
+# AUDIT_BULK_OPERATION_THRESHOLD=25  # Lower threshold for production
+
+# =============================================================================
+# DEVELOPMENT ENVIRONMENT EXAMPLE
+# =============================================================================
+
+# For development environments, consider these settings:
+# AUDIT_ENABLED=true
+# AUDIT_ASYNC_ENABLED=false  # Synchronous for easier debugging
+# AUDIT_CACHE_ENABLED=false  # Disable caching for development
+# AUDIT_RETENTION_DEFAULT=30  # Shorter retention for development
+# AUDIT_VERBOSE_LOGGING=true  # Enable verbose logging
+# AUDIT_TEST_MODE=true  # Enable test features
+
+# =============================================================================
+# TESTING ENVIRONMENT EXAMPLE
+# =============================================================================
+
+# For testing environments, consider these settings:
+# AUDIT_ENABLED=true
+# AUDIT_ASYNC_ENABLED=false  # Synchronous for predictable tests
+# AUDIT_CACHE_ENABLED=false  # Disable caching for tests
+# AUDIT_RETENTION_DEFAULT=1  # Very short retention for tests
+# AUDIT_TEST_MODE=true  # Enable test mode features

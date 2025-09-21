@@ -1,0 +1,117 @@
+# ShipSharkLtd Audit System Cron Jobs Configuration
+# Add these entries to your crontab to enable automated audit maintenance
+#
+# Installation:
+# 1. Edit your crontab: crontab -e
+# 2. Add the entries below (update paths to match your installation)
+# 3. Save and exit
+#
+# Note: Update /var/www/shipsharkltd to match your application path
+
+# =============================================================================
+# REQUIRED CRON JOBS
+# =============================================================================
+
+# Clean up expired audit logs daily at 2:00 AM
+0 2 * * * cd /var/www/shipsharkltd && php artisan audit:cleanup >> /var/www/shipsharkltd/storage/logs/audit-cleanup.log 2>&1
+
+# Check audit system health daily at 6:00 AM
+0 6 * * * cd /var/www/shipsharkltd && php artisan audit:health-check >> /var/www/shipsharkltd/storage/logs/audit-health.log 2>&1
+
+# =============================================================================
+# OPTIONAL CRON JOBS
+# =============================================================================
+
+# Generate weekly audit summary reports (Mondays at 6:00 AM)
+0 6 * * 1 cd /var/www/shipsharkltd && php artisan audit:weekly-report >> /var/www/shipsharkltd/storage/logs/audit-reports.log 2>&1
+
+# Generate monthly compliance reports (1st of month at 7:00 AM)
+0 7 1 * * cd /var/www/shipsharkltd && php artisan audit:monthly-report >> /var/www/shipsharkltd/storage/logs/audit-reports.log 2>&1
+
+# Optimize audit database indexes weekly (Sundays at 3:00 AM)
+0 3 * * 0 cd /var/www/shipsharkltd && php artisan audit:optimize-indexes >> /var/www/shipsharkltd/storage/logs/audit-optimization.log 2>&1
+
+# Archive old audit logs monthly (1st of month at 4:00 AM)
+0 4 1 * * cd /var/www/shipsharkltd && php artisan audit:archive >> /var/www/shipsharkltd/storage/logs/audit-archive.log 2>&1
+
+# Monitor queue health every 15 minutes during business hours (9 AM - 6 PM)
+*/15 9-18 * * 1-5 cd /var/www/shipsharkltd && php artisan audit:queue-health >> /var/www/shipsharkltd/storage/logs/audit-queue-health.log 2>&1
+
+# =============================================================================
+# HIGH VOLUME ENVIRONMENT CRON JOBS
+# =============================================================================
+# For high-volume environments, consider these additional jobs:
+
+# Clean up audit logs twice daily (2 AM and 2 PM)
+# 0 2,14 * * * cd /var/www/shipsharkltd && php artisan audit:cleanup >> /var/www/shipsharkltd/storage/logs/audit-cleanup.log 2>&1
+
+# Optimize database performance daily at 1 AM
+# 0 1 * * * cd /var/www/shipsharkltd && php artisan audit:optimize-performance >> /var/www/shipsharkltd/storage/logs/audit-optimization.log 2>&1
+
+# Monitor storage usage hourly during business hours
+# 0 9-18 * * * cd /var/www/shipsharkltd && php artisan audit:storage-monitor >> /var/www/shipsharkltd/storage/logs/audit-storage.log 2>&1
+
+# =============================================================================
+# SECURITY MONITORING CRON JOBS
+# =============================================================================
+
+# Check for suspicious activity patterns every 30 minutes
+*/30 * * * * cd /var/www/shipsharkltd && php artisan audit:security-scan >> /var/www/shipsharkltd/storage/logs/audit-security.log 2>&1
+
+# Generate security alerts summary daily at 8 AM
+0 8 * * * cd /var/www/shipsharkltd && php artisan audit:security-summary >> /var/www/shipsharkltd/storage/logs/audit-security.log 2>&1
+
+# =============================================================================
+# COMPLIANCE CRON JOBS
+# =============================================================================
+# For compliance-heavy environments:
+
+# Generate daily compliance reports at 5 AM
+# 0 5 * * * cd /var/www/shipsharkltd && php artisan audit:compliance-report >> /var/www/shipsharkltd/storage/logs/audit-compliance.log 2>&1
+
+# Verify audit trail integrity daily at 11 PM
+# 0 23 * * * cd /var/www/shipsharkltd && php artisan audit:verify-integrity >> /var/www/shipsharkltd/storage/logs/audit-integrity.log 2>&1
+
+# =============================================================================
+# DEVELOPMENT ENVIRONMENT CRON JOBS
+# =============================================================================
+# For development environments (less frequent):
+
+# Clean up audit logs weekly (Sundays at 2 AM)
+# 0 2 * * 0 cd /var/www/shipsharkltd && php artisan audit:cleanup >> /var/www/shipsharkltd/storage/logs/audit-cleanup.log 2>&1
+
+# Health check weekly (Mondays at 9 AM)
+# 0 9 * * 1 cd /var/www/shipsharkltd && php artisan audit:health-check >> /var/www/shipsharkltd/storage/logs/audit-health.log 2>&1
+
+# =============================================================================
+# LOG ROTATION
+# =============================================================================
+# Rotate audit-related log files to prevent disk space issues
+
+# Rotate audit logs weekly (Sundays at 1 AM)
+0 1 * * 0 /usr/sbin/logrotate -f /etc/logrotate.d/audit-logs
+
+# =============================================================================
+# EXAMPLE LOGROTATE CONFIGURATION
+# =============================================================================
+# Create /etc/logrotate.d/audit-logs with this content:
+#
+# /var/www/shipsharkltd/storage/logs/audit-*.log {
+#     weekly
+#     rotate 12
+#     compress
+#     delaycompress
+#     missingok
+#     notifempty
+#     create 644 www-data www-data
+# }
+
+# =============================================================================
+# MONITORING AND ALERTING
+# =============================================================================
+
+# Send daily audit system status email (8:30 AM)
+30 8 * * * cd /var/www/shipsharkltd && php artisan audit:daily-status-email >> /var/www/shipsharkltd/storage/logs/audit-status.log 2>&1
+
+# Check disk space for audit logs (every 4 hours)
+0 */4 * * * cd /var/www/shipsharkltd && php artisan audit:check-disk-space >> /var/www/shipsharkltd/storage/logs/audit-disk.log 2>&1

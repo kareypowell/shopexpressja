@@ -34,8 +34,9 @@ class AuditServiceProvider extends ServiceProvider
         $auditableModels = Config::get('audit.auditable_models', []);
         $observer = $this->app->make(UniversalAuditObserver::class);
 
-        foreach ($auditableModels as $modelClass) {
-            if (class_exists($modelClass)) {
+        foreach ($auditableModels as $modelClass => $config) {
+            // Check if this model's auditing is enabled
+            if (isset($config['enabled']) && $config['enabled'] && class_exists($modelClass)) {
                 // Always register the universal audit observer
                 // Laravel allows multiple observers per model and they will all be called
                 $modelClass::observe($observer);
