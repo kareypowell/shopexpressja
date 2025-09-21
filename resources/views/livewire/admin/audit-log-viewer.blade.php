@@ -86,7 +86,7 @@
                                 User Context
                             </button>
                             
-                            @if($relatedLogs)
+                            @if($relatedLogs && $relatedLogs->isNotEmpty())
                                 <button wire:click="setActiveTab('related')" 
                                         class="py-4 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'related' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                                     <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -259,33 +259,39 @@
                                     <div class="space-y-4">
                                         <h5 class="font-medium text-gray-900">User Information</h5>
                                         
-                                        @if($userContext['user'])
+                                        @if($userContext && isset($userContext['user']) && $userContext['user'])
                                             <div class="bg-gray-50 rounded-lg p-4 space-y-3">
                                                 <div class="flex items-center space-x-3">
                                                     <div class="flex-shrink-0">
                                                         <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
                                                             <span class="text-white font-medium text-sm">
-                                                                {{ substr($userContext['user']->first_name, 0, 1) }}{{ substr($userContext['user']->last_name, 0, 1) }}
+                                                                @if($userContext['user']->first_name && $userContext['user']->last_name)
+                                                                    {{ substr($userContext['user']->first_name, 0, 1) }}{{ substr($userContext['user']->last_name, 0, 1) }}
+                                                                @else
+                                                                    U
+                                                                @endif
                                                             </span>
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <p class="text-sm font-medium text-gray-900">{{ $userContext['user']->full_name }}</p>
-                                                        <p class="text-sm text-gray-500">{{ $userContext['user']->email }}</p>
+                                                        <p class="text-sm font-medium text-gray-900">{{ $userContext['user']->full_name ?? 'Unknown User' }}</p>
+                                                        <p class="text-sm text-gray-500">{{ $userContext['user']->email ?? 'No email' }}</p>
                                                     </div>
                                                 </div>
                                                 
-                                                @if($userContext['user']->role)
+                                                @if($userContext && isset($userContext['user']) && $userContext['user'] && $userContext['user']->role)
                                                     <div class="flex justify-between">
                                                         <span class="text-sm font-medium text-gray-500">Role:</span>
                                                         <span class="text-sm text-gray-900">{{ $userContext['user']->role->name }}</span>
                                                     </div>
                                                 @endif
                                                 
-                                                <div class="flex justify-between">
-                                                    <span class="text-sm font-medium text-gray-500">User ID:</span>
-                                                    <span class="text-sm text-gray-900 font-mono">{{ $userContext['user']->id }}</span>
-                                                </div>
+                                                @if($userContext && isset($userContext['user']) && $userContext['user'])
+                                                    <div class="flex justify-between">
+                                                        <span class="text-sm font-medium text-gray-500">User ID:</span>
+                                                        <span class="text-sm text-gray-900 font-mono">{{ $userContext['user']->id }}</span>
+                                                    </div>
+                                                @endif
                                             </div>
                                         @else
                                             <div class="bg-gray-50 rounded-lg p-4">
@@ -299,29 +305,31 @@
                                         <h5 class="font-medium text-gray-900">Session & Request</h5>
                                         
                                         <div class="bg-gray-50 rounded-lg p-4 space-y-3">
-                                            @if($userContext['ip_address'])
+                                            @if($userContext && isset($userContext['ip_address']) && $userContext['ip_address'])
                                                 <div class="flex justify-between">
                                                     <span class="text-sm font-medium text-gray-500">IP Address:</span>
                                                     <span class="text-sm text-gray-900 font-mono">{{ $userContext['ip_address'] }}</span>
                                                 </div>
                                             @endif
                                             
-                                            @if(isset($userContext['session_id']))
+                                            @if($userContext && isset($userContext['session_id']) && $userContext['session_id'])
                                                 <div class="flex justify-between">
                                                     <span class="text-sm font-medium text-gray-500">Session ID:</span>
                                                     <span class="text-sm text-gray-900 font-mono">{{ substr($userContext['session_id'], 0, 8) }}...</span>
                                                 </div>
                                             @endif
                                             
-                                            <div class="flex justify-between">
-                                                <span class="text-sm font-medium text-gray-500">Timestamp:</span>
-                                                <span class="text-sm text-gray-900">{{ $userContext['timestamp']->format('M j, Y g:i:s A T') }}</span>
-                                            </div>
-                                            
-                                            <div class="flex justify-between">
-                                                <span class="text-sm font-medium text-gray-500">Time Ago:</span>
-                                                <span class="text-sm text-gray-900">{{ $userContext['timestamp']->diffForHumans() }}</span>
-                                            </div>
+                                            @if($userContext && isset($userContext['timestamp']) && $userContext['timestamp'])
+                                                <div class="flex justify-between">
+                                                    <span class="text-sm font-medium text-gray-500">Timestamp:</span>
+                                                    <span class="text-sm text-gray-900">{{ $userContext['timestamp']->format('M j, Y g:i:s A T') }}</span>
+                                                </div>
+                                                
+                                                <div class="flex justify-between">
+                                                    <span class="text-sm font-medium text-gray-500">Time Ago:</span>
+                                                    <span class="text-sm text-gray-900">{{ $userContext['timestamp']->diffForHumans() }}</span>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -329,7 +337,7 @@
                         @endif
 
                         <!-- Related Activity Tab -->
-                        @if($activeTab === 'related' && $relatedLogs)
+                        @if($activeTab === 'related' && $relatedLogs && $relatedLogs->isNotEmpty())
                             <div class="space-y-6">
                                 <h4 class="text-lg font-medium text-gray-900">Related Activity</h4>
                                 
@@ -340,43 +348,51 @@
                                         </h5>
                                         
                                         <div class="space-y-2">
-                                            @foreach($relatedGroup['logs'] as $relatedLog)
-                                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
-                                                     wire:click="showAuditLogDetails({{ $relatedLog->id }})">
-                                                    <div class="flex items-center space-x-3">
-                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                                                            @if($relatedLog->event_type === 'authentication') bg-blue-100 text-blue-800
-                                                            @elseif($relatedLog->event_type === 'authorization') bg-purple-100 text-purple-800
-                                                            @elseif($relatedLog->event_type === 'security_event') bg-red-100 text-red-800
-                                                            @elseif(str_contains($relatedLog->event_type, 'model_')) bg-green-100 text-green-800
-                                                            @elseif($relatedLog->event_type === 'business_action') bg-yellow-100 text-yellow-800
-                                                            @elseif($relatedLog->event_type === 'financial_transaction') bg-indigo-100 text-indigo-800
-                                                            @else bg-gray-100 text-gray-800
-                                                            @endif">
-                                                            {{ ucfirst($relatedLog->action) }}
-                                                        </span>
-                                                        
-                                                        <div>
-                                                            <p class="text-sm font-medium text-gray-900">
-                                                                {{ ucfirst(str_replace('_', ' ', $relatedLog->event_type)) }}
-                                                                @if($relatedLog->auditable_type)
-                                                                    • {{ class_basename($relatedLog->auditable_type) }}
-                                                                @endif
-                                                            </p>
-                                                            <p class="text-xs text-gray-500">
-                                                                {{ $relatedLog->created_at->format('M j, g:i A') }}
-                                                                @if($relatedLog->user)
-                                                                    • {{ $relatedLog->user->full_name }}
-                                                                @endif
-                                                            </p>
+                                            @if(empty($relatedGroup['logs']))
+                                                <p class="text-sm text-gray-500 italic">No related logs found</p>
+                                            @else
+                                                @foreach($relatedGroup['logs'] as $relatedLog)
+                                                    @if($relatedLog)
+                                                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
+                                                             wire:click="showAuditLogDetails({{ $relatedLog['id'] ?? 0 }})">
+                                                            <div class="flex items-center space-x-3">
+                                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                                                    @if(($relatedLog['event_type'] ?? '') === 'authentication') bg-blue-100 text-blue-800
+                                                                    @elseif(($relatedLog['event_type'] ?? '') === 'authorization') bg-purple-100 text-purple-800
+                                                                    @elseif(($relatedLog['event_type'] ?? '') === 'security_event') bg-red-100 text-red-800
+                                                                    @elseif(str_contains($relatedLog['event_type'] ?? '', 'model_')) bg-green-100 text-green-800
+                                                                    @elseif(($relatedLog['event_type'] ?? '') === 'business_action') bg-yellow-100 text-yellow-800
+                                                                    @elseif(($relatedLog['event_type'] ?? '') === 'financial_transaction') bg-indigo-100 text-indigo-800
+                                                                    @else bg-gray-100 text-gray-800
+                                                                    @endif">
+                                                                    {{ !empty($relatedLog['action']) ? ucfirst($relatedLog['action']) : 'Unknown' }}
+                                                                </span>
+                                                                
+                                                                <div>
+                                                                    <p class="text-sm font-medium text-gray-900">
+                                                                        {{ !empty($relatedLog['event_type']) ? ucfirst(str_replace('_', ' ', $relatedLog['event_type'])) : 'Unknown Event' }}
+                                                                        @if(!empty($relatedLog['auditable_type']))
+                                                                            • {{ class_basename($relatedLog['auditable_type']) }}
+                                                                        @endif
+                                                                    </p>
+                                                                    <p class="text-xs text-gray-500">
+                                                                        {{ !empty($relatedLog['created_at']) ? \Carbon\Carbon::parse($relatedLog['created_at'])->format('M j, g:i A') : 'Unknown Date' }}
+                                                                        @if(!empty($relatedLog['user']))
+                                                                            • {{ $relatedLog['user']['full_name'] ?? $relatedLog['user']['first_name'] . ' ' . $relatedLog['user']['last_name'] ?? 'Unknown User' }}
+                                                                        @else
+                                                                            • System
+                                                                        @endif
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                                            </svg>
                                                         </div>
-                                                    </div>
-                                                    
-                                                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                                    </svg>
-                                                </div>
-                                            @endforeach
+                                                    @endif
+                                                @endforeach
+                                            @endif
                                         </div>
                                     </div>
                                 @endforeach

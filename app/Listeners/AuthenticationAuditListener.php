@@ -40,7 +40,7 @@ class AuthenticationAuditListener
                 'login_method' => 'credentials',
                 'user_name' => $event->user->name,
                 'user_email' => $event->user->email,
-                'user_role' => $event->user->role?->name,
+                'user_role' => $event->user->role->name,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to audit login event', [
@@ -61,7 +61,7 @@ class AuthenticationAuditListener
                 'session_duration' => $this->calculateSessionDuration($event->user),
                 'user_name' => $event->user->name,
                 'user_email' => $event->user->email,
-                'user_role' => $event->user->role?->name,
+                'user_role' => $event->user->role->name,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to audit logout event', [
@@ -120,7 +120,7 @@ class AuthenticationAuditListener
                 'registration_method' => 'web_form',
                 'user_name' => $event->user->name,
                 'user_email' => $event->user->email,
-                'default_role' => $event->user->role?->name ?? 'customer',
+                'default_role' => $event->user->role->name ?? 'customer',
                 'email_verified' => $event->user->hasVerifiedEmail(),
             ]);
         } catch (\Exception $e) {

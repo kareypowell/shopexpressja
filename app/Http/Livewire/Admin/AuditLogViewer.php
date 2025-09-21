@@ -10,7 +10,7 @@ class AuditLogViewer extends Component
 {
     public $auditLogId;
     public $auditLog;
-    public $relatedLogs = [];
+    public $relatedLogs;
     public $showModal = false;
     public $activeTab = 'details';
     
@@ -18,6 +18,8 @@ class AuditLogViewer extends Component
 
     public function mount($auditLogId = null)
     {
+        $this->relatedLogs = collect();
+        
         if ($auditLogId) {
             $this->loadAuditLog($auditLogId);
         }
@@ -62,8 +64,8 @@ class AuditLogViewer extends Component
                     ->where('user_id', $this->auditLog->user_id)
                     ->where('id', '!=', $this->auditLog->id)
                     ->whereBetween('created_at', [
-                        $this->auditLog->created_at->subHour(),
-                        $this->auditLog->created_at->addHour()
+                        $this->auditLog->created_at->copy()->subHour(),
+                        $this->auditLog->created_at->copy()->addHour()
                     ])
                     ->orderBy('created_at', 'desc')
                     ->limit(10)
@@ -93,8 +95,8 @@ class AuditLogViewer extends Component
                     ->where('ip_address', $this->auditLog->ip_address)
                     ->where('id', '!=', $this->auditLog->id)
                     ->whereBetween('created_at', [
-                        $this->auditLog->created_at->subHours(24),
-                        $this->auditLog->created_at->addHours(24)
+                        $this->auditLog->created_at->copy()->subHours(24),
+                        $this->auditLog->created_at->copy()->addHours(24)
                     ])
                     ->orderBy('created_at', 'desc')
                     ->limit(10)
@@ -118,7 +120,7 @@ class AuditLogViewer extends Component
 
         $this->relatedLogs = $relatedQueries->filter(function ($query) {
             return $query['logs']->isNotEmpty();
-        })->toArray();
+        });
     }
 
     public function setActiveTab($tab)
@@ -130,7 +132,7 @@ class AuditLogViewer extends Component
     {
         $this->showModal = false;
         $this->auditLog = null;
-        $this->relatedLogs = [];
+        $this->relatedLogs = collect();
         $this->auditLogId = null;
     }
 
@@ -274,7 +276,13 @@ class AuditLogViewer extends Component
     public function getUserContextProperty()
     {
         if (!$this->auditLog) {
-            return null;
+            return [
+                'user' => null,
+                'ip_address' => null,
+                'user_agent' => null,
+                'url' => null,
+                'timestamp' => null,
+            ];
         }
 
         $context = [
