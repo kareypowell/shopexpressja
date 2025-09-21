@@ -10,10 +10,11 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use MailerSend\LaravelDriver\MailerSendTrait;
 use Carbon\Carbon;
+use App\Traits\Auditable;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable, MailerSendTrait, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, MailerSendTrait, SoftDeletes, Auditable;
 
     /**
      * The attributes that are mass assignable.
@@ -50,6 +51,19 @@ class User extends Authenticatable implements MustVerifyEmail
         'deleted_at' => 'datetime',
         'account_balance' => 'decimal:2',
         'credit_balance' => 'decimal:2',
+    ];
+
+    /**
+     * Fields to exclude from audit logging
+     *
+     * @var array<string>
+     */
+    protected $auditExcluded = [
+        'password',
+        'remember_token',
+        'api_token',
+        'email_verified_at',
+        'last_login_at',
     ];
 
     /**
@@ -1513,5 +1527,39 @@ class User extends Authenticatable implements MustVerifyEmail
         }
         
         return $sections;
+    }
+
+    /**
+     * Get audit context for this user
+     */
+    public function getAuditContext(): array
+    {
+        return [
+            'user_role' => $this->role?->name ?? 'unknown',
+            'user_type' => $this->isCustomer() ? 'customer' : ($this->isAdmin() ? 'admin' : 'superadmin'),
+            'account_balance' => $this->account_balance,
+            'is_active' => !$this->trashed(),
+        ];
+    }
+
+    /**
+     * Get audit relationship context
+     */
+    public function getAuditRelationshipContext(): array
+    {
+        return [
+            'profile_id' => $this->profile?->id,
+            'role_id' => $this->role_id,
+            'packages_count' => $this->packages()->count(),
+        ];
+    }
+
+    /**
+     * Custom audit condition for users
+     */
+    public function auditCondition(): bool
+    {
+        // Always audit all user actions for comprehensive tracking
+        return true;
     }
 }
