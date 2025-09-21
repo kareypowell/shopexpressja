@@ -101,7 +101,7 @@ class AuditCacheService
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($modelType, $modelId, $limit) {
             return AuditLog::where('auditable_type', $modelType)
                 ->where('auditable_id', $modelId)
-                ->with('user:id,name,email')
+                ->with('user:id,first_name,last_name,email')
                 ->orderBy('created_at', 'desc')
                 ->limit($limit)
                 ->get()
@@ -272,7 +272,7 @@ class AuditCacheService
             ->groupBy('user_id')
             ->orderByDesc('count')
             ->limit(10)
-            ->with('user:id,name,email')
+            ->with('user:id,first_name,last_name,email')
             ->get()
             ->toArray();
     }

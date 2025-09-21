@@ -45,9 +45,12 @@ class ProcessAuditLogJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(AuditService $auditService, AuditCacheService $cacheService): void
+    public function handle(): void
     {
         try {
+            $auditService = app(AuditService::class);
+            $cacheService = app(AuditCacheService::class);
+            
             if ($this->isBatch) {
                 $results = $auditService->logBatch($this->auditData);
                 $this->handleBatchResults($results, $cacheService);
@@ -94,12 +97,16 @@ class ProcessAuditLogJob implements ShouldQueue
 
         $eventType = $this->auditData['event_type'] ?? 'default';
         
-        return match ($eventType) {
-            'security_event' => 'audit-security',
-            'authentication' => 'audit-auth',
-            'financial_transaction' => 'audit-financial',
-            default => 'audit-default'
-        };
+        switch ($eventType) {
+            case 'security_event':
+                return 'audit-security';
+            case 'authentication':
+                return 'audit-auth';
+            case 'financial_transaction':
+                return 'audit-financial';
+            default:
+                return 'audit-default';
+        }
     }
 
     /**

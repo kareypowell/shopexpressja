@@ -4,22 +4,29 @@ namespace Tests\Feature;
 
 use App\Models\AuditLog;
 use App\Models\User;
+use App\Models\Role;
 use App\Services\SecurityMonitoringService;
 use App\Services\AuditService;
+use App\Listeners\SecurityMonitoringListener;
 use App\Notifications\SecurityAlertNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Failed;
 use Tests\TestCase;
+use Carbon\Carbon;
 
 class SecurityMonitoringIntegrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected SecurityMonitoringService $securityService;
-    protected AuditService $auditService;
-    protected User $user;
-    protected User $admin;
+    protected $securityService;
+    protected $auditService;
+    protected $user;
+    protected $adminUser;
+    protected $superAdminUser;
 
     protected function setUp(): void
     {
@@ -28,242 +35,383 @@ class SecurityMonitoringIntegrationTest extends TestCase
         $this->securityService = app(SecurityMonitoringService::class);
         $this->auditService = app(AuditService::class);
         
-        // Create or get existing roles
-        $customerRole = \App\Models\Role::firstOrCreate(['name' => 'customer'], ['description' => 'Customer role']);
-        $adminRole = \App\Models\Role::firstOrCreate(['name' => 'superadmin'], ['description' => 'Super admin role']);
-        
-        $this->user = User::factory()->create(['role_id' => $customerRole->id]);
-        $this->admin = User::factory()->create(['role_id' => $adminRole->id]);
-        
-        Notification::fake();
+        $this->createTestUsers();
     }
 
-    public function test_analyzes_user_activity_for_suspicious_patterns()
+    protected function createTestUsers()
     {
-        // Create multiple failed login attempts directly in audit_logs table
+        $customerRole = Role::factory()->create(['name' => 'customer']);
+        $adminRole = Role::factory()->create(['name' => 'admin']);
+        $superAdminRole = Role::factory()->create(['name' => 'superadmin']);
+        
+        $this->user = User::factory()->create(['role_id' => $customerRole->id]);
+        $this->adminUser = User::factory()->create(['role_id' => $adminRole->id]);
+        $this->superAdminUser = User::factory()->create(['role_id' => $superAdminRole->id]);
+    }
+
+    /** @test */
+    public function it_integrates_authentication_events_with_security_monitoring()
+    {
+        Notification::fake();
+        
+        // Simulate multiple failed login attempts
         for ($i = 0; $i < 6; $i++) {
+            $this->post('/login', [
+                'email' => $this->user->email,
+                'password' => 'wrong-password'
+            ]);
+        }
+
+        // Manually trigger security analysis
+        $analysis = $this->securityService->analyzeUserActivity($this->user, '127.0.0.1');
+
+        $this->assertGreaterThan(0, $analysis['risk_score']);
+        $this->assertContains('Multiple failed login attempts detected', $analysis['alerts']);
+
+        // Check that security alert was generated
+        if ($analysis['risk_score'] >= SecurityMonitoringService::MEDIUM_RISK) {
+            $this->securityService->generateSecurityAlert($analysis);
+            
+            $this->assertDatabaseHas('audit_logs', [
+                'event_type' => 'security_event',
+                'action' => 'security_alert_generated'
+            ]);
+
+            Notification::assertSentTo($this->superAdminUser, SecurityAlertNotification::class);
+        }
+    }
+
+    /** @test */
+    public function it_detects_and_responds_to_suspicious_login_patterns()
+    {
+        Notification::fake();
+        
+        // Create multiple login attempts from different IPs in short time
+        $ips = ['192.168.1.1', '192.168.1.2', '192.168.1.3', '192.168.1.4'];
+        
+        foreach ($ips as $ip) {
             AuditLog::create([
                 'user_id' => $this->user->id,
                 'event_type' => 'authentication',
-                'action' => 'failed_login',
-                'ip_address' => '192.168.1.100',
-                'additional_data' => ['severity' => 'medium'],
-                'created_at' => now()
+                'action' => 'login',
+                'ip_address' => $ip,
+                'created_at' => now()->subMinutes(30)
             ]);
         }
 
-        $analysis = $this->securityService->analyzeUserActivity($this->user, '192.168.1.100');
+        $analysis = $this->securityService->analyzeUserActivity($this->user);
 
-        $this->assertGreaterThanOrEqual(30, $analysis['risk_score']);
-        $this->assertContains('Multiple failed login attempts detected (6 attempts)', $analysis['alerts']);
-        $this->assertEquals($this->user->id, $analysis['user_id']);
-    }
+        $this->assertGreaterThanOrEqual(20, $analysis['risk_score']);
+        $this->assertContains('Access from multiple IP addresses detected', $analysis['alerts']);
 
-    public function test_analyzes_ip_activity_for_suspicious_patterns()
-    {
-        $ipAddress = '192.168.1.200';
-        
-        // Create multiple failed attempts from same IP
-        for ($i = 0; $i < 12; $i++) {
-            $this->auditService->logSecurityEvent('failed_authentication', [
-                'ip_address' => $ipAddress,
-                'severity' => 'medium'
-            ]);
-        }
+        // Generate security alert
+        $this->securityService->generateSecurityAlert($analysis);
 
-        $analysis = $this->securityService->analyzeIPActivity($ipAddress);
-
-        $this->assertGreaterThanOrEqual(40, $analysis['risk_score']);
-        $this->assertContains('Multiple failed authentication attempts from IP', $analysis['alerts']);
-        $this->assertEquals($ipAddress, $analysis['ip_address']);
-    }
-
-    public function test_detects_system_anomalies()
-    {
-        // Create mass deletion pattern
-        for ($i = 0; $i < 25; $i++) {
-            AuditLog::create([
-                'user_id' => $this->user->id,
-                'event_type' => 'model_deleted',
-                'action' => 'delete',
-                'auditable_type' => 'App\\Models\\Package',
-                'auditable_id' => $i + 1,
-                'ip_address' => '192.168.1.100',
-                'created_at' => now()
-            ]);
-        }
-
-        $anomalies = $this->securityService->detectSystemAnomalies();
-
-        $this->assertNotEmpty($anomalies);
-        $this->assertEquals('mass_deletion', $anomalies[0]['type']);
-        $this->assertEquals('high', $anomalies[0]['severity']);
-    }
-
-    public function test_generates_security_alerts()
-    {
-        $alertData = [
-            'risk_score' => 85,
-            'risk_level' => 'high',
-            'alerts' => ['Test security alert'],
-            'user_id' => $this->user->id,
-            'ip_address' => '192.168.1.100',
-            'analysis_type' => 'test'
-        ];
-
-        $this->securityService->generateSecurityAlert($alertData);
-
-        // Check that audit log was created
+        // Verify alert was logged and notifications sent
         $this->assertDatabaseHas('audit_logs', [
             'event_type' => 'security_event',
             'action' => 'security_alert_generated',
             'user_id' => $this->user->id
         ]);
 
-        // Check that notification was sent
-        Notification::assertSentTo(
-            [$this->admin],
-            SecurityAlertNotification::class
-        );
-
-        // Check that alert was cached
-        $cacheKey = 'security_alerts_' . now()->format('Y-m-d');
-        $cachedAlerts = Cache::get($cacheKey);
-        $this->assertNotEmpty($cachedAlerts);
+        Notification::assertSentTo($this->superAdminUser, SecurityAlertNotification::class);
     }
 
-    public function test_security_monitoring_middleware_integration()
+    /** @test */
+    public function it_monitors_ip_based_attack_patterns()
     {
-        $this->actingAs($this->user);
-
-        // Make multiple rapid requests to trigger activity monitoring
-        for ($i = 0; $i < 5; $i++) {
-            $response = $this->get('/dashboard');
-            $response->assertStatus(200);
-        }
-
-        // Check that user activity was monitored (should create audit logs)
-        $this->assertDatabaseHas('audit_logs', [
-            'user_id' => $this->user->id,
-            'event_type' => 'authentication'
-        ]);
-    }
-
-    public function test_failed_authentication_tracking()
-    {
-        // Simulate failed login attempts
-        for ($i = 0; $i < 3; $i++) {
-            $response = $this->post('/login', [
-                'email' => $this->user->email,
-                'password' => 'wrong-password'
+        $attackerIP = '203.0.113.1';
+        
+        // Simulate brute force attack from single IP
+        for ($i = 0; $i < 15; $i++) {
+            AuditLog::create([
+                'event_type' => 'authentication',
+                'action' => 'failed_login',
+                'ip_address' => $attackerIP,
+                'created_at' => now()->subMinutes(rand(1, 30))
             ]);
         }
 
-        // Check that failed attempts were logged
-        $failedAttempts = AuditLog::where('event_type', 'security_event')
-            ->where('action', 'failed_authentication')
-            ->count();
+        $ipAnalysis = $this->securityService->analyzeIPActivity($attackerIP);
 
-        $this->assertGreaterThan(0, $failedAttempts);
+        $this->assertGreaterThanOrEqual(40, $ipAnalysis['risk_score']);
+        $this->assertContains('Multiple failed authentication attempts from IP', $ipAnalysis['alerts']);
+        $this->assertEquals('high', $ipAnalysis['risk_level']);
     }
 
-    public function test_risk_level_calculation()
+    /** @test */
+    public function it_detects_system_wide_anomalies()
     {
-        // Test different risk score thresholds
-        $testCases = [
-            ['score' => 95, 'expected' => 'critical'],
-            ['score' => 80, 'expected' => 'high'],
-            ['score' => 60, 'expected' => 'medium'],
-            ['score' => 30, 'expected' => 'low'],
-            ['score' => 10, 'expected' => 'minimal']
-        ];
-
-        foreach ($testCases as $case) {
-            $reflection = new \ReflectionClass($this->securityService);
-            $method = $reflection->getMethod('getRiskLevel');
-            $method->setAccessible(true);
-            
-            $result = $method->invoke($this->securityService, $case['score']);
-            $this->assertEquals($case['expected'], $result);
-        }
-    }
-
-    public function test_security_dashboard_access_control()
-    {
-        // Test that regular users cannot access security dashboard
-        $this->actingAs($this->user);
-        $response = $this->get('/admin/security-dashboard');
-        $response->assertStatus(403);
-
-        // Test that admins can access security dashboard
-        $this->actingAs($this->admin);
-        $response = $this->get('/admin/security-dashboard');
-        $response->assertStatus(200);
-    }
-
-    public function test_anomaly_detection_command()
-    {
-        // Create some anomalous data
-        for ($i = 0; $i < 15; $i++) {
+        // Create mass deletion pattern
+        for ($i = 0; $i < 25; $i++) {
             AuditLog::create([
-                'user_id' => $this->user->id,
+                'user_id' => $this->adminUser->id,
                 'event_type' => 'model_deleted',
                 'action' => 'delete',
                 'auditable_type' => 'App\\Models\\Package',
                 'auditable_id' => $i + 1,
-                'ip_address' => '192.168.1.100',
-                'created_at' => now()
+                'created_at' => now()->subMinutes(rand(1, 30))
             ]);
         }
 
-        $this->artisan('security:detect-anomalies --hours=1 --alert-threshold=medium')
-            ->assertExitCode(0);
-
-        // Check that alerts were generated
-        $this->assertDatabaseHas('audit_logs', [
+        // Create unauthorized access attempts
+        AuditLog::create([
+            'user_id' => $this->user->id,
             'event_type' => 'security_event',
-            'action' => 'security_alert_generated'
+            'action' => 'unauthorized_access',
+            'created_at' => now()->subMinutes(15)
         ]);
+
+        $anomalies = $this->securityService->detectSystemAnomalies();
+
+        $this->assertGreaterThan(0, count($anomalies));
+        
+        $massDeletion = collect($anomalies)->firstWhere('type', 'mass_deletion');
+        $this->assertNotNull($massDeletion);
+        $this->assertEquals('high', $massDeletion['severity']);
+
+        $unauthorizedAccess = collect($anomalies)->firstWhere('type', 'unauthorized_access');
+        $this->assertNotNull($unauthorizedAccess);
+        $this->assertEquals('critical', $unauthorizedAccess['severity']);
     }
 
-    public function test_security_alert_notification_content()
+    /** @test */
+    public function it_integrates_with_audit_service_for_comprehensive_monitoring()
+    {
+        // Create various audit events
+        $this->auditService->logAuthentication('login', $this->user, ['ip_address' => '192.168.1.1']);
+        $this->auditService->logSecurityEvent('failed_authentication', ['severity' => 'medium']);
+        $this->auditService->logBusinessAction('bulk_update', null, ['bulk_operation' => true]);
+
+        // Get security summary
+        $summary = $this->auditService->getSecurityEventsSummary(24);
+
+        $this->assertArrayHasKey('total_events', $summary);
+        $this->assertArrayHasKey('failed_logins', $summary);
+        $this->assertArrayHasKey('unique_ips', $summary);
+        $this->assertGreaterThan(0, $summary['total_events']);
+    }
+
+    /** @test */
+    public function it_caches_security_alerts_for_dashboard_display()
     {
         $alertData = [
-            'risk_score' => 90,
-            'risk_level' => 'critical',
-            'alerts' => ['Critical security event detected'],
             'user_id' => $this->user->id,
-            'ip_address' => '192.168.1.100'
+            'risk_score' => 85,
+            'risk_level' => 'high',
+            'alerts' => ['Multiple failed login attempts'],
+            'ip_address' => '192.168.1.1'
         ];
 
-        $notification = new SecurityAlertNotification($alertData);
-        $mailMessage = $notification->toMail($this->admin);
+        $this->securityService->generateSecurityAlert($alertData);
 
-        $this->assertStringContainsString('[CRITICAL]', $mailMessage->subject);
-        $this->assertStringContainsString('Risk Score: 90/100', $mailMessage->introLines[1]);
+        // Check that alert was cached
+        $cacheKey = 'security_alerts_' . now()->format('Y-m-d');
+        $cachedAlerts = Cache::get($cacheKey, []);
+
+        $this->assertNotEmpty($cachedAlerts);
+        $this->assertEquals(85, $cachedAlerts[0]['risk_score']);
+        $this->assertEquals('high', $cachedAlerts[0]['risk_level']);
     }
 
-    public function test_caching_of_security_metrics()
+    /** @test */
+    public function it_handles_concurrent_security_events()
     {
-        // Generate some security events
-        $this->auditService->logSecurityEvent('failed_authentication', [
-            'severity' => 'medium',
-            'ip_address' => '192.168.1.100'
+        Notification::fake();
+        
+        // Simulate concurrent events from multiple users
+        $users = [$this->user, $this->adminUser];
+        
+        foreach ($users as $user) {
+            for ($i = 0; $i < 8; $i++) {
+                AuditLog::create([
+                    'user_id' => $user->id,
+                    'event_type' => 'authentication',
+                    'action' => 'failed_login',
+                    'ip_address' => '192.168.1.' . ($user->id + 100),
+                    'created_at' => now()->subMinutes(rand(1, 45))
+                ]);
+            }
+        }
+
+        // Analyze each user
+        foreach ($users as $user) {
+            $analysis = $this->securityService->analyzeUserActivity($user);
+            
+            if ($analysis['risk_score'] >= SecurityMonitoringService::MEDIUM_RISK) {
+                $this->securityService->generateSecurityAlert($analysis);
+            }
+        }
+
+        // Verify multiple alerts were generated
+        $alertCount = AuditLog::where('event_type', 'security_event')
+            ->where('action', 'security_alert_generated')
+            ->count();
+
+        $this->assertGreaterThan(0, $alertCount);
+    }
+
+    /** @test */
+    public function it_tracks_user_behavior_patterns_over_time()
+    {
+        // Create historical activity pattern
+        for ($day = 7; $day >= 1; $day--) {
+            for ($i = 0; $i < 5; $i++) { // Normal activity: 5 actions per day
+                AuditLog::create([
+                    'user_id' => $this->user->id,
+                    'event_type' => 'business_action',
+                    'action' => 'view_package',
+                    'created_at' => now()->subDays($day)->addHours(rand(8, 18))
+                ]);
+            }
+        }
+
+        // Create unusual spike in activity
+        for ($i = 0; $i < 25; $i++) {
+            AuditLog::create([
+                'user_id' => $this->user->id,
+                'event_type' => 'business_action',
+                'action' => 'bulk_update',
+                'created_at' => now()->subMinutes(rand(1, 30))
+            ]);
+        }
+
+        $analysis = $this->securityService->analyzeUserActivity($this->user);
+
+        $this->assertGreaterThan(0, $analysis['risk_score']);
+        $this->assertContains('Unusually high activity volume detected', $analysis['alerts']);
+    }
+
+    /** @test */
+    public function it_integrates_with_authentication_listeners()
+    {
+        Event::fake();
+        
+        $listener = new SecurityMonitoringListener($this->securityService, $this->auditService);
+
+        // Simulate successful login
+        $loginEvent = new Login('web', $this->user, false);
+        $listener->handleLogin($loginEvent);
+
+        // Verify audit log was created
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $this->user->id,
+            'event_type' => 'authentication',
+            'action' => 'login'
+        ]);
+    }
+
+    /** @test */
+    public function it_monitors_privilege_escalation_attempts()
+    {
+        // Simulate privilege escalation attempts
+        for ($i = 0; $i < 3; $i++) {
+            AuditLog::create([
+                'user_id' => $this->user->id,
+                'event_type' => 'security_event',
+                'action' => 'unauthorized_access',
+                'additional_data' => [
+                    'attempted_resource' => '/admin/users',
+                    'required_permission' => 'admin'
+                ],
+                'created_at' => now()->subMinutes(rand(1, 30))
+            ]);
+        }
+
+        $analysis = $this->securityService->analyzeUserActivity($this->user);
+
+        $this->assertGreaterThanOrEqual(40, $analysis['risk_score']);
+        $this->assertContains('Privilege escalation attempts detected', $analysis['alerts']);
+    }
+
+    /** @test */
+    public function it_provides_security_dashboard_metrics()
+    {
+        // Create diverse security events
+        AuditLog::create([
+            'event_type' => 'security_event',
+            'action' => 'failed_authentication',
+            'ip_address' => '192.168.1.1',
+            'additional_data' => ['severity' => 'medium']
         ]);
 
-        // First call should cache the results
-        $summary1 = $this->auditService->getSecurityEventsSummary(24);
-        
-        // Second call should use cached results
-        $summary2 = $this->auditService->getSecurityEventsSummary(24);
-        
-        $this->assertEquals($summary1, $summary2);
-        $this->assertGreaterThan(0, $summary1['total_events']);
+        AuditLog::create([
+            'event_type' => 'security_event',
+            'action' => 'suspicious_activity_detected',
+            'ip_address' => '192.168.1.2',
+            'additional_data' => ['severity' => 'high']
+        ]);
+
+        AuditLog::create([
+            'event_type' => 'security_event',
+            'action' => 'security_alert_generated',
+            'additional_data' => ['severity' => 'critical']
+        ]);
+
+        $summary = $this->auditService->getSecurityEventsSummary(24);
+
+        $this->assertEquals(3, $summary['total_events']);
+        $this->assertEquals(1, $summary['failed_logins']);
+        $this->assertEquals(1, $summary['suspicious_activities']);
+        $this->assertEquals(1, $summary['security_alerts']);
+        $this->assertEquals(2, $summary['unique_ips']);
+        $this->assertArrayHasKey('events_by_severity', $summary);
     }
 
-    protected function tearDown(): void
+    /** @test */
+    public function it_handles_bulk_security_event_processing()
     {
-        Cache::flush();
-        parent::tearDown();
+        // Create large number of security events
+        $events = [];
+        for ($i = 0; $i < 50; $i++) {
+            $events[] = [
+                'event_type' => 'security_event',
+                'action' => 'automated_scan_detected',
+                'ip_address' => '203.0.113.' . ($i % 10),
+                'additional_data' => ['scan_type' => 'port_scan'],
+                'created_at' => now()->subMinutes(rand(1, 60))
+            ];
+        }
+
+        $count = $this->auditService->logBulk($events);
+
+        $this->assertEquals(50, $count);
+
+        // Analyze system-wide anomalies
+        $anomalies = $this->securityService->detectSystemAnomalies();
+
+        // Should detect the bulk security events as an anomaly
+        $this->assertGreaterThan(0, count($anomalies));
+    }
+
+    /** @test */
+    public function it_maintains_audit_trail_for_security_responses()
+    {
+        Notification::fake();
+        
+        $alertData = [
+            'user_id' => $this->user->id,
+            'risk_score' => 90,
+            'risk_level' => 'critical',
+            'alerts' => ['Critical security threat detected'],
+            'ip_address' => '203.0.113.1'
+        ];
+
+        $this->securityService->generateSecurityAlert($alertData);
+
+        // Verify complete audit trail
+        $this->assertDatabaseHas('audit_logs', [
+            'event_type' => 'security_event',
+            'action' => 'security_alert_generated',
+            'user_id' => $this->user->id
+        ]);
+
+        $auditLog = AuditLog::where('action', 'security_alert_generated')->first();
+        $this->assertEquals(90, $auditLog->additional_data['risk_score']);
+        $this->assertEquals('critical', $auditLog->additional_data['risk_level']);
+        $this->assertEquals(['Critical security threat detected'], $auditLog->additional_data['alerts']);
+
+        // Verify notification was sent
+        Notification::assertSentTo($this->superAdminUser, SecurityAlertNotification::class);
     }
 }

@@ -35,12 +35,14 @@ class AuditCacheWarmupJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(AuditCacheService $cacheService): void
+    public function handle(): void
     {
         try {
             Log::info('Starting audit cache warmup');
             
             $startTime = microtime(true);
+            
+            $cacheService = app(AuditCacheService::class);
             
             // Warm up frequently accessed caches
             $cacheService->warmUpCaches();

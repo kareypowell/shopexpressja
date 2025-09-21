@@ -14,11 +14,23 @@ use Carbon\Carbon;
 
 class AuditService
 {
-    protected AuditCacheService $cacheService;
+    protected ?AuditCacheService $cacheService = null;
 
-    public function __construct(AuditCacheService $cacheService)
+    public function __construct(?AuditCacheService $cacheService = null)
     {
         $this->cacheService = $cacheService;
+    }
+
+    /**
+     * Get cache service instance
+     */
+    protected function getCacheService(): AuditCacheService
+    {
+        if (!$this->cacheService) {
+            $this->cacheService = app(AuditCacheService::class);
+        }
+        
+        return $this->cacheService;
     }
     /**
      * Create a standardized audit log entry
@@ -188,17 +200,40 @@ class AuditService
      */
     public function logSecurityEvent(string $action, array $eventData = []): ?AuditLog
     {
+        // Ensure severity is set with a proper default
+        $severity = $eventData['severity'] ?? 'medium';
+        
         return $this->log([
             'user_id' => Auth::id(),
             'event_type' => 'security_event',
             'action' => $action,
             'additional_data' => array_merge([
                 'timestamp' => now()->toISOString(),
-                'severity' => $eventData['severity'] ?? 'medium',
+                'severity' => $severity,
                 'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent()
+                'user_agent' => request()->userAgent(),
+                'risk_level' => $this->mapSeverityToRiskLevel($severity)
             ], $eventData)
         ]);
+    }
+
+    /**
+     * Map severity to risk level for consistency
+     */
+    private function mapSeverityToRiskLevel(string $severity): string
+    {
+        switch ($severity) {
+            case 'critical':
+                return 'Critical';
+            case 'high':
+                return 'High';
+            case 'medium':
+                return 'Medium';
+            case 'low':
+                return 'Low';
+            default:
+                return 'Medium';
+        }
     }
 
     /**
@@ -579,7 +614,7 @@ class AuditService
                 ->selectRaw('user_id, count(*) as count')
                 ->orderByDesc('count')
                 ->limit(10)
-                ->with('user')
+                ->with('user:id,first_name,last_name,email')
                 ->get()
         ];
     }

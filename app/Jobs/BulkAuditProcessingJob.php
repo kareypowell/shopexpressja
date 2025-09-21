@@ -43,9 +43,12 @@ class BulkAuditProcessingJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(AuditService $auditService, AuditCacheService $cacheService): void
+    public function handle(): void
     {
         try {
+            $auditService = app(AuditService::class);
+            $cacheService = app(AuditCacheService::class);
+            
             $chunks = array_chunk($this->auditEntries, $this->batchSize);
             $totalProcessed = 0;
             

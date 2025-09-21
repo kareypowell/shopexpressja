@@ -29,12 +29,16 @@ class AuditPerformanceCommand extends Command
     {
         $action = $this->argument('action');
 
-        return match ($action) {
-            'warmup-cache' => $this->warmupCache($cacheService),
-            'analyze-performance' => $this->analyzePerformance(),
-            'optimize-indexes' => $this->optimizeIndexes(),
-            default => $this->error("Unknown action: {$action}")
-        };
+        switch ($action) {
+            case 'warmup-cache':
+                return $this->warmupCache($cacheService);
+            case 'analyze-performance':
+                return $this->analyzePerformance();
+            case 'optimize-indexes':
+                return $this->optimizeIndexes();
+            default:
+                return $this->error("Unknown action: {$action}");
+        }
     }
 
     /**

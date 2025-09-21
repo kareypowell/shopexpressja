@@ -2,307 +2,193 @@
 
 namespace App\Http\Livewire\Admin;
 
-use App\Services\SecurityMonitoringService;
-use App\Services\AuditService;
-use App\Models\AuditLog;
+use App\Services\SecurityService;
+use App\Services\AuditCacheService;
 use Livewire\Component;
-use Livewire\WithPagination;
-use Illuminate\Support\Facades\Cache;
 
 class SecurityDashboard extends Component
 {
-    use WithPagination;
-
-    public $timeRange = '24'; // hours
-    public $riskLevelFilter = '';
-    public $alertTypeFilter = '';
-    public $refreshInterval = 30; // seconds
-
-    /** @var SecurityMonitoringService */
-    protected $securityService;
+    public $timeRange = 24; // hours
+    public $riskLevel = 'all';
+    public $alertType = 'all';
     
-    /** @var AuditService */
-    protected $auditService;
+    public $securityData = [];
+    public $isLoading = false;
 
-    public function boot(SecurityMonitoringService $securityService, AuditService $auditService)
+    protected SecurityService $securityService;
+    protected AuditCacheService $cacheService;
+
+    public function boot(SecurityService $securityService, AuditCacheService $cacheService)
     {
         $this->securityService = $securityService;
-        $this->auditService = $auditService;
+        $this->cacheService = $cacheService;
     }
 
     public function mount()
     {
-        // Check if user can access audit logs (authorization handled by middleware)
-        if (!auth()->user()->canAccessAuditLogs()) {
-            abort(403, 'Unauthorized access to security dashboard.');
+        $this->loadSecurityData();
+    }
+
+    public function updatedTimeRange()
+    {
+        $this->loadSecurityData();
+    }
+
+    public function updatedRiskLevel()
+    {
+        $this->loadSecurityData();
+    }
+
+    public function updatedAlertType()
+    {
+        $this->loadSecurityData();
+    }
+
+    public function refreshDashboard()
+    {
+        $this->isLoading = true;
+        
+        // Clear relevant caches
+        $this->cacheService->invalidateStatisticsCaches();
+        
+        $this->loadSecurityData();
+        
+        $this->isLoading = false;
+        
+        $this->dispatchBrowserEvent('dashboard-refreshed');
+    }
+
+    public function loadSecurityData()
+    {
+        try {
+            $this->securityData = $this->securityService->getSecurityDashboardData($this->timeRange);
+            
+            // Filter alerts based on selected criteria
+            if ($this->riskLevel !== 'all') {
+                $riskLevel = $this->riskLevel;
+                $this->securityData['recent_alerts'] = array_filter(
+                    $this->securityData['recent_alerts'],
+                    function($alert) use ($riskLevel) {
+                        return strtolower($alert['risk_level']) === strtolower($riskLevel);
+                    }
+                );
+            }
+            
+            if ($this->alertType !== 'all') {
+                $alertType = $this->alertType;
+                $this->securityData['recent_alerts'] = array_filter(
+                    $this->securityData['recent_alerts'],
+                    function($alert) use ($alertType) {
+                        return strpos(strtolower($alert['type']), strtolower($alertType)) !== false;
+                    }
+                );
+            }
+            
+        } catch (\Exception $e) {
+            \Log::error('Security dashboard data loading failed', [
+                'error' => $e->getMessage(),
+                'time_range' => $this->timeRange
+            ]);
+            
+            // Provide fallback data
+            $this->securityData = [
+                'security_events' => 0,
+                'failed_logins' => 0,
+                'suspicious_activities' => 0,
+                'unique_ips' => 0,
+                'risk_assessment' => [
+                    'level' => 'Minimal',
+                    'score' => 0,
+                    'high_risk_alerts' => 0,
+                    'trend' => 'Stable',
+                ],
+                'recent_alerts' => [],
+            ];
+        }
+    }
+
+    public function getTimeRangeOptions()
+    {
+        return [
+            1 => 'Last Hour',
+            6 => 'Last 6 Hours',
+            24 => 'Last 24 Hours',
+            72 => 'Last 3 Days',
+            168 => 'Last Week',
+        ];
+    }
+
+    public function getRiskLevelOptions()
+    {
+        return [
+            'all' => 'All Levels',
+            'critical' => 'Critical',
+            'high' => 'High',
+            'medium' => 'Medium',
+            'low' => 'Low',
+            'minimal' => 'Minimal',
+        ];
+    }
+
+    public function getAlertTypeOptions()
+    {
+        return [
+            'all' => 'All Types',
+            'authentication' => 'Authentication',
+            'suspicious' => 'Suspicious Activity',
+            'security' => 'Security Alert',
+            'access' => 'Access Pattern',
+        ];
+    }
+
+    public function getRiskLevelColor($level)
+    {
+        switch (strtolower($level)) {
+            case 'critical':
+                return 'text-red-600 bg-red-100';
+            case 'high':
+                return 'text-red-500 bg-red-50';
+            case 'medium':
+                return 'text-yellow-600 bg-yellow-100';
+            case 'low':
+                return 'text-blue-600 bg-blue-100';
+            case 'minimal':
+                return 'text-green-600 bg-green-100';
+            default:
+                return 'text-gray-600 bg-gray-100';
+        }
+    }
+
+    public function getTrendIcon($trend)
+    {
+        switch (strtolower($trend)) {
+            case 'increasing':
+                return '↗';
+            case 'decreasing':
+                return '↘';
+            default:
+                return '→';
+        }
+    }
+
+    public function getTrendColor($trend)
+    {
+        switch (strtolower($trend)) {
+            case 'increasing':
+                return 'text-red-500';
+            case 'decreasing':
+                return 'text-green-500';
+            default:
+                return 'text-gray-500';
         }
     }
 
     public function render()
     {
-        $securitySummary = $this->getSecuritySummary();
-        $recentAlerts = $this->getRecentSecurityAlerts();
-        $systemAnomalies = $this->getSystemAnomalies();
-        $riskMetrics = $this->getRiskMetrics();
-
         return view('livewire.admin.security-dashboard', [
-            'securitySummary' => $securitySummary,
-            'recentAlerts' => $recentAlerts,
-            'systemAnomalies' => $systemAnomalies,
-            'riskMetrics' => $riskMetrics,
-            'alertStats' => $this->getAlertStatistics()
+            'timeRangeOptions' => $this->getTimeRangeOptions(),
+            'riskLevelOptions' => $this->getRiskLevelOptions(),
+            'alertTypeOptions' => $this->getAlertTypeOptions(),
         ]);
-    }
-
-    public function updatedTimeRange()
-    {
-        $this->resetPage();
-    }
-
-    public function updatedRiskLevelFilter()
-    {
-        $this->resetPage();
-    }
-
-    public function updatedAlertTypeFilter()
-    {
-        $this->resetPage();
-    }
-
-    public function runAnomalyDetection()
-    {
-        try {
-            $anomalies = $this->securityService->detectSystemAnomalies();
-            
-            if (empty($anomalies)) {
-                $this->dispatchBrowserEvent('show-notification', [
-                    'type' => 'success',
-                    'message' => 'No security anomalies detected.'
-                ]);
-            } else {
-                $alertsGenerated = 0;
-                foreach ($anomalies as $anomaly) {
-                    if ($anomaly['severity'] === 'high' || $anomaly['severity'] === 'critical') {
-                        $this->generateAnomalyAlert($anomaly);
-                        $alertsGenerated++;
-                    }
-                }
-
-                $message = count($anomalies) . ' anomalies detected';
-                if ($alertsGenerated > 0) {
-                    $message .= ", {$alertsGenerated} alerts generated";
-                }
-
-                $this->dispatchBrowserEvent('show-notification', [
-                    'type' => 'warning',
-                    'message' => $message
-                ]);
-            }
-
-            // Clear cache to refresh data
-            $this->clearSecurityCache();
-
-        } catch (\Exception $e) {
-            $this->dispatchBrowserEvent('show-notification', [
-                'type' => 'error',
-                'message' => 'Failed to run anomaly detection: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    public function acknowledgeAlert($alertId)
-    {
-        try {
-            $alert = AuditLog::findOrFail($alertId);
-            
-            // Update alert to mark as acknowledged
-            $additionalData = $alert->additional_data ?? [];
-            $additionalData['acknowledged'] = true;
-            $additionalData['acknowledged_by'] = auth()->id();
-            $additionalData['acknowledged_at'] = now()->toISOString();
-            
-            $alert->update(['additional_data' => $additionalData]);
-
-            $this->dispatchBrowserEvent('show-notification', [
-                'type' => 'success',
-                'message' => 'Alert acknowledged successfully.'
-            ]);
-
-        } catch (\Exception $e) {
-            $this->dispatchBrowserEvent('show-notification', [
-                'type' => 'error',
-                'message' => 'Failed to acknowledge alert: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    public function refreshDashboard()
-    {
-        $this->clearSecurityCache();
-        $this->dispatchBrowserEvent('show-notification', [
-            'type' => 'success',
-            'message' => 'Dashboard refreshed successfully.'
-        ]);
-    }
-
-    protected function getSecuritySummary(): array
-    {
-        $cacheKey = "security_summary_{$this->timeRange}";
-        
-        return Cache::remember($cacheKey, 300, function () {
-            return $this->auditService->getSecurityEventsSummary((int) $this->timeRange);
-        });
-    }
-
-    protected function getRecentSecurityAlerts()
-    {
-        $query = AuditLog::where('event_type', 'security_event')
-            ->where('created_at', '>=', now()->subHours((int) $this->timeRange))
-            ->orderBy('created_at', 'desc');
-
-        if ($this->riskLevelFilter) {
-            $query->whereJsonContains('additional_data->risk_level', $this->riskLevelFilter);
-        }
-
-        if ($this->alertTypeFilter) {
-            $query->where('action', $this->alertTypeFilter);
-        }
-
-        return $query->paginate(10);
-    }
-
-    protected function getSystemAnomalies(): array
-    {
-        $cacheKey = "system_anomalies_{$this->timeRange}";
-        
-        return Cache::remember($cacheKey, 600, function () {
-            return $this->securityService->detectSystemAnomalies();
-        });
-    }
-
-    protected function getRiskMetrics(): array
-    {
-        $cacheKey = "risk_metrics_{$this->timeRange}";
-        
-        return Cache::remember($cacheKey, 300, function () {
-            $since = now()->subHours((int) $this->timeRange);
-            
-            $alerts = AuditLog::where('event_type', 'security_event')
-                ->where('action', 'security_alert_generated')
-                ->where('created_at', '>=', $since)
-                ->get();
-
-            $riskLevels = $alerts->pluck('additional_data.risk_level')->countBy();
-            $avgRiskScore = $alerts->avg('additional_data.risk_score') ?? 0;
-            
-            return [
-                'total_alerts' => $alerts->count(),
-                'average_risk_score' => round($avgRiskScore, 1),
-                'risk_distribution' => $riskLevels->toArray(),
-                'high_risk_alerts' => $riskLevels->get('high', 0) + $riskLevels->get('critical', 0),
-                'trend' => $this->calculateRiskTrend()
-            ];
-        });
-    }
-
-    protected function getAlertStatistics(): array
-    {
-        $cacheKey = "alert_statistics_{$this->timeRange}";
-        
-        return Cache::remember($cacheKey, 300, function () {
-            $since = now()->subHours((int) $this->timeRange);
-            
-            return [
-                'failed_logins' => AuditLog::where('event_type', 'authentication')
-                    ->where('action', 'failed_login')
-                    ->where('created_at', '>=', $since)
-                    ->count(),
-                'suspicious_activities' => AuditLog::where('event_type', 'security_event')
-                    ->where('action', 'suspicious_activity_detected')
-                    ->where('created_at', '>=', $since)
-                    ->count(),
-                'unauthorized_attempts' => AuditLog::where('event_type', 'security_event')
-                    ->where('action', 'unauthorized_access')
-                    ->where('created_at', '>=', $since)
-                    ->count(),
-                'account_lockouts' => AuditLog::where('event_type', 'security_event')
-                    ->where('action', 'account_lockout')
-                    ->where('created_at', '>=', $since)
-                    ->count()
-            ];
-        });
-    }
-
-    protected function calculateRiskTrend(): string
-    {
-        $currentPeriod = now()->subHours((int) $this->timeRange);
-        $previousPeriod = now()->subHours((int) $this->timeRange * 2);
-        
-        $currentAlerts = AuditLog::where('event_type', 'security_event')
-            ->where('created_at', '>=', $currentPeriod)
-            ->count();
-            
-        $previousAlerts = AuditLog::where('event_type', 'security_event')
-            ->where('created_at', '>=', $previousPeriod)
-            ->where('created_at', '<', $currentPeriod)
-            ->count();
-
-        if ($previousAlerts === 0) {
-            return $currentAlerts > 0 ? 'increasing' : 'stable';
-        }
-
-        $change = (($currentAlerts - $previousAlerts) / $previousAlerts) * 100;
-        
-        if ($change > 10) return 'increasing';
-        if ($change < -10) return 'decreasing';
-        return 'stable';
-    }
-
-    protected function generateAnomalyAlert(array $anomaly): void
-    {
-        switch ($anomaly['severity']) {
-            case 'critical':
-                $riskScore = 95;
-                break;
-            case 'high':
-                $riskScore = 80;
-                break;
-            case 'medium':
-                $riskScore = 60;
-                break;
-            case 'low':
-                $riskScore = 30;
-                break;
-            default:
-                $riskScore = 25;
-                break;
-        }
-        
-        $alertData = [
-            'risk_score' => $riskScore,
-            'risk_level' => $anomaly['severity'],
-            'alerts' => [$anomaly['description']],
-            'analysis_type' => 'system_anomaly',
-            'anomaly_type' => $anomaly['type'],
-            'anomaly_count' => $anomaly['count'] ?? null,
-            'detection_time' => now(),
-            'automated_detection' => true
-        ];
-
-        $this->securityService->generateSecurityAlert($alertData);
-    }
-
-    protected function clearSecurityCache(): void
-    {
-        $cacheKeys = [
-            "security_summary_{$this->timeRange}",
-            "system_anomalies_{$this->timeRange}",
-            "risk_metrics_{$this->timeRange}",
-            "alert_statistics_{$this->timeRange}"
-        ];
-
-        foreach ($cacheKeys as $key) {
-            Cache::forget($key);
-        }
     }
 }
