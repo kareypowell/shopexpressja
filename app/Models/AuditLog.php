@@ -37,6 +37,7 @@ class AuditLog extends Model
         'ip_address',
         'user_agent',
         'additional_data',
+        'created_at',
     ];
 
     /**

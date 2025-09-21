@@ -56,6 +56,30 @@ class Kernel extends ConsoleKernel
             ->onFailure(function () {
                 \Log::error('Scheduled audit report generation failed');
             });
+
+        // Archive old audit logs weekly (Sundays at 2 AM)
+        $schedule->command('audit:archive --force')
+            ->weeklyOn(0, '02:00') // Sunday at 2 AM
+            ->withoutOverlapping(60) // Prevent overlapping runs, timeout after 60 minutes
+            ->runInBackground()
+            ->onSuccess(function () {
+                \Log::info('Scheduled audit archival completed successfully');
+            })
+            ->onFailure(function () {
+                \Log::error('Scheduled audit archival failed');
+            });
+
+        // Clean up old audit logs daily (3 AM)
+        $schedule->command('audit:cleanup --archive --force')
+            ->dailyAt('03:00')
+            ->withoutOverlapping(30) // Prevent overlapping runs, timeout after 30 minutes
+            ->runInBackground()
+            ->onSuccess(function () {
+                \Log::info('Scheduled audit cleanup completed successfully');
+            })
+            ->onFailure(function () {
+                \Log::error('Scheduled audit cleanup failed');
+            });
     }
 
     /**

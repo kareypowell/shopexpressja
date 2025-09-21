@@ -18,8 +18,11 @@ class SecurityDashboard extends Component
     public $alertTypeFilter = '';
     public $refreshInterval = 30; // seconds
 
-    protected SecurityMonitoringService $securityService;
-    protected AuditService $auditService;
+    /** @var SecurityMonitoringService */
+    protected $securityService;
+    
+    /** @var AuditService */
+    protected $auditService;
 
     public function boot(SecurityMonitoringService $securityService, AuditService $auditService)
     {
@@ -29,7 +32,10 @@ class SecurityDashboard extends Component
 
     public function mount()
     {
-        $this->authorize('viewAny', AuditLog::class);
+        // Check if user can access audit logs (authorization handled by middleware)
+        if (!auth()->user()->canAccessAuditLogs()) {
+            abort(403, 'Unauthorized access to security dashboard.');
+        }
     }
 
     public function render()
@@ -254,13 +260,23 @@ class SecurityDashboard extends Component
 
     protected function generateAnomalyAlert(array $anomaly): void
     {
-        $riskScore = match ($anomaly['severity']) {
-            'critical' => 95,
-            'high' => 80,
-            'medium' => 60,
-            'low' => 30,
-            default => 25
-        };
+        switch ($anomaly['severity']) {
+            case 'critical':
+                $riskScore = 95;
+                break;
+            case 'high':
+                $riskScore = 80;
+                break;
+            case 'medium':
+                $riskScore = 60;
+                break;
+            case 'low':
+                $riskScore = 30;
+                break;
+            default:
+                $riskScore = 25;
+                break;
+        }
         
         $alertData = [
             'risk_score' => $riskScore,

@@ -148,7 +148,7 @@ class AuditService
             'user_id' => Auth::id(),
             'event_type' => 'business_action',
             'auditable_type' => $model ? get_class($model) : null,
-            'auditable_id' => $model->getKey(),
+            'auditable_id' => $model ? $model->getKey() : null,
             'action' => $action,
             'additional_data' => array_merge([
                 'timestamp' => now()->toISOString(),
@@ -466,7 +466,7 @@ class AuditService
                 ->selectRaw('user_id, count(*) as count')
                 ->orderByDesc('count')
                 ->limit(10)
-                ->with('user:id,name,email')
+                ->with('user')
                 ->get()
         ];
     }

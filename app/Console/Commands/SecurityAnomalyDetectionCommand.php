@@ -20,7 +20,8 @@ class SecurityAnomalyDetectionCommand extends Command
      */
     protected $description = 'Detect security anomalies and generate alerts for suspicious system-wide activity';
 
-    protected SecurityMonitoringService $securityService;
+    /** @var SecurityMonitoringService */
+    protected $securityService;
 
     public function __construct(SecurityMonitoringService $securityService)
     {
@@ -132,12 +133,17 @@ class SecurityAnomalyDetectionCommand extends Command
      */
     protected function calculateRiskScore(string $severity): int
     {
-        return match ($severity) {
-            'critical' => 95,
-            'high' => 80,
-            'medium' => 60,
-            'low' => 30,
-            default => 25
-        };
+        switch ($severity) {
+            case 'critical':
+                return 95;
+            case 'high':
+                return 80;
+            case 'medium':
+                return 60;
+            case 'low':
+                return 30;
+            default:
+                return 25;
+        }
     }
 }

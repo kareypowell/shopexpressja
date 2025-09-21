@@ -7,6 +7,7 @@ use App\Models\ConsolidatedPackage;
 use App\Models\ConsolidationHistory;
 use App\Models\User;
 use App\Enums\PackageStatus;
+use App\Services\AuditService;
 use App\Services\ConsolidationCacheService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,10 +19,14 @@ use Exception;
 class PackageConsolidationService
 {
     protected ConsolidationCacheService $cacheService;
+    protected AuditService $auditService;
 
-    public function __construct(ConsolidationCacheService $cacheService)
-    {
+    public function __construct(
+        ConsolidationCacheService $cacheService,
+        AuditService $auditService
+    ) {
         $this->cacheService = $cacheService;
+        $this->auditService = $auditService;
     }
     /**
      * Consolidate multiple packages into a single consolidated package
@@ -116,6 +121,9 @@ class PackageConsolidationService
                 'total_weight' => $totals['weight'],
                 'total_cost' => $totals['total_cost'],
             ]);
+
+            // Log to unified audit system
+            $this->auditService->logConsolidationOperation('consolidated', $packageIds, $consolidatedPackage->id);
 
             DB::commit();
 
@@ -222,6 +230,9 @@ class PackageConsolidationService
                 'package_count' => $packages->count(),
                 'reason' => isset($options['notes']) ? $options['notes'] : 'Manual unconsolidation',
             ]);
+
+            // Log to unified audit system
+            $this->auditService->logConsolidationOperation('unconsolidated', $packageIds, $consolidatedPackage->id);
 
             DB::commit();
 
@@ -455,6 +466,14 @@ class PackageConsolidationService
             'performed_at' => now(),
         ]);
 
+        // Log to unified audit system
+        $this->auditService->logBusinessAction("consolidation_{$action}", $consolidatedPackage, array_merge($details, [
+            'history_id' => $historyRecord->id,
+            'tracking_number' => $consolidatedPackage->consolidated_tracking_number,
+            'customer_id' => $consolidatedPackage->customer_id,
+            'performed_by' => $user->name,
+        ]));
+
         // Also log to Laravel log for system monitoring
         Log::info("Package consolidation action: {$action}", [
             'history_id' => $historyRecord->id,
@@ -510,6 +529,15 @@ class PackageConsolidationService
                 'new_status' => $newStatus,
                 'package_count' => $consolidatedPackage->packages()->count(),
                 'reason' => $options['reason'] ?? 'Status updated',
+            ]);
+
+            // Log to unified audit system
+            $this->auditService->logBusinessAction('consolidated_package_status_changed', $consolidatedPackage, [
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'package_count' => $consolidatedPackage->packages()->count(),
+                'reason' => $options['reason'] ?? 'Status updated',
+                'changed_by' => $user->name,
             ]);
 
             // Send notification to customer if status changed

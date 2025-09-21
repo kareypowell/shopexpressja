@@ -4,11 +4,18 @@ namespace App\Services;
 
 use App\Models\CustomerTransaction;
 use App\Mail\TransactionReviewRequest;
+use App\Services\AuditService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
 class TransactionReviewService
 {
+    protected AuditService $auditService;
+
+    public function __construct(AuditService $auditService)
+    {
+        $this->auditService = $auditService;
+    }
     /**
      * Flag a transaction for review and notify admin
      *
@@ -21,6 +28,16 @@ class TransactionReviewService
         try {
             // Flag the transaction
             $transaction->flagForReview($reason);
+            
+            // Log to audit system
+            $this->auditService->logFinancialTransaction('transaction_flagged_for_review', [
+                'transaction_id' => $transaction->id,
+                'customer_id' => $transaction->user_id,
+                'amount' => $transaction->amount,
+                'type' => $transaction->type,
+                'reason' => $reason,
+                'flagged_by' => auth()->user()->name ?? 'System',
+            ]);
             
             // Send email notification to admin
             $this->notifyAdmin($transaction);
@@ -84,6 +101,17 @@ class TransactionReviewService
     {
         try {
             $transaction->resolveReview($adminResponse, $resolvedBy);
+            
+            // Log to audit system
+            $this->auditService->logFinancialTransaction('transaction_review_resolved', [
+                'transaction_id' => $transaction->id,
+                'customer_id' => $transaction->user_id,
+                'amount' => $transaction->amount,
+                'type' => $transaction->type,
+                'admin_response' => $adminResponse,
+                'resolved_by_id' => $resolvedBy,
+                'resolved_by' => \App\Models\User::find($resolvedBy)->name ?? 'Unknown',
+            ]);
             
             Log::info('Transaction review resolved', [
                 'transaction_id' => $transaction->id,

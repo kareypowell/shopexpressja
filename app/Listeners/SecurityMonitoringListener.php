@@ -13,8 +13,11 @@ use Illuminate\Support\Facades\Log;
 
 class SecurityMonitoringListener
 {
-    protected SecurityMonitoringService $securityService;
-    protected AuditService $auditService;
+    /** @var SecurityMonitoringService */
+    protected $securityService;
+    
+    /** @var AuditService */
+    protected $auditService;
 
     public function __construct(SecurityMonitoringService $securityService, AuditService $auditService)
     {

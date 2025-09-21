@@ -11,7 +11,8 @@ class SecurityAlertNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    protected array $alertData;
+    /** @var array */
+    protected $alertData;
 
     /**
      * Create a new notification instance.
@@ -92,13 +93,18 @@ class SecurityAlertNotification extends Notification implements ShouldQueue
      */
     private function getSubjectByRiskLevel(string $riskLevel): string
     {
-        return match ($riskLevel) {
-            'critical' => '[CRITICAL] Security Alert - Immediate Action Required',
-            'high' => '[HIGH] Security Alert - Review Required',
-            'medium' => '[MEDIUM] Security Alert - Monitoring Required',
-            'low' => '[LOW] Security Alert - Information Only',
-            default => 'Security Alert - ShipSharkLtd'
-        };
+        switch ($riskLevel) {
+            case 'critical':
+                return '[CRITICAL] Security Alert - Immediate Action Required';
+            case 'high':
+                return '[HIGH] Security Alert - Review Required';
+            case 'medium':
+                return '[MEDIUM] Security Alert - Monitoring Required';
+            case 'low':
+                return '[LOW] Security Alert - Information Only';
+            default:
+                return 'Security Alert - ShipSharkLtd';
+        }
     }
 
     /**
@@ -106,12 +112,17 @@ class SecurityAlertNotification extends Notification implements ShouldQueue
      */
     private function getPriorityByRiskLevel(string $riskLevel): int
     {
-        return match ($riskLevel) {
-            'critical' => 1, // High priority
-            'high' => 2,     // High priority
-            'medium' => 3,   // Normal priority
-            'low' => 4,      // Low priority
-            default => 3     // Normal priority
-        };
+        switch ($riskLevel) {
+            case 'critical':
+                return 1; // High priority
+            case 'high':
+                return 2; // High priority
+            case 'medium':
+                return 3; // Normal priority
+            case 'low':
+                return 4; // Low priority
+            default:
+                return 3; // Normal priority
+        }
     }
 }

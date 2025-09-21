@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Package;
+use App\Services\AuditService;
 use App\Services\CustomerCacheInvalidationService;
 use App\Services\ManifestLockService;
 use App\Services\ManifestSummaryCacheService;
@@ -13,15 +14,18 @@ class PackageObserver
     protected CustomerCacheInvalidationService $cacheInvalidationService;
     protected ManifestLockService $manifestLockService;
     protected ManifestSummaryCacheService $manifestCacheService;
+    protected AuditService $auditService;
 
     public function __construct(
         CustomerCacheInvalidationService $cacheInvalidationService,
         ManifestLockService $manifestLockService,
-        ManifestSummaryCacheService $manifestCacheService
+        ManifestSummaryCacheService $manifestCacheService,
+        AuditService $auditService
     ) {
         $this->cacheInvalidationService = $cacheInvalidationService;
         $this->manifestLockService = $manifestLockService;
         $this->manifestCacheService = $manifestCacheService;
+        $this->auditService = $auditService;
     }
 
     /**
@@ -32,6 +36,18 @@ class PackageObserver
      */
     public function created(Package $package)
     {
+        // Log package creation to audit system
+        $this->auditService->logModelCreated($package);
+        
+        // Log business action for package creation
+        $this->auditService->logBusinessAction('package_created', $package, [
+            'tracking_number' => $package->tracking_number,
+            'customer_id' => $package->user_id,
+            'manifest_id' => $package->manifest_id,
+            'status' => $package->status->value ?? null,
+            'description' => $package->description,
+        ]);
+
         $this->cacheInvalidationService->handlePackageCreation($package);
         $this->invalidateManifestCache($package);
     }
@@ -46,6 +62,57 @@ class PackageObserver
     {
         // Get the changes that were made
         $changes = $package->getChanges();
+        $originalValues = $package->getOriginal();
+        
+        // Log package update to audit system
+        $this->auditService->logModelUpdated($package, $originalValues);
+        
+        // Log specific business actions for important changes
+        if (isset($changes['status'])) {
+            $oldStatus = $originalValues['status'] ?? null;
+            $newStatus = $package->status->value ?? null;
+            
+            $this->auditService->logPackageStatusChange(
+                $package, 
+                $oldStatus, 
+                $newStatus
+            );
+        }
+        
+        // Log consolidation changes
+        if (isset($changes['consolidated_package_id'])) {
+            $action = $package->consolidated_package_id ? 'package_consolidated' : 'package_unconsolidated';
+            $this->auditService->logBusinessAction($action, $package, [
+                'tracking_number' => $package->tracking_number,
+                'customer_id' => $package->user_id,
+                'old_consolidated_package_id' => $originalValues['consolidated_package_id'] ?? null,
+                'new_consolidated_package_id' => $package->consolidated_package_id,
+            ]);
+        }
+        
+        // Log manifest assignment changes
+        if (isset($changes['manifest_id'])) {
+            $this->auditService->logBusinessAction('package_manifest_changed', $package, [
+                'tracking_number' => $package->tracking_number,
+                'customer_id' => $package->user_id,
+                'old_manifest_id' => $originalValues['manifest_id'] ?? null,
+                'new_manifest_id' => $package->manifest_id,
+            ]);
+        }
+        
+        // Log fee changes
+        $feeFields = ['customs_duty', 'storage_fee', 'delivery_fee', 'freight_price'];
+        $feeChanges = array_intersect_key($changes, array_flip($feeFields));
+        if (!empty($feeChanges)) {
+            $this->auditService->logBusinessAction('package_fees_updated', $package, [
+                'tracking_number' => $package->tracking_number,
+                'customer_id' => $package->user_id,
+                'fee_changes' => $feeChanges,
+                'old_total_cost' => $this->calculateTotalCost($originalValues),
+                'new_total_cost' => $package->total_cost,
+            ]);
+        }
+
         $this->cacheInvalidationService->handlePackageUpdate($package, $changes);
         $this->invalidateManifestCache($package);
 
@@ -61,6 +128,18 @@ class PackageObserver
      */
     public function deleted(Package $package)
     {
+        // Log package deletion to audit system
+        $this->auditService->logModelDeleted($package);
+        
+        // Log business action for package deletion
+        $this->auditService->logBusinessAction('package_deleted', $package, [
+            'tracking_number' => $package->tracking_number,
+            'customer_id' => $package->user_id,
+            'manifest_id' => $package->manifest_id,
+            'consolidated_package_id' => $package->consolidated_package_id,
+            'status' => $package->status->value ?? null,
+        ]);
+
         $this->cacheInvalidationService->handlePackageDeletion($package);
         $this->invalidateManifestCache($package);
     }
@@ -73,6 +152,14 @@ class PackageObserver
      */
     public function restored(Package $package)
     {
+        // Log package restoration to audit system
+        $this->auditService->logBusinessAction('package_restored', $package, [
+            'tracking_number' => $package->tracking_number,
+            'customer_id' => $package->user_id,
+            'manifest_id' => $package->manifest_id,
+            'status' => $package->status->value ?? null,
+        ]);
+
         $this->cacheInvalidationService->handlePackageCreation($package);
         $this->invalidateManifestCache($package);
     }
@@ -85,6 +172,14 @@ class PackageObserver
      */
     public function forceDeleted(Package $package)
     {
+        // Log package force deletion to audit system
+        $this->auditService->logBusinessAction('package_force_deleted', $package, [
+            'tracking_number' => $package->tracking_number,
+            'customer_id' => $package->user_id,
+            'manifest_id' => $package->manifest_id,
+            'status' => $package->status->value ?? null,
+        ]);
+
         $this->cacheInvalidationService->handlePackageDeletion($package);
         $this->invalidateManifestCache($package);
     }
@@ -174,5 +269,19 @@ class PackageObserver
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Calculate total cost from package attributes
+     *
+     * @param array $attributes
+     * @return float
+     */
+    protected function calculateTotalCost(array $attributes): float
+    {
+        return ($attributes['freight_price'] ?? 0) +
+               ($attributes['customs_duty'] ?? 0) +
+               ($attributes['storage_fee'] ?? 0) +
+               ($attributes['delivery_fee'] ?? 0);
     }
 }

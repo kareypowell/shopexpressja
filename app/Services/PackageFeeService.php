@@ -6,11 +6,18 @@ use App\Models\Package;
 use App\Models\User;
 use App\Models\CustomerTransaction;
 use App\Enums\PackageStatus;
+use App\Services\AuditService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PackageFeeService
 {
+    protected AuditService $auditService;
+
+    public function __construct(AuditService $auditService)
+    {
+        $this->auditService = $auditService;
+    }
     /**
      * Update package fees and transition to ready status
      */
@@ -52,7 +59,34 @@ class PackageFeeService
                         'fees_updated' => $fees,
                     ]
                 );
+
+                // Log credit application to audit system
+                if ($appliedCredit > 0) {
+                    $this->auditService->logFinancialTransaction('credit_balance_applied', [
+                        'customer_id' => $customer->id,
+                        'package_id' => $package->id,
+                        'package_tracking' => $package->tracking_number,
+                        'amount' => $appliedCredit,
+                        'type' => 'credit_application',
+                        'total_cost' => $totalCost,
+                        'applied_by' => $updatedBy->name,
+                    ], $customer);
+                }
             }
+
+            // Log fee update to audit system
+            $this->auditService->logFinancialTransaction('package_fees_updated', [
+                'package_id' => $package->id,
+                'package_tracking' => $package->tracking_number,
+                'customer_id' => $customer->id,
+                'old_status' => $oldStatus->value,
+                'new_status' => PackageStatus::READY,
+                'fees' => $fees,
+                'total_cost' => $totalCost,
+                'credit_applied' => $appliedCredit,
+                'net_charge' => $totalCost - $appliedCredit,
+                'updated_by' => $updatedBy->name,
+            ], $customer);
 
             // Note: Customer will be charged when package is distributed, not when set to ready
             // This follows the business logic of charging only when package is actually delivered

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Manifest;
 use App\Models\ManifestAudit;
 use App\Models\User;
+use App\Services\AuditService;
 use App\Services\ManifestNotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -13,10 +14,14 @@ use Exception;
 class ManifestLockService
 {
     protected ManifestNotificationService $notificationService;
+    protected AuditService $auditService;
 
-    public function __construct(ManifestNotificationService $notificationService)
-    {
+    public function __construct(
+        ManifestNotificationService $notificationService,
+        AuditService $auditService
+    ) {
         $this->notificationService = $notificationService;
+        $this->auditService = $auditService;
     }
     /**
      * Check if a manifest can be edited by a user
@@ -114,6 +119,13 @@ class ManifestLockService
                     'action' => 'unlocked',
                     'reason' => $trimmedReason,
                     'performed_at' => now()
+                ]);
+
+                // Log to unified audit system
+                $this->auditService->logManifestOperation('unlocked', $manifest, [
+                    'reason' => $trimmedReason,
+                    'unlocked_by' => $user->name,
+                    'unlocked_by_id' => $user->id,
                 ]);
             });
 
@@ -220,6 +232,13 @@ class ManifestLockService
                     'reason' => $trimmedReason,
                     'performed_at' => now()
                 ]);
+
+                // Log to unified audit system
+                $this->auditService->logManifestOperation('locked', $manifest, [
+                    'reason' => $trimmedReason,
+                    'locked_by' => $user->name,
+                    'locked_by_id' => $user->id,
+                ]);
             });
 
             // Log successful lock
@@ -269,6 +288,14 @@ class ManifestLockService
                     'action' => $action,
                     'reason' => $reason,
                     'performed_at' => now()
+                ]);
+
+                // Log to unified audit system
+                $this->auditService->logManifestOperation($action, $manifest, [
+                    'reason' => $reason,
+                    'closed_by_id' => $userId,
+                    'closed_by' => auth()->user()->name ?? 'System',
+                    'auto_closure' => $action === 'auto_complete',
                 ]);
 
                 // Log successful closure
