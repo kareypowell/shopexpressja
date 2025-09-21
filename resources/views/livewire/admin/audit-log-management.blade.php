@@ -430,7 +430,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <button class="text-blue-600 hover:text-blue-900" 
-                                        onclick="alert('Detailed view will be implemented in the next task')">
+                                        wire:click="$emit('showAuditLogDetails', {{ $log->id }})">
                                     View Details
                                 </button>
                             </td>
@@ -459,4 +459,7 @@
             </div>
         @endif
     </div>
+
+    <!-- Audit Log Viewer Modal -->
+    @livewire('admin.audit-log-viewer')
 </div>
