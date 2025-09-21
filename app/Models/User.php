@@ -1497,6 +1497,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Check if user can access audit logs
+     *
+     * @return bool
+     */
+    public function canAccessAuditLogs(): bool
+    {
+        return $this->isSuperAdmin();
+    }
+
+    /**
      * Check if user can access administration section
      *
      * @return bool
@@ -1535,7 +1545,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getAuditContext(): array
     {
         return [
-            'user_role' => $this->role?->name ?? 'unknown',
+            'user_role' => $this->role->name ?? 'unknown',
             'user_type' => $this->isCustomer() ? 'customer' : ($this->isAdmin() ? 'admin' : 'superadmin'),
             'account_balance' => $this->account_balance,
             'is_active' => !$this->trashed(),
@@ -1548,7 +1558,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getAuditRelationshipContext(): array
     {
         return [
-            'profile_id' => $this->profile?->id,
+            'profile_id' => $this->profile->id,
             'role_id' => $this->role_id,
             'packages_count' => $this->packages()->count(),
         ];

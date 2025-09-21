@@ -21,6 +21,8 @@ use App\Models\Manifest;
 use App\Policies\ManifestPolicy;
 use App\Models\Role;
 use App\Policies\RolePolicy;
+use App\Models\AuditLog;
+use App\Policies\AuditLogPolicy;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 
@@ -40,6 +42,7 @@ class AuthServiceProvider extends ServiceProvider
         Address::class => AddressPolicy::class,
         Manifest::class => ManifestPolicy::class,
         Role::class => RolePolicy::class,
+        AuditLog::class => AuditLogPolicy::class,
     ];
 
     /**

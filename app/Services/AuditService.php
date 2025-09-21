@@ -42,7 +42,7 @@ class AuditService
     public function logModelCreated(Model $model, ?User $user = null): ?AuditLog
     {
         return $this->log([
-            'user_id' => $user?->id ?? Auth::id(),
+            'user_id' => $user->id ?? Auth::id(),
             'event_type' => 'model_created',
             'auditable_type' => get_class($model),
             'auditable_id' => $model->getKey(),
@@ -70,7 +70,7 @@ class AuditService
         }
 
         return $this->log([
-            'user_id' => $user?->id ?? Auth::id(),
+            'user_id' => $user->id ?? Auth::id(),
             'event_type' => 'model_updated',
             'auditable_type' => get_class($model),
             'auditable_id' => $model->getKey(),
@@ -91,7 +91,7 @@ class AuditService
     public function logModelDeleted(Model $model, ?User $user = null): ?AuditLog
     {
         return $this->log([
-            'user_id' => $user?->id ?? Auth::id(),
+            'user_id' => $user->id ?? Auth::id(),
             'event_type' => 'model_deleted',
             'auditable_type' => get_class($model),
             'auditable_id' => $model->getKey(),
@@ -110,7 +110,7 @@ class AuditService
     public function logAuthentication(string $action, ?User $user = null, array $additionalData = []): ?AuditLog
     {
         return $this->log([
-            'user_id' => $user?->id,
+            'user_id' => $user->id,
             'event_type' => 'authentication',
             'action' => $action,
             'additional_data' => array_merge([
@@ -127,14 +127,14 @@ class AuditService
     public function logAuthorization(string $action, ?User $user = null, array $oldValues = [], array $newValues = []): ?AuditLog
     {
         return $this->log([
-            'user_id' => $user?->id ?? Auth::id(),
+            'user_id' => $user->id ?? Auth::id(),
             'event_type' => 'authorization',
             'action' => $action,
             'old_values' => $oldValues,
             'new_values' => $newValues,
             'additional_data' => [
                 'timestamp' => now()->toISOString(),
-                'performed_by' => Auth::user()?->name ?? 'System'
+                'performed_by' => Auth::user()->name ?? 'System'
             ]
         ]);
     }
@@ -148,11 +148,11 @@ class AuditService
             'user_id' => Auth::id(),
             'event_type' => 'business_action',
             'auditable_type' => $model ? get_class($model) : null,
-            'auditable_id' => $model?->getKey(),
+            'auditable_id' => $model->getKey(),
             'action' => $action,
             'additional_data' => array_merge([
                 'timestamp' => now()->toISOString(),
-                'performed_by' => Auth::user()?->name ?? 'System'
+                'performed_by' => Auth::user()->name ?? 'System'
             ], $additionalData)
         ]);
     }
@@ -163,7 +163,7 @@ class AuditService
     public function logFinancialTransaction(string $action, array $transactionData, ?User $user = null): ?AuditLog
     {
         return $this->log([
-            'user_id' => $user?->id ?? Auth::id(),
+            'user_id' => $user->id ?? Auth::id(),
             'event_type' => 'financial_transaction',
             'action' => $action,
             'new_values' => $transactionData,
