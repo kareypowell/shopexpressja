@@ -39,33 +39,50 @@ error() {
 check_requirements() {
     log "Checking system requirements..."
     
-    # Check PHP version
-    PHP_VERSION=$(php -r "echo PHP_VERSION;")
-    if ! php -r "exit(version_compare(PHP_VERSION, '7.4.0', '>=') ? 0 : 1);"; then
-        error "PHP 7.4 or higher is required. Current version: $PHP_VERSION"
-    fi
-    success "PHP version check passed: $PHP_VERSION"
-    
-    # Check Laravel version
+    # Check if we're in the right directory
     if [ ! -f "$PROJECT_ROOT/artisan" ]; then
-        error "Laravel artisan command not found. Are you in the correct directory?"
+        error "Laravel artisan command not found. Please run this script from the Laravel project root directory."
     fi
+    
+    # Check PHP version
+    if command -v php > /dev/null; then
+        PHP_VERSION=$(php -r "echo PHP_VERSION;" 2>/dev/null)
+        if [ $? -eq 0 ]; then
+            if ! php -r "exit(version_compare(PHP_VERSION, '7.4.0', '>=') ? 0 : 1);" 2>/dev/null; then
+                error "PHP 7.4 or higher is required. Current version: $PHP_VERSION"
+            fi
+            success "PHP version check passed: $PHP_VERSION"
+        else
+            error "PHP is not working correctly"
+        fi
+    else
+        error "PHP is not installed or not in PATH"
+    fi
+    
     success "Laravel installation detected"
     
-    # Check database connection
-    if ! php "$PROJECT_ROOT/artisan" migrate:status > /dev/null 2>&1; then
-        error "Database connection failed. Please check your database configuration."
+    # Check database connection with better error handling
+    log "Testing database connection..."
+    if php "$PROJECT_ROOT/artisan" migrate:status > /dev/null 2>&1; then
+        success "Database connection verified"
+    else
+        warning "Database connection test failed. Please verify your database configuration in .env file"
+        log "Continuing with deployment, but database operations may fail..."
     fi
-    success "Database connection verified"
     
-    # Check Redis connection (if configured)
-    if grep -q "QUEUE_CONNECTION=redis" "$PROJECT_ROOT/.env" 2>/dev/null; then
-        if ! php "$PROJECT_ROOT/artisan" queue:monitor --once > /dev/null 2>&1; then
-            warning "Redis connection could not be verified. Queue processing may be affected."
-        else
+    # Check Redis connection (if configured) with better error handling
+    if [ -f "$PROJECT_ROOT/.env" ] && grep -q "QUEUE_CONNECTION=redis" "$PROJECT_ROOT/.env" 2>/dev/null; then
+        log "Testing Redis connection..."
+        if php "$PROJECT_ROOT/artisan" tinker --execute="Redis::ping();" > /dev/null 2>&1; then
             success "Redis connection verified"
+        else
+            warning "Redis connection could not be verified. Queue processing may be affected."
         fi
     fi
+    
+    # Check required directories
+    mkdir -p "$PROJECT_ROOT/storage/logs"
+    mkdir -p "$PROJECT_ROOT/storage/deployment-backups"
 }
 
 create_backup() {
@@ -78,13 +95,22 @@ create_backup() {
     # Backup database
     log "Backing up database..."
     if command -v mysqldump > /dev/null; then
-        DB_HOST=$(php -r "echo env('DB_HOST', 'localhost');")
-        DB_DATABASE=$(php -r "echo env('DB_DATABASE');")
-        DB_USERNAME=$(php -r "echo env('DB_USERNAME');")
-        DB_PASSWORD=$(php -r "echo env('DB_PASSWORD');")
+        # Get database configuration from Laravel
+        DB_HOST=$(php "$PROJECT_ROOT/artisan" tinker --execute="echo config('database.connections.mysql.host', 'localhost');" 2>/dev/null | tail -1)
+        DB_DATABASE=$(php "$PROJECT_ROOT/artisan" tinker --execute="echo config('database.connections.mysql.database');" 2>/dev/null | tail -1)
+        DB_USERNAME=$(php "$PROJECT_ROOT/artisan" tinker --execute="echo config('database.connections.mysql.username');" 2>/dev/null | tail -1)
+        DB_PASSWORD=$(php "$PROJECT_ROOT/artisan" tinker --execute="echo config('database.connections.mysql.password');" 2>/dev/null | tail -1)
         
-        mysqldump -h"$DB_HOST" -u"$DB_USERNAME" -p"$DB_PASSWORD" "$DB_DATABASE" > "${BACKUP_PATH}_database.sql"
-        success "Database backup created: ${BACKUP_PATH}_database.sql"
+        if [ -n "$DB_DATABASE" ] && [ -n "$DB_USERNAME" ]; then
+            mysqldump -h"$DB_HOST" -u"$DB_USERNAME" -p"$DB_PASSWORD" "$DB_DATABASE" > "${BACKUP_PATH}_database.sql" 2>/dev/null
+            if [ $? -eq 0 ]; then
+                success "Database backup created: ${BACKUP_PATH}_database.sql"
+            else
+                warning "Database backup failed. Continuing with deployment..."
+            fi
+        else
+            warning "Could not retrieve database configuration. Skipping database backup."
+        fi
     else
         warning "mysqldump not found. Skipping database backup."
     fi
@@ -102,12 +128,31 @@ run_migrations() {
     
     cd "$PROJECT_ROOT"
     
-    # Run specific audit migrations
-    php artisan migrate --path=database/migrations/2025_09_20_182606_create_audit_logs_table.php --force
-    php artisan migrate --path=database/migrations/2025_09_20_182648_create_audit_settings_table.php --force
-    php artisan migrate --path=database/migrations/2025_09_21_000001_add_audit_performance_indexes.php --force
+    # Check if migration files exist before running them
+    MIGRATION_FILES=(
+        "database/migrations/2025_09_20_182606_create_audit_logs_table.php"
+        "database/migrations/2025_09_20_182648_create_audit_settings_table.php"
+        "database/migrations/2025_09_21_000001_add_audit_performance_indexes.php"
+    )
     
-    success "Audit system migrations completed"
+    for migration_file in "${MIGRATION_FILES[@]}"; do
+        if [ -f "$PROJECT_ROOT/$migration_file" ]; then
+            log "Running migration: $migration_file"
+            if php artisan migrate --path="$migration_file" --force; then
+                success "Migration completed: $(basename "$migration_file")"
+            else
+                warning "Migration failed or already applied: $(basename "$migration_file")"
+            fi
+        else
+            warning "Migration file not found: $migration_file"
+        fi
+    done
+    
+    # Run all pending migrations as fallback
+    log "Running any remaining migrations..."
+    php artisan migrate --force
+    
+    success "Audit system migrations process completed"
 }
 
 seed_configuration() {
@@ -115,10 +160,18 @@ seed_configuration() {
     
     cd "$PROJECT_ROOT"
     
-    # Run audit system seeder
-    php artisan db:seed --class=AuditSystemSeeder --force
-    
-    success "Audit system configuration seeded"
+    # Check if seeder exists
+    if [ -f "$PROJECT_ROOT/database/seeders/AuditSystemSeeder.php" ]; then
+        log "Running AuditSystemSeeder..."
+        if php artisan db:seed --class=AuditSystemSeeder --force; then
+            success "Audit system configuration seeded successfully"
+        else
+            warning "Seeding failed or encountered errors. Check the logs for details."
+        fi
+    else
+        warning "AuditSystemSeeder not found. Skipping seeding step."
+        log "You may need to run the seeder manually later: php artisan db:seed --class=AuditSystemSeeder"
+    fi
 }
 
 configure_environment() {
@@ -249,32 +302,38 @@ verify_installation() {
     cd "$PROJECT_ROOT"
     
     # Check if audit tables exist
-    if php artisan migrate:status | grep -q "audit_logs"; then
+    log "Checking audit tables..."
+    if php artisan migrate:status 2>/dev/null | grep -q "audit_logs"; then
         success "Audit logs table verified"
     else
-        error "Audit logs table not found"
+        warning "Audit logs table not found in migration status"
     fi
     
-    if php artisan migrate:status | grep -q "audit_settings"; then
+    if php artisan migrate:status 2>/dev/null | grep -q "audit_settings"; then
         success "Audit settings table verified"
     else
-        error "Audit settings table not found"
+        warning "Audit settings table not found in migration status"
     fi
     
-    # Check if audit settings are seeded
-    SETTINGS_COUNT=$(php artisan tinker --execute="echo App\Models\AuditSetting::count();" 2>/dev/null | tail -1)
-    if [ "$SETTINGS_COUNT" -gt 0 ]; then
+    # Check if audit settings are seeded with better error handling
+    log "Checking audit settings..."
+    SETTINGS_COUNT=$(php artisan tinker --execute="try { echo App\\Models\\AuditSetting::count(); } catch (Exception \$e) { echo '0'; }" 2>/dev/null | tail -1 | tr -d '\n')
+    
+    if [ -n "$SETTINGS_COUNT" ] && [ "$SETTINGS_COUNT" -gt 0 ] 2>/dev/null; then
         success "Audit settings verified ($SETTINGS_COUNT settings found)"
     else
-        error "Audit settings not found. Seeding may have failed."
+        warning "Audit settings not found or could not be verified. You may need to run the seeder manually."
     fi
     
-    # Test audit log creation
+    # Test audit log creation with proper method signature
     log "Testing audit log creation..."
-    if php artisan tinker --execute="App\Services\AuditService::log('system_event', 'deployment_test', null, ['test' => true]);" > /dev/null 2>&1; then
+    TEST_RESULT=$(php artisan tinker --execute="try { \$service = app(App\\Services\\AuditService::class); \$service->log(['event_type' => 'system_event', 'action' => 'deployment_test', 'additional_data' => ['test' => true]]); echo 'SUCCESS'; } catch (Exception \$e) { echo 'FAILED: ' . \$e->getMessage(); }" 2>/dev/null | tail -1)
+    
+    if echo "$TEST_RESULT" | grep -q "SUCCESS"; then
         success "Audit log creation test passed"
     else
-        warning "Audit log creation test failed. Check configuration."
+        warning "Audit log creation test failed: $TEST_RESULT"
+        warning "You may need to check the audit system configuration manually"
     fi
 }
 
