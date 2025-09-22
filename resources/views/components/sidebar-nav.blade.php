@@ -135,6 +135,73 @@
           </div>
         </div>
 
+        <!-- 📈 REPORTS & ANALYTICS -->
+        @if(auth()->user()->canAccessAdminPanel())
+        <div x-data="{ open: {{ \Route::is('reports.*') ? 'true' : 'false' }} }" class="space-y-1">
+          <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white group w-full flex items-center px-2 py-2 text-left text-base font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <span class="mr-3 text-lg">📈</span>
+            <span class="flex-1">Reports & Analytics</span>
+            <svg class="ml-3 h-5 w-5 transform transition-colors duration-150 ease-in-out group-hover:text-gray-400" :class="{'rotate-90 text-gray-400': open, 'text-gray-300': !open}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <div x-show="open" x-transition class="space-y-1 pl-4">
+            <a href="{{ route('reports.index') }}" class="{{ \Route::is('reports.index') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+              <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Dashboard
+            </a>
+
+            <a href="{{ route('reports.sales') }}" class="{{ \Route::is('reports.sales') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+              <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Sales & Collections
+            </a>
+
+            <a href="{{ route('reports.manifests') }}" class="{{ \Route::is('reports.manifests') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+              <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Manifest Performance
+            </a>
+
+            <a href="{{ route('reports.customers') }}" class="{{ \Route::is('reports.customers') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+              <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              Customer Analytics
+            </a>
+
+            <!-- Report Management Submenu -->
+            <div x-data="{ reportMgmtOpen: {{ (\Route::is('reports.templates.*') || \Route::is('reports.filters.*') || \Route::is('reports.exports.*')) ? 'true' : 'false' }} }" class="space-y-1">
+              <button @click="reportMgmtOpen = !reportMgmtOpen" class="{{ (\Route::is('reports.templates.*') || \Route::is('reports.filters.*') || \Route::is('reports.exports.*')) ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group w-full flex items-center px-2 py-2 text-sm font-medium rounded-md text-left">
+                <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span class="flex-1">Report Management</span>
+                <svg class="ml-2 h-4 w-4 transform transition-colors" :class="{'rotate-90': reportMgmtOpen}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <div x-show="reportMgmtOpen" x-transition class="space-y-1 pl-6">
+                <a href="{{ route('reports.templates.index') }}" class="{{ \Route::is('reports.templates.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
+                  Report Templates
+                </a>
+                <a href="{{ route('reports.filters.index') }}" class="{{ \Route::is('reports.filters.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
+                  Saved Filters
+                </a>
+                <a href="{{ route('reports.exports.index') }}" class="{{ \Route::is('reports.exports.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
+                  Export History
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        @endif
+
         <!-- ⚙️ ADMINISTRATION -->
         @if(auth()->user()->canAccessAdministration())
         <div x-data="{ open: {{ (\Route::is('admin.users.*') || \Route::is('admin.roles') || \Route::is('admin.offices.*') || \Route::is('admin.addresses.*') || \Route::is('security-dashboard') || \Route::is('admin.audit-logs.*') || \Route::is('audit-settings') || \Route::is('backup-dashboard') || \Route::is('backup-history') || \Route::is('backup-settings')) ? 'true' : 'false' }} }" class="space-y-1">
@@ -283,24 +350,7 @@
         </div>
         @endif
 
-        <!-- 📈 ANALYTICS -->
-        <div x-data="{ open: false }" class="space-y-1">
-          <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white group w-full flex items-center px-2 py-2 text-left text-base font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <span class="mr-3 text-lg">📈</span>
-            <span class="flex-1">Analytics</span>
-            <svg class="ml-3 h-5 w-5 transform transition-colors duration-150 ease-in-out group-hover:text-gray-400" :class="{'rotate-90 text-gray-400': open, 'text-gray-300': !open}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-            </svg>
-          </button>
-          <div x-show="open" x-transition class="space-y-1 pl-4">
-            <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md">
-              <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Reports
-            </a>
-          </div>
-        </div>
+
 
 
       </nav>
@@ -454,6 +504,44 @@
             </div>
           </div>
 
+          <!-- 📈 REPORTS & ANALYTICS (Mobile) -->
+          @if(auth()->user()->canAccessAdminPanel())
+          <div x-data="{ open: {{ \Route::is('reports.*') ? 'true' : 'false' }} }" class="space-y-1">
+            <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white group w-full flex items-center pl-2 pr-1 py-2 text-left text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <span class="flex-1">📈 Reports & Analytics</span>
+              <svg class="ml-3 h-5 w-5 transform transition-colors" :class="{'rotate-90': open}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <div x-show="open" x-transition class="space-y-1 pl-4">
+              <a href="{{ route('reports.index') }}" class="{{ \Route::is('reports.index') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
+                Dashboard
+              </a>
+              <a href="{{ route('reports.sales') }}" class="{{ \Route::is('reports.sales') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
+                Sales & Collections
+              </a>
+              <a href="{{ route('reports.manifests') }}" class="{{ \Route::is('reports.manifests') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
+                Manifest Performance
+              </a>
+              <a href="{{ route('reports.customers') }}" class="{{ \Route::is('reports.customers') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
+                Customer Analytics
+              </a>
+              <a href="{{ route('reports.templates.index') }}" class="{{ \Route::is('reports.templates.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
+                Report Templates
+              </a>
+              <a href="{{ route('reports.filters.index') }}" class="{{ \Route::is('reports.filters.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
+                Saved Filters
+              </a>
+              <a href="{{ route('reports.exports.index') }}" class="{{ \Route::is('reports.exports.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
+                Export History
+              </a>
+            </div>
+          </div>
+          @endif
+
           <!-- ⚙️ ADMINISTRATION (Mobile) -->
           @if(auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
           <div x-data="{ open: {{ (\Route::is('admin.users.*') || \Route::is('admin.roles') || \Route::is('admin.offices.*') || \Route::is('admin.addresses.*') || \Route::is('security-dashboard') || \Route::is('admin.audit-logs.*') || \Route::is('audit-settings') || \Route::is('backup-dashboard') || \Route::is('backup-history') || \Route::is('backup-settings')) ? 'true' : 'false' }} }" class="space-y-1">
@@ -509,23 +597,7 @@
           </div>
           @endif
 
-          <!-- 📈 ANALYTICS (Mobile) -->
-          <div x-data="{ open: false }" class="space-y-1">
-            <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white group w-full flex items-center pl-2 pr-1 py-2 text-left text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <span class="flex-1">📈 Analytics</span>
-              <svg class="ml-3 h-5 w-5 transform transition-colors" :class="{'rotate-90': open}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-              </svg>
-            </button>
-            <div x-show="open" x-transition class="space-y-1 pl-4">
-              <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-2 py-2 text-xs font-medium rounded-md">
-                Reports
-              </a>
-            </div>
-          </div>
+
             Rates
           </a>
 
@@ -554,14 +626,7 @@
           </div>
           @endif
 
-          <!-- 6. ANALYTICS & REPORTING -->
-          <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md">
-            <!-- Heroicon name: outline/chart-bar -->
-            <svg class="text-gray-400 group-hover:text-gray-300 mr-4 flex-shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            Reports
-          </a>
+
         </nav>
       </div>
     </div>

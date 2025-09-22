@@ -80,6 +80,11 @@ class RouteServiceProvider extends ServiceProvider
         Route::bind('package', function ($value) {
             return \App\Models\Package::findOrFail($value);
         });
+
+        // Bind 'template' parameter to ReportTemplate model
+        Route::bind('template', function ($value) {
+            return \App\Models\ReportTemplate::findOrFail($value);
+        });
     }
 
     /**
@@ -91,6 +96,27 @@ class RouteServiceProvider extends ServiceProvider
     {
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
+        });
+
+        // Rate limiting for report endpoints
+        RateLimiter::for('reports', function (Request $request) {
+            return Limit::perMinute(30)->by(optional($request->user())->id ?: $request->ip());
+        });
+
+        // More restrictive rate limiting for API report endpoints
+        RateLimiter::for('api-reports', function (Request $request) {
+            return [
+                Limit::perMinute(100)->by(optional($request->user())->id ?: $request->ip()),
+                Limit::perHour(500)->by(optional($request->user())->id ?: $request->ip()),
+            ];
+        });
+
+        // Rate limiting for report exports
+        RateLimiter::for('report-exports', function (Request $request) {
+            return [
+                Limit::perMinute(5)->by(optional($request->user())->id ?: $request->ip()),
+                Limit::perHour(20)->by(optional($request->user())->id ?: $request->ip()),
+            ];
         });
     }
 }

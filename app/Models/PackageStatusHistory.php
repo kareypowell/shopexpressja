@@ -125,7 +125,7 @@ class PackageStatusHistory extends Model
      */
     public function scopeWithUser($query)
     {
-        return $query->with('changedBy:id,name,email');
+        return $query->with('changedBy:id,first_name,last_name,email');
     }
 
     /**

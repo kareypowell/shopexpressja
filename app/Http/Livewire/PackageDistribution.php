@@ -155,8 +155,8 @@ class PackageDistribution extends Component
         $customer = User::with('profile')->find($customerId);
         if ($customer) {
             $this->selectedCustomerId = $customerId;
-            $this->customerSearch = $customer->full_name ?? $customer->name;
-            $this->selectedCustomerDisplay = ($customer->full_name ?? $customer->name) . 
+            $this->customerSearch = $customer->full_name;
+            $this->selectedCustomerDisplay = $customer->full_name . 
                 ($customer->profile && $customer->profile->account_number ? ' (' . $customer->profile->account_number . ')' : '');
             $this->showCustomerDropdown = false;
             $this->resetForm();

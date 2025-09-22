@@ -59,8 +59,8 @@ class AuditMiddleware
                 'user_agent' => $request->userAgent(),
                 'additional_data' => [
                     'method' => $request->method(),
-                    'route_name' => $request->route()?->getName(),
-                    'controller_action' => $request->route()?->getActionName(),
+                    'route_name' => $request->route() ? $request->route()->getName() : null,
+                    'controller_action' => $request->route() ? $request->route()->getActionName() : null,
                     'parameters' => $this->filterSensitiveData($request->all()),
                     'headers' => $this->filterSensitiveHeaders($request->headers->all()),
                     'timestamp' => now()->toISOString(),
@@ -93,8 +93,8 @@ class AuditMiddleware
                     'method' => $request->method(),
                     'status_code' => $response->getStatusCode(),
                     'response_time_ms' => $duration,
-                    'route_name' => $request->route()?->getName(),
-                    'controller_action' => $request->route()?->getActionName(),
+                    'route_name' => $request->route() ? $request->route()->getName() : null,
+                    'controller_action' => $request->route() ? $request->route()->getActionName() : null,
                     'timestamp' => now()->toISOString(),
                 ]
             ]);
@@ -132,7 +132,7 @@ class AuditMiddleware
         ];
 
         // Skip based on route name
-        $routeName = $request->route()?->getName();
+        $routeName = $request->route() ? $request->route()->getName() : null;
         if ($routeName) {
             foreach ($skipRoutes as $pattern) {
                 if (fnmatch($pattern, $routeName)) {

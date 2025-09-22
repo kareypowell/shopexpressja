@@ -186,6 +186,49 @@ Route::middleware(['auth', 'verified', 'admin.access'])->prefix('admin')->group(
     Route::get('/rates', Rate::class)->name('view-rates');
     Route::get('/purchase-requests', AdminPurchaseRequest::class)->name('view-purchase-requests');
     Route::get('/pre-alerts', AdminPreAlert::class)->name('view-pre-alerts');
+    
+    // Report routes - accessible by both admin and superadmin
+    Route::prefix('reports')->name('reports.')->group(function () {
+        // Main report dashboard and views
+        Route::get('/', [App\Http\Controllers\ReportController::class, 'index'])->name('index');
+        Route::get('/sales', [App\Http\Controllers\ReportController::class, 'salesReport'])->name('sales');
+        Route::get('/manifests', [App\Http\Controllers\ReportController::class, 'manifestReport'])->name('manifests');
+        Route::get('/customers', [App\Http\Controllers\ReportController::class, 'customerReport'])->name('customers');
+        Route::get('/financial', [App\Http\Controllers\ReportController::class, 'financialReport'])->name('financial');
+        
+        // Report data API endpoints for internal use
+        Route::get('/api/sales-data', [App\Http\Controllers\ReportController::class, 'apiSalesReport'])->name('api.sales');
+        Route::get('/api/manifest-data', [App\Http\Controllers\ReportController::class, 'apiManifestReport'])->name('api.manifests');
+        Route::get('/api/customer-data', [App\Http\Controllers\ReportController::class, 'apiCustomerReport'])->name('api.customers');
+        Route::get('/api/financial-summary', [App\Http\Controllers\ReportController::class, 'apiFinancialSummary'])->name('api.financial');
+        Route::get('/api/options', [App\Http\Controllers\ReportController::class, 'apiReportOptions'])->name('api.options');
+        
+        // Report template management
+        Route::resource('templates', App\Http\Controllers\ReportTemplateController::class);
+        Route::post('/templates/{template}/duplicate', [App\Http\Controllers\ReportTemplateController::class, 'duplicate'])->name('templates.duplicate');
+        
+        // Saved filter management
+        Route::prefix('filters')->name('filters.')->group(function () {
+            Route::get('/', [App\Http\Controllers\SavedReportFilterController::class, 'index'])->name('index');
+            Route::post('/', [App\Http\Controllers\SavedReportFilterController::class, 'store'])->name('store');
+            Route::get('/{filter}', [App\Http\Controllers\SavedReportFilterController::class, 'show'])->name('show');
+            Route::put('/{filter}', [App\Http\Controllers\SavedReportFilterController::class, 'update'])->name('update');
+            Route::delete('/{filter}', [App\Http\Controllers\SavedReportFilterController::class, 'destroy'])->name('destroy');
+            Route::post('/{filter}/duplicate', [App\Http\Controllers\SavedReportFilterController::class, 'duplicate'])->name('duplicate');
+            Route::post('/{filter}/share', [App\Http\Controllers\SavedReportFilterController::class, 'share'])->name('share');
+        });
+        
+        // Report export routes
+        Route::prefix('exports')->name('exports.')->group(function () {
+            Route::get('/', [App\Http\Controllers\ReportExportController::class, 'index'])->name('index');
+            Route::get('/{job}/status', [App\Http\Controllers\ReportExportController::class, 'status'])->name('status');
+            Route::get('/{job}/download', [App\Http\Controllers\ReportExportController::class, 'download'])->name('download');
+            Route::get('/download-direct', [App\Http\Controllers\ReportExportController::class, 'downloadDirect'])->name('download.direct');
+            Route::post('/{job}/cancel', [App\Http\Controllers\ReportExportController::class, 'cancel'])->name('cancel');
+            Route::delete('/{job}', [App\Http\Controllers\ReportExportController::class, 'delete'])->name('delete');
+            Route::get('/statistics', [App\Http\Controllers\ReportExportController::class, 'statistics'])->name('statistics');
+        });
+    });
 
 });
 

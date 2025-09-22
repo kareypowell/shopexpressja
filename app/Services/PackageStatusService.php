@@ -139,7 +139,7 @@ class PackageStatusService
                 'old_status' => $oldStatus->value,
                 'new_status' => $newStatus->value,
                 'changed_by' => $user->id,
-                'changed_by_name' => $user->name,
+                'changed_by_name' => $user->full_name,
                 'notes' => $notes,
                 'timestamp' => now(),
             ]);

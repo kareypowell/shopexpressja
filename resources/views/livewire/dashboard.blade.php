@@ -140,11 +140,17 @@
                 </div>
             </div>
         @else
+            <!-- Admin Dashboard with Report Widgets -->
             <div class="mt-10">
-                <div class="bg-white shadow rounded-lg p-6">
+                <div class="bg-white shadow rounded-lg p-6 mb-8">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Admin Dashboard</h3>
                     <p class="text-gray-600">Welcome to the admin dashboard. Use the navigation menu to access admin features.</p>
                 </div>
+                
+                <!-- Business Analytics Section -->
+                @if(auth()->user()->canAccessAdminPanel())
+                    @livewire('admin.dashboard-reports')
+                @endif
             </div>
         @endif
     </div>

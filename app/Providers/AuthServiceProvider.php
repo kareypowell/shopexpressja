@@ -23,6 +23,7 @@ use App\Models\Role;
 use App\Policies\RolePolicy;
 use App\Models\AuditLog;
 use App\Policies\AuditLogPolicy;
+use App\Policies\ReportPolicy;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 
@@ -43,6 +44,7 @@ class AuthServiceProvider extends ServiceProvider
         Manifest::class => ManifestPolicy::class,
         Role::class => RolePolicy::class,
         AuditLog::class => AuditLogPolicy::class,
+        'App\Models\Report' => ReportPolicy::class,
     ];
 
     /**
@@ -66,6 +68,7 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerUserPolicyGates();
         $this->registerRolePolicyGates();
         $this->registerAuditPolicyGates();
+        $this->registerReportPolicyGates();
 
         // Define superadmin gate
         Gate::define('super-admin-access', function ($user) {
@@ -169,5 +172,35 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('audit.manageSettings', [AuditLogPolicy::class, 'manageSettings']);
         Gate::define('audit.createExportTemplate', [AuditLogPolicy::class, 'createExportTemplate']);
         Gate::define('audit.scheduleReports', [AuditLogPolicy::class, 'scheduleReports']);
+    }
+
+    /**
+     * Register report-specific policy gates.
+     * These gates use the ReportPolicy for report access operations.
+     *
+     * @return void
+     */
+    protected function registerReportPolicyGates()
+    {
+        // Report access gates
+        Gate::define('report.viewAny', [ReportPolicy::class, 'viewAny']);
+        Gate::define('report.viewSalesReports', [ReportPolicy::class, 'viewSalesReports']);
+        Gate::define('report.viewManifestReports', [ReportPolicy::class, 'viewManifestReports']);
+        Gate::define('report.viewCustomerReports', [ReportPolicy::class, 'viewCustomerReports']);
+        Gate::define('report.viewFinancialReports', [ReportPolicy::class, 'viewFinancialReports']);
+        Gate::define('report.exportReports', [ReportPolicy::class, 'exportReports']);
+        Gate::define('report.exportSensitiveData', [ReportPolicy::class, 'exportSensitiveData']);
+        Gate::define('report.viewAllCustomerData', [ReportPolicy::class, 'viewAllCustomerData']);
+        Gate::define('report.manageReportTemplates', [ReportPolicy::class, 'manageReportTemplates']);
+        Gate::define('report.viewReportTemplates', [ReportPolicy::class, 'viewReportTemplates']);
+        Gate::define('report.createReportTemplates', [ReportPolicy::class, 'createReportTemplates']);
+        Gate::define('report.updateReportTemplates', [ReportPolicy::class, 'updateReportTemplates']);
+        Gate::define('report.deleteReportTemplates', [ReportPolicy::class, 'deleteReportTemplates']);
+        Gate::define('report.manageSavedFilters', [ReportPolicy::class, 'manageSavedFilters']);
+        Gate::define('report.shareSavedFilters', [ReportPolicy::class, 'shareSavedFilters']);
+        Gate::define('report.administerReports', [ReportPolicy::class, 'administerReports']);
+        Gate::define('report.viewCustomerData', [ReportPolicy::class, 'viewCustomerData']);
+        Gate::define('report.accessRealTimeData', [ReportPolicy::class, 'accessRealTimeData']);
+        Gate::define('report.viewDetailedFinancials', [ReportPolicy::class, 'viewDetailedFinancials']);
     }
 }

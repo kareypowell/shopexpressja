@@ -47,7 +47,7 @@ class AuditExportService
                 $log->created_at->format('Y-m-d H:i:s'),
                 $log->event_type ?? '',
                 $log->action ?? '',
-                $log->user ? $log->user->name : 'System',
+                $log->user ? ($log->user->full_name) : 'System',
                 $log->user ? $log->user->email : 'N/A',
                 $log->auditable_type ?? '',
                 $log->auditable_id ?? '',
@@ -138,7 +138,9 @@ class AuditExportService
             return [
                 'count' => $logs->count(),
                 'actions' => $logs->groupBy('action')->map->count(),
-                'users' => $logs->pluck('user.name')->filter()->unique()->values(),
+                'users' => $logs->map(function($log) {
+                    return $log->user ? ($log->user->full_name) : null;
+                })->filter()->unique()->values(),
             ];
         });
 
@@ -165,7 +167,7 @@ class AuditExportService
                 'most_active_users' => $auditLogs->groupBy('user_id')
                     ->map(function ($logs) {
                         return [
-                            'user' => $logs->first()->user->name ?? 'System',
+                            'user' => $logs->first()->user ? ($logs->first()->user->full_name) : 'System',
                             'count' => $logs->count(),
                         ];
                     })

@@ -110,7 +110,7 @@ class TransactionReviewService
                 'type' => $transaction->type,
                 'admin_response' => $adminResponse,
                 'resolved_by_id' => $resolvedBy,
-                'resolved_by' => \App\Models\User::find($resolvedBy)->name ?? 'Unknown',
+                'resolved_by' => ($resolvedByUser = \App\Models\User::find($resolvedBy)) ? ($resolvedByUser->first_name . ' ' . $resolvedByUser->last_name) : 'Unknown',
             ]);
             
             Log::info('Transaction review resolved', [

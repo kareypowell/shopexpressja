@@ -104,6 +104,30 @@ class Kernel extends ConsoleKernel
             ->onFailure(function () {
                 \Log::error('Audit performance analysis failed');
             });
+
+        // Warm up report caches every 30 minutes during business hours
+        $schedule->command('reports:warm-cache --days=30')
+            ->cron('*/30 6-18 * * 1-5') // Every 30 minutes, 6 AM to 6 PM, Monday to Friday
+            ->withoutOverlapping(15)
+            ->runInBackground()
+            ->onSuccess(function () {
+                \Log::info('Report cache warmup completed successfully');
+            })
+            ->onFailure(function () {
+                \Log::error('Report cache warmup failed');
+            });
+
+        // Full report cache warmup daily at 5 AM
+        $schedule->command('reports:warm-cache --days=90 --force')
+            ->dailyAt('05:00')
+            ->withoutOverlapping(30)
+            ->runInBackground()
+            ->onSuccess(function () {
+                \Log::info('Full report cache warmup completed successfully');
+            })
+            ->onFailure(function () {
+                \Log::error('Full report cache warmup failed');
+            });
     }
 
     /**

@@ -39,10 +39,10 @@ class RoleChangeAuditListener
 
             $this->auditService->logAuthorization('role_change', $event->user, [
                 'old_role_id' => $event->oldRoleId,
-                'old_role_name' => $oldRole?->name,
+                'old_role_name' => $oldRole ? $oldRole->name : null,
             ], [
                 'new_role_id' => $event->newRoleId,
-                'new_role_name' => $newRole?->name,
+                'new_role_name' => $newRole ? $newRole->name : null,
                 'reason' => $event->reason,
                 'role_change_audit_id' => $roleChangeAudit->id,
             ]);
@@ -54,8 +54,8 @@ class RoleChangeAuditListener
                     'user_id' => $event->user->id,
                     'user_name' => $event->user->name,
                     'user_email' => $event->user->email,
-                    'old_role' => $oldRole?->name ?? 'none',
-                    'new_role' => $newRole?->name,
+                    'old_role' => $oldRole ? $oldRole->name : 'none',
+                    'new_role' => $newRole ? $newRole->name : null,
                     'reason' => $event->reason,
                     'role_change_audit_id' => $roleChangeAudit->id,
                 ]);
@@ -80,7 +80,7 @@ class RoleChangeAuditListener
             $this->auditService->logAuthorization('permission_grant', $user, [], [
                 'permission' => $permission,
                 'context' => $context,
-                'granted_by' => auth()->user()?->name ?? 'System',
+                'granted_by' => auth()->user() ? auth()->user()->name : 'System',
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to audit permission grant event', [
@@ -101,7 +101,7 @@ class RoleChangeAuditListener
                 'permission' => $permission,
                 'context' => $context,
             ], [
-                'revoked_by' => auth()->user()?->name ?? 'System',
+                'revoked_by' => auth()->user() ? auth()->user()->name : 'System',
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to audit permission revoke event', [
@@ -123,7 +123,7 @@ class RoleChangeAuditListener
             ], [
                 'status' => $newStatus,
                 'reason' => $reason,
-                'changed_by' => auth()->user()?->name ?? 'System',
+                'changed_by' => auth()->user() ? auth()->user()->name : 'System',
             ]);
 
             // Log as security event if account is being suspended or deactivated

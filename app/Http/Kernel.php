@@ -71,5 +71,6 @@ class Kernel extends HttpKernel
         'audit' => \App\Http\Middleware\AuditMiddleware::class,
         'auth.block' => \App\Http\Middleware\BlockFailedAuthenticationMiddleware::class,
         'security.monitor' => \App\Http\Middleware\SecurityMonitoringMiddleware::class,
+        'report.access' => \App\Http\Middleware\ReportAccessMiddleware::class,
     ];
 }

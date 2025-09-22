@@ -57,7 +57,7 @@ class BlockFailedAuthenticationMiddleware
             'password.update',
         ];
 
-        $routeName = $request->route()?->getName();
+        $routeName = $request->route() ? $request->route()->getName() : null;
         
         return in_array($routeName, $authRoutes) || 
                str_contains($request->path(), 'login') ||
