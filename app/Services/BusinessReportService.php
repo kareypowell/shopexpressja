@@ -6,38 +6,50 @@ use App\Models\Package;
 use App\Models\Manifest;
 use App\Models\CustomerTransaction;
 use App\Models\User;
+use App\Traits\HandlesReportErrors;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class BusinessReportService
 {
+    use HandlesReportErrors;
     /**
      * Generate sales and collections report data
      */
     public function generateSalesCollectionsReport(array $filters = []): array
     {
-        $dateFrom = $filters['date_from'] ?? Carbon::now()->subMonth();
-        $dateTo = $filters['date_to'] ?? Carbon::now();
-        $manifestIds = $filters['manifest_ids'] ?? null;
-        $officeIds = $filters['office_ids'] ?? null;
+        return $this->executeWithErrorHandling(function() use ($filters) {
+            // Validate filters and permissions
+            $this->validateReportFilters($filters, 'sales');
+            $this->checkReportPermissions('sales', $filters);
+            $this->checkResourceLimits($filters, 'sales');
+            
+            // Log report access
+            $this->logReportAccess('sales', $filters);
 
-        // Get manifest-based revenue data
-        $manifestData = $this->getManifestRevenueData($dateFrom, $dateTo, $manifestIds, $officeIds);
-        
-        // Get collections data
-        $collectionsData = $this->getCollectionsData($dateFrom, $dateTo, $manifestIds, $officeIds);
-        
-        // Get outstanding balances
-        $outstandingData = $this->getOutstandingBalancesData($manifestIds, $officeIds);
+            $dateFrom = $filters['date_from'] ?? Carbon::now()->subMonth();
+            $dateTo = $filters['date_to'] ?? Carbon::now();
+            $manifestIds = $filters['manifest_ids'] ?? null;
+            $officeIds = $filters['office_ids'] ?? null;
 
-        return [
-            'manifests' => $manifestData,
-            'collections' => $collectionsData,
-            'outstanding' => $outstandingData,
-            'summary' => $this->calculateSalesSummary($manifestData, $collectionsData, $outstandingData),
-            'filters_applied' => $filters,
-            'generated_at' => now()
-        ];
+            // Get manifest-based revenue data
+            $manifestData = $this->getManifestRevenueData($dateFrom, $dateTo, $manifestIds, $officeIds);
+            
+            // Get collections data
+            $collectionsData = $this->getCollectionsData($dateFrom, $dateTo, $manifestIds, $officeIds);
+            
+            // Get outstanding balances
+            $outstandingData = $this->getOutstandingBalancesData($manifestIds, $officeIds);
+
+            return [
+                'manifests' => $manifestData,
+                'collections' => $collectionsData,
+                'outstanding' => $outstandingData,
+                'summary' => $this->calculateSalesSummary($manifestData, $collectionsData, $outstandingData),
+                'filters_applied' => $filters,
+                'generated_at' => now()
+            ];
+        }, 'sales', $filters);
     }
 
     /**
@@ -325,62 +337,72 @@ class BusinessReportService
      */
     public function generateManifestPerformanceReport(array $filters = []): array
     {
-        $dateFrom = $filters['date_from'] ?? Carbon::now()->subMonth();
-        $dateTo = $filters['date_to'] ?? Carbon::now();
-        $manifestType = $filters['manifest_type'] ?? null;
-        $officeIds = $filters['office_ids'] ?? null;
+        return $this->executeWithErrorHandling(function() use ($filters) {
+            // Validate filters and permissions
+            $this->validateReportFilters($filters, 'manifest');
+            $this->checkReportPermissions('manifest', $filters);
+            $this->checkResourceLimits($filters, 'manifest');
+            
+            // Log report access
+            $this->logReportAccess('manifest', $filters);
 
-        $query = Manifest::query()
-            ->with(['packages' => function($q) use ($officeIds) {
-                $q->select([
-                    'id', 'manifest_id', 'weight', 'cubic_feet', 'status', 'created_at',
-                    'length_inches', 'width_inches', 'height_inches'
-                ]);
-                if ($officeIds) {
-                    $q->whereIn('office_id', $officeIds);
-                }
-            }])
-            ->whereBetween('shipment_date', [$dateFrom, $dateTo]);
+            $dateFrom = $filters['date_from'] ?? Carbon::now()->subMonth();
+            $dateTo = $filters['date_to'] ?? Carbon::now();
+            $manifestType = $filters['manifest_type'] ?? null;
+            $officeIds = $filters['office_ids'] ?? null;
 
-        if ($manifestType) {
-            $query->where('type', $manifestType);
-        }
+            $query = Manifest::query()
+                ->with(['packages' => function($q) use ($officeIds) {
+                    $q->select([
+                        'id', 'manifest_id', 'weight', 'cubic_feet', 'status', 'created_at',
+                        'length_inches', 'width_inches', 'height_inches'
+                    ]);
+                    if ($officeIds) {
+                        $q->whereIn('office_id', $officeIds);
+                    }
+                }])
+                ->whereBetween('shipment_date', [$dateFrom, $dateTo]);
 
-        $manifests = $query->get();
+            if ($manifestType) {
+                $query->where('type', $manifestType);
+            }
 
-        return $manifests->map(function ($manifest) {
-            $packages = $manifest->packages;
-            $totalWeight = $packages->sum('weight') ?? 0;
-            $totalVolume = $packages->sum(function($package) {
-                return $package->getVolumeInCubicFeet();
-            });
+            $manifests = $query->get();
 
-            // Calculate processing times
-            $processingTimes = $packages->map(function($package) {
-                if ($package->status === 'delivered') {
-                    return $package->created_at->diffInDays(now());
-                }
-                return null;
-            })->filter()->values();
+            return $manifests->map(function ($manifest) {
+                $packages = $manifest->packages;
+                $totalWeight = $packages->sum('weight') ?? 0;
+                $totalVolume = $packages->sum(function($package) {
+                    return $package->getVolumeInCubicFeet();
+                });
 
-            $avgProcessingTime = $processingTimes->count() > 0 ? $processingTimes->avg() : null;
+                // Calculate processing times
+                $processingTimes = $packages->map(function($package) {
+                    if ($package->status === 'delivered') {
+                        return $package->created_at->diffInDays(now());
+                    }
+                    return null;
+                })->filter()->values();
 
-            return [
-                'manifest_id' => $manifest->id,
-                'manifest_name' => $manifest->name,
-                'manifest_type' => $manifest->type,
-                'shipment_date' => $manifest->shipment_date,
-                'package_count' => $packages->count(),
-                'total_weight' => $totalWeight,
-                'total_volume' => $totalVolume,
-                'average_processing_time_days' => $avgProcessingTime,
-                'delivered_count' => $packages->where('status', 'delivered')->count(),
-                'in_transit_count' => $packages->whereIn('status', ['shipped', 'customs'])->count(),
-                'pending_count' => $packages->where('status', 'pending')->count(),
-                'completion_rate' => $packages->count() > 0 ? 
-                    ($packages->where('status', 'delivered')->count() / $packages->count()) * 100 : 0
-            ];
-        })->toArray();
+                $avgProcessingTime = $processingTimes->count() > 0 ? $processingTimes->avg() : null;
+
+                return [
+                    'manifest_id' => $manifest->id,
+                    'manifest_name' => $manifest->name,
+                    'manifest_type' => $manifest->type,
+                    'shipment_date' => $manifest->shipment_date,
+                    'package_count' => $packages->count(),
+                    'total_weight' => $totalWeight,
+                    'total_volume' => $totalVolume,
+                    'average_processing_time_days' => $avgProcessingTime,
+                    'delivered_count' => $packages->where('status', 'delivered')->count(),
+                    'in_transit_count' => $packages->whereIn('status', ['shipped', 'customs'])->count(),
+                    'pending_count' => $packages->where('status', 'pending')->count(),
+                    'completion_rate' => $packages->count() > 0 ? 
+                        ($packages->where('status', 'delivered')->count() / $packages->count()) * 100 : 0
+                ];
+            })->toArray();
+        }, 'manifest', $filters);
     }
 
     /**
@@ -388,57 +410,67 @@ class BusinessReportService
      */
     public function generateCustomerAnalyticsReport(array $filters = []): array
     {
-        $dateFrom = $filters['date_from'] ?? Carbon::now()->subMonth();
-        $dateTo = $filters['date_to'] ?? Carbon::now();
-        $customerIds = $filters['customer_ids'] ?? null;
+        return $this->executeWithErrorHandling(function() use ($filters) {
+            // Validate filters and permissions
+            $this->validateReportFilters($filters, 'customer');
+            $this->checkReportPermissions('customer', $filters);
+            $this->checkResourceLimits($filters, 'customer');
+            
+            // Log report access
+            $this->logReportAccess('customer', $filters);
 
-        $query = User::query()
-            ->select(['id', 'first_name', 'last_name', 'email', 'account_balance'])
-            ->with(['packages' => function($q) use ($dateFrom, $dateTo) {
-                $q->whereBetween('created_at', [$dateFrom, $dateTo])
-                  ->select(['id', 'user_id', 'freight_price', 'clearance_fee', 'storage_fee', 'delivery_fee', 'status']);
-            }, 'transactions' => function($q) use ($dateFrom, $dateTo) {
-                $q->whereBetween('created_at', [$dateFrom, $dateTo])
-                  ->select(['id', 'user_id', 'type', 'amount', 'created_at']);
-            }])
-            ->whereHas('packages', function($q) use ($dateFrom, $dateTo) {
-                $q->whereBetween('created_at', [$dateFrom, $dateTo]);
-            });
+            $dateFrom = $filters['date_from'] ?? Carbon::now()->subMonth();
+            $dateTo = $filters['date_to'] ?? Carbon::now();
+            $customerIds = $filters['customer_ids'] ?? null;
 
-        if ($customerIds) {
-            $query->whereIn('id', $customerIds);
-        }
+            $query = User::query()
+                ->select(['id', 'first_name', 'last_name', 'email', 'account_balance'])
+                ->with(['packages' => function($q) use ($dateFrom, $dateTo) {
+                    $q->whereBetween('created_at', [$dateFrom, $dateTo])
+                      ->select(['id', 'user_id', 'freight_price', 'clearance_fee', 'storage_fee', 'delivery_fee', 'status']);
+                }, 'transactions' => function($q) use ($dateFrom, $dateTo) {
+                    $q->whereBetween('created_at', [$dateFrom, $dateTo])
+                      ->select(['id', 'user_id', 'type', 'amount', 'created_at']);
+                }])
+                ->whereHas('packages', function($q) use ($dateFrom, $dateTo) {
+                    $q->whereBetween('created_at', [$dateFrom, $dateTo]);
+                });
 
-        $customers = $query->get();
+            if ($customerIds) {
+                $query->whereIn('id', $customerIds);
+            }
 
-        return $customers->map(function ($customer) {
-            $packages = $customer->packages;
-            $transactions = $customer->transactions;
+            $customers = $query->get();
 
-            $totalSpent = $packages->sum(function($package) {
-                return ($package->freight_price ?? 0) + 
-                       ($package->clearance_fee ?? 0) + 
-                       ($package->storage_fee ?? 0) + 
-                       ($package->delivery_fee ?? 0);
-            });
+            return $customers->map(function ($customer) {
+                $packages = $customer->packages;
+                $transactions = $customer->transactions;
 
-            $totalPaid = $transactions->where('type', CustomerTransaction::TYPE_PAYMENT)->sum('amount');
+                $totalSpent = $packages->sum(function($package) {
+                    return ($package->freight_price ?? 0) + 
+                           ($package->clearance_fee ?? 0) + 
+                           ($package->storage_fee ?? 0) + 
+                           ($package->delivery_fee ?? 0);
+                });
 
-            return [
-                'customer_id' => $customer->id,
-                'customer_name' => $customer->first_name . ' ' . $customer->last_name,
-                'customer_email' => $customer->email,
-                'account_balance' => $customer->account_balance,
-                'package_count' => $packages->count(),
-                'total_spent' => $totalSpent,
-                'total_paid' => $totalPaid,
-                'outstanding_balance' => $totalSpent - $totalPaid,
-                'delivered_packages' => $packages->where('status', 'delivered')->count(),
-                'average_package_value' => $packages->count() > 0 ? $totalSpent / $packages->count() : 0,
-                'last_package_date' => $packages->max('created_at'),
-                'last_payment_date' => $transactions->where('type', CustomerTransaction::TYPE_PAYMENT)->max('created_at')
-            ];
-        })->toArray();
+                $totalPaid = $transactions->where('type', CustomerTransaction::TYPE_PAYMENT)->sum('amount');
+
+                return [
+                    'customer_id' => $customer->id,
+                    'customer_name' => $customer->first_name . ' ' . $customer->last_name,
+                    'customer_email' => $customer->email,
+                    'account_balance' => $customer->account_balance,
+                    'package_count' => $packages->count(),
+                    'total_spent' => $totalSpent,
+                    'total_paid' => $totalPaid,
+                    'outstanding_balance' => $totalSpent - $totalPaid,
+                    'delivered_packages' => $packages->where('status', 'delivered')->count(),
+                    'average_package_value' => $packages->count() > 0 ? $totalSpent / $packages->count() : 0,
+                    'last_package_date' => $packages->max('created_at'),
+                    'last_payment_date' => $transactions->where('type', CustomerTransaction::TYPE_PAYMENT)->max('created_at')
+                ];
+            })->toArray();
+        }, 'customer', $filters);
     }
 
     /**
@@ -446,64 +478,74 @@ class BusinessReportService
      */
     public function generateFinancialSummaryReport(array $filters = []): array
     {
-        $dateFrom = $filters['date_from'] ?? Carbon::now()->subMonth();
-        $dateTo = $filters['date_to'] ?? Carbon::now();
+        return $this->executeWithErrorHandling(function() use ($filters) {
+            // Validate filters and permissions
+            $this->validateReportFilters($filters, 'financial');
+            $this->checkReportPermissions('financial', $filters);
+            $this->checkResourceLimits($filters, 'financial');
+            
+            // Log report access
+            $this->logReportAccess('financial', $filters);
 
-        // Revenue breakdown by service type
-        $revenueBreakdown = Package::whereBetween('created_at', [$dateFrom, $dateTo])
-            ->selectRaw('
-                SUM(freight_price) as freight_revenue,
-                SUM(clearance_fee) as clearance_revenue,
-                SUM(storage_fee) as storage_revenue,
-                SUM(delivery_fee) as delivery_revenue,
-                COUNT(*) as package_count
-            ')
-            ->first();
+            $dateFrom = $filters['date_from'] ?? Carbon::now()->subMonth();
+            $dateTo = $filters['date_to'] ?? Carbon::now();
 
-        // Payment collections
-        $collections = CustomerTransaction::where('type', CustomerTransaction::TYPE_PAYMENT)
-            ->whereBetween('created_at', [$dateFrom, $dateTo])
-            ->selectRaw('
-                SUM(amount) as total_collected,
-                COUNT(*) as payment_count,
-                AVG(amount) as average_payment
-            ')
-            ->first();
+            // Revenue breakdown by service type
+            $revenueBreakdown = Package::whereBetween('created_at', [$dateFrom, $dateTo])
+                ->selectRaw('
+                    SUM(freight_price) as freight_revenue,
+                    SUM(clearance_fee) as clearance_revenue,
+                    SUM(storage_fee) as storage_revenue,
+                    SUM(delivery_fee) as delivery_revenue,
+                    COUNT(*) as package_count
+                ')
+                ->first();
 
-        // Outstanding balances
-        $outstanding = User::where('account_balance', '<', 0)
-            ->selectRaw('
-                SUM(ABS(account_balance)) as total_outstanding,
-                COUNT(*) as customers_with_debt
-            ')
-            ->first();
+            // Payment collections
+            $collections = CustomerTransaction::where('type', CustomerTransaction::TYPE_PAYMENT)
+                ->whereBetween('created_at', [$dateFrom, $dateTo])
+                ->selectRaw('
+                    SUM(amount) as total_collected,
+                    COUNT(*) as payment_count,
+                    AVG(amount) as average_payment
+                ')
+                ->first();
 
-        return [
-            'revenue_breakdown' => [
-                'freight_revenue' => $revenueBreakdown->freight_revenue ?? 0,
-                'clearance_revenue' => $revenueBreakdown->clearance_revenue ?? 0,
-                'storage_revenue' => $revenueBreakdown->storage_revenue ?? 0,
-                'delivery_revenue' => $revenueBreakdown->delivery_revenue ?? 0,
-                'total_revenue' => ($revenueBreakdown->freight_revenue ?? 0) + 
-                                 ($revenueBreakdown->clearance_revenue ?? 0) + 
-                                 ($revenueBreakdown->storage_revenue ?? 0) + 
-                                 ($revenueBreakdown->delivery_revenue ?? 0),
-                'package_count' => $revenueBreakdown->package_count ?? 0
-            ],
-            'collections' => [
-                'total_collected' => $collections->total_collected ?? 0,
-                'payment_count' => $collections->payment_count ?? 0,
-                'average_payment' => $collections->average_payment ?? 0
-            ],
-            'outstanding' => [
-                'total_outstanding' => $outstanding->total_outstanding ?? 0,
-                'customers_with_debt' => $outstanding->customers_with_debt ?? 0
-            ],
-            'period' => [
-                'date_from' => $dateFrom,
-                'date_to' => $dateTo
-            ],
-            'generated_at' => now()
-        ];
+            // Outstanding balances
+            $outstanding = User::where('account_balance', '<', 0)
+                ->selectRaw('
+                    SUM(ABS(account_balance)) as total_outstanding,
+                    COUNT(*) as customers_with_debt
+                ')
+                ->first();
+
+            return [
+                'revenue_breakdown' => [
+                    'freight_revenue' => $revenueBreakdown->freight_revenue ?? 0,
+                    'clearance_revenue' => $revenueBreakdown->clearance_revenue ?? 0,
+                    'storage_revenue' => $revenueBreakdown->storage_revenue ?? 0,
+                    'delivery_revenue' => $revenueBreakdown->delivery_revenue ?? 0,
+                    'total_revenue' => ($revenueBreakdown->freight_revenue ?? 0) + 
+                                     ($revenueBreakdown->clearance_revenue ?? 0) + 
+                                     ($revenueBreakdown->storage_revenue ?? 0) + 
+                                     ($revenueBreakdown->delivery_revenue ?? 0),
+                    'package_count' => $revenueBreakdown->package_count ?? 0
+                ],
+                'collections' => [
+                    'total_collected' => $collections->total_collected ?? 0,
+                    'payment_count' => $collections->payment_count ?? 0,
+                    'average_payment' => $collections->average_payment ?? 0
+                ],
+                'outstanding' => [
+                    'total_outstanding' => $outstanding->total_outstanding ?? 0,
+                    'customers_with_debt' => $outstanding->customers_with_debt ?? 0
+                ],
+                'period' => [
+                    'date_from' => $dateFrom,
+                    'date_to' => $dateTo
+                ],
+                'generated_at' => now()
+            ];
+        }, 'financial', $filters);
     }
 }

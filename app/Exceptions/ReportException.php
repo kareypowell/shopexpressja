@@ -3,54 +3,28 @@
 namespace App\Exceptions;
 
 use Exception;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Throwable;
 
 class ReportException extends Exception
 {
     protected $reportType;
     protected $context;
 
-    public function __construct(string $message = "", string $reportType = null, array $context = [], int $code = 0, Exception $previous = null)
-    {
-        parent::__construct($message, $code, $previous);
+    public function __construct(
+        string $message = '',
+        string $reportType = '',
+        array $context = [],
+        int $code = 0,
+        Throwable $previous = null
+    ) {
         $this->reportType = $reportType;
         $this->context = $context;
+        
+        $fullMessage = $reportType ? "Report Error [{$reportType}]: {$message}" : "Report Error: {$message}";
+        parent::__construct($fullMessage, $code, $previous);
     }
 
-    /**
-     * Report the exception.
-     */
-    public function report(): void
-    {
-        \Log::error('Report Exception: ' . $this->getMessage(), [
-            'report_type' => $this->reportType,
-            'context' => $this->context,
-            'trace' => $this->getTraceAsString()
-        ]);
-    }
-
-    /**
-     * Render the exception as an HTTP response.
-     */
-    public function render(Request $request): Response
-    {
-        if ($request->expectsJson()) {
-            return response()->json([
-                'error' => 'Report generation failed',
-                'message' => $this->getMessage(),
-                'report_type' => $this->reportType
-            ], 500);
-        }
-
-        return response()->view('livewire.reports.report-dashboard-error', [
-            'error' => $this->getMessage(),
-            'reportType' => $this->reportType,
-            'context' => $this->context
-        ], 500);
-    }
-
-    public function getReportType(): ?string
+    public function getReportType(): string
     {
         return $this->reportType;
     }
@@ -58,5 +32,23 @@ class ReportException extends Exception
     public function getContext(): array
     {
         return $this->context;
+    }
+
+    public function getUserFriendlyMessage(): string
+    {
+        switch ($this->getCode()) {
+            case 1001:
+                return 'The report data is temporarily unavailable. Please try again in a few moments.';
+            case 1002:
+                return 'The selected date range contains too much data. Please select a smaller date range.';
+            case 1003:
+                return 'You do not have permission to access this report.';
+            case 1004:
+                return 'The report export failed. Please try again or contact support.';
+            case 1005:
+                return 'The report filters contain invalid values. Please check your selections.';
+            default:
+                return 'An error occurred while generating the report. Please try again.';
+        }
     }
 }

@@ -16,13 +16,16 @@ class ReportDataService
     protected $defaultCacheTtl = 900; // 15 minutes
     protected ReportDataFilterService $filterService;
     protected ReportPrivacyService $privacyService;
+    protected ReportQueryOptimizationService $queryOptimizationService;
 
     public function __construct(
         ReportDataFilterService $filterService,
-        ReportPrivacyService $privacyService
+        ReportPrivacyService $privacyService,
+        ReportQueryOptimizationService $queryOptimizationService
     ) {
         $this->filterService = $filterService;
         $this->privacyService = $privacyService;
+        $this->queryOptimizationService = $queryOptimizationService;
     }
 
     /**
@@ -169,22 +172,7 @@ class ReportDataService
      */
     protected function getCollectedAmountsByManifest(array $manifestIds): array
     {
-        if (empty($manifestIds)) {
-            return [];
-        }
-
-        $collected = DB::table('package_distributions as pd')
-            ->select([
-                'p.manifest_id',
-                DB::raw('SUM(pd.total_amount) as total_collected')
-            ])
-            ->join('package_distribution_items as pdi', 'pd.id', '=', 'pdi.distribution_id')
-            ->join('packages as p', 'pdi.package_id', '=', 'p.id')
-            ->whereIn('p.manifest_id', $manifestIds)
-            ->groupBy('p.manifest_id')
-            ->get();
-
-        return $collected->pluck('total_collected', 'manifest_id')->toArray();
+        return $this->queryOptimizationService->getCollectedAmountsByManifest($manifestIds);
     }
 
     /**

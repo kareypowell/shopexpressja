@@ -6,16 +6,21 @@ use App\Models\Package;
 use App\Models\Manifest;
 use App\Models\CustomerTransaction;
 use App\Models\User;
+use App\Models\PackageDistribution;
+use App\Models\ConsolidatedPackage;
 use App\Services\ReportCacheService;
+use App\Jobs\WarmReportCacheJob;
 use Illuminate\Support\Facades\Log;
 
 class ReportCacheObserver
 {
     protected ReportCacheService $reportCacheService;
+    protected bool $shouldWarmCache;
 
     public function __construct(ReportCacheService $reportCacheService)
     {
         $this->reportCacheService = $reportCacheService;
+        $this->shouldWarmCache = config('reports.auto_warm_cache', true);
     }
 
     /**
@@ -70,6 +75,12 @@ class ReportCacheObserver
                     $this->invalidateUserRelatedCache($model, $event);
                 }
                 break;
+            case PackageDistribution::class:
+                $this->invalidateDistributionRelatedCache($model, $event);
+                break;
+            case ConsolidatedPackage::class:
+                $this->invalidateConsolidationRelatedCache($model, $event);
+                break;
         }
     }
 
@@ -92,9 +103,10 @@ class ReportCacheObserver
             ]);
 
             // If package status changed to delivered, invalidate completion metrics
-            if ($event === 'updated' && $package->isDirty('status') && $package->status->value === 'delivered') {
+            if ($event === 'updated' && $package->isDirty('status') && $package->status === 'delivered') {
                 $this->reportCacheService->invalidateReportCache('report:manifest:completion:*');
                 $this->reportCacheService->invalidateReportCache('report:dashboard:*');
+                $this->scheduleWarmupIfNeeded(['manifest', 'dashboard']);
             }
 
             // If package financial data changed, invalidate financial reports
@@ -102,6 +114,12 @@ class ReportCacheObserver
             if ($event === 'updated' && $package->isDirty($financialFields)) {
                 $this->reportCacheService->invalidateReportCache('report:sales:*');
                 $this->reportCacheService->invalidateReportCache('report:financial:*');
+                $this->scheduleWarmupIfNeeded(['sales', 'financial']);
+            }
+
+            // Schedule warmup for new packages
+            if ($event === 'created') {
+                $this->scheduleWarmupIfNeeded(['sales', 'manifest', 'dashboard']);
             }
 
         } catch (\Exception $e) {
@@ -134,6 +152,18 @@ class ReportCacheObserver
             if ($event === 'updated' && $manifest->isDirty('is_open')) {
                 $this->reportCacheService->invalidateReportCache('report:manifest:efficiency:*');
                 $this->reportCacheService->invalidateReportCache('report:analytics:*');
+                $this->scheduleWarmupIfNeeded(['manifest']);
+            }
+
+            // If shipment date changed, affects processing time calculations
+            if ($event === 'updated' && $manifest->isDirty('shipment_date')) {
+                $this->reportCacheService->invalidateReportCache('report:manifest:*');
+                $this->scheduleWarmupIfNeeded(['manifest']);
+            }
+
+            // Schedule warmup for new manifests
+            if ($event === 'created') {
+                $this->scheduleWarmupIfNeeded(['manifest', 'dashboard']);
             }
 
         } catch (\Exception $e) {
@@ -168,6 +198,13 @@ class ReportCacheObserver
             $this->reportCacheService->invalidateReportCache('report:financial:*');
             $this->reportCacheService->invalidateReportCache('report:customer:*');
 
+            // Payment transactions are more significant for financial reports
+            if ($transaction->type === 'payment') {
+                $this->scheduleWarmupIfNeeded(['sales', 'financial', 'dashboard']);
+            } else {
+                $this->scheduleWarmupIfNeeded(['financial']);
+            }
+
         } catch (\Exception $e) {
             Log::error('Failed to invalidate transaction-related report cache', [
                 'event' => $event,
@@ -193,6 +230,13 @@ class ReportCacheObserver
                 'email' => $user->email
             ]);
 
+            // Account balance changes affect financial reports
+            if ($event === 'updated' && $user->isDirty('account_balance')) {
+                $this->reportCacheService->invalidateReportCache('report:financial:*');
+                $this->reportCacheService->invalidateReportCache('report:customer:*');
+                $this->scheduleWarmupIfNeeded(['customer', 'financial', 'dashboard']);
+            }
+
         } catch (\Exception $e) {
             Log::error('Failed to invalidate user-related report cache', [
                 'event' => $event,
@@ -200,5 +244,107 @@ class ReportCacheObserver
                 'error' => $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Invalidate cache related to package distribution changes
+     */
+    private function invalidateDistributionRelatedCache(PackageDistribution $distribution, string $event): void
+    {
+        try {
+            // Package distributions affect sales and financial reports significantly
+            $this->reportCacheService->invalidateReportCache('report:sales:*');
+            $this->reportCacheService->invalidateReportCache('report:financial:*');
+            $this->reportCacheService->invalidateReportCache('report:customer:*');
+            $this->reportCacheService->invalidateReportCache('report:dashboard:*');
+
+            // Log cache invalidation
+            Log::info('Report cache invalidated due to distribution event', [
+                'event' => $event,
+                'distribution_id' => $distribution->id,
+                'customer_id' => $distribution->customer_id ?? null,
+                'total_amount' => $distribution->total_amount ?? null
+            ]);
+
+            // Schedule warmup for distribution changes
+            $this->scheduleWarmupIfNeeded(['sales', 'financial', 'dashboard']);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to invalidate distribution-related report cache', [
+                'event' => $event,
+                'distribution_id' => $distribution->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Invalidate cache related to consolidated package changes
+     */
+    private function invalidateConsolidationRelatedCache(ConsolidatedPackage $consolidatedPackage, string $event): void
+    {
+        try {
+            // Consolidated packages affect manifest and customer reports
+            $this->reportCacheService->invalidateReportCache('report:manifest:*');
+            $this->reportCacheService->invalidateReportCache('report:customer:*');
+            $this->reportCacheService->invalidateReportCache('report:dashboard:*');
+
+            // Log cache invalidation
+            Log::info('Report cache invalidated due to consolidation event', [
+                'event' => $event,
+                'consolidated_package_id' => $consolidatedPackage->id,
+                'user_id' => $consolidatedPackage->user_id ?? null,
+                'status' => $consolidatedPackage->status ?? null
+            ]);
+
+            // Schedule warmup for consolidation changes
+            if ($event === 'updated' && $consolidatedPackage->isDirty('status')) {
+                $this->scheduleWarmupIfNeeded(['manifest', 'customer', 'dashboard']);
+            } elseif ($event === 'created') {
+                $this->scheduleWarmupIfNeeded(['manifest', 'customer', 'dashboard']);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Failed to invalidate consolidation-related report cache', [
+                'event' => $event,
+                'consolidated_package_id' => $consolidatedPackage->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Schedule cache warmup if needed
+     */
+    private function scheduleWarmupIfNeeded(array $cacheTypes): void
+    {
+        if (!$this->shouldWarmCache) {
+            return;
+        }
+
+        try {
+            // Dispatch warmup job with delay to avoid overwhelming the system
+            WarmReportCacheJob::dispatch($cacheTypes)
+                ->delay(now()->addMinutes(2))
+                ->onQueue('reports');
+                
+            Log::debug('Scheduled cache warmup', [
+                'cache_types' => $cacheTypes,
+                'delay_minutes' => 2
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Failed to schedule cache warmup', [
+                'cache_types' => $cacheTypes,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Enable or disable automatic cache warming
+     */
+    public function setAutoWarmCache(bool $enabled): void
+    {
+        $this->shouldWarmCache = $enabled;
     }
 }

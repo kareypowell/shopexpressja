@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Jobs\ProcessReportExportJob;
 use App\Models\ReportExportJob;
 use App\Models\User;
+use App\Traits\HandlesReportErrors;
+use App\Exceptions\ReportException;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -13,6 +15,7 @@ use Exception;
 
 class ReportExportService
 {
+    use HandlesReportErrors;
     protected $pdfGenerator;
     protected ReportPrivacyService $privacyService;
     protected ReportAuditService $auditService;
@@ -32,14 +35,19 @@ class ReportExportService
      */
     public function exportToPdf(array $reportData, string $template, array $options = [], ?User $user = null): string
     {
-        try {
+        return $this->executeWithErrorHandling(function() use ($reportData, $template, $options, $user) {
+            // Validate export permissions
+            if ($user && !$this->privacyService->validateExportPermissions($user, $reportData)) {
+                throw new ReportException(
+                    'User does not have permission to export sensitive data',
+                    'export',
+                    ['template' => $template, 'user_id' => $user->id],
+                    1003
+                );
+            }
+            
             // Apply privacy protection if user is provided
             if ($user) {
-                // Validate export permissions
-                if (!$this->privacyService->validateExportPermissions($user, $reportData)) {
-                    throw new Exception('User does not have permission to export sensitive data');
-                }
-                
                 // Apply privacy protection to data
                 $reportData = $this->privacyService->applyPrivacyProtection($reportData, $user, 'pdf');
                 

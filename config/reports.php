@@ -19,8 +19,30 @@ return [
     */
     'cache' => [
         'enabled' => env('REPORTS_CACHE_ENABLED', true),
-        'ttl' => env('REPORTS_CACHE_TTL', 1800), // 30 minutes
+        'driver' => env('REPORTS_CACHE_DRIVER', env('CACHE_DRIVER', 'redis')),
         'prefix' => env('REPORTS_CACHE_PREFIX', 'reports'),
+        
+        'ttl' => [
+            'query_results' => env('REPORTS_CACHE_TTL_QUERY', 15), // minutes
+            'aggregated_data' => env('REPORTS_CACHE_TTL_AGGREGATED', 60), // minutes
+            'report_templates' => env('REPORTS_CACHE_TTL_TEMPLATES', 1440), // 24 hours
+            'chart_data' => env('REPORTS_CACHE_TTL_CHARTS', 30), // minutes
+            'dashboard_widgets' => env('REPORTS_CACHE_TTL_DASHBOARD', 10), // minutes
+            'export_data' => env('REPORTS_CACHE_TTL_EXPORT', 5), // minutes
+        ],
+        
+        'warming' => [
+            'enabled' => env('REPORTS_CACHE_WARMING_ENABLED', true),
+            'auto_warm_cache' => env('REPORTS_AUTO_WARM_CACHE', true),
+            'warmup_delay_minutes' => env('REPORTS_CACHE_WARMUP_DELAY', 2),
+            'queue' => env('REPORTS_CACHE_WARMUP_QUEUE', 'reports'),
+        ],
+        
+        'monitoring' => [
+            'log_performance' => env('REPORTS_CACHE_LOG_PERFORMANCE', true),
+            'slow_query_threshold_ms' => env('REPORTS_CACHE_SLOW_THRESHOLD', 1000),
+            'track_hit_rates' => env('REPORTS_CACHE_TRACK_HITS', true),
+        ],
     ],
 
     /*
@@ -33,6 +55,19 @@ return [
         'query_timeout' => env('REPORTS_QUERY_TIMEOUT', 30),
         'export_timeout' => env('REPORTS_EXPORT_TIMEOUT', 300),
         'max_export_records' => env('REPORTS_MAX_EXPORT_RECORDS', 10000),
+        
+        'query_optimization' => [
+            'enabled' => env('REPORTS_QUERY_OPTIMIZATION_ENABLED', true),
+            'log_slow_queries' => env('REPORTS_LOG_SLOW_QUERIES', true),
+            'slow_query_threshold_ms' => env('REPORTS_SLOW_QUERY_THRESHOLD', 1000),
+            'enable_query_caching' => env('REPORTS_ENABLE_QUERY_CACHING', true),
+        ],
+        
+        'database' => [
+            'use_read_replica' => env('REPORTS_USE_READ_REPLICA', false),
+            'connection' => env('REPORTS_DB_CONNECTION', env('DB_CONNECTION', 'mysql')),
+            'chunk_size' => env('REPORTS_QUERY_CHUNK_SIZE', 1000),
+        ],
     ],
 
     /*

@@ -47,6 +47,9 @@ class ReportDashboard extends Component
 
     public function loadData()
     {
+        $this->isLoading = true;
+        $this->error = null;
+        
         try {
             $this->isLoading = true;
             $this->error = null;
@@ -59,34 +62,33 @@ class ReportDashboard extends Component
                 'date_to' => $endDate
             ];
 
-            // Try to load data with fallback
-            try {
-                $businessService = app(BusinessReportService::class);
-                
-                switch ($this->reportType) {
-                    case 'sales':
-                        $this->reportData = $businessService->generateSalesCollectionsReport($filters);
-                        break;
-                    case 'manifests':
-                        $this->reportData = $businessService->generateManifestPerformanceReport($filters);
-                        break;
-                    case 'customers':
-                        $this->reportData = $businessService->generateCustomerAnalyticsReport($filters);
-                        break;
-                    case 'financial':
-                        $this->reportData = $businessService->generateFinancialSummaryReport($filters);
-                        break;
-                    default:
-                        $this->reportData = $this->getEmptyData();
-                }
-            } catch (\Exception $serviceError) {
-                Log::warning('BusinessReportService failed, using fallback data', [
-                    'error' => $serviceError->getMessage(),
-                    'reportType' => $this->reportType
-                ]);
-                
-                // Use fallback data
-                $this->reportData = $this->getEmptyData();
+            // Try to load data with comprehensive error handling
+            $businessService = app(BusinessReportService::class);
+            
+            $result = null;
+            switch ($this->reportType) {
+                case 'sales':
+                    $result = $businessService->generateSalesCollectionsReport($filters);
+                    break;
+                case 'manifests':
+                    $result = $businessService->generateManifestPerformanceReport($filters);
+                    break;
+                case 'customers':
+                    $result = $businessService->generateCustomerAnalyticsReport($filters);
+                    break;
+                case 'financial':
+                    $result = $businessService->generateFinancialSummaryReport($filters);
+                    break;
+                default:
+                    $result = ['success' => true, 'data' => $this->getEmptyData()];
+            }
+            
+            // Handle the result from the service
+            if ($result['success']) {
+                $this->reportData = $result['data'];
+            } else {
+                // Handle error response from service
+                $this->handleServiceError($result);
             }
 
         } catch (\Exception $e) {
@@ -537,4 +539,90 @@ class ReportDashboard extends Component
     {
         return view('livewire.reports.report-dashboard');
     }
-}
+}   
+ /**
+     * Handle service error response
+     */
+    protected function handleServiceError(array $errorResult): void
+    {
+        // Check if fallback data is available
+        if (isset($errorResult['fallback_data']) && !empty($errorResult['fallback_data'])) {
+            $this->reportData = $errorResult['fallback_data'];
+            
+            // Show a warning that we're using cached data
+            $this->dispatchBrowserEvent('show-warning', [
+                'message' => 'Using cached data due to temporary issue: ' . $errorResult['message']
+            ]);
+        } else {
+            // No fallback data available
+            $this->reportData = $this->getEmptyData();
+            
+            // Emit error event to show error handler
+            $this->emit('reportError', $errorResult);
+        }
+    }
+
+    /**
+     * Retry report generation (called from error handler)
+     */
+    protected $listeners = [
+        'refreshData' => 'loadData',
+        'retryReportGeneration' => 'retryGeneration',
+        'showFallbackData' => 'showFallbackData'
+    ];
+
+    public function retryGeneration()
+    {
+        $this->loadData();
+    }
+
+    public function showFallbackData($fallbackData)
+    {
+        $this->reportData = $fallbackData;
+        $this->dispatchBrowserEvent('show-info', [
+            'message' => 'Displaying cached data from previous successful report generation.'
+        ]);
+    }
+
+    /**
+     * Check if data is empty or error state
+     */
+    public function getIsEmptyDataProperty(): bool
+    {
+        if (empty($this->reportData)) {
+            return true;
+        }
+
+        // Check based on report type
+        switch ($this->reportType) {
+            case 'sales':
+                return empty($this->reportData['manifests']) && 
+                       ($this->reportData['summary']['total_revenue_owed'] ?? 0) == 0;
+            case 'manifests':
+                return empty($this->reportData) || 
+                       (is_array($this->reportData) && count($this->reportData) == 0);
+            case 'customers':
+                return empty($this->reportData) || 
+                       (is_array($this->reportData) && count($this->reportData) == 0);
+            case 'financial':
+                return ($this->reportData['revenue_breakdown']['total_revenue'] ?? 0) == 0;
+            default:
+                return true;
+        }
+    }
+
+    /**
+     * Get user-friendly error message
+     */
+    public function getErrorMessageProperty(): ?string
+    {
+        if ($this->error) {
+            return $this->error;
+        }
+
+        if ($this->isEmptyData && !$this->isLoading) {
+            return "No data available for the selected date range. Try selecting a different period or check if there are any packages in the system.";
+        }
+
+        return null;
+    }

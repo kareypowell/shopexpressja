@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Services\ReportCacheService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
+use App\Services\ReportCacheService;
+use App\Jobs\WarmReportCacheJob;
 use Carbon\Carbon;
 
 class WarmReportCacheCommand extends Command
@@ -15,33 +15,25 @@ class WarmReportCacheCommand extends Command
      * @var string
      */
     protected $signature = 'reports:warm-cache 
-                            {--days=30 : Number of days to include in cache warmup}
-                            {--types=* : Specific report types to warm up (sales,manifest,customer,dashboard)}
-                            {--force : Force cache warmup even if cache exists}';
+                            {--types=* : Cache types to warm (sales, manifest, customer, financial, dashboard, all)}
+                            {--async : Run cache warming in background jobs}
+                            {--date-from= : Start date for cache warming (YYYY-MM-DD)}
+                            {--date-to= : End date for cache warming (YYYY-MM-DD)}
+                            {--force : Force cache warming even if cache exists}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Warm up the report cache with frequently accessed data';
+    protected $description = 'Warm up report cache for frequently accessed data';
 
-    /**
-     * The report cache service
-     *
-     * @var ReportCacheService
-     */
-    protected ReportCacheService $reportCacheService;
+    protected ReportCacheService $cacheService;
 
-    /**
-     * Create a new command instance.
-     *
-     * @param ReportCacheService $reportCacheService
-     */
-    public function __construct(ReportCacheService $reportCacheService)
+    public function __construct(ReportCacheService $cacheService)
     {
         parent::__construct();
-        $this->reportCacheService = $reportCacheService;
+        $this->cacheService = $cacheService;
     }
 
     /**
@@ -51,262 +43,307 @@ class WarmReportCacheCommand extends Command
      */
     public function handle()
     {
-        $this->info('Starting report cache warmup...');
-        
-        $days = (int) $this->option('days');
+        $this->info('Report Cache Warming Tool');
+        $this->line('===========================');
+
+        // Get cache types to warm
         $types = $this->option('types');
-        $force = $this->option('force');
-        
-        // Default to all types if none specified
         if (empty($types)) {
-            $types = ['sales', 'manifest', 'customer', 'dashboard'];
+            $types = ['all'];
         }
-        
-        // Prepare base filters
-        $baseFilters = [
-            'date_from' => Carbon::now()->subDays($days)->toDateString()
-        ];
-        
-        $this->info("Warming cache for last {$days} days...");
-        $this->info('Report types: ' . implode(', ', $types));
-        
-        try {
-            // Check cache health first
-            $this->checkCacheHealth();
-            
-            // Warm up each requested type
-            foreach ($types as $type) {
-                $this->warmupReportType($type, $baseFilters, $force);
-            }
-            
-            // Display cache statistics
-            $this->displayCacheStats();
-            
-            $this->info('Report cache warmup completed successfully!');
-            
-            return Command::SUCCESS;
-            
-        } catch (\Exception $e) {
-            $this->error('Cache warmup failed: ' . $e->getMessage());
-            Log::error('Report cache warmup failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return Command::FAILURE;
-        }
-    }
 
-    /**
-     * Check cache health before warming up
-     */
-    private function checkCacheHealth(): void
-    {
-        $this->info('Checking cache health...');
-        
-        $stats = $this->reportCacheService->getCacheStats();
-        
-        if (!$stats['cache_health']) {
-            $this->warn('Cache health check failed. Proceeding anyway...');
-        } else {
-            $this->info('✓ Cache is healthy');
+        // Prepare filters
+        $filters = [];
+        if ($this->option('date-from')) {
+            $filters['date_from'] = Carbon::parse($this->option('date-from'))->toDateString();
         }
-        
-        $this->info('Cache driver: ' . $stats['cache_driver']);
-    }
-
-    /**
-     * Warm up cache for a specific report type
-     */
-    private function warmupReportType(string $type, array $baseFilters, bool $force): void
-    {
-        $this->info("Warming up {$type} reports...");
-        
-        $progressBar = $this->output->createProgressBar();
-        $progressBar->start();
-        
-        try {
-            switch ($type) {
-                case 'sales':
-                    $this->warmupSalesReports($baseFilters, $force, $progressBar);
-                    break;
-                    
-                case 'manifest':
-                    $this->warmupManifestReports($baseFilters, $force, $progressBar);
-                    break;
-                    
-                case 'customer':
-                    $this->warmupCustomerReports($baseFilters, $force, $progressBar);
-                    break;
-                    
-                case 'dashboard':
-                    $this->warmupDashboardReports($baseFilters, $force, $progressBar);
-                    break;
-                    
-                default:
-                    $this->warn("Unknown report type: {$type}");
-                    return;
-            }
-            
-            $progressBar->finish();
-            $this->newLine();
-            $this->info("✓ {$type} reports warmed up");
-            
-        } catch (\Exception $e) {
-            $progressBar->finish();
-            $this->newLine();
-            $this->error("✗ Failed to warm up {$type} reports: " . $e->getMessage());
+        if ($this->option('date-to')) {
+            $filters['date_to'] = Carbon::parse($this->option('date-to'))->toDateString();
         }
-    }
 
-    /**
-     * Warm up sales reports
-     */
-    private function warmupSalesReports(array $baseFilters, bool $force, $progressBar): void
-    {
-        $filterCombinations = [
-            $baseFilters, // Base filters
-            array_merge($baseFilters, ['date_from' => Carbon::now()->subDays(7)->toDateString()]), // Last 7 days
-            array_merge($baseFilters, ['date_from' => Carbon::now()->subDays(1)->toDateString()]), // Last 24 hours
-        ];
-        
-        foreach ($filterCombinations as $filters) {
-            $progressBar->advance();
-            
-            // Check if cache exists and skip if not forcing
-            if (!$force && $this->reportCacheService->getCachedSalesData($filters)) {
-                continue;
-            }
-            
-            // Use the BusinessReportService to generate and cache data
-            $businessReportService = app(\App\Services\BusinessReportService::class);
-            $data = $businessReportService->generateSalesCollectionsReport($filters);
-            $this->reportCacheService->cacheSalesData($filters, $data);
-        }
-    }
-
-    /**
-     * Warm up manifest reports
-     */
-    private function warmupManifestReports(array $baseFilters, bool $force, $progressBar): void
-    {
-        $filterCombinations = [
-            $baseFilters,
-            array_merge($baseFilters, ['type' => 'air']),
-            array_merge($baseFilters, ['type' => 'sea']),
-            array_merge($baseFilters, ['status' => 'open']),
-            array_merge($baseFilters, ['status' => 'closed']),
-        ];
-        
-        foreach ($filterCombinations as $filters) {
-            $progressBar->advance();
-            
-            if (!$force && $this->reportCacheService->getCachedManifestData($filters)) {
-                continue;
-            }
-            
-            $manifestAnalyticsService = app(\App\Services\ManifestAnalyticsService::class);
-            $data = $manifestAnalyticsService->getEfficiencyMetrics($filters);
-            $this->reportCacheService->cacheManifestData($filters, $data);
-        }
-    }
-
-    /**
-     * Warm up customer reports
-     */
-    private function warmupCustomerReports(array $baseFilters, bool $force, $progressBar): void
-    {
-        $filterCombinations = [
-            $baseFilters,
-            array_merge($baseFilters, ['date_from' => Carbon::now()->subDays(7)->toDateString()]),
-        ];
-        
-        foreach ($filterCombinations as $filters) {
-            $progressBar->advance();
-            
-            if (!$force && $this->reportCacheService->getCachedCustomerData($filters)) {
-                continue;
-            }
-            
-            // Placeholder for customer analytics - will be implemented when service is available
-            $data = ['placeholder' => true, 'filters' => $filters];
-            $this->reportCacheService->cacheCustomerData($filters, $data);
-        }
-    }
-
-    /**
-     * Warm up dashboard reports
-     */
-    private function warmupDashboardReports(array $baseFilters, bool $force, $progressBar): void
-    {
-        $widgets = [
-            'sales_summary',
-            'manifest_count',
-            'recent_activity',
-            'financial_overview',
-            'processing_metrics'
-        ];
-        
-        foreach ($widgets as $widget) {
-            $progressBar->advance();
-            
-            if (!$force && $this->reportCacheService->getCachedDashboardWidget($widget)) {
-                continue;
-            }
-            
-            // Generate widget data based on type
-            $data = $this->generateWidgetData($widget, $baseFilters);
-            $this->reportCacheService->cacheDashboardWidget($widget, $data);
-        }
-    }
-
-    /**
-     * Generate widget data for dashboard
-     */
-    private function generateWidgetData(string $widget, array $filters): array
-    {
-        switch ($widget) {
-            case 'sales_summary':
-                $businessReportService = app(\App\Services\BusinessReportService::class);
-                return $businessReportService->generateFinancialSummaryReport($filters);
-                
-            case 'manifest_count':
-                $manifestAnalyticsService = app(\App\Services\ManifestAnalyticsService::class);
-                return $manifestAnalyticsService->getEfficiencyMetrics($filters);
-                
-            default:
-                return [
-                    'widget_type' => $widget,
-                    'generated_at' => now()->toISOString(),
-                    'filters' => $filters,
-                    'placeholder' => true
-                ];
-        }
-    }
-
-    /**
-     * Display cache statistics
-     */
-    private function displayCacheStats(): void
-    {
-        $this->info('Cache Statistics:');
-        
-        $stats = $this->reportCacheService->getCacheStats();
-        
+        $this->info('Cache warming configuration:');
         $this->table(
-            ['Metric', 'Value'],
+            ['Setting', 'Value'],
             [
-                ['Cache Driver', $stats['cache_driver']],
-                ['Cache Health', $stats['cache_health'] ? '✓ Healthy' : '✗ Unhealthy'],
-                ['Memory Usage', $stats['memory_usage']['usage'] ?? 'N/A'],
+                ['Cache Types', implode(', ', $types)],
+                ['Async Mode', $this->option('async') ? 'Yes' : 'No'],
+                ['Date From', $filters['date_from'] ?? 'Default (30 days ago)'],
+                ['Date To', $filters['date_to'] ?? 'Default (today)'],
+                ['Force Refresh', $this->option('force') ? 'Yes' : 'No']
             ]
         );
-        
-        if (isset($stats['key_counts']) && !empty($stats['key_counts'])) {
-            $this->info('Cache Key Counts by Type:');
-            foreach ($stats['key_counts'] as $type => $count) {
-                $this->line("  {$type}: {$count}");
+
+        if (!$this->confirm('Proceed with cache warming?')) {
+            $this->info('Cache warming cancelled.');
+            return 0;
+        }
+
+        if ($this->option('async')) {
+            return $this->warmCacheAsync($types, $filters);
+        } else {
+            return $this->warmCacheSync($types, $filters);
+        }
+    }
+
+    /**
+     * Warm cache asynchronously using jobs
+     */
+    protected function warmCacheAsync(array $types, array $filters): int
+    {
+        try {
+            $this->info('Dispatching cache warming jobs...');
+            
+            // Dispatch job for each cache type to distribute load
+            foreach ($types as $type) {
+                if ($type === 'all') {
+                    WarmReportCacheJob::dispatch(['all'], $filters)->onQueue('reports');
+                    $this->info('Dispatched job for all cache types');
+                    break;
+                } else {
+                    WarmReportCacheJob::dispatch([$type], $filters)->onQueue('reports');
+                    $this->info("Dispatched job for {$type} cache");
+                }
             }
+
+            $this->info('Cache warming jobs dispatched successfully!');
+            $this->line('Monitor job progress with: php artisan queue:work --queue=reports');
+            
+            return 0;
+        } catch (\Exception $e) {
+            $this->error('Failed to dispatch cache warming jobs: ' . $e->getMessage());
+            return 1;
+        }
+    }
+
+    /**
+     * Warm cache synchronously
+     */
+    protected function warmCacheSync(array $types, array $filters): int
+    {
+        try {
+            $this->info('Starting synchronous cache warming...');
+            $startTime = microtime(true);
+
+            // Clear existing cache if force option is used
+            if ($this->option('force')) {
+                $this->info('Clearing existing cache...');
+                $this->cacheService->clearAllReportCache();
+            }
+
+            // Determine types to warm
+            $typesToWarm = in_array('all', $types) ? 
+                ['sales', 'manifest', 'customer', 'financial', 'dashboard'] : 
+                $types;
+
+            $progressBar = $this->output->createProgressBar(count($typesToWarm));
+            $progressBar->start();
+
+            foreach ($typesToWarm as $type) {
+                $this->warmCacheType($type, $filters);
+                $progressBar->advance();
+            }
+
+            $progressBar->finish();
+            $this->line('');
+
+            $executionTime = round((microtime(true) - $startTime), 2);
+            $this->info("Cache warming completed in {$executionTime} seconds");
+
+            // Show cache statistics
+            $this->showCacheStatistics();
+
+            return 0;
+        } catch (\Exception $e) {
+            $this->error('Cache warming failed: ' . $e->getMessage());
+            return 1;
+        }
+    }
+
+    /**
+     * Warm specific cache type
+     */
+    protected function warmCacheType(string $type, array $filters): void
+    {
+        switch ($type) {
+            case 'sales':
+                $this->warmSalesCache($filters);
+                break;
+            case 'manifest':
+                $this->warmManifestCache($filters);
+                break;
+            case 'customer':
+                $this->warmCustomerCache($filters);
+                break;
+            case 'financial':
+                $this->warmFinancialCache($filters);
+                break;
+            case 'dashboard':
+                $this->warmDashboardCache($filters);
+                break;
+            default:
+                $this->warn("Unknown cache type: {$type}");
+        }
+    }
+
+    /**
+     * Warm sales cache
+     */
+    protected function warmSalesCache(array $filters): void
+    {
+        $commonFilters = $this->getCommonDateFilters($filters);
+        
+        foreach ($commonFilters as $filterSet) {
+            try {
+                $this->cacheService->warmUpReportCache($filterSet);
+            } catch (\Exception $e) {
+                $this->warn("Failed to warm sales cache: {$e->getMessage()}");
+            }
+        }
+    }
+
+    /**
+     * Warm manifest cache
+     */
+    protected function warmManifestCache(array $filters): void
+    {
+        $commonFilters = $this->getCommonDateFilters($filters);
+        $manifestTypes = ['air', 'sea'];
+        
+        foreach ($commonFilters as $filterSet) {
+            foreach ($manifestTypes as $type) {
+                try {
+                    $typeFilters = array_merge($filterSet, ['manifest_type' => $type]);
+                    $this->cacheService->warmUpReportCache($typeFilters);
+                } catch (\Exception $e) {
+                    $this->warn("Failed to warm manifest cache for {$type}: {$e->getMessage()}");
+                }
+            }
+        }
+    }
+
+    /**
+     * Warm customer cache
+     */
+    protected function warmCustomerCache(array $filters): void
+    {
+        $commonFilters = $this->getCommonDateFilters($filters);
+        
+        foreach ($commonFilters as $filterSet) {
+            try {
+                $this->cacheService->warmUpReportCache($filterSet);
+            } catch (\Exception $e) {
+                $this->warn("Failed to warm customer cache: {$e->getMessage()}");
+            }
+        }
+    }
+
+    /**
+     * Warm financial cache
+     */
+    protected function warmFinancialCache(array $filters): void
+    {
+        $commonFilters = $this->getCommonDateFilters($filters);
+        
+        foreach ($commonFilters as $filterSet) {
+            try {
+                $this->cacheService->warmUpReportCache($filterSet);
+            } catch (\Exception $e) {
+                $this->warn("Failed to warm financial cache: {$e->getMessage()}");
+            }
+        }
+    }
+
+    /**
+     * Warm dashboard cache
+     */
+    protected function warmDashboardCache(array $filters): void
+    {
+        $dashboardPeriods = [
+            'today' => [
+                'date_from' => Carbon::today()->toDateString(),
+                'date_to' => Carbon::today()->toDateString()
+            ],
+            'this_week' => [
+                'date_from' => Carbon::now()->startOfWeek()->toDateString(),
+                'date_to' => Carbon::now()->endOfWeek()->toDateString()
+            ],
+            'this_month' => [
+                'date_from' => Carbon::now()->startOfMonth()->toDateString(),
+                'date_to' => Carbon::now()->endOfMonth()->toDateString()
+            ]
+        ];
+
+        foreach ($dashboardPeriods as $period => $periodFilters) {
+            try {
+                $mergedFilters = array_merge($filters, $periodFilters);
+                $this->cacheService->warmUpReportCache($mergedFilters);
+            } catch (\Exception $e) {
+                $this->warn("Failed to warm dashboard cache for {$period}: {$e->getMessage()}");
+            }
+        }
+    }
+
+    /**
+     * Get common date filter combinations
+     */
+    protected function getCommonDateFilters(array $baseFilters): array
+    {
+        $filters = [];
+        
+        // Use provided date range or defaults
+        $dateFrom = $baseFilters['date_from'] ?? Carbon::now()->subDays(30)->toDateString();
+        $dateTo = $baseFilters['date_to'] ?? Carbon::now()->toDateString();
+        
+        $filters[] = array_merge($baseFilters, [
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo
+        ]);
+
+        // Add common period filters if not using custom dates
+        if (!isset($baseFilters['date_from']) && !isset($baseFilters['date_to'])) {
+            $commonPeriods = [
+                [
+                    'date_from' => Carbon::now()->subDays(7)->toDateString(),
+                    'date_to' => Carbon::now()->toDateString()
+                ],
+                [
+                    'date_from' => Carbon::now()->startOfMonth()->toDateString(),
+                    'date_to' => Carbon::now()->endOfMonth()->toDateString()
+                ],
+                [
+                    'date_from' => Carbon::now()->subMonth()->startOfMonth()->toDateString(),
+                    'date_to' => Carbon::now()->subMonth()->endOfMonth()->toDateString()
+                ]
+            ];
+
+            foreach ($commonPeriods as $period) {
+                $filters[] = array_merge($baseFilters, $period);
+            }
+        }
+
+        return $filters;
+    }
+
+    /**
+     * Show cache statistics after warming
+     */
+    protected function showCacheStatistics(): void
+    {
+        try {
+            $stats = $this->cacheService->getCacheStats();
+            
+            $this->line('');
+            $this->info('Cache Statistics:');
+            $this->table(
+                ['Metric', 'Value'],
+                [
+                    ['Cache Driver', $stats['cache_driver']],
+                    ['Cache Health', $stats['cache_health'] ? 'Healthy' : 'Unhealthy'],
+                    ['Memory Usage', $stats['memory_usage']['usage'] ?? 'N/A']
+                ]
+            );
+        } catch (\Exception $e) {
+            $this->warn('Could not retrieve cache statistics: ' . $e->getMessage());
         }
     }
 }
