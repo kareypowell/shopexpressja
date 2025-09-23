@@ -23,6 +23,12 @@
 
     <!-- Scripts -->
     <script src="{{ url(mix('js/app.js')) }}" defer></script>
+    
+    <!-- Chart.js for Reports -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Reports Dashboard Scripts -->
+    <script src="{{ url(mix('js/reports.js')) }}" defer></script>
 
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -51,6 +57,8 @@
             toastr.warning(event.detail.message);
         });
     </script>
+
+    @stack('scripts')
 </body>
 
 </html>

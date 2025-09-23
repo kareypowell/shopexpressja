@@ -68,7 +68,7 @@ class PackageDistributionServiceConsolidatedTest extends TestCase
             'created_by' => $admin->id,
             'status' => PackageStatus::READY,
             'total_freight_price' => 50.00,
-            'total_customs_duty' => 30.00,
+            'total_clearance_fee' => 30.00,
             'total_storage_fee' => 10.00,
             'total_delivery_fee' => 15.00,
             'is_active' => true,
@@ -80,7 +80,7 @@ class PackageDistributionServiceConsolidatedTest extends TestCase
             'status' => PackageStatus::READY,
             'is_consolidated' => true,
             'freight_price' => 16.67,
-            'customs_duty' => 10.00,
+            'clearance_fee' => 10.00,
             'storage_fee' => 3.33,
             'delivery_fee' => 5.00,
         ]);
@@ -159,7 +159,7 @@ class PackageDistributionServiceConsolidatedTest extends TestCase
             'created_by' => $admin->id,
             'status' => PackageStatus::READY,
             'total_freight_price' => 30.00,
-            'total_customs_duty' => 20.00,
+            'total_clearance_fee' => 20.00,
             'total_storage_fee' => 5.00,
             'total_delivery_fee' => 10.00,
             'is_active' => true,
@@ -226,7 +226,7 @@ class PackageDistributionServiceConsolidatedTest extends TestCase
             'created_by' => $admin->id,
             'status' => PackageStatus::READY,
             'total_freight_price' => 40.00,
-            'total_customs_duty' => 25.00,
+            'total_clearance_fee' => 25.00,
             'total_storage_fee' => 5.00,
             'total_delivery_fee' => 10.00,
             'is_active' => true,
@@ -289,7 +289,7 @@ class PackageDistributionServiceConsolidatedTest extends TestCase
             'created_by' => $admin->id,
             'status' => PackageStatus::READY,
             'total_freight_price' => 50.00,
-            'total_customs_duty' => 30.00,
+            'total_clearance_fee' => 30.00,
             'total_storage_fee' => 10.00,
             'total_delivery_fee' => 10.00,
             'is_active' => true,
@@ -416,7 +416,7 @@ class PackageDistributionServiceConsolidatedTest extends TestCase
             'created_by' => $admin->id,
             'status' => PackageStatus::READY,
             'total_freight_price' => 30.00,
-            'total_customs_duty' => 20.00,
+            'total_clearance_fee' => 20.00,
             'total_storage_fee' => 5.00,
             'total_delivery_fee' => 10.00,
             'is_active' => true,
@@ -469,7 +469,7 @@ class PackageDistributionServiceConsolidatedTest extends TestCase
         // Arrange
         $consolidatedPackage = ConsolidatedPackage::factory()->create([
             'total_freight_price' => 100.00,
-            'total_customs_duty' => 50.00,
+            'total_clearance_fee' => 50.00,
             'total_storage_fee' => 25.00,
             'total_delivery_fee' => 30.00,
         ]);
@@ -488,8 +488,8 @@ class PackageDistributionServiceConsolidatedTest extends TestCase
     {
         // Arrange
         $packages = collect([
-            (object) ['freight_price' => 20, 'customs_duty' => 10, 'storage_fee' => 5, 'delivery_fee' => 8],
-            (object) ['freight_price' => 30, 'customs_duty' => 15, 'storage_fee' => 7, 'delivery_fee' => 12],
+            (object) ['freight_price' => 20, 'clearance_fee' => 10, 'storage_fee' => 5, 'delivery_fee' => 8],
+            (object) ['freight_price' => 30, 'clearance_fee' => 15, 'storage_fee' => 7, 'delivery_fee' => 12],
         ]);
 
         // Act
@@ -512,7 +512,7 @@ class PackageDistributionServiceConsolidatedTest extends TestCase
             'total_weight' => 15.5,
             'total_quantity' => 3,
             'total_freight_price' => 75.00,
-            'total_customs_duty' => 45.00,
+            'total_clearance_fee' => 45.00,
             'total_storage_fee' => 15.00,
             'total_delivery_fee' => 20.00,
         ]);
@@ -561,7 +561,7 @@ class PackageDistributionServiceConsolidatedTest extends TestCase
             'total_weight' => 25.0,
             'total_quantity' => 2,
             'total_freight_price' => 100.00,
-            'total_customs_duty' => 60.00,
+            'total_clearance_fee' => 60.00,
             'total_storage_fee' => 20.00,
             'total_delivery_fee' => 25.00,
         ]);

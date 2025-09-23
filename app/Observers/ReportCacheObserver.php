@@ -98,7 +98,7 @@ class ReportCacheObserver
             }
 
             // If package financial data changed, invalidate financial reports
-            $financialFields = ['freight_price', 'customs_duty', 'storage_fee', 'delivery_fee'];
+            $financialFields = ['freight_price', 'clearance_fee', 'storage_fee', 'delivery_fee'];
             if ($event === 'updated' && $package->isDirty($financialFields)) {
                 $this->reportCacheService->invalidateReportCache('report:sales:*');
                 $this->reportCacheService->invalidateReportCache('report:financial:*');

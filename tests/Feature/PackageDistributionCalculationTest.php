@@ -69,7 +69,7 @@ class PackageDistributionCalculationTest extends TestCase
         // Set package fees for testing
         $this->package->update([
             'freight_price' => 45.00,
-            'customs_duty' => 15.50,
+            'clearance_fee' => 15.50,
             'storage_fee' => 10.00,
             'delivery_fee' => 5.00
         ]);
@@ -108,7 +108,7 @@ class PackageDistributionCalculationTest extends TestCase
         // Set package fees
         $this->package->update([
             'freight_price' => 45.00,
-            'customs_duty' => 15.50,
+            'clearance_fee' => 15.50,
             'storage_fee' => 10.00,
             'delivery_fee' => 5.00
         ]);
@@ -154,7 +154,7 @@ class PackageDistributionCalculationTest extends TestCase
         // Set package fees
         $this->package->update([
             'freight_price' => 45.00,
-            'customs_duty' => 15.50,
+            'clearance_fee' => 15.50,
             'storage_fee' => 10.00,
             'delivery_fee' => 5.00
         ]);
@@ -188,7 +188,7 @@ class PackageDistributionCalculationTest extends TestCase
         // Create package with different fee structure
         $this->package->update([
             'freight_price' => 60.00,
-            'customs_duty' => 25.00,
+            'clearance_fee' => 25.00,
             'storage_fee' => 15.00,
             'delivery_fee' => 8.00
         ]);
@@ -215,7 +215,7 @@ class PackageDistributionCalculationTest extends TestCase
         $distributionItem = $distribution->items()->first();
         $this->assertNotNull($distributionItem);
         $this->assertEquals(60.00, $distributionItem->freight_price);
-        $this->assertEquals(25.00, $distributionItem->customs_duty);
+        $this->assertEquals(25.00, $distributionItem->clearance_fee);
         $this->assertEquals(15.00, $distributionItem->storage_fee);
         $this->assertEquals(8.00, $distributionItem->delivery_fee);
     }
@@ -230,7 +230,7 @@ class PackageDistributionCalculationTest extends TestCase
         // Set package fees
         $this->package->update([
             'freight_price' => 45.00,
-            'customs_duty' => 15.50,
+            'clearance_fee' => 15.50,
             'storage_fee' => 10.00,
             'delivery_fee' => 5.00
         ]);
@@ -268,7 +268,7 @@ class PackageDistributionCalculationTest extends TestCase
         // Set package fees
         $this->package->update([
             'freight_price' => 45.00,
-            'customs_duty' => 15.50,
+            'clearance_fee' => 15.50,
             'storage_fee' => 10.00,
             'delivery_fee' => 5.00
         ]);
@@ -315,7 +315,7 @@ class PackageDistributionCalculationTest extends TestCase
         // Set package fees
         $this->package->update([
             'freight_price' => 80.00,
-            'customs_duty' => 20.00,
+            'clearance_fee' => 20.00,
             'storage_fee' => 0.00,
             'delivery_fee' => 0.00
         ]);
@@ -364,7 +364,7 @@ class PackageDistributionCalculationTest extends TestCase
         // Set package fees
         $this->package->update([
             'freight_price' => 45.00,
-            'customs_duty' => 15.50,
+            'clearance_fee' => 15.50,
             'storage_fee' => 10.00,
             'delivery_fee' => 5.00
         ]);
@@ -409,7 +409,7 @@ class PackageDistributionCalculationTest extends TestCase
             'estimated_value' => 75.00,
             'status' => 'ready',
             'freight_price' => 30.00,
-            'customs_duty' => 10.00,
+            'clearance_fee' => 10.00,
             'storage_fee' => 5.00,
             'delivery_fee' => 3.00
         ]);
@@ -421,7 +421,7 @@ class PackageDistributionCalculationTest extends TestCase
             'estimated_value' => 200.00,
             'status' => 'ready',
             'freight_price' => 60.00,
-            'customs_duty' => 20.00,
+            'clearance_fee' => 20.00,
             'storage_fee' => 12.00,
             'delivery_fee' => 8.00
         ]);
@@ -429,7 +429,7 @@ class PackageDistributionCalculationTest extends TestCase
         // Set fees for original package
         $this->package->update([
             'freight_price' => 45.00,
-            'customs_duty' => 15.50,
+            'clearance_fee' => 15.50,
             'storage_fee' => 10.00,
             'delivery_fee' => 5.00
         ]);

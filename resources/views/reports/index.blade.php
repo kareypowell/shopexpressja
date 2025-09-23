@@ -166,13 +166,11 @@
         </div>
     </div>
 </div>
+@endsection
 
-@push('scripts')
 <script>
     // Update the last update time every minute
     setInterval(function() {
         document.getElementById('last-update-time').textContent = new Date().toLocaleString();
     }, 60000);
 </script>
-@endpush
-@endsection

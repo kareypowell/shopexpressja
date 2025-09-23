@@ -10,7 +10,7 @@ This document describes the enhanced package workflow system that includes fee e
 
 When updating a package to "Ready for Pickup" status, users are now prompted to enter additional fees:
 
-- **Customs Duty**: Import duties and taxes
+- **Clearance Fee**: Import duties and taxes
 - **Storage Fee**: Warehouse storage charges
 - **Delivery Fee**: Final delivery charges
 
@@ -23,7 +23,7 @@ When updating a package to "Ready for Pickup" status, users are now prompted to 
 1. Select a package in the workflow
 2. Click to advance to "Ready" status
 3. Fee modal opens automatically
-4. Enter customs duty, storage fee, and delivery fee
+4. Enter clearance fee, storage fee, and delivery fee
 5. Optionally apply customer credit balance
 6. Review cost summary and impact
 7. Confirm to update fees and set status to ready
@@ -77,7 +77,7 @@ Updates package fees and transitions to ready status.
 
 **Parameters:**
 - `$package`: Package to update
-- `$fees`: Array with keys: customs_duty, storage_fee, delivery_fee
+- `$fees`: Array with keys: clearance_fee, storage_fee, delivery_fee
 - `$updatedBy`: User performing the update
 - `$applyCreditBalance`: Whether to apply customer credit
 
@@ -118,7 +118,7 @@ Returns comprehensive account balance information.
 $feeService = app(PackageFeeService::class);
 
 $fees = [
-    'customs_duty' => 25.50,
+    'clearance_fee' => 25.50,
     'storage_fee' => 10.00,
     'delivery_fee' => 5.00,
 ];

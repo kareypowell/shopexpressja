@@ -62,7 +62,7 @@ class CustomerStatisticsServiceCacheTest extends TestCase
         Package::factory()->count(2)->create([
             'user_id' => $this->customer->id,
             'freight_price' => 100.00,
-            'customs_duty' => 50.00,
+            'clearance_fee' => 50.00,
             'storage_fee' => 25.00,
             'delivery_fee' => 15.00,
         ]);
@@ -221,7 +221,7 @@ class CustomerStatisticsServiceCacheTest extends TestCase
         Package::factory()->create([
             'user_id' => $this->customer->id,
             'freight_price' => 100.00,
-            'customs_duty' => 0.00,
+            'clearance_fee' => 0.00,
             'storage_fee' => 0.00,
             'delivery_fee' => 0.00,
         ]);
@@ -234,7 +234,7 @@ class CustomerStatisticsServiceCacheTest extends TestCase
         Package::factory()->create([
             'user_id' => $this->customer->id,
             'freight_price' => 150.00,
-            'customs_duty' => 0.00,
+            'clearance_fee' => 0.00,
             'storage_fee' => 0.00,
             'delivery_fee' => 0.00,
         ]);

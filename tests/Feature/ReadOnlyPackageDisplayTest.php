@@ -91,7 +91,7 @@ class ReadOnlyPackageDisplayTest extends TestCase
             'description' => 'Test package description',
             'weight' => 5.5,
             'freight_price' => 25.00,
-            'customs_duty' => 10.00,
+            'clearance_fee' => 10.00,
             'storage_fee' => 5.00,
             'delivery_fee' => 15.00,
             'estimated_value' => 100.00

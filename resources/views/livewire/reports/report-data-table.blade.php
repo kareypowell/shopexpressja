@@ -198,10 +198,56 @@
                             @foreach($selectedColumns as $column)
                                 @if(isset($availableColumns[$column]))
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        @if($column === 'total_owed' || $column === 'total_collected' || $column === 'outstanding_balance' || $column === 'account_balance' || $column === 'total_spent')
-                                            ${{ number_format((float)($row[$column] ?? 0), 2) }}
+                                        @if($column === 'manifest_number')
+                                            <div class="flex items-center space-x-2">
+                                                <span class="font-medium">{{ $row[$column] ?? 'N/A' }}</span>
+                                                @if($reportType === 'sales_collections' && isset($row['id']))
+                                                    <button wire:click="showManifestDetails({{ $row['id'] }})"
+                                                            class="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                                                        View Packages
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        @elseif($column === 'total_packages' && $reportType === 'sales_collections')
+                                            <div class="flex items-center space-x-2">
+                                                <span>{{ $row[$column] ?? 0 }}</span>
+                                                @if(isset($row['id']))
+                                                    <button wire:click="showManifestDetails({{ $row['id'] }})"
+                                                            class="text-sm text-blue-600 hover:text-blue-800">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                        </svg>
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        @elseif($column === 'total_owed' || $column === 'total_collected' || $column === 'outstanding_balance' || $column === 'account_balance' || $column === 'total_spent')
+                                            <div class="flex items-center justify-between">
+                                                <span>${{ number_format((float)($row[$column] ?? 0), 2) }}</span>
+                                                @if($reportType === 'sales_collections' && ($column === 'total_owed' || $column === 'outstanding_balance') && isset($row['id']))
+                                                    <button wire:click="showManifestDetails({{ $row['id'] }})"
+                                                            class="ml-2 text-xs text-gray-500 hover:text-blue-600">
+                                                        Details
+                                                    </button>
+                                                @endif
+                                            </div>
                                         @elseif($column === 'collection_rate')
-                                            {{ number_format((float)($row[$column] ?? 0), 1) }}%
+                                            <div class="flex items-center space-x-2">
+                                                @php $rate = (float)($row[$column] ?? 0); @endphp
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                                    @if($rate >= 90) bg-green-100 text-green-800
+                                                    @elseif($rate >= 70) bg-yellow-100 text-yellow-800
+                                                    @elseif($rate >= 50) bg-orange-100 text-orange-800
+                                                    @else bg-red-100 text-red-800 @endif">
+                                                    {{ number_format($rate, 1) }}%
+                                                </span>
+                                                @if($reportType === 'sales_collections' && isset($row['id']))
+                                                    <button wire:click="showManifestDetails({{ $row['id'] }})"
+                                                            class="text-xs text-gray-500 hover:text-blue-600">
+                                                        Breakdown
+                                                    </button>
+                                                @endif
+                                            </div>
                                         @elseif($column === 'total_weight')
                                             {{ number_format((float)($row[$column] ?? 0), 1) }} lbs
                                         @elseif($column === 'total_volume')
@@ -226,6 +272,16 @@
                                             </span>
                                         @elseif($column === 'created_at' || $column === 'last_activity')
                                             {{ isset($row[$column]) ? \Carbon\Carbon::parse($row[$column])->format('M j, Y') : 'N/A' }}
+                                        @elseif($column === 'customer_name' && $reportType === 'customer_analytics')
+                                            <div class="flex items-center space-x-2">
+                                                <span>{{ $row[$column] ?? 'N/A' }}</span>
+                                                @if(isset($row['id']))
+                                                    <button wire:click="showCustomerDetails({{ $row['id'] }})"
+                                                            class="text-blue-600 hover:text-blue-800 text-xs">
+                                                        View Profile
+                                                    </button>
+                                                @endif
+                                            </div>
                                         @else
                                             {{ $row[$column] ?? 'N/A' }}
                                         @endif

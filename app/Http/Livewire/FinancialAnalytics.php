@@ -85,12 +85,12 @@ class FinancialAnalytics extends Component
                 ->selectRaw("
                     {$dateFormat} as period,
                     SUM(freight_price) as freight_revenue,
-                    SUM(customs_duty) as customs_revenue,
+                    SUM(clearance_fee) as clearance_revenue,
                     SUM(storage_fee) as storage_revenue,
                     SUM(delivery_fee) as delivery_revenue,
-                    SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total_revenue,
+                    SUM(freight_price + clearance_fee + storage_fee + delivery_fee) as total_revenue,
                     COUNT(*) as order_count,
-                    AVG(freight_price + customs_duty + storage_fee + delivery_fee) as avg_order_value
+                    AVG(freight_price + clearance_fee + storage_fee + delivery_fee) as avg_order_value
                 ")
                 ->groupBy('period')
                 ->orderBy('period')
@@ -99,7 +99,7 @@ class FinancialAnalytics extends Component
                     return [
                         'period' => $item->period,
                         'freight_revenue' => (float) ($item->freight_revenue ?? 0),
-                        'customs_revenue' => (float) ($item->customs_revenue ?? 0),
+                        'clearance_revenue' => (float) ($item->clearance_revenue ?? 0),
                         'storage_revenue' => (float) ($item->storage_revenue ?? 0),
                         'delivery_revenue' => (float) ($item->delivery_revenue ?? 0),
                         'total_revenue' => (float) ($item->total_revenue ?? 0),
@@ -139,11 +139,11 @@ class FinancialAnalytics extends Component
                 ->join('manifests', 'packages.manifest_id', '=', 'manifests.id')
                 ->selectRaw("
                     manifests.type as service_type,
-                    SUM(packages.freight_price + packages.customs_duty + packages.storage_fee + packages.delivery_fee) as total_revenue,
+                    SUM(packages.freight_price + packages.clearance_fee + packages.storage_fee + packages.delivery_fee) as total_revenue,
                     COUNT(*) as order_count,
-                    AVG(packages.freight_price + packages.customs_duty + packages.storage_fee + packages.delivery_fee) as avg_order_value,
+                    AVG(packages.freight_price + packages.clearance_fee + packages.storage_fee + packages.delivery_fee) as avg_order_value,
                     SUM(packages.freight_price) as freight_revenue,
-                    SUM(packages.customs_duty) as customs_revenue,
+                    SUM(packages.clearance_fee) as clearance_revenue,
                     SUM(packages.storage_fee) as storage_revenue,
                     SUM(packages.delivery_fee) as delivery_revenue
                 ")
@@ -157,7 +157,7 @@ class FinancialAnalytics extends Component
                         'avg_order_value' => round((float) ($item->avg_order_value ?? 0), 2),
                         'breakdown' => [
                             'freight' => (float) ($item->freight_revenue ?? 0),
-                            'customs' => (float) ($item->customs_revenue ?? 0),
+                            'customs' => (float) ($item->clearance_revenue ?? 0),
                             'storage' => (float) ($item->storage_revenue ?? 0),
                             'delivery' => (float) ($item->delivery_revenue ?? 0),
                         ],
@@ -197,12 +197,12 @@ class FinancialAnalytics extends Component
                 ->join('packages', 'users.id', '=', 'packages.user_id')
                 ->selectRaw("
                     users.id,
-                    SUM(packages.freight_price + packages.customs_duty + packages.storage_fee + packages.delivery_fee) as total_spent,
+                    SUM(packages.freight_price + packages.clearance_fee + packages.storage_fee + packages.delivery_fee) as total_spent,
                     COUNT(packages.id) as package_count,
                     CASE 
-                        WHEN SUM(packages.freight_price + packages.customs_duty + packages.storage_fee + packages.delivery_fee) >= 10000 THEN 'Premium'
-                        WHEN SUM(packages.freight_price + packages.customs_duty + packages.storage_fee + packages.delivery_fee) >= 5000 THEN 'High Value'
-                        WHEN SUM(packages.freight_price + packages.customs_duty + packages.storage_fee + packages.delivery_fee) >= 1000 THEN 'Regular'
+                        WHEN SUM(packages.freight_price + packages.clearance_fee + packages.storage_fee + packages.delivery_fee) >= 10000 THEN 'Premium'
+                        WHEN SUM(packages.freight_price + packages.clearance_fee + packages.storage_fee + packages.delivery_fee) >= 5000 THEN 'High Value'
+                        WHEN SUM(packages.freight_price + packages.clearance_fee + packages.storage_fee + packages.delivery_fee) >= 1000 THEN 'Regular'
                         ELSE 'New/Low Value'
                     END as segment
                 ")
@@ -263,8 +263,8 @@ class FinancialAnalytics extends Component
                 $currentMetrics = Package::whereBetween('created_at', $dateRange)
                     ->selectRaw("
                         COUNT(*) as total_orders,
-                        SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total_revenue,
-                        AVG(freight_price + customs_duty + storage_fee + delivery_fee) as avg_order_value,
+                        SUM(freight_price + clearance_fee + storage_fee + delivery_fee) as total_revenue,
+                        AVG(freight_price + clearance_fee + storage_fee + delivery_fee) as avg_order_value,
                         COUNT(DISTINCT user_id) as unique_customers
                     ")
                     ->first();
@@ -273,8 +273,8 @@ class FinancialAnalytics extends Component
                 $previousMetrics = Package::whereBetween('created_at', $previousRange)
                     ->selectRaw("
                         COUNT(*) as total_orders,
-                        SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total_revenue,
-                        AVG(freight_price + customs_duty + storage_fee + delivery_fee) as avg_order_value,
+                        SUM(freight_price + clearance_fee + storage_fee + delivery_fee) as total_revenue,
+                        AVG(freight_price + clearance_fee + storage_fee + delivery_fee) as avg_order_value,
                         COUNT(DISTINCT user_id) as unique_customers
                     ")
                     ->first();
@@ -360,8 +360,8 @@ class FinancialAnalytics extends Component
                 ->selectRaw("
                     DATE(created_at) as date,
                     SUM(freight_price) as gross_revenue,
-                    SUM(customs_duty + storage_fee + delivery_fee) as pass_through_costs,
-                    SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total_revenue,
+                    SUM(clearance_fee + storage_fee + delivery_fee) as pass_through_costs,
+                    SUM(freight_price + clearance_fee + storage_fee + delivery_fee) as total_revenue,
                     COUNT(*) as order_count
                 ")
                 ->groupBy('date')
@@ -411,8 +411,8 @@ class FinancialAnalytics extends Component
                     users.id,
                     users.created_at as customer_since,
                     COUNT(packages.id) as total_orders,
-                    SUM(packages.freight_price + packages.customs_duty + packages.storage_fee + packages.delivery_fee) as total_spent,
-                    AVG(packages.freight_price + packages.customs_duty + packages.storage_fee + packages.delivery_fee) as avg_order_value,
+                    SUM(packages.freight_price + packages.clearance_fee + packages.storage_fee + packages.delivery_fee) as total_spent,
+                    AVG(packages.freight_price + packages.clearance_fee + packages.storage_fee + packages.delivery_fee) as avg_order_value,
                     MIN(packages.created_at) as first_order_date,
                     MAX(packages.created_at) as last_order_date
                 ")
@@ -463,9 +463,9 @@ class FinancialAnalytics extends Component
             $currentPeriod = Package::whereBetween('created_at', $dateRange)
                 ->selectRaw("
                     COUNT(*) as total_orders,
-                    SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total_revenue,
+                    SUM(freight_price + clearance_fee + storage_fee + delivery_fee) as total_revenue,
                     COUNT(DISTINCT user_id) as unique_customers,
-                    AVG(freight_price + customs_duty + storage_fee + delivery_fee) as avg_order_value
+                    AVG(freight_price + clearance_fee + storage_fee + delivery_fee) as avg_order_value
                 ")
                 ->first();
 
@@ -473,9 +473,9 @@ class FinancialAnalytics extends Component
             $previousPeriod = Package::whereBetween('created_at', $previousRange)
                 ->selectRaw("
                     COUNT(*) as total_orders,
-                    SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total_revenue,
+                    SUM(freight_price + clearance_fee + storage_fee + delivery_fee) as total_revenue,
                     COUNT(DISTINCT user_id) as unique_customers,
-                    AVG(freight_price + customs_duty + storage_fee + delivery_fee) as avg_order_value
+                    AVG(freight_price + clearance_fee + storage_fee + delivery_fee) as avg_order_value
                 ")
                 ->first();
 
@@ -778,8 +778,8 @@ class FinancialAnalytics extends Component
             $currentMetrics = Package::whereBetween('created_at', $dateRange)
                 ->selectRaw("
                     COUNT(*) as total_orders,
-                    SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total_revenue,
-                    AVG(freight_price + customs_duty + storage_fee + delivery_fee) as avg_order_value,
+                    SUM(freight_price + clearance_fee + storage_fee + delivery_fee) as total_revenue,
+                    AVG(freight_price + clearance_fee + storage_fee + delivery_fee) as avg_order_value,
                     COUNT(DISTINCT user_id) as unique_customers
                 ")
                 ->first();
@@ -788,8 +788,8 @@ class FinancialAnalytics extends Component
             $previousMetrics = Package::whereBetween('created_at', $previousRange)
                 ->selectRaw("
                     COUNT(*) as total_orders,
-                    SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total_revenue,
-                    AVG(freight_price + customs_duty + storage_fee + delivery_fee) as avg_order_value,
+                    SUM(freight_price + clearance_fee + storage_fee + delivery_fee) as total_revenue,
+                    AVG(freight_price + clearance_fee + storage_fee + delivery_fee) as avg_order_value,
                     COUNT(DISTINCT user_id) as unique_customers
                 ")
                 ->first();

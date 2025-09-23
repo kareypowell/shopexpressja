@@ -209,7 +209,7 @@ class ManifestSummaryService
             $totalValue = $packages->sum(function (Package $package) {
                 // Calculate total cost from individual cost components
                 $cost = ($package->freight_price ?? 0) + 
-                       ($package->customs_duty ?? 0) + 
+                       ($package->clearance_fee ?? 0) + 
                        ($package->storage_fee ?? 0) + 
                        ($package->delivery_fee ?? 0);
                 

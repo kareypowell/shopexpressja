@@ -15,6 +15,7 @@ require("laravel-mix-tailwind");
 
 mix.js("resources/js/app.js", "public/js/app.js")
     .js("resources/js/html5-editor.js", "public/js/html5-editor.js")
+    .js("resources/js/reports.js", "public/js/reports.js")
     .sass("resources/sass/app.scss", "public/css/app.css")
     .tailwind("./tailwind.config.js")
     .sourceMaps();

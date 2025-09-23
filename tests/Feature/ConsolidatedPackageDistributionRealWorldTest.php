@@ -37,7 +37,7 @@ class ConsolidatedPackageDistributionRealWorldTest extends TestCase
             'user_id' => $customer->id,
             'status' => 'ready',
             'freight_price' => 100.00,
-            'customs_duty' => 15.00,
+            'clearance_fee' => 15.00,
             'storage_fee' => 10.00,
             'delivery_fee' => 20.00,
         ]);

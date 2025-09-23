@@ -478,9 +478,9 @@ class OptimizeCustomerQueries extends Command
             $financial = DB::table('packages')
                 ->where('user_id', $customerId)
                 ->select(
-                    DB::raw('SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total_spent'),
+                    DB::raw('SUM(freight_price + clearance_fee + storage_fee + delivery_fee) as total_spent'),
                     DB::raw('COUNT(*) as package_count'),
-                    DB::raw('AVG(freight_price + customs_duty + storage_fee + delivery_fee) as avg_cost')
+                    DB::raw('AVG(freight_price + clearance_fee + storage_fee + delivery_fee) as avg_cost')
                 )
                 ->first();
                 

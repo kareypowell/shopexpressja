@@ -178,7 +178,7 @@ class PackageModelTest extends TestCase
             'status',
             'estimated_value',
             'freight_price',
-            'customs_duty',
+            'clearance_fee',
             'storage_fee',
             'delivery_fee',
             'container_type',

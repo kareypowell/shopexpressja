@@ -131,8 +131,8 @@
                                         @if($package->freight_price > 0)
                                             <div>Freight: ${{ number_format($package->freight_price, 2) }}</div>
                                         @endif
-                                        @if($package->customs_duty > 0)
-                                            <div>Customs: ${{ number_format($package->customs_duty, 2) }}</div>
+                                        @if($package->clearance_fee > 0)
+                                            <div>Customs: ${{ number_format($package->clearance_fee, 2) }}</div>
                                         @endif
                                         @if($package->storage_fee > 0)
                                             <div>Storage: ${{ number_format($package->storage_fee, 2) }}</div>
@@ -372,7 +372,7 @@
                                                 ${{ number_format($package['freight_price'], 2) }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                                ${{ number_format($package['customs_duty'], 2) }}
+                                                ${{ number_format($package['clearance_fee'], 2) }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
                                                 ${{ number_format($package['storage_fee'], 2) }}

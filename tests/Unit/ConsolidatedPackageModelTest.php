@@ -29,7 +29,7 @@ class ConsolidatedPackageModelTest extends TestCase
             'total_weight',
             'total_quantity',
             'total_freight_price',
-            'total_customs_duty',
+            'total_clearance_fee',
             'total_storage_fee',
             'total_delivery_fee',
             'status',
@@ -128,7 +128,7 @@ class ConsolidatedPackageModelTest extends TestCase
     {
         $consolidatedPackage = ConsolidatedPackage::factory()->create([
             'total_freight_price' => 100.00,
-            'total_customs_duty' => 25.50,
+            'total_clearance_fee' => 25.50,
             'total_storage_fee' => 15.00,
             'total_delivery_fee' => 10.00,
         ]);
@@ -163,7 +163,7 @@ class ConsolidatedPackageModelTest extends TestCase
             'consolidated_package_id' => $consolidatedPackage->id,
             'weight' => 10.5,
             'freight_price' => 50.00,
-            'customs_duty' => 10.00,
+            'clearance_fee' => 10.00,
             'storage_fee' => 5.00,
             'delivery_fee' => 8.00,
         ]);
@@ -172,7 +172,7 @@ class ConsolidatedPackageModelTest extends TestCase
             'consolidated_package_id' => $consolidatedPackage->id,
             'weight' => 15.3,
             'freight_price' => 75.00,
-            'customs_duty' => 15.00,
+            'clearance_fee' => 15.00,
             'storage_fee' => 7.50,
             'delivery_fee' => 12.00,
         ]);
@@ -183,7 +183,7 @@ class ConsolidatedPackageModelTest extends TestCase
         $this->assertEquals(25.8, $consolidatedPackage->total_weight);
         $this->assertEquals(2, $consolidatedPackage->total_quantity);
         $this->assertEquals(125.00, $consolidatedPackage->total_freight_price);
-        $this->assertEquals(25.00, $consolidatedPackage->total_customs_duty);
+        $this->assertEquals(25.00, $consolidatedPackage->total_clearance_fee);
         $this->assertEquals(12.50, $consolidatedPackage->total_storage_fee);
         $this->assertEquals(20.00, $consolidatedPackage->total_delivery_fee);
     }

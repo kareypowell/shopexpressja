@@ -72,7 +72,7 @@ class SalesAnalyticsService
             ->select([
                 DB::raw('YEAR(m.shipment_date) as year'),
                 DB::raw('MONTH(m.shipment_date) as month'),
-                DB::raw('SUM(COALESCE(p.freight_price, 0) + COALESCE(p.customs_duty, 0) + COALESCE(p.storage_fee, 0) + COALESCE(p.delivery_fee, 0)) as total_owed'),
+                DB::raw('SUM(COALESCE(p.freight_price, 0) + COALESCE(p.clearance_fee, 0) + COALESCE(p.storage_fee, 0) + COALESCE(p.delivery_fee, 0)) as total_owed'),
                 DB::raw('COUNT(p.id) as package_count'),
                 'm.type as manifest_type'
             ])
@@ -126,7 +126,7 @@ class SalesAnalyticsService
         $query = DB::table('manifests as m')
             ->select([
                 DB::raw('YEARWEEK(m.shipment_date) as year_week'),
-                DB::raw('SUM(COALESCE(p.freight_price, 0) + COALESCE(p.customs_duty, 0) + COALESCE(p.storage_fee, 0) + COALESCE(p.delivery_fee, 0)) as total_owed'),
+                DB::raw('SUM(COALESCE(p.freight_price, 0) + COALESCE(p.clearance_fee, 0) + COALESCE(p.storage_fee, 0) + COALESCE(p.delivery_fee, 0)) as total_owed'),
                 DB::raw('COUNT(p.id) as package_count')
             ])
             ->leftJoin('packages as p', 'm.id', '=', 'p.manifest_id')
@@ -173,7 +173,7 @@ class SalesAnalyticsService
         $query = DB::table('manifests as m')
             ->select([
                 'm.type as manifest_type',
-                DB::raw('SUM(COALESCE(p.freight_price, 0) + COALESCE(p.customs_duty, 0) + COALESCE(p.storage_fee, 0) + COALESCE(p.delivery_fee, 0)) as total_owed'),
+                DB::raw('SUM(COALESCE(p.freight_price, 0) + COALESCE(p.clearance_fee, 0) + COALESCE(p.storage_fee, 0) + COALESCE(p.delivery_fee, 0)) as total_owed'),
                 DB::raw('COUNT(p.id) as package_count'),
                 DB::raw('COUNT(DISTINCT m.id) as manifest_count')
             ])
@@ -640,7 +640,7 @@ class SalesAnalyticsService
             $owedQuery->where('p.office_id', $officeId);
         }
 
-        $totalOwed = $owedQuery->sum(DB::raw('COALESCE(p.freight_price, 0) + COALESCE(p.customs_duty, 0) + COALESCE(p.storage_fee, 0) + COALESCE(p.delivery_fee, 0)'));
+        $totalOwed = $owedQuery->sum(DB::raw('COALESCE(p.freight_price, 0) + COALESCE(p.clearance_fee, 0) + COALESCE(p.storage_fee, 0) + COALESCE(p.delivery_fee, 0)'));
 
         // Get total collected amounts
         $collectedQuery = DB::table('package_distributions as pd')
@@ -711,7 +711,7 @@ class SalesAnalyticsService
                 $owedQuery->where('p.office_id', $officeId);
             }
 
-            $owed = $owedQuery->sum(DB::raw('COALESCE(p.freight_price, 0) + COALESCE(p.customs_duty, 0) + COALESCE(p.storage_fee, 0) + COALESCE(p.delivery_fee, 0)'));
+            $owed = $owedQuery->sum(DB::raw('COALESCE(p.freight_price, 0) + COALESCE(p.clearance_fee, 0) + COALESCE(p.storage_fee, 0) + COALESCE(p.delivery_fee, 0)'));
 
             // Get collected amounts for this period
             $collectedQuery = DB::table('package_distributions as pd')
@@ -908,14 +908,14 @@ class SalesAnalyticsService
 
         $revenueData = $query->selectRaw('
             SUM(COALESCE(p.freight_price, 0)) as freight_revenue,
-            SUM(COALESCE(p.customs_duty, 0)) as customs_revenue,
+            SUM(COALESCE(p.clearance_fee, 0)) as clearance_revenue,
             SUM(COALESCE(p.storage_fee, 0)) as storage_revenue,
             SUM(COALESCE(p.delivery_fee, 0)) as delivery_revenue
         ')->first();
 
         $breakdown = [
             ['service' => 'Freight', 'amount' => (float) $revenueData->freight_revenue],
-            ['service' => 'Customs', 'amount' => (float) $revenueData->customs_revenue],
+            ['service' => 'Customs', 'amount' => (float) $revenueData->clearance_revenue],
             ['service' => 'Storage', 'amount' => (float) $revenueData->storage_revenue],
             ['service' => 'Delivery', 'amount' => (float) $revenueData->delivery_revenue]
         ];
@@ -1021,7 +1021,7 @@ class SalesAnalyticsService
             $revenue = DB::table('packages as p')
                 ->join('manifests as m', 'p.manifest_id', '=', 'm.id')
                 ->whereBetween('m.shipment_date', [$current, $weekEnd])
-                ->sum(DB::raw('COALESCE(p.freight_price, 0) + COALESCE(p.customs_duty, 0) + COALESCE(p.storage_fee, 0) + COALESCE(p.delivery_fee, 0)'));
+                ->sum(DB::raw('COALESCE(p.freight_price, 0) + COALESCE(p.clearance_fee, 0) + COALESCE(p.storage_fee, 0) + COALESCE(p.delivery_fee, 0)'));
 
             // Get collections for this period
             $collections = DB::table('package_distributions as pd')
@@ -1084,7 +1084,7 @@ class SalesAnalyticsService
                 'revenue' => DB::table('packages as p')
                     ->join('manifests as m', 'p.manifest_id', '=', 'm.id')
                     ->whereBetween('m.shipment_date', [$dateFrom, $dateTo])
-                    ->sum('p.customs_duty'),
+                    ->sum('p.clearance_fee'),
                 'margin' => 15.0 // Estimated margin
             ],
             [
@@ -1124,6 +1124,8 @@ class SalesAnalyticsService
             ]
         ];
     }
+
+
 
     protected function generateCacheKey(string $type, array $filters): string
     {

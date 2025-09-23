@@ -76,7 +76,7 @@ class ConsolidationEndToEndWorkflowTest extends TestCase
             'status' => PackageStatus::READY,
             'weight' => 2.5,
             'freight_price' => 25.00,
-            'customs_duty' => 5.00,
+            'clearance_fee' => 5.00,
             'storage_fee' => 3.00,
             'delivery_fee' => 7.00
         ]);
@@ -103,7 +103,7 @@ class ConsolidationEndToEndWorkflowTest extends TestCase
         $this->assertEquals(7.5, $consolidatedPackage->total_weight); // 3 * 2.5
         $this->assertEquals(3, $consolidatedPackage->total_quantity); // Count of packages
         $this->assertEquals(75.00, $consolidatedPackage->total_freight_price); // 3 * 25.00
-        $this->assertEquals(15.00, $consolidatedPackage->total_customs_duty); // 3 * 5.00
+        $this->assertEquals(15.00, $consolidatedPackage->total_clearance_fee); // 3 * 5.00
         $this->assertEquals(9.00, $consolidatedPackage->total_storage_fee); // 3 * 3.00
         $this->assertEquals(21.00, $consolidatedPackage->total_delivery_fee); // 3 * 7.00
 
@@ -178,7 +178,7 @@ class ConsolidationEndToEndWorkflowTest extends TestCase
 
         // Step 7: Distribute consolidated package
         $totalCost = $consolidatedPackage->total_freight_price + 
-                    $consolidatedPackage->total_customs_duty + 
+                    $consolidatedPackage->total_clearance_fee + 
                     $consolidatedPackage->total_storage_fee + 
                     $consolidatedPackage->total_delivery_fee;
 

@@ -205,7 +205,7 @@ enum PackageStatus: string
   - `distribution_id` (foreign key)
   - `package_id` (foreign key)
   - `freight_price` (decimal)
-  - `customs_duty` (decimal)
+  - `clearance_fee` (decimal)
   - `storage_fee` (decimal)
   - `delivery_fee` (decimal)
   - `total_cost` (decimal)
@@ -330,7 +330,7 @@ CREATE TABLE package_distribution_items (
     distribution_id BIGINT UNSIGNED NOT NULL,
     package_id BIGINT UNSIGNED NOT NULL,
     freight_price DECIMAL(8,2) NOT NULL DEFAULT 0,
-    customs_duty DECIMAL(8,2) NOT NULL DEFAULT 0,
+    clearance_fee DECIMAL(8,2) NOT NULL DEFAULT 0,
     storage_fee DECIMAL(8,2) NOT NULL DEFAULT 0,
     delivery_fee DECIMAL(8,2) NOT NULL DEFAULT 0,
     total_cost DECIMAL(8,2) NOT NULL,

@@ -29,7 +29,7 @@ public function getPendingPackageChargesAttribute()
 {
     return $this->packages()
         ->where('status', 'ready')
-        ->sum(\DB::raw('freight_price + customs_duty + storage_fee + delivery_fee'));
+        ->sum(\DB::raw('freight_price + clearance_fee + storage_fee + delivery_fee'));
 }
 
 /**

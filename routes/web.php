@@ -261,7 +261,9 @@ if (app()->environment(['local', 'testing'])) {
             return view('test-editor');
         })->name('test.html5-editor');
         
-
+        Route::get('/test-collections-chart', function () {
+            return view('test-collections-chart');
+        })->name('test.collections-chart');
 
     });
 }

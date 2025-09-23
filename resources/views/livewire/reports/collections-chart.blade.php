@@ -39,7 +39,21 @@
 
     <!-- Chart Content -->
     <div class="p-6">
-        @if($chartData)
+        @if(isset($error))
+            <!-- Error State -->
+            <div class="flex items-center justify-center h-64">
+                <div class="text-center">
+                    <svg class="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Chart Unavailable</h3>
+                    <p class="mt-1 text-sm text-gray-500">{{ $error }}</p>
+                    <button wire:click="$refresh" class="mt-2 text-sm text-blue-600 hover:text-blue-800">
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        @elseif($chartData && isset($chartData['data']))
             <!-- Summary Cards -->
             @if(isset($chartData['summary']))
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -103,6 +117,17 @@
                     Hover over chart elements for detailed information
                 @endif
             </div>
+        @elseif($chartData === null)
+            <!-- No Data State -->
+            <div class="flex items-center justify-center h-64">
+                <div class="text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No Data Available</h3>
+                    <p class="mt-1 text-sm text-gray-500">Try adjusting your filters or date range.</p>
+                </div>
+            </div>
         @else
             <!-- Loading State -->
             <div class="flex items-center justify-center h-64">
@@ -113,56 +138,4 @@
     </div>
 </div>
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    let chart = null;
-    const chartId = 'collectionsChart-{{ $this->id }}';
-    
-    function initChart() {
-        const canvas = document.getElementById(chartId);
-        if (!canvas) return;
-        
-        const ctx = canvas.getContext('2d');
-        const chartData = @json($chartData);
-        
-        if (chart) {
-            chart.destroy();
-        }
-        
-        if (chartData && chartData.data) {
-            chart = new Chart(ctx, {
-                type: chartData.type,
-                data: chartData.data,
-                options: {
-                    ...chartData.options,
-                    onClick: function(event, elements) {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            
-                            if (chartData.type === 'doughnut') {
-                                const label = this.data.labels[index];
-                                @this.call('handleDrillDown', {type: label.toLowerCase()});
-                            } else if (chartData.type === 'line' || chartData.type === 'bar') {
-                                const period = this.data.labels[index];
-                                @this.call('handleDrillDown', {period: period});
-                            }
-                        }
-                    }
-                }
-            });
-        }
-    }
-    
-    // Initialize chart
-    initChart();
-    
-    // Reinitialize when component updates
-    Livewire.hook('message.processed', (message, component) => {
-        if (component.fingerprint.name === 'reports.collections-chart') {
-            setTimeout(initChart, 100);
-        }
-    });
-});
-</script>
-@endpush
+{{-- Chart initialization handled by global reports dashboard --}}

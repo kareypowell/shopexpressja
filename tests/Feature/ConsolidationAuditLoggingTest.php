@@ -42,7 +42,7 @@ class ConsolidationAuditLoggingTest extends TestCase
             'status' => PackageStatus::PROCESSING,
             'weight' => 5.0,
             'freight_price' => 25.00,
-            'customs_duty' => 0,
+            'clearance_fee' => 0,
             'storage_fee' => 0,
             'delivery_fee' => 0,
         ]);

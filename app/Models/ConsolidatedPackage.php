@@ -19,7 +19,7 @@ class ConsolidatedPackage extends Model
         'total_weight',
         'total_quantity',
         'total_freight_price',
-        'total_customs_duty',
+        'total_clearance_fee',
         'total_storage_fee',
         'total_delivery_fee',
         'status',
@@ -33,7 +33,7 @@ class ConsolidatedPackage extends Model
         'total_weight' => 'decimal:2',
         'total_quantity' => 'integer',
         'total_freight_price' => 'decimal:2',
-        'total_customs_duty' => 'decimal:2',
+        'total_clearance_fee' => 'decimal:2',
         'total_storage_fee' => 'decimal:2',
         'total_delivery_fee' => 'decimal:2',
         'consolidated_at' => 'datetime',
@@ -55,7 +55,7 @@ class ConsolidatedPackage extends Model
     public function packagesWithDetails(): HasMany
     {
         return $this->hasMany(Package::class)
-            ->select(['id', 'consolidated_package_id', 'tracking_number', 'description', 'weight', 'status', 'freight_price', 'customs_duty', 'storage_fee', 'delivery_fee'])
+            ->select(['id', 'consolidated_package_id', 'tracking_number', 'description', 'weight', 'status', 'freight_price', 'clearance_fee', 'storage_fee', 'delivery_fee'])
             ->orderBy('tracking_number');
     }
 
@@ -113,7 +113,7 @@ class ConsolidatedPackage extends Model
     public function getTotalCostAttribute()
     {
         return ($this->total_freight_price ?? 0) +
-               ($this->total_customs_duty ?? 0) +
+               ($this->total_clearance_fee ?? 0) +
                ($this->total_storage_fee ?? 0) +
                ($this->total_delivery_fee ?? 0);
     }
@@ -137,7 +137,7 @@ class ConsolidatedPackage extends Model
             'total_weight' => $packages->sum('weight'),
             'total_quantity' => $packages->count(),
             'total_freight_price' => $packages->sum('freight_price'),
-            'total_customs_duty' => $packages->sum('customs_duty'),
+            'total_clearance_fee' => $packages->sum('clearance_fee'),
             'total_storage_fee' => $packages->sum('storage_fee'),
             'total_delivery_fee' => $packages->sum('delivery_fee'),
         ]);
@@ -311,7 +311,7 @@ class ConsolidatedPackage extends Model
         return $query->select([
             'id', 'consolidated_tracking_number', 'customer_id', 'status', 
             'total_weight', 'total_quantity', 'total_freight_price', 
-            'total_customs_duty', 'total_storage_fee', 'total_delivery_fee',
+            'total_clearance_fee', 'total_storage_fee', 'total_delivery_fee',
             'consolidated_at', 'is_active'
         ])->with('customer:id,first_name,last_name,email');
     }

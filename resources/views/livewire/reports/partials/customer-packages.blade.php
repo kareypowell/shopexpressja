@@ -156,7 +156,7 @@
                             {{ $package->weight ? number_format($package->weight, 1) . ' lbs' : 'N/A' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${{ number_format(($package->freight_price ?? 0) + ($package->customs_duty ?? 0) + ($package->storage_fee ?? 0) + ($package->delivery_fee ?? 0), 2) }}
+                            ${{ number_format(($package->freight_price ?? 0) + ($package->clearance_fee ?? 0) + ($package->storage_fee ?? 0) + ($package->delivery_fee ?? 0), 2) }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ $package->created_at->format('M j, Y') }}

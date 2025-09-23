@@ -381,8 +381,8 @@
                         <td class="amount">${{ number_format($consolidatedPackage->total_freight_price, 2) }}</td>
                     </tr>
                     <tr>
-                        <td>Customs Duty</td>
-                        <td class="amount">${{ number_format($consolidatedPackage->total_customs_duty, 2) }}</td>
+                        <td>Clearance Fee</td>
+                        <td class="amount">${{ number_format($consolidatedPackage->total_clearance_fee, 2) }}</td>
                     </tr>
                     <tr>
                         <td>Storage Fees</td>

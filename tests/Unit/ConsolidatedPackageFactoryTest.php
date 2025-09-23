@@ -154,7 +154,7 @@ class ConsolidatedPackageFactoryTest extends TestCase
         $this->assertGreaterThanOrEqual(10, $consolidatedPackage->total_weight);
         $this->assertGreaterThanOrEqual(5, $consolidatedPackage->total_quantity);
         $this->assertGreaterThanOrEqual(200, $consolidatedPackage->total_freight_price);
-        $this->assertGreaterThanOrEqual(50, $consolidatedPackage->total_customs_duty);
+        $this->assertGreaterThanOrEqual(50, $consolidatedPackage->total_clearance_fee);
     }
 
     /** @test */

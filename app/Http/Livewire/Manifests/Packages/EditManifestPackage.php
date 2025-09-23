@@ -31,7 +31,7 @@ class EditManifestPackage extends Component
     public string $status = '';
     public string $estimated_value = '';
     public float $freight_price = 0;
-    public float $customs_duty = 0;
+    public float $clearance_fee = 0;
     public float $storage_fee = 0;
     public float $delivery_fee = 0;
     public $customerList = [];
@@ -96,7 +96,7 @@ class EditManifestPackage extends Component
             $this->status = $package->status;
             $this->estimated_value = $package->estimated_value;
             $this->freight_price = $package->freight_price ?? 0;
-            $this->customs_duty = $package->customs_duty ?? 0;
+            $this->clearance_fee = $package->clearance_fee ?? 0;
             $this->storage_fee = $package->storage_fee ?? 0;
             $this->delivery_fee = $package->delivery_fee ?? 0;
             
@@ -303,7 +303,7 @@ class EditManifestPackage extends Component
             'status' => 'required|string|max:255',
             'estimated_value' => 'nullable|numeric',
             'freight_price' => 'nullable|numeric|min:0',
-            'customs_duty' => 'nullable|numeric|min:0',
+            'clearance_fee' => 'nullable|numeric|min:0',
             'storage_fee' => 'nullable|numeric|min:0',
             'delivery_fee' => 'nullable|numeric|min:0',
         ];
@@ -311,7 +311,7 @@ class EditManifestPackage extends Component
         // Add specific validation for ready status
         if ($this->status === 'ready') {
             $rules['freight_price'] = 'required|numeric|min:0';
-            $rules['customs_duty'] = 'required|numeric|min:0';
+            $rules['clearance_fee'] = 'required|numeric|min:0';
             $rules['storage_fee'] = 'required|numeric|min:0';
             $rules['delivery_fee'] = 'required|numeric|min:0';
         }
@@ -364,7 +364,7 @@ class EditManifestPackage extends Component
             // Check if status is changing to 'ready' - this requires fee entry
             if ($oldStatus !== 'ready' && $newStatus === 'ready') {
                 // Validate that required fees are set (use form values, not database values)
-                if (!$this->freight_price || !$this->customs_duty || !$this->storage_fee || !$this->delivery_fee) {
+                if (!$this->freight_price || !$this->clearance_fee || !$this->storage_fee || !$this->delivery_fee) {
                     $this->dispatchBrowserEvent('toastr:error', [
                         'message' => 'Cannot set package to ready status. Please ensure all fees (freight, customs, storage, delivery) are properly set before marking as ready.',
                     ]);
@@ -374,7 +374,7 @@ class EditManifestPackage extends Component
                 // Update package with fees first
                 $package->update([
                     'freight_price' => $this->freight_price,
-                    'customs_duty' => $this->customs_duty,
+                    'clearance_fee' => $this->clearance_fee,
                     'storage_fee' => $this->storage_fee,
                     'delivery_fee' => $this->delivery_fee,
                 ]);
@@ -388,7 +388,7 @@ class EditManifestPackage extends Component
                         $package->fresh(), // Get fresh instance with updated fees
                         [
                             'freight_price' => $this->freight_price,
-                            'customs_duty' => $this->customs_duty,
+                            'clearance_fee' => $this->clearance_fee,
                             'storage_fee' => $this->storage_fee,
                             'delivery_fee' => $this->delivery_fee,
                         ],
@@ -416,7 +416,7 @@ class EditManifestPackage extends Component
                 'status' => $this->status,
                 'estimated_value' => $this->estimated_value,
                 'freight_price' => $this->freight_price,
-                'customs_duty' => $this->customs_duty,
+                'clearance_fee' => $this->clearance_fee,
                 'storage_fee' => $this->storage_fee,
                 'delivery_fee' => $this->delivery_fee,
             ];

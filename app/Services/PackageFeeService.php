@@ -35,7 +35,7 @@ class PackageFeeService
 
             // Update package fees
             $package->update([
-                'customs_duty' => isset($fees['customs_duty']) ? $fees['customs_duty'] : 0,
+                'clearance_fee' => isset($fees['clearance_fee']) ? $fees['clearance_fee'] : 0,
                 'storage_fee' => isset($fees['storage_fee']) ? $fees['storage_fee'] : 0,
                 'delivery_fee' => isset($fees['delivery_fee']) ? $fees['delivery_fee'] : 0,
                 'status' => PackageStatus::READY,
@@ -138,7 +138,7 @@ class PackageFeeService
         
         // Calculate new total cost
         $newTotalCost = ($package->freight_price ? $package->freight_price : 0) + 
-                       (isset($fees['customs_duty']) ? $fees['customs_duty'] : 0) + 
+                       (isset($fees['clearance_fee']) ? $fees['clearance_fee'] : 0) + 
                        (isset($fees['storage_fee']) ? $fees['storage_fee'] : 0) + 
                        (isset($fees['delivery_fee']) ? $fees['delivery_fee'] : 0);
 
@@ -166,8 +166,8 @@ class PackageFeeService
     {
         $errors = [];
 
-        if (!isset($fees['customs_duty']) || !is_numeric($fees['customs_duty']) || $fees['customs_duty'] < 0) {
-            $errors['customs_duty'] = 'Customs duty must be a valid positive number';
+        if (!isset($fees['clearance_fee']) || !is_numeric($fees['clearance_fee']) || $fees['clearance_fee'] < 0) {
+            $errors['clearance_fee'] = 'Clearance fee must be a valid positive number';
         }
 
         if (!isset($fees['storage_fee']) || !is_numeric($fees['storage_fee']) || $fees['storage_fee'] < 0) {
@@ -207,7 +207,7 @@ class PackageFeeService
             ],
             'fees' => [
                 'freight_price' => $package->freight_price ? $package->freight_price : 0,
-                'customs_duty' => $fees['customs_duty'],
+                'clearance_fee' => $fees['clearance_fee'],
                 'storage_fee' => $fees['storage_fee'],
                 'delivery_fee' => $fees['delivery_fee'],
             ],

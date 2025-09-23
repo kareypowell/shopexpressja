@@ -101,7 +101,7 @@ class PackageObserver
         }
         
         // Log fee changes
-        $feeFields = ['customs_duty', 'storage_fee', 'delivery_fee', 'freight_price'];
+        $feeFields = ['clearance_fee', 'storage_fee', 'delivery_fee', 'freight_price'];
         $feeChanges = array_intersect_key($changes, array_flip($feeFields));
         if (!empty($feeChanges)) {
             $this->auditService->logBusinessAction('package_fees_updated', $package, [
@@ -280,7 +280,7 @@ class PackageObserver
     protected function calculateTotalCost(array $attributes): float
     {
         return ($attributes['freight_price'] ?? 0) +
-               ($attributes['customs_duty'] ?? 0) +
+               ($attributes['clearance_fee'] ?? 0) +
                ($attributes['storage_fee'] ?? 0) +
                ($attributes['delivery_fee'] ?? 0);
     }

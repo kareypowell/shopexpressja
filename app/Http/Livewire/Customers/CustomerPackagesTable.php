@@ -103,7 +103,7 @@ class CustomerPackagesTable extends DataTableComponent
         // Only show Total Cost column if user should see costs
         if ($this->shouldShowCosts()) {
             $columns[] = Column::make("Total Cost", "")
-                ->sortable(fn($query, $direction) => $query->orderByRaw("(COALESCE(freight_price, 0) + COALESCE(customs_duty, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) {$direction}"))
+                ->sortable(fn($query, $direction) => $query->orderByRaw("(COALESCE(freight_price, 0) + COALESCE(clearance_fee, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) {$direction}"))
                 ->format(fn($value, $row) => '$' . number_format($this->calculateTotalCost($row), 2));
         }
 
@@ -111,7 +111,7 @@ class CustomerPackagesTable extends DataTableComponent
             $columns[] = Column::make("Freight", "freight_price")
                 ->sortable()
                 ->format(fn($value) => '$' . number_format($value ?? 0, 2));
-            $columns[] = Column::make("Customs", "customs_duty")
+            $columns[] = Column::make("Clearance", "clearance_fee")
                 ->sortable()
                 ->format(fn($value) => '$' . number_format($value ?? 0, 2));
             $columns[] = Column::make("Storage", "storage_fee")
@@ -130,7 +130,7 @@ class CustomerPackagesTable extends DataTableComponent
     protected function calculateTotalCost($package): float
     {
         return ($package->freight_price ?? 0) + 
-               ($package->customs_duty ?? 0) + 
+               ($package->clearance_fee ?? 0) + 
                ($package->storage_fee ?? 0) + 
                ($package->delivery_fee ?? 0);
     }
@@ -200,13 +200,13 @@ class CustomerPackagesTable extends DataTableComponent
             ->when($this->getFilter('cost_range'), function($query, $range) {
                 switch($range) {
                     case '0-100':
-                        return $query->havingRaw('(COALESCE(freight_price, 0) + COALESCE(customs_duty, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) BETWEEN 0 AND 100');
+                        return $query->havingRaw('(COALESCE(freight_price, 0) + COALESCE(clearance_fee, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) BETWEEN 0 AND 100');
                     case '100-500':
-                        return $query->havingRaw('(COALESCE(freight_price, 0) + COALESCE(customs_duty, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) BETWEEN 100 AND 500');
+                        return $query->havingRaw('(COALESCE(freight_price, 0) + COALESCE(clearance_fee, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) BETWEEN 100 AND 500');
                     case '500-1000':
-                        return $query->havingRaw('(COALESCE(freight_price, 0) + COALESCE(customs_duty, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) BETWEEN 500 AND 1000');
+                        return $query->havingRaw('(COALESCE(freight_price, 0) + COALESCE(clearance_fee, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) BETWEEN 500 AND 1000');
                     case '1000+':
-                        return $query->havingRaw('(COALESCE(freight_price, 0) + COALESCE(customs_duty, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) > 1000');
+                        return $query->havingRaw('(COALESCE(freight_price, 0) + COALESCE(clearance_fee, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) > 1000');
                 }
             });
     }

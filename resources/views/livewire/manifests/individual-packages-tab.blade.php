@@ -193,10 +193,10 @@
                                     </div>
                                     
                                     <div class="mt-1 grid grid-cols-4 gap-4 text-sm text-gray-600">
-                                        <div>Customs: ${{ number_format($package->customs_duty ?? 0, 2) }}</div>
+                                        <div>Customs: ${{ number_format($package->clearance_fee ?? 0, 2) }}</div>
                                         <div>Storage: ${{ number_format($package->storage_fee ?? 0, 2) }}</div>
                                         <div>Delivery: ${{ number_format($package->delivery_fee ?? 0, 2) }}</div>
-                                        <div>Total: ${{ number_format(($package->freight_price ?? 0) + ($package->customs_duty ?? 0) + ($package->storage_fee ?? 0) + ($package->delivery_fee ?? 0), 2) }}</div>
+                                        <div>Total: ${{ number_format(($package->freight_price ?? 0) + ($package->clearance_fee ?? 0) + ($package->storage_fee ?? 0) + ($package->delivery_fee ?? 0), 2) }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -375,7 +375,7 @@
                     
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Customs Duty</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Clearance Fee</label>
                             <input 
                                 type="number" 
                                 step="0.01" 

@@ -36,7 +36,7 @@ class ConsolidatedPackageFeeModalTest extends TestCase
             'consolidated_package_id' => $this->consolidatedPackage->id,
             'user_id' => $this->user->id,
             'status' => PackageStatus::PROCESSING,
-            'customs_duty' => 0,
+            'clearance_fee' => 0,
             'storage_fee' => 0,
             'delivery_fee' => 0,
         ]);
@@ -90,7 +90,7 @@ class ConsolidatedPackageFeeModalTest extends TestCase
                 'id' => $package->id,
                 'tracking_number' => $package->tracking_number,
                 'description' => $package->description,
-                'customs_duty' => 10.00,
+                'clearance_fee' => 10.00,
                 'storage_fee' => 5.00,
                 'delivery_fee' => 15.00,
                 'needs_fees' => true,
@@ -107,7 +107,7 @@ class ConsolidatedPackageFeeModalTest extends TestCase
         // Verify that the individual packages have been updated with fees
         foreach ($packages as $package) {
             $package->refresh();
-            $this->assertEquals(10.00, $package->customs_duty);
+            $this->assertEquals(10.00, $package->clearance_fee);
             $this->assertEquals(5.00, $package->storage_fee);
             $this->assertEquals(15.00, $package->delivery_fee);
         }
@@ -124,7 +124,7 @@ class ConsolidatedPackageFeeModalTest extends TestCase
         $packageNeedingFees = Package::factory()->create([
             'consolidated_package_id' => $this->consolidatedPackage->id,
             'user_id' => $this->user->id,
-            'customs_duty' => 0,
+            'clearance_fee' => 0,
             'storage_fee' => 0,
             'delivery_fee' => 0,
         ]);
@@ -133,7 +133,7 @@ class ConsolidatedPackageFeeModalTest extends TestCase
         $packageWithFees = Package::factory()->create([
             'consolidated_package_id' => $this->consolidatedPackage->id,
             'user_id' => $this->user->id,
-            'customs_duty' => 10.00,
+            'clearance_fee' => 10.00,
             'storage_fee' => 5.00,
             'delivery_fee' => 15.00,
         ]);

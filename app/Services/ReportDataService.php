@@ -65,7 +65,7 @@ class ReportDataService
                 'm.shipment_date as created_at',
                 'o.name as office_name',
                 DB::raw('COUNT(p.id) as total_packages'),
-                DB::raw('SUM(COALESCE(p.freight_price, 0) + COALESCE(p.customs_duty, 0) + COALESCE(p.storage_fee, 0) + COALESCE(p.delivery_fee, 0)) as total_owed'),
+                DB::raw('SUM(COALESCE(p.freight_price, 0) + COALESCE(p.clearance_fee, 0) + COALESCE(p.storage_fee, 0) + COALESCE(p.delivery_fee, 0)) as total_owed'),
                 DB::raw('SUM(CASE WHEN p.status = "delivered" THEN 1 ELSE 0 END) as delivered_count')
             ])
             ->leftJoin('packages as p', 'm.id', '=', 'p.manifest_id')
@@ -447,7 +447,7 @@ class ReportDataService
                 'u.account_balance',
                 'u.updated_at as last_activity',
                 DB::raw('COUNT(p.id) as total_packages'),
-                DB::raw('SUM(COALESCE(p.freight_price, 0) + COALESCE(p.customs_duty, 0) + COALESCE(p.storage_fee, 0) + COALESCE(p.delivery_fee, 0)) as total_spent'),
+                DB::raw('SUM(COALESCE(p.freight_price, 0) + COALESCE(p.clearance_fee, 0) + COALESCE(p.storage_fee, 0) + COALESCE(p.delivery_fee, 0)) as total_spent'),
                 DB::raw('SUM(CASE WHEN p.status = "delivered" THEN 1 ELSE 0 END) as delivered_packages'),
                 DB::raw('MAX(p.created_at) as last_package_date'),
                 DB::raw('CASE 
@@ -597,7 +597,7 @@ class ReportDataService
         $revenueBreakdown = DB::table('packages')
             ->selectRaw('
                 SUM(COALESCE(freight_price, 0)) as freight_revenue,
-                SUM(COALESCE(customs_duty, 0)) as customs_revenue,
+                SUM(COALESCE(clearance_fee, 0)) as clearance_revenue,
                 SUM(COALESCE(storage_fee, 0)) as storage_revenue,
                 SUM(COALESCE(delivery_fee, 0)) as delivery_revenue,
                 COUNT(*) as package_count
@@ -629,7 +629,7 @@ class ReportDataService
         $dailyRevenue = DB::table('packages')
             ->selectRaw('
                 DATE(created_at) as date,
-                SUM(COALESCE(freight_price, 0) + COALESCE(customs_duty, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) as daily_revenue,
+                SUM(COALESCE(freight_price, 0) + COALESCE(clearance_fee, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) as daily_revenue,
                 COUNT(*) as daily_packages
             ')
             ->whereBetween('created_at', [$dateFrom, $dateTo])
@@ -640,12 +640,12 @@ class ReportDataService
         return [
             'revenue_breakdown' => [
                 'freight_revenue' => (float) ($revenueBreakdown->freight_revenue ?? 0),
-                'customs_revenue' => (float) ($revenueBreakdown->customs_revenue ?? 0),
+                'clearance_revenue' => (float) ($revenueBreakdown->clearance_revenue ?? 0),
                 'storage_revenue' => (float) ($revenueBreakdown->storage_revenue ?? 0),
                 'delivery_revenue' => (float) ($revenueBreakdown->delivery_revenue ?? 0),
                 'total_revenue' => (float) (
                     ($revenueBreakdown->freight_revenue ?? 0) + 
-                    ($revenueBreakdown->customs_revenue ?? 0) + 
+                    ($revenueBreakdown->clearance_revenue ?? 0) + 
                     ($revenueBreakdown->storage_revenue ?? 0) + 
                     ($revenueBreakdown->delivery_revenue ?? 0)
                 ),

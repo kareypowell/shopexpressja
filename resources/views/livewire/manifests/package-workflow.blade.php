@@ -261,8 +261,8 @@
                         <!-- Fee Entry Form -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                             <div>
-                                <label for="customs-duty" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Customs Duty
+                                <label for="clearance-fee" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Clearance Fee
                                 </label>
                                 <div class="relative">
                                     <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
@@ -352,8 +352,8 @@
                                             <span>${{ number_format($feePreview['fees']['freight_price'], 2) }}</span>
                                         </div>
                                         <div class="flex justify-between">
-                                            <span class="text-gray-600">Customs Duty:</span>
-                                            <span>${{ number_format($feePreview['fees']['customs_duty'], 2) }}</span>
+                                            <span class="text-gray-600">Clearance Fee:</span>
+                                            <span>${{ number_format($feePreview['fees']['clearance_fee'], 2) }}</span>
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-gray-600">Storage Fee:</span>

@@ -14,7 +14,7 @@ class PackageDistributionItem extends Model
         'distribution_id',
         'package_id',
         'freight_price',
-        'customs_duty',
+        'clearance_fee',
         'storage_fee',
         'delivery_fee',
         'total_cost',
@@ -22,7 +22,7 @@ class PackageDistributionItem extends Model
 
     protected $casts = [
         'freight_price' => 'decimal:2',
-        'customs_duty' => 'decimal:2',
+        'clearance_fee' => 'decimal:2',
         'storage_fee' => 'decimal:2',
         'delivery_fee' => 'decimal:2',
         'total_cost' => 'decimal:2',
@@ -49,7 +49,7 @@ class PackageDistributionItem extends Model
      */
     public function calculateTotalCost(): float
     {
-        return $this->freight_price + $this->customs_duty + $this->storage_fee + $this->delivery_fee;
+        return $this->freight_price + $this->clearance_fee + $this->storage_fee + $this->delivery_fee;
     }
 
     /**

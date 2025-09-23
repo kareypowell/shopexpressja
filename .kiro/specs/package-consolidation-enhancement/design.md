@@ -28,7 +28,7 @@ The Package Consolidation Enhancement introduces a flexible system for grouping 
 - total_weight (calculated from individual packages)
 - total_quantity (calculated from individual packages)
 - total_freight_price (calculated)
-- total_customs_duty (calculated)
+- total_clearance_fee (calculated)
 - total_storage_fee (calculated)
 - total_delivery_fee (calculated)
 - status (mirrors individual package status)
@@ -201,7 +201,7 @@ class PackageDistribution extends Component
     'total_weight' => 'decimal(15,2)',
     'total_quantity' => 'integer',
     'total_freight_price' => 'decimal(15,2)',
-    'total_customs_duty' => 'decimal(15,2)',
+    'total_clearance_fee' => 'decimal(15,2)',
     'total_storage_fee' => 'decimal(15,2)',
     'total_delivery_fee' => 'decimal(15,2)',
     'status' => 'string', // Uses PackageStatus enum

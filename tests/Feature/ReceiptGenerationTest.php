@@ -59,7 +59,7 @@ class ReceiptGenerationTest extends TestCase
             'tracking_number' => 'TEST123',
             'description' => 'Test Package',
             'freight_price' => 100.00,
-            'customs_duty' => 25.00,
+            'clearance_fee' => 25.00,
             'storage_fee' => 10.00,
             'delivery_fee' => 15.00,
         ]);
@@ -101,7 +101,7 @@ class ReceiptGenerationTest extends TestCase
             'user_id' => $this->customer->id,
             'status' => PackageStatus::READY,
             'freight_price' => 100.00,
-            'customs_duty' => 0.00,
+            'clearance_fee' => 0.00,
             'storage_fee' => 0.00,
             'delivery_fee' => 0.00,
         ]);
@@ -154,7 +154,7 @@ class ReceiptGenerationTest extends TestCase
             'user_id' => $customer->id,
             'status' => PackageStatus::READY,
             'freight_price' => 100.00,
-            'customs_duty' => 0.00,
+            'clearance_fee' => 0.00,
             'storage_fee' => 0.00,
             'delivery_fee' => 0.00,
         ]);
@@ -192,7 +192,7 @@ class ReceiptGenerationTest extends TestCase
             'tracking_number' => 'PDF123',
             'description' => 'PDF Test Package',
             'freight_price' => 75.00,
-            'customs_duty' => 25.00,
+            'clearance_fee' => 25.00,
             'storage_fee' => 0.00,
             'delivery_fee' => 0.00,
         ]);
@@ -235,7 +235,7 @@ class ReceiptGenerationTest extends TestCase
             'user_id' => $customer->id,
             'status' => PackageStatus::READY,
             'freight_price' => 50.00,
-            'customs_duty' => 0.00,
+            'clearance_fee' => 0.00,
             'storage_fee' => 0.00,
             'delivery_fee' => 0.00,
         ]);

@@ -137,8 +137,8 @@ class CustomerQueryOptimizationService
                     DB::raw('COUNT(CASE WHEN status = "delivered" THEN 1 END) as delivered_packages'),
                     DB::raw('COUNT(CASE WHEN status = "shipped" THEN 1 END) as in_transit_packages'),
                     DB::raw('COUNT(CASE WHEN status = "ready" THEN 1 END) as ready_packages'),
-                    DB::raw('COALESCE(SUM(freight_price + customs_duty + storage_fee + delivery_fee), 0) as total_spent'),
-                    DB::raw('COALESCE(AVG(freight_price + customs_duty + storage_fee + delivery_fee), 0) as avg_package_cost'),
+                    DB::raw('COALESCE(SUM(freight_price + clearance_fee + storage_fee + delivery_fee), 0) as total_spent'),
+                    DB::raw('COALESCE(AVG(freight_price + clearance_fee + storage_fee + delivery_fee), 0) as avg_package_cost'),
                     DB::raw('COALESCE(SUM(weight), 0) as total_weight'),
                     DB::raw('COALESCE(AVG(weight), 0) as avg_weight')
                 ])
@@ -173,12 +173,12 @@ class CustomerQueryOptimizationService
                 ->select([
                     'user_id',
                     DB::raw('COALESCE(SUM(freight_price), 0) as total_freight'),
-                    DB::raw('COALESCE(SUM(customs_duty), 0) as total_customs'),
+                    DB::raw('COALESCE(SUM(clearance_fee), 0) as total_clearance'),
                     DB::raw('COALESCE(SUM(storage_fee), 0) as total_storage'),
                     DB::raw('COALESCE(SUM(delivery_fee), 0) as total_delivery'),
                     DB::raw('COUNT(*) as package_count'),
                     DB::raw('COALESCE(AVG(freight_price), 0) as avg_freight'),
-                    DB::raw('COALESCE(AVG(customs_duty), 0) as avg_customs'),
+                    DB::raw('COALESCE(AVG(clearance_fee), 0) as avg_clearance'),
                     DB::raw('COALESCE(AVG(storage_fee), 0) as avg_storage'),
                     DB::raw('COALESCE(AVG(delivery_fee), 0) as avg_delivery')
                 ])
@@ -218,7 +218,7 @@ class CustomerQueryOptimizationService
                     'user_id',
                     DB::raw('COUNT(*) as recent_packages'),
                     DB::raw('MAX(created_at) as last_package_date'),
-                    DB::raw('COALESCE(SUM(freight_price + customs_duty + storage_fee + delivery_fee), 0) as recent_spending')
+                    DB::raw('COALESCE(SUM(freight_price + clearance_fee + storage_fee + delivery_fee), 0) as recent_spending')
                 ])
                 ->groupBy('user_id')
                 ->get()

@@ -49,7 +49,7 @@ class CustomerStatisticsServiceTest extends TestCase
             'weight' => 10.5,
             'cubic_feet' => 2.5,
             'freight_price' => 100.00,
-            'customs_duty' => 25.00,
+            'clearance_fee' => 25.00,
             'storage_fee' => 10.00,
             'delivery_fee' => 15.00,
             'created_at' => Carbon::now()->subDays(30)
@@ -61,7 +61,7 @@ class CustomerStatisticsServiceTest extends TestCase
             'weight' => 5.0,
             'cubic_feet' => 1.2,
             'freight_price' => 50.00,
-            'customs_duty' => 12.50,
+            'clearance_fee' => 12.50,
             'storage_fee' => 5.00,
             'delivery_fee' => 7.50,
             'created_at' => Carbon::now()->subDays(15)
@@ -130,7 +130,7 @@ class CustomerStatisticsServiceTest extends TestCase
         Package::factory()->create([
             'user_id' => $this->customer->id,
             'freight_price' => 100.00,
-            'customs_duty' => 25.00,
+            'clearance_fee' => 25.00,
             'storage_fee' => 10.00,
             'delivery_fee' => 15.00
         ]);
@@ -138,7 +138,7 @@ class CustomerStatisticsServiceTest extends TestCase
         Package::factory()->create([
             'user_id' => $this->customer->id,
             'freight_price' => 200.00,
-            'customs_duty' => 50.00,
+            'clearance_fee' => 50.00,
             'storage_fee' => 20.00,
             'delivery_fee' => 30.00
         ]);
@@ -148,19 +148,19 @@ class CustomerStatisticsServiceTest extends TestCase
         $this->assertEquals(450.00, $financial['total_spent']);
         $this->assertEquals(225.00, $financial['average_per_package']);
         $this->assertEquals(300.00, $financial['cost_breakdown']['freight']);
-        $this->assertEquals(75.00, $financial['cost_breakdown']['customs']);
+        $this->assertEquals(75.00, $financial['cost_breakdown']['clearance']);
         $this->assertEquals(30.00, $financial['cost_breakdown']['storage']);
         $this->assertEquals(45.00, $financial['cost_breakdown']['delivery']);
         
         // Test percentages
         $this->assertEquals(66.7, $financial['cost_percentages']['freight']);
-        $this->assertEquals(16.7, $financial['cost_percentages']['customs']);
+        $this->assertEquals(16.7, $financial['cost_percentages']['clearance']);
         $this->assertEquals(6.7, $financial['cost_percentages']['storage']);
         $this->assertEquals(10.0, $financial['cost_percentages']['delivery']);
         
         // Test averages
         $this->assertEquals(150.00, $financial['average_costs']['freight']);
-        $this->assertEquals(37.50, $financial['average_costs']['customs']);
+        $this->assertEquals(37.50, $financial['average_costs']['clearance']);
         $this->assertEquals(15.00, $financial['average_costs']['storage']);
         $this->assertEquals(22.50, $financial['average_costs']['delivery']);
     }
@@ -364,7 +364,7 @@ class CustomerStatisticsServiceTest extends TestCase
         Package::factory()->create([
             'user_id' => $this->customer->id,
             'freight_price' => 0,
-            'customs_duty' => 0,
+            'clearance_fee' => 0,
             'storage_fee' => 0,
             'delivery_fee' => 0
         ]);

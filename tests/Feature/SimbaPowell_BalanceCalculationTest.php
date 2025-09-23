@@ -45,7 +45,7 @@ class SimbaPowell_BalanceCalculationTest extends TestCase
             'user_id' => $this->customer->id,
             'status' => PackageStatus::READY,
             'freight_price' => 5000.00,
-            'customs_duty' => 1500.00,
+            'clearance_fee' => 1500.00,
             'storage_fee' => 200.00,
             'delivery_fee' => 1242.00, // Total: 7,942
         ]);
@@ -110,7 +110,7 @@ class SimbaPowell_BalanceCalculationTest extends TestCase
             'user_id' => $this->customer->id,
             'status' => PackageStatus::READY,
             'freight_price' => 5000.00,
-            'customs_duty' => 1500.00,
+            'clearance_fee' => 1500.00,
             'storage_fee' => 200.00,
             'delivery_fee' => 1242.00, // Total: 7,942
         ]);

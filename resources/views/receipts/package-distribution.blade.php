@@ -378,7 +378,7 @@
                             @endif
                         </th>
                         <th class="text-right">Freight</th>
-                        <th class="text-right">Customs</th>
+                        <th class="text-right">Clearance</th>
                         <th class="text-right">Storage</th>
                         <th class="text-right">Delivery</th>
                         <th class="text-right">Total</th>
@@ -391,7 +391,7 @@
                         <td>{{ $package['description'] }}</td>
                         <td>{{ $package['weight_display'] }}</td>
                         <td class="text-right">${{ $package['freight_price'] }}</td>
-                        <td class="text-right">${{ $package['customs_duty'] }}</td>
+                        <td class="text-right">${{ $package['clearance_fee'] }}</td>
                         <td class="text-right">${{ $package['storage_fee'] }}</td>
                         <td class="text-right">${{ $package['delivery_fee'] }}</td>
                         <td class="text-right">${{ $package['total_cost'] }}</td>

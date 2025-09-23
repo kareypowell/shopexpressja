@@ -97,7 +97,7 @@ class ConsolidatedPackageReceiptEmail extends Mailable implements ShouldQueue
         foreach ($distribution->items as $item) {
             $subtotal += $item->total_cost;
             $totalFreight += $item->freight_price;
-            $totalCustoms += $item->customs_duty;
+            $totalCustoms += $item->clearance_fee;
             $totalStorage += $item->storage_fee;
             $totalDelivery += $item->delivery_fee;
         }

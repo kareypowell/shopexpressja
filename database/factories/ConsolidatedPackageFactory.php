@@ -20,7 +20,7 @@ class ConsolidatedPackageFactory extends Factory
             'total_weight' => $this->faker->randomFloat(2, 1, 100),
             'total_quantity' => $this->faker->numberBetween(2, 10),
             'total_freight_price' => $this->faker->randomFloat(2, 50, 500),
-            'total_customs_duty' => $this->faker->randomFloat(2, 10, 100),
+            'total_clearance_fee' => $this->faker->randomFloat(2, 10, 100),
             'total_storage_fee' => $this->faker->randomFloat(2, 5, 50),
             'total_delivery_fee' => $this->faker->randomFloat(2, 10, 30),
             'status' => $this->faker->randomElement([
@@ -148,7 +148,7 @@ class ConsolidatedPackageFactory extends Factory
             'total_weight' => $this->faker->randomFloat(2, 10, 50),
             'total_quantity' => $this->faker->numberBetween(5, 15),
             'total_freight_price' => $this->faker->randomFloat(2, 200, 800),
-            'total_customs_duty' => $this->faker->randomFloat(2, 50, 200),
+            'total_clearance_fee' => $this->faker->randomFloat(2, 50, 200),
             'total_storage_fee' => $this->faker->randomFloat(2, 20, 80),
             'total_delivery_fee' => $this->faker->randomFloat(2, 20, 60),
         ]);
@@ -163,7 +163,7 @@ class ConsolidatedPackageFactory extends Factory
             'total_weight' => $this->faker->randomFloat(2, 1, 5),
             'total_quantity' => $this->faker->numberBetween(2, 3),
             'total_freight_price' => $this->faker->randomFloat(2, 20, 80),
-            'total_customs_duty' => $this->faker->randomFloat(2, 5, 25),
+            'total_clearance_fee' => $this->faker->randomFloat(2, 5, 25),
             'total_storage_fee' => $this->faker->randomFloat(2, 2, 10),
             'total_delivery_fee' => $this->faker->randomFloat(2, 3, 12),
         ]);

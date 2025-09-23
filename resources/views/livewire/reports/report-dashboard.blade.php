@@ -39,9 +39,9 @@
                     <p class="mt-2 text-sm text-gray-600">
                         Comprehensive analytics and reporting dashboard
                     </p>
-                    @if($lastUpdated)
+                    @if($this->lastUpdated)
                         <p class="mt-1 text-xs text-gray-500">
-                            Last updated: {{ $lastUpdated }}
+                            Last updated: {{ $this->lastUpdated }}
                         </p>
                     @endif
                 </div>
@@ -50,12 +50,12 @@
                     {{-- Auto Refresh Toggle --}}
                     <button 
                         wire:click="toggleAutoRefresh"
-                        class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 {{ $autoRefresh ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
+                        class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 {{ $this->autoRefresh ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
                     >
-                        <svg class="w-4 h-4 mr-2 {{ $autoRefresh ? 'animate-spin' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 mr-2 {{ $this->autoRefresh ? 'animate-spin' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                         </svg>
-                        {{ $autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh OFF' }}
+                        {{ $this->autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh OFF' }}
                     </button>
                     
                     {{-- Refresh Button --}}
@@ -78,13 +78,13 @@
             </div>
             
             {{-- Report Type Navigation --}}
-            @if(count($availableReports) > 1)
+            @if(count($this->availableReports) > 1)
                 <div class="mt-6">
                     <nav class="flex space-x-8" aria-label="Report Types">
-                        @foreach($availableReports as $reportType => $config)
+                        @foreach($this->availableReports as $reportType => $config)
                             <button
                                 wire:click="changeReportType('{{ $reportType }}')"
-                                class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 {{ $activeReportType === $reportType ? 'bg-' . $config['color'] . '-100 text-' . $config['color'] . '-800' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100' }}"
+                                class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 {{ $this->activeReportType === $reportType ? 'bg-' . $config['color'] . '-100 text-' . $config['color'] . '-800' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100' }}"
                             >
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     @if($config['icon'] === 'currency-dollar')
@@ -109,7 +109,7 @@
         </div>
 
         {{-- Error Display --}}
-        @if($error)
+        @if($this->error)
             <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
                 <div class="flex">
                     <div class="flex-shrink-0">
@@ -120,7 +120,7 @@
                     <div class="ml-3">
                         <h3 class="text-sm font-medium text-red-800">Error</h3>
                         <div class="mt-2 text-sm text-red-700">
-                            <p>{{ $error }}</p>
+                            <p>{{ $this->error }}</p>
                         </div>
                     </div>
                 </div>
@@ -129,17 +129,17 @@
 
         {{-- Dashboard Components --}}
         <div class="space-y-6">
-            @foreach($sortedComponents as $componentName)
+            @foreach($this->sortedComponents as $componentName)
                 @if($componentName === 'filters' && $this->shouldShowComponent('filters'))
                     {{-- Report Filters Component --}}
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        @livewire('reports.report-filters', ['reportType' => $activeReportType], key('report-filters-' . $activeReportType))
+                        @livewire('reports.report-filters', ['reportType' => $this->activeReportType], key('report-filters-' . $this->activeReportType))
                     </div>
                 @elseif($componentName === 'summary_cards' && $this->shouldShowComponent('summary_cards'))
                     {{-- Summary Statistics Cards --}}
-                    @if(!empty($summaryStats))
+                    @if(!empty($this->summaryStats))
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            @foreach($summaryStats as $stat)
+                            @foreach($this->summaryStats as $stat)
                                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0">
@@ -166,56 +166,65 @@
                     @endif
                 @elseif($componentName === 'main_chart' && $this->shouldShowComponent('main_chart'))
                     {{-- Main Chart Component --}}
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-lg font-semibold text-gray-900">
-                                {{ $currentReport['name'] ?? 'Report' }} Visualization
-                            </h3>
-                            <button 
-                                wire:click="loadChartData"
-                                class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
-                            >
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                </svg>
-                                Load Chart
-                            </button>
-                        </div>
-                        
-                        <div class="h-96" id="report-chart-container">
-                            @if($chartsLoaded && !empty($chartData))
-                                {{-- Chart will be rendered here via JavaScript --}}
-                                <canvas id="report-main-chart" class="w-full h-full"></canvas>
-                            @else
-                                <div class="flex items-center justify-center h-full bg-gray-50 rounded-lg">
-                                    <div class="text-center">
-                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                        </svg>
-                                        <h3 class="mt-2 text-sm font-medium text-gray-900">No chart data</h3>
-                                        <p class="mt-1 text-sm text-gray-500">Click "Load Chart" to visualize the data</p>
+                    @if($this->activeReportType === 'sales_collections')
+                        @livewire('reports.collections-chart', ['filters' => $this->activeFilters], key('collections-chart-' . md5(serialize($this->activeFilters))))
+                    @elseif($this->activeReportType === 'manifest_performance')
+                        @livewire('reports.manifest-performance-chart', ['filters' => $this->activeFilters], key('manifest-chart-' . md5(serialize($this->activeFilters))))
+                    @elseif($this->activeReportType === 'financial_summary')
+                        @livewire('reports.financial-analytics-chart', ['filters' => $this->activeFilters], key('financial-chart-' . md5(serialize($this->activeFilters))))
+                    @else
+                        {{-- Fallback Generic Chart --}}
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-lg font-semibold text-gray-900">
+                                    {{ $this->currentReport['name'] ?? 'Report' }} Visualization
+                                </h3>
+                                <button 
+                                    wire:click="loadChartData"
+                                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                                >
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                    </svg>
+                                    Load Chart
+                                </button>
+                            </div>
+                            
+                            <div class="h-96" id="report-chart-container">
+                                @if($this->chartsLoaded && !empty($this->chartData))
+                                    {{-- Chart will be rendered here via JavaScript --}}
+                                    <canvas id="report-main-chart" class="w-full h-full"></canvas>
+                                @else
+                                    <div class="flex items-center justify-center h-full bg-gray-50 rounded-lg">
+                                        <div class="text-center">
+                                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                            </svg>
+                                            <h3 class="mt-2 text-sm font-medium text-gray-900">No chart data</h3>
+                                            <p class="mt-1 text-sm text-gray-500">Click "Load Chart" to visualize the data</p>
+                                        </div>
                                     </div>
-                                </div>
-                            @endif
+                                @endif
+                            </div>
                         </div>
-                    </div>
+                    @endif
                 @elseif($componentName === 'data_table' && $this->shouldShowComponent('data_table'))
                     {{-- Data Table Component --}}
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
                         @livewire('reports.report-data-table', [
-                            'reportType' => $activeReportType,
-                            'data' => $tableData,
-                            'filters' => $activeFilters
-                        ], key('report-data-table-' . $activeReportType))
+                            'reportType' => $this->activeReportType,
+                            'data' => $this->tableData,
+                            'filters' => $this->activeFilters
+                        ], key('report-data-table-' . $this->activeReportType))
                     </div>
                 @elseif($componentName === 'export_controls' && $this->shouldShowComponent('export_controls'))
                     {{-- Export Controls Component --}}
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
                         @livewire('reports.report-exporter', [
-                            'reportType' => $activeReportType,
-                            'reportData' => $reportData,
-                            'filters' => $activeFilters
-                        ], key('report-exporter-' . $activeReportType))
+                            'reportType' => $this->activeReportType,
+                            'reportData' => $this->reportData,
+                            'filters' => $this->activeFilters
+                        ], key('report-exporter-' . $this->activeReportType))
                     </div>
                 @endif
             @endforeach
@@ -234,152 +243,13 @@
             </div>
         </div>
     </div>
+
+    {{-- Package Detail Modal --}}
+    <div x-data="{ show: false }" 
+         @show-manifest-details.window="show = true"
+         @close-modal.window="show = false">
+        @livewire('reports.manifest-package-detail-modal')
+    </div>
 </div>
 
-{{-- Chart.js Integration --}}
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    let reportChart = null;
-    let autoRefreshInterval = null;
-    
-    // Listen for chart data loaded event
-    Livewire.on('chartDataLoaded', function(chartData) {
-        renderChart(chartData);
-    });
-    
-    // Listen for auto-refresh events
-    window.addEventListener('startAutoRefresh', function(event) {
-        if (autoRefreshInterval) {
-            clearInterval(autoRefreshInterval);
-        }
-        
-        autoRefreshInterval = setInterval(function() {
-            @this.call('refreshReport');
-        }, event.detail.interval);
-    });
-    
-    window.addEventListener('stopAutoRefresh', function() {
-        if (autoRefreshInterval) {
-            clearInterval(autoRefreshInterval);
-            autoRefreshInterval = null;
-        }
-    });
-    
-    function renderChart(chartData) {
-        const canvas = document.getElementById('report-main-chart');
-        if (!canvas || !chartData) return;
-        
-        const ctx = canvas.getContext('2d');
-        
-        // Destroy existing chart
-        if (reportChart) {
-            reportChart.destroy();
-        }
-        
-        // Create new chart based on type
-        const config = getChartConfig(chartData);
-        reportChart = new Chart(ctx, config);
-    }
-    
-    function getChartConfig(chartData) {
-        const baseConfig = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                }
-            },
-            scales: {
-                x: {
-                    display: true,
-                    title: {
-                        display: true,
-                        text: chartData.xAxisLabel || 'Date'
-                    }
-                },
-                y: {
-                    display: true,
-                    title: {
-                        display: true,
-                        text: chartData.yAxisLabel || 'Value'
-                    }
-                }
-            }
-        };
-        
-        switch (chartData.type) {
-            case 'collections':
-                return {
-                    type: 'line',
-                    data: chartData.data,
-                    options: {
-                        ...baseConfig,
-                        interaction: {
-                            mode: 'nearest',
-                            axis: 'x',
-                            intersect: false
-                        }
-                    }
-                };
-            case 'manifest_performance':
-                return {
-                    type: 'bar',
-                    data: chartData.data,
-                    options: baseConfig
-                };
-            case 'customer_analytics':
-                return {
-                    type: 'doughnut',
-                    data: chartData.data,
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                            }
-                        }
-                    }
-                };
-            case 'financial_summary':
-                return {
-                    type: 'bar',
-                    data: chartData.data,
-                    options: {
-                        ...baseConfig,
-                        scales: {
-                            ...baseConfig.scales,
-                            y: {
-                                ...baseConfig.scales.y,
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                };
-            default:
-                return {
-                    type: 'line',
-                    data: chartData.data,
-                    options: baseConfig
-                };
-        }
-    }
-    
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', function() {
-        if (autoRefreshInterval) {
-            clearInterval(autoRefreshInterval);
-        }
-        if (reportChart) {
-            reportChart.destroy();
-        }
-    });
-});
-</script>
-@endpush
+{{-- Chart.js Integration will be handled by individual chart components --}}

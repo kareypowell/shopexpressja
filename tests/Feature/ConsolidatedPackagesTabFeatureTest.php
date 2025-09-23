@@ -262,7 +262,7 @@ class ConsolidatedPackagesTabFeatureTest extends TestCase
                 'id' => $packages->first()->id,
                 'tracking_number' => $packages->first()->tracking_number,
                 'description' => $packages->first()->description,
-                'customs_duty' => 10.00,
+                'clearance_fee' => 10.00,
                 'storage_fee' => 5.00,
                 'delivery_fee' => 15.00,
                 'needs_fees' => true,
@@ -276,7 +276,7 @@ class ConsolidatedPackagesTabFeatureTest extends TestCase
         
         // Verify package fees were updated
         $packages->first()->refresh();
-        $this->assertEquals(10.00, $packages->first()->customs_duty);
+        $this->assertEquals(10.00, $packages->first()->clearance_fee);
         $this->assertEquals(5.00, $packages->first()->storage_fee);
         $this->assertEquals(15.00, $packages->first()->delivery_fee);
     }

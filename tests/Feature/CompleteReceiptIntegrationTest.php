@@ -58,7 +58,7 @@ class CompleteReceiptIntegrationTest extends TestCase
             'description' => 'Electronics Package',
             'weight' => 5.5,
             'freight_price' => 5000.00,
-            'customs_duty' => 1500.00,
+            'clearance_fee' => 1500.00,
             'storage_fee' => 200.00,
             'delivery_fee' => 1242.00, // Total: 7942
         ]);
@@ -129,7 +129,7 @@ class CompleteReceiptIntegrationTest extends TestCase
             'tracking_number' => 'BAL123',
             'description' => 'Balance Test Package',
             'freight_price' => 200.00,
-            'customs_duty' => 100.00,
+            'clearance_fee' => 100.00,
             'storage_fee' => 50.00,
             'delivery_fee' => 50.00, // Total: 400
         ]);
@@ -179,7 +179,7 @@ class CompleteReceiptIntegrationTest extends TestCase
             'status' => PackageStatus::READY,
             'tracking_number' => 'DISC123',
             'freight_price' => 100.00,
-            'customs_duty' => 0.00,
+            'clearance_fee' => 0.00,
             'storage_fee' => 0.00,
             'delivery_fee' => 0.00,
         ]);
@@ -230,7 +230,7 @@ class CompleteReceiptIntegrationTest extends TestCase
             'status' => PackageStatus::READY,
             'tracking_number' => 'NOPROF123',
             'freight_price' => 75.00,
-            'customs_duty' => 0.00,
+            'clearance_fee' => 0.00,
             'storage_fee' => 0.00,
             'delivery_fee' => 0.00,
         ]);

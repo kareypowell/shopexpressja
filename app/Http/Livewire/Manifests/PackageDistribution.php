@@ -185,7 +185,7 @@ class PackageDistribution extends Component
                     'tracking_number' => $package->tracking_number,
                     'description' => $package->description,
                     'freight_price' => $package->freight_price ?? 0,
-                    'customs_duty' => $package->customs_duty ?? 0,
+                    'clearance_fee' => $package->clearance_fee ?? 0,
                     'storage_fee' => $package->storage_fee ?? 0,
                     'delivery_fee' => $package->delivery_fee ?? 0,
                     'total_cost' => $package->total_cost,

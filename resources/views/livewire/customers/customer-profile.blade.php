@@ -329,13 +329,13 @@
                         </div>
                     </div>
 
-                    <!-- Customs Duty -->
+                    <!-- Clearance Fee -->
                     <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4 border border-red-200">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm font-medium text-red-600">Customs Duty</p>
-                                <p class="text-2xl font-bold text-red-900">${{ number_format($financialSummary['cost_breakdown']['customs'] ?? 0, 0) }}</p>
-                                <p class="text-xs text-red-600">{{ $financialSummary['cost_percentages']['customs'] ?? 0 }}% of total</p>
+                                <p class="text-sm font-medium text-red-600">Clearance Fee</p>
+                                <p class="text-2xl font-bold text-red-900">${{ number_format($financialSummary['cost_breakdown']['clearance'] ?? 0, 0) }}</p>
+                                <p class="text-xs text-red-600">{{ $financialSummary['cost_percentages']['clearance'] ?? 0 }}% of total</p>
                             </div>
                             <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
                                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

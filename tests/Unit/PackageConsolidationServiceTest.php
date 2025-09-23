@@ -40,7 +40,7 @@ class PackageConsolidationServiceTest extends TestCase
             'status' => PackageStatus::READY,
             'weight' => 10.5,
             'freight_price' => 100.00,
-            'customs_duty' => 25.00,
+            'clearance_fee' => 25.00,
             'storage_fee' => 15.00,
             'delivery_fee' => 10.00,
         ]);
@@ -64,7 +64,7 @@ class PackageConsolidationServiceTest extends TestCase
         $this->assertEquals(31.5, $consolidatedPackage->total_weight); // 3 * 10.5
         $this->assertEquals(3, $consolidatedPackage->total_quantity);
         $this->assertEquals(300.00, $consolidatedPackage->total_freight_price); // 3 * 100
-        $this->assertEquals(75.00, $consolidatedPackage->total_customs_duty); // 3 * 25
+        $this->assertEquals(75.00, $consolidatedPackage->total_clearance_fee); // 3 * 25
         $this->assertEquals(45.00, $consolidatedPackage->total_storage_fee); // 3 * 15
         $this->assertEquals(30.00, $consolidatedPackage->total_delivery_fee); // 3 * 10
 
@@ -269,14 +269,14 @@ class PackageConsolidationServiceTest extends TestCase
             Package::factory()->make([
                 'weight' => 10.5,
                 'freight_price' => 100.00,
-                'customs_duty' => 25.00,
+                'clearance_fee' => 25.00,
                 'storage_fee' => 15.00,
                 'delivery_fee' => 10.00,
             ]),
             Package::factory()->make([
                 'weight' => 5.2,
                 'freight_price' => 50.00,
-                'customs_duty' => 12.50,
+                'clearance_fee' => 12.50,
                 'storage_fee' => 7.50,
                 'delivery_fee' => 5.00,
             ]),
@@ -287,7 +287,7 @@ class PackageConsolidationServiceTest extends TestCase
         $this->assertEquals(15.7, $totals['weight']);
         $this->assertEquals(2, $totals['quantity']);
         $this->assertEquals(150.00, $totals['freight_price']);
-        $this->assertEquals(37.50, $totals['customs_duty']);
+        $this->assertEquals(37.50, $totals['clearance_fee']);
         $this->assertEquals(22.50, $totals['storage_fee']);
         $this->assertEquals(15.00, $totals['delivery_fee']);
         $this->assertEquals(225.00, $totals['total_cost']);

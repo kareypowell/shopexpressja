@@ -34,7 +34,7 @@ class AdminDashboardFeatureTest extends TestCase
             'office_id' => $office->id,
             'shipper_id' => $shipper->id,
             'freight_price' => 100.00,
-            'customs_duty' => 25.00,
+            'clearance_fee' => 25.00,
             'storage_fee' => 10.00,
             'delivery_fee' => 15.00,
         ]);

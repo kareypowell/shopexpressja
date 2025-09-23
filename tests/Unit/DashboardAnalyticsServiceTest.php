@@ -165,7 +165,7 @@ class DashboardAnalyticsServiceTest extends TestCase
         // Create packages on different dates
         Package::factory()->create([
             'freight_price' => 50.00,
-            'customs_duty' => 10.00,
+            'clearance_fee' => 10.00,
             'created_at' => now()->subDays(5)->startOfDay(),
         ]);
         

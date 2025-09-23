@@ -69,7 +69,7 @@ class PackageDistributionService
                     $adjustments = $options['feeAdjustments']['consolidated'];
                     $consolidatedPackage->update([
                         'total_freight_price' => $adjustments['total_freight_price'] ?? $consolidatedPackage->total_freight_price,
-                        'total_customs_duty' => $adjustments['total_customs_duty'] ?? $consolidatedPackage->total_customs_duty,
+                        'total_clearance_fee' => $adjustments['total_clearance_fee'] ?? $consolidatedPackage->total_clearance_fee,
                         'total_storage_fee' => $adjustments['total_storage_fee'] ?? $consolidatedPackage->total_storage_fee,
                         'total_delivery_fee' => $adjustments['total_delivery_fee'] ?? $consolidatedPackage->total_delivery_fee,
                     ]);
@@ -169,7 +169,7 @@ class PackageDistributionService
                     'distribution_id' => $distribution->id,
                     'package_id' => $package->id,
                     'freight_price' => $package->freight_price ?? 0,
-                    'customs_duty' => $package->customs_duty ?? 0,
+                    'clearance_fee' => $package->clearance_fee ?? 0,
                     'storage_fee' => $package->storage_fee ?? 0,
                     'delivery_fee' => $package->delivery_fee ?? 0,
                     'total_cost' => $package->total_cost ?? 0,
@@ -319,7 +319,7 @@ class PackageDistributionService
                         // Update package fees before distribution
                         $package->update([
                             'freight_price' => $adjustments['freight_price'] ?? $package->freight_price,
-                            'customs_duty' => $adjustments['customs_duty'] ?? $package->customs_duty,
+                            'clearance_fee' => $adjustments['clearance_fee'] ?? $package->clearance_fee,
                             'storage_fee' => $adjustments['storage_fee'] ?? $package->storage_fee,
                             'delivery_fee' => $adjustments['delivery_fee'] ?? $package->delivery_fee,
                         ]);
@@ -594,7 +594,7 @@ class PackageDistributionService
                     'distribution_id' => $distribution->id,
                     'package_id' => $package->id,
                     'freight_price' => $package->freight_price ? $package->freight_price : 0,
-                    'customs_duty' => $package->customs_duty ? $package->customs_duty : 0,
+                    'clearance_fee' => $package->clearance_fee ? $package->clearance_fee : 0,
                     'storage_fee' => $package->storage_fee ? $package->storage_fee : 0,
                     'delivery_fee' => $package->delivery_fee ? $package->delivery_fee : 0,
                     'total_cost' => $package->total_cost ? $package->total_cost : 0,
@@ -689,12 +689,12 @@ class PackageDistributionService
             
             if (is_array($package)) {
                 $packageTotal += isset($package['freight_price']) ? $package['freight_price'] : 0;
-                $packageTotal += isset($package['customs_duty']) ? $package['customs_duty'] : 0;
+                $packageTotal += isset($package['clearance_fee']) ? $package['clearance_fee'] : 0;
                 $packageTotal += isset($package['storage_fee']) ? $package['storage_fee'] : 0;
                 $packageTotal += isset($package['delivery_fee']) ? $package['delivery_fee'] : 0;
             } else {
                 $packageTotal += $package->freight_price ? $package->freight_price : 0;
-                $packageTotal += $package->customs_duty ? $package->customs_duty : 0;
+                $packageTotal += $package->clearance_fee ? $package->clearance_fee : 0;
                 $packageTotal += $package->storage_fee ? $package->storage_fee : 0;
                 $packageTotal += $package->delivery_fee ? $package->delivery_fee : 0;
             }
@@ -868,7 +868,7 @@ class PackageDistributionService
                 'total_weight' => number_format($consolidatedPackage->total_weight, 2),
                 'total_quantity' => $consolidatedPackage->total_quantity,
                 'total_freight_price' => number_format($consolidatedPackage->total_freight_price, 2),
-                'total_customs_duty' => number_format($consolidatedPackage->total_customs_duty, 2),
+                'total_clearance_fee' => number_format($consolidatedPackage->total_clearance_fee, 2),
                 'total_storage_fee' => number_format($consolidatedPackage->total_storage_fee, 2),
                 'total_delivery_fee' => number_format($consolidatedPackage->total_delivery_fee, 2),
                 'total_cost' => number_format($consolidatedPackage->total_cost, 2),
@@ -895,7 +895,7 @@ class PackageDistributionService
                     'weight_label' => $isSeaPackage ? 'Cubic Feet' : 'Weight',
                     'is_sea_package' => $isSeaPackage,
                     'freight_price' => number_format($item->freight_price, 2),
-                    'customs_duty' => number_format($item->customs_duty, 2),
+                    'clearance_fee' => number_format($item->clearance_fee, 2),
                     'storage_fee' => number_format($item->storage_fee, 2),
                     'delivery_fee' => number_format($item->delivery_fee, 2),
                     'total_cost' => number_format($item->total_cost, 2),

@@ -219,6 +219,26 @@ class ReportDataTable extends Component
         }
     }
 
+    public function showManifestDetails(int $manifestId)
+    {
+        // Find the manifest data from the current table data
+        $manifestData = collect($this->getTableData())->firstWhere('id', $manifestId);
+        
+        if ($manifestData) {
+            $this->emit('showManifestDetails', $manifestId, $manifestData);
+        } else {
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Manifest details not found.'
+            ]);
+        }
+    }
+
+    public function showCustomerDetails(int $customerId)
+    {
+        $this->emit('showCustomerDetails', $customerId);
+    }
+
     public function getTableData()
     {
         $collection = collect($this->data);

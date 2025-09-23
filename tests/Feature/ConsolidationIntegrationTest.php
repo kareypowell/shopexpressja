@@ -152,7 +152,7 @@ class ConsolidationIntegrationTest extends TestCase
             'user_id' => $this->customerUser->id,
             'status' => PackageStatus::READY_FOR_PICKUP,
             'freight_price' => 25.00,
-            'customs_duty' => 5.00,
+            'clearance_fee' => 5.00,
             'storage_fee' => 2.00,
             'delivery_fee' => 8.00
         ]);
@@ -176,7 +176,7 @@ class ConsolidationIntegrationTest extends TestCase
 
         // Test distribution integration
         $totalCost = $consolidatedPackage->total_freight_price + 
-                    $consolidatedPackage->total_customs_duty + 
+                    $consolidatedPackage->total_clearance_fee + 
                     $consolidatedPackage->total_storage_fee + 
                     $consolidatedPackage->total_delivery_fee;
 
@@ -414,7 +414,7 @@ class ConsolidationIntegrationTest extends TestCase
             'weight' => 1.5,
             'quantity' => 2,
             'freight_price' => 20.00,
-            'customs_duty' => 3.00,
+            'clearance_fee' => 3.00,
             'storage_fee' => 1.50,
             'delivery_fee' => 5.00
         ]);
@@ -425,7 +425,7 @@ class ConsolidationIntegrationTest extends TestCase
         $originalTotalWeight = $packages->sum('weight');
         $originalTotalQuantity = $packages->sum('quantity');
         $originalTotalFreight = $packages->sum('freight_price');
-        $originalTotalCustoms = $packages->sum('customs_duty');
+        $originalTotalCustoms = $packages->sum('clearance_fee');
         $originalTotalStorage = $packages->sum('storage_fee');
         $originalTotalDelivery = $packages->sum('delivery_fee');
 
@@ -441,7 +441,7 @@ class ConsolidationIntegrationTest extends TestCase
         $this->assertEquals($originalTotalWeight, $consolidatedPackage->total_weight);
         $this->assertEquals($originalTotalQuantity, $consolidatedPackage->total_quantity);
         $this->assertEquals($originalTotalFreight, $consolidatedPackage->total_freight_price);
-        $this->assertEquals($originalTotalCustoms, $consolidatedPackage->total_customs_duty);
+        $this->assertEquals($originalTotalCustoms, $consolidatedPackage->total_clearance_fee);
         $this->assertEquals($originalTotalStorage, $consolidatedPackage->total_storage_fee);
         $this->assertEquals($originalTotalDelivery, $consolidatedPackage->total_delivery_fee);
 

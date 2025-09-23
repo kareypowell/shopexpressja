@@ -96,7 +96,7 @@ class PackageConsolidationService
                 'total_weight' => $totals['weight'],
                 'total_quantity' => $totals['quantity'],
                 'total_freight_price' => $totals['freight_price'],
-                'total_customs_duty' => $totals['customs_duty'],
+                'total_clearance_fee' => $totals['clearance_fee'],
                 'total_storage_fee' => $totals['storage_fee'],
                 'total_delivery_fee' => $totals['delivery_fee'],
                 'status' => $this->determineConsolidatedStatus($packages),
@@ -362,7 +362,7 @@ class PackageConsolidationService
             'weight' => 0,
             'quantity' => $packages->count(),
             'freight_price' => 0,
-            'customs_duty' => 0,
+            'clearance_fee' => 0,
             'storage_fee' => 0,
             'delivery_fee' => 0,
         ];
@@ -370,14 +370,14 @@ class PackageConsolidationService
         foreach ($packages as $package) {
             $totals['weight'] += $package->weight ?? 0;
             $totals['freight_price'] += $package->freight_price ?? 0;
-            $totals['customs_duty'] += $package->customs_duty ?? 0;
+            $totals['clearance_fee'] += $package->clearance_fee ?? 0;
             $totals['storage_fee'] += $package->storage_fee ?? 0;
             $totals['delivery_fee'] += $package->delivery_fee ?? 0;
         }
 
         // Calculate total cost
         $totals['total_cost'] = $totals['freight_price'] + 
-                               $totals['customs_duty'] + 
+                               $totals['clearance_fee'] + 
                                $totals['storage_fee'] + 
                                $totals['delivery_fee'];
 
@@ -842,7 +842,7 @@ class PackageConsolidationService
             }),
             'total_weight_consolidated' => $consolidatedPackages->sum('total_weight'),
             'total_value_consolidated' => $consolidatedPackages->sum(function ($cp) {
-                return $cp->total_freight_price + $cp->total_customs_duty + 
+                return $cp->total_freight_price + $cp->total_clearance_fee + 
                        $cp->total_storage_fee + $cp->total_delivery_fee;
             }),
             'average_packages_per_consolidation' => $consolidatedPackages->count() > 0 

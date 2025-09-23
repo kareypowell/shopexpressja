@@ -84,11 +84,11 @@
                 
                 <!-- Package Costs -->
                 <div class="text-right ml-4">
-                    @if($package->freight_price || $package->customs_duty || $package->storage_fee || $package->delivery_fee)
+                    @if($package->freight_price || $package->clearance_fee || $package->storage_fee || $package->delivery_fee)
                         <div class="bg-gray-50 rounded-lg p-3 text-sm {{ $this->isPackageSelected($package->id) ? 'bg-blue-50' : '' }}">
                             @php
                                 $totalCost = ($package->freight_price ?? 0) + 
-                                           ($package->customs_duty ?? 0) + 
+                                           ($package->clearance_fee ?? 0) + 
                                            ($package->storage_fee ?? 0) + 
                                            ($package->delivery_fee ?? 0);
                             @endphp
@@ -102,10 +102,10 @@
                                         <span>${{ number_format($package->freight_price, 2) }}</span>
                                     </div>
                                 @endif
-                                @if($package->customs_duty)
+                                @if($package->clearance_fee)
                                     <div class="flex justify-between">
                                         <span>Customs:</span>
-                                        <span>${{ number_format($package->customs_duty, 2) }}</span>
+                                        <span>${{ number_format($package->clearance_fee, 2) }}</span>
                                     </div>
                                 @endif
                                 @if($package->storage_fee)

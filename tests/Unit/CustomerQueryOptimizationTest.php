@@ -126,7 +126,7 @@ class CustomerQueryOptimizationTest extends TestCase
             'user_id' => $customer->id,
             'status' => 'delivered',
             'freight_price' => 100.00,
-            'customs_duty' => 25.00,
+            'clearance_fee' => 25.00,
             'storage_fee' => 10.00,
             'delivery_fee' => 15.00,
             'weight' => 5.5
@@ -136,7 +136,7 @@ class CustomerQueryOptimizationTest extends TestCase
             'user_id' => $customer->id,
             'status' => 'shipped',
             'freight_price' => 150.00,
-            'customs_duty' => 30.00,
+            'clearance_fee' => 30.00,
             'storage_fee' => 15.00,
             'delivery_fee' => 20.00,
             'weight' => 8.2
@@ -163,7 +163,7 @@ class CustomerQueryOptimizationTest extends TestCase
         Package::factory()->count(2)->create([
             'user_id' => $customer->id,
             'freight_price' => 100.00,
-            'customs_duty' => 25.00,
+            'clearance_fee' => 25.00,
             'storage_fee' => 10.00,
             'delivery_fee' => 15.00
         ]);
@@ -191,7 +191,7 @@ class CustomerQueryOptimizationTest extends TestCase
             'user_id' => $customer->id,
             'created_at' => now()->subDays(5),
             'freight_price' => 100.00,
-            'customs_duty' => 0.00,
+            'clearance_fee' => 0.00,
             'storage_fee' => 0.00,
             'delivery_fee' => 0.00
         ]);
@@ -201,7 +201,7 @@ class CustomerQueryOptimizationTest extends TestCase
             'user_id' => $customer->id,
             'created_at' => now()->subDays(45),
             'freight_price' => 200.00,
-            'customs_duty' => 0.00,
+            'clearance_fee' => 0.00,
             'storage_fee' => 0.00,
             'delivery_fee' => 0.00
         ]);

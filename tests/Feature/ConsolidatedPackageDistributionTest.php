@@ -49,7 +49,7 @@ class ConsolidatedPackageDistributionTest extends TestCase
             'user_id' => $this->customer->id,
             'status' => PackageStatus::READY,
             'freight_price' => 50.00,
-            'customs_duty' => 25.00,
+            'clearance_fee' => 25.00,
             'storage_fee' => 10.00,
             'delivery_fee' => 15.00,
         ]);
@@ -60,7 +60,7 @@ class ConsolidatedPackageDistributionTest extends TestCase
             'created_by' => $this->admin->id,
             'status' => PackageStatus::READY,
             'total_freight_price' => 150.00,
-            'total_customs_duty' => 75.00,
+            'total_clearance_fee' => 75.00,
             'total_storage_fee' => 30.00,
             'total_delivery_fee' => 45.00,
             'is_active' => true,

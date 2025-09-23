@@ -242,18 +242,4 @@
     @endif
 </div>
 
-@push('scripts')
-<script>
-    window.addEventListener('notify', event => {
-        // You can integrate with your notification system here
-        console.log(event.detail.type + ': ' + event.detail.message);
-        
-        // Example with a simple alert (replace with your notification system)
-        if (event.detail.type === 'success') {
-            // Show success notification
-        } else if (event.detail.type === 'error') {
-            // Show error notification
-        }
-    });
-</script>
-@endpush
+{{-- Notifications handled by global reports dashboard --}}

@@ -34,7 +34,7 @@ class EnhancedManifestSummaryIntegrationTest extends TestCase
             'weight' => 15.5,
             'estimated_value' => 100.00,
             'freight_price' => 150.00,
-            'customs_duty' => 30.00,
+            'clearance_fee' => 30.00,
             'storage_fee' => 15.00,
             'delivery_fee' => 5.00,
             // total_cost = 150 + 30 + 15 + 5 = 200.00 per package, 3 packages = $600.00
@@ -65,7 +65,7 @@ class EnhancedManifestSummaryIntegrationTest extends TestCase
             'height_inches' => 12,
             'estimated_value' => 100.00,
             'freight_price' => 100.00,
-            'customs_duty' => 25.00,
+            'clearance_fee' => 25.00,
             'storage_fee' => 20.00,
             'delivery_fee' => 5.00,
             // total_cost = 100 + 25 + 20 + 5 = 150.00 per package, 2 packages = $300.00

@@ -54,7 +54,7 @@ class ConsolidatedPackageNotificationIntegrationTest extends TestCase
             'total_weight' => 15.50,
             'total_quantity' => 3,
             'total_freight_price' => 45.00,
-            'total_customs_duty' => 12.50,
+            'total_clearance_fee' => 12.50,
             'total_storage_fee' => 8.00,
             'total_delivery_fee' => 15.00,
             'status' => PackageStatus::PROCESSING,

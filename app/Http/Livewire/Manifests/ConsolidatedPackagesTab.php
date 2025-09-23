@@ -359,7 +359,7 @@ class ConsolidatedPackagesTab extends Component
                 'id' => $package->id,
                 'tracking_number' => $package->tracking_number,
                 'description' => $package->description,
-                'customs_duty' => $package->customs_duty ?? 0,
+                'clearance_fee' => $package->clearance_fee ?? 0,
                 'storage_fee' => $package->storage_fee ?? 0,
                 'delivery_fee' => $package->delivery_fee ?? 0,
                 'needs_fees' => $this->packageNeedsFeeEntry($package),
@@ -371,7 +371,7 @@ class ConsolidatedPackagesTab extends Component
 
     private function packageNeedsFeeEntry($package): bool
     {
-        return ($package->customs_duty ?? 0) == 0 || 
+        return ($package->clearance_fee ?? 0) == 0 || 
                ($package->storage_fee ?? 0) == 0 || 
                ($package->delivery_fee ?? 0) == 0;
     }
@@ -401,7 +401,7 @@ class ConsolidatedPackagesTab extends Component
                 $package = \App\Models\Package::findOrFail($packageData['id']);
                 
                 $package->update([
-                    'customs_duty' => $packageData['customs_duty'] ?? 0,
+                    'clearance_fee' => $packageData['clearance_fee'] ?? 0,
                     'storage_fee' => $packageData['storage_fee'] ?? 0,
                     'delivery_fee' => $packageData['delivery_fee'] ?? 0,
                 ]);

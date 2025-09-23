@@ -49,7 +49,7 @@ class BusinessReportService
             ->with(['packages' => function($q) use ($officeIds) {
                 $q->select([
                     'id', 'manifest_id', 'user_id', 'office_id', 'tracking_number',
-                    'freight_price', 'customs_duty', 'storage_fee', 'delivery_fee', 'status'
+                    'freight_price', 'clearance_fee', 'storage_fee', 'delivery_fee', 'status'
                 ]);
                 if ($officeIds) {
                     $q->whereIn('office_id', $officeIds);
@@ -68,7 +68,7 @@ class BusinessReportService
             
             $totalOwed = $packages->sum(function ($package) {
                 return ($package->freight_price ?? 0) + 
-                       ($package->customs_duty ?? 0) + 
+                       ($package->clearance_fee ?? 0) + 
                        ($package->storage_fee ?? 0) + 
                        ($package->delivery_fee ?? 0);
             });
@@ -97,11 +97,11 @@ class BusinessReportService
                         'user_id' => $package->user_id,
                         'status' => $package->status,
                         'total_charges' => ($package->freight_price ?? 0) + 
-                                         ($package->customs_duty ?? 0) + 
+                                         ($package->clearance_fee ?? 0) + 
                                          ($package->storage_fee ?? 0) + 
                                          ($package->delivery_fee ?? 0),
                         'freight_price' => $package->freight_price ?? 0,
-                        'customs_duty' => $package->customs_duty ?? 0,
+                        'clearance_fee' => $package->clearance_fee ?? 0,
                         'storage_fee' => $package->storage_fee ?? 0,
                         'delivery_fee' => $package->delivery_fee ?? 0,
                     ];
@@ -396,7 +396,7 @@ class BusinessReportService
             ->select(['id', 'first_name', 'last_name', 'email', 'account_balance'])
             ->with(['packages' => function($q) use ($dateFrom, $dateTo) {
                 $q->whereBetween('created_at', [$dateFrom, $dateTo])
-                  ->select(['id', 'user_id', 'freight_price', 'customs_duty', 'storage_fee', 'delivery_fee', 'status']);
+                  ->select(['id', 'user_id', 'freight_price', 'clearance_fee', 'storage_fee', 'delivery_fee', 'status']);
             }, 'transactions' => function($q) use ($dateFrom, $dateTo) {
                 $q->whereBetween('created_at', [$dateFrom, $dateTo])
                   ->select(['id', 'user_id', 'type', 'amount', 'created_at']);
@@ -417,7 +417,7 @@ class BusinessReportService
 
             $totalSpent = $packages->sum(function($package) {
                 return ($package->freight_price ?? 0) + 
-                       ($package->customs_duty ?? 0) + 
+                       ($package->clearance_fee ?? 0) + 
                        ($package->storage_fee ?? 0) + 
                        ($package->delivery_fee ?? 0);
             });
@@ -453,7 +453,7 @@ class BusinessReportService
         $revenueBreakdown = Package::whereBetween('created_at', [$dateFrom, $dateTo])
             ->selectRaw('
                 SUM(freight_price) as freight_revenue,
-                SUM(customs_duty) as customs_revenue,
+                SUM(clearance_fee) as clearance_revenue,
                 SUM(storage_fee) as storage_revenue,
                 SUM(delivery_fee) as delivery_revenue,
                 COUNT(*) as package_count
@@ -481,11 +481,11 @@ class BusinessReportService
         return [
             'revenue_breakdown' => [
                 'freight_revenue' => $revenueBreakdown->freight_revenue ?? 0,
-                'customs_revenue' => $revenueBreakdown->customs_revenue ?? 0,
+                'clearance_revenue' => $revenueBreakdown->clearance_revenue ?? 0,
                 'storage_revenue' => $revenueBreakdown->storage_revenue ?? 0,
                 'delivery_revenue' => $revenueBreakdown->delivery_revenue ?? 0,
                 'total_revenue' => ($revenueBreakdown->freight_revenue ?? 0) + 
-                                 ($revenueBreakdown->customs_revenue ?? 0) + 
+                                 ($revenueBreakdown->clearance_revenue ?? 0) + 
                                  ($revenueBreakdown->storage_revenue ?? 0) + 
                                  ($revenueBreakdown->delivery_revenue ?? 0),
                 'package_count' => $revenueBreakdown->package_count ?? 0

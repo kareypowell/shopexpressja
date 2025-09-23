@@ -133,8 +133,8 @@
                                                 <dd class="text-sm font-medium text-gray-900">${{ number_format($selectedConsolidatedPackage->total_freight_price ?? 0, 2) }} JMD</dd>
                                             </div>
                                             <div class="flex justify-between">
-                                                <dt class="text-sm text-gray-500">Customs Duty:</dt>
-                                                <dd class="text-sm font-medium text-gray-900">${{ number_format($selectedConsolidatedPackage->total_customs_duty ?? 0, 2) }} JMD</dd>
+                                                <dt class="text-sm text-gray-500">Clearance Fee:</dt>
+                                                <dd class="text-sm font-medium text-gray-900">${{ number_format($selectedConsolidatedPackage->total_clearance_fee ?? 0, 2) }} JMD</dd>
                                             </div>
                                             <div class="flex justify-between">
                                                 <dt class="text-sm text-gray-500">Storage Fee:</dt>
@@ -356,8 +356,8 @@
                                             <dd class="text-sm font-medium text-gray-900">${{ number_format($selectedPackage->freight_price ?? 0, 2) }} JMD</dd>
                                         </div>
                                         <div class="flex justify-between">
-                                            <dt class="text-sm text-gray-500">Customs Duty:</dt>
-                                            <dd class="text-sm font-medium text-gray-900">${{ number_format($selectedPackage->customs_duty ?? 0, 2) }} JMD</dd>
+                                            <dt class="text-sm text-gray-500">Clearance Fee:</dt>
+                                            <dd class="text-sm font-medium text-gray-900">${{ number_format($selectedPackage->clearance_fee ?? 0, 2) }} JMD</dd>
                                         </div>
                                         <div class="flex justify-between">
                                             <dt class="text-sm text-gray-500">Storage Fee:</dt>

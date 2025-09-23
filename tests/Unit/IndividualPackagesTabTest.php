@@ -328,7 +328,7 @@ class IndividualPackagesTabTest extends TestCase
             'office_id' => $this->office->id,
             'shipper_id' => $this->shipper->id,
             'consolidated_package_id' => null,
-            'customs_duty' => 10.00,
+            'clearance_fee' => 10.00,
             'storage_fee' => 5.00,
             'delivery_fee' => 15.00
         ]);

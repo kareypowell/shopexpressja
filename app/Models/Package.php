@@ -22,7 +22,7 @@ class Package extends Model
         'status',
         'estimated_value',
         'freight_price',
-        'customs_duty',
+        'clearance_fee',
         'storage_fee',
         'delivery_fee',
         'container_type',
@@ -254,7 +254,7 @@ class Package extends Model
     public function getTotalCostAttribute(): float
     {
         return ($this->freight_price ?? 0) + 
-               ($this->customs_duty ?? 0) + 
+               ($this->clearance_fee ?? 0) + 
                ($this->storage_fee ?? 0) + 
                ($this->delivery_fee ?? 0);
     }
@@ -266,7 +266,7 @@ class Package extends Model
     {
         return [
             'freight' => $this->freight_price ?? 0,
-            'customs' => $this->customs_duty ?? 0,
+            'clearance' => $this->clearance_fee ?? 0,
             'storage' => $this->storage_fee ?? 0,
             'delivery' => $this->delivery_fee ?? 0,
             'total' => $this->total_cost,
@@ -489,7 +489,7 @@ class Package extends Model
     {
         return $query->select([
                 'id', 'user_id', 'tracking_number', 'description', 'weight', 'status',
-                'freight_price', 'customs_duty', 'storage_fee', 'delivery_fee',
+                'freight_price', 'clearance_fee', 'storage_fee', 'delivery_fee',
                 'is_consolidated', 'consolidated_package_id'
             ])
             ->where('is_consolidated', false)
@@ -511,7 +511,7 @@ class Package extends Model
     {
         return $query->select([
             'id', 'consolidated_package_id', 'tracking_number', 'description', 
-            'weight', 'status', 'freight_price', 'customs_duty', 'storage_fee', 
+            'weight', 'status', 'freight_price', 'clearance_fee', 'storage_fee', 
             'delivery_fee', 'is_consolidated'
         ]);
     }

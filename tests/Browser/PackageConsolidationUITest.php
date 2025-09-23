@@ -215,7 +215,7 @@ class PackageConsolidationUITest extends DuskTestCase
             'customer_id' => $this->customerUser->id,
             'total_weight' => 25.5,
             'total_freight_price' => 75.00,
-            'total_customs_duty' => 15.00,
+            'total_clearance_fee' => 15.00,
             'total_storage_fee' => 10.00,
             'total_delivery_fee' => 5.00
         ]);

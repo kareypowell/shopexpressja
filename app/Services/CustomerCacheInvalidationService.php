@@ -103,7 +103,7 @@ class CustomerCacheInvalidationService
             Log::debug("Invalidating cache for package update - customer: {$package->user_id}");
             
             // Check if the update affects financial calculations
-            $financialFields = ['freight_price', 'customs_duty', 'storage_fee', 'delivery_fee', 'status'];
+            $financialFields = ['freight_price', 'clearance_fee', 'storage_fee', 'delivery_fee', 'status'];
             $affectsFinancials = !empty(array_intersect(array_keys($changes), $financialFields));
             
             $customer = User::find($package->user_id);

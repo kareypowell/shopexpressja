@@ -80,7 +80,7 @@ class IndividualPackagesTabFeatureTest extends TestCase
             'description' => 'Test Package Description',
             'weight' => 5.5,
             'freight_price' => 25.00,
-            'customs_duty' => 10.00,
+            'clearance_fee' => 10.00,
             'storage_fee' => 5.00,
             'delivery_fee' => 15.00,
             'consolidated_package_id' => null
@@ -459,7 +459,7 @@ class IndividualPackagesTabFeatureTest extends TestCase
             'user_id' => $this->user->id,
             'office_id' => $this->office->id,
             'shipper_id' => $this->shipper->id,
-            'customs_duty' => 10.00,
+            'clearance_fee' => 10.00,
             'storage_fee' => 5.00,
             'delivery_fee' => 15.00,
             'consolidated_package_id' => null
@@ -471,7 +471,7 @@ class IndividualPackagesTabFeatureTest extends TestCase
         $component->assertSet('showFeeModal', true)
                   ->assertSee('Update Fees for Package')
                   ->assertSee($package->tracking_number)
-                  ->assertSee('Customs Duty')
+                  ->assertSee('Clearance Fee')
                   ->assertSee('Storage Fee')
                   ->assertSee('Delivery Fee');
     }
@@ -484,7 +484,7 @@ class IndividualPackagesTabFeatureTest extends TestCase
             'user_id' => $this->user->id,
             'office_id' => $this->office->id,
             'shipper_id' => $this->shipper->id,
-            'customs_duty' => 0,
+            'clearance_fee' => 0,
             'storage_fee' => 0,
             'delivery_fee' => 0,
             'status' => PackageStatus::CUSTOMS, // Status that can transition to READY
@@ -501,7 +501,7 @@ class IndividualPackagesTabFeatureTest extends TestCase
             ->call('processFeeUpdate');
 
         $package->refresh();
-        $this->assertEquals(20.00, $package->customs_duty);
+        $this->assertEquals(20.00, $package->clearance_fee);
         $this->assertEquals(10.00, $package->storage_fee);
         $this->assertEquals(25.00, $package->delivery_fee);
 

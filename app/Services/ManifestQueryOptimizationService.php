@@ -21,7 +21,7 @@ class ManifestQueryOptimizationService
     {
         try {
             return $manifest->packages()
-                ->select(['id', 'tracking_number', 'weight', 'freight_price', 'customs_duty', 'storage_fee', 'delivery_fee'])
+                ->select(['id', 'tracking_number', 'weight', 'freight_price', 'clearance_fee', 'storage_fee', 'delivery_fee'])
                 ->whereNotNull('weight')
                 ->where('weight', '>', 0)
                 ->get();
@@ -53,7 +53,7 @@ class ManifestQueryOptimizationService
                     'width_inches', 
                     'height_inches',
                     'freight_price',
-                    'customs_duty',
+                    'clearance_fee',
                     'storage_fee',
                     'delivery_fee'
                 ])
@@ -103,7 +103,7 @@ class ManifestQueryOptimizationService
                     COUNT(CASE WHEN length_inches IS NOT NULL AND width_inches IS NOT NULL AND height_inches IS NOT NULL 
                               AND length_inches > 0 AND width_inches > 0 AND height_inches > 0 THEN 1 END) as packages_with_dimensions,
                     SUM(CASE WHEN freight_price IS NOT NULL AND freight_price >= 0 THEN freight_price ELSE 0 END + 
-                        CASE WHEN customs_duty IS NOT NULL AND customs_duty >= 0 THEN customs_duty ELSE 0 END +
+                        CASE WHEN clearance_fee IS NOT NULL AND clearance_fee >= 0 THEN clearance_fee ELSE 0 END +
                         CASE WHEN storage_fee IS NOT NULL AND storage_fee >= 0 THEN storage_fee ELSE 0 END +
                         CASE WHEN delivery_fee IS NOT NULL AND delivery_fee >= 0 THEN delivery_fee ELSE 0 END) as total_value,
                     COUNT(CASE WHEN consolidated_package_id IS NULL THEN 1 END) as individual_packages_count,
@@ -262,7 +262,7 @@ class ManifestQueryOptimizationService
     {
         try {
             return $manifest->load([
-                'packages:id,manifest_id,tracking_number,weight,cubic_feet,length_inches,width_inches,height_inches,freight_price,customs_duty,storage_fee,delivery_fee,consolidated_package_id',
+                'packages:id,manifest_id,tracking_number,weight,cubic_feet,length_inches,width_inches,height_inches,freight_price,clearance_fee,storage_fee,delivery_fee,consolidated_package_id',
                 'packages.consolidatedPackage:id,customer_id,status'
             ]);
         } catch (\Exception $e) {

@@ -24,14 +24,14 @@ $totalReceived = $this->amount_collected + $creditApplied;
 ### 2. `app/Services/PackageFeeService.php`
 **Before:**
 ```php
-'customs_duty' => $fees['customs_duty'] ?? 0,
+'clearance_fee' => $fees['clearance_fee'] ?? 0,
 'storage_fee' => $fees['storage_fee'] ?? 0,
 'delivery_fee' => $fees['delivery_fee'] ?? 0,
 ```
 
 **After:**
 ```php
-'customs_duty' => isset($fees['customs_duty']) ? $fees['customs_duty'] : 0,
+'clearance_fee' => isset($fees['clearance_fee']) ? $fees['clearance_fee'] : 0,
 'storage_fee' => isset($fees['storage_fee']) ? $fees['storage_fee'] : 0,
 'delivery_fee' => isset($fees['delivery_fee']) ? $fees['delivery_fee'] : 0,
 ```
@@ -40,13 +40,13 @@ $totalReceived = $this->amount_collected + $creditApplied;
 **Before:**
 ```php
 'freight_price' => $package->freight_price ?? 0,
-'customs_duty' => $package->customs_duty ?? 0,
+'clearance_fee' => $package->clearance_fee ?? 0,
 ```
 
 **After:**
 ```php
 'freight_price' => $package->freight_price ? $package->freight_price : 0,
-'customs_duty' => $package->customs_duty ? $package->customs_duty : 0,
+'clearance_fee' => $package->clearance_fee ? $package->clearance_fee : 0,
 ```
 
 ## Replacement Patterns Used

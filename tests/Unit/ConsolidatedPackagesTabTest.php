@@ -253,7 +253,7 @@ class ConsolidatedPackagesTabTest extends TestCase
         $component->set('consolidatedPackagesNeedingFees', [
             [
                 'id' => $this->consolidatedPackage->packages->first()->id,
-                'customs_duty' => 10.00,
+                'clearance_fee' => 10.00,
                 'storage_fee' => 5.00,
                 'delivery_fee' => 15.00,
             ]
@@ -396,7 +396,7 @@ class ConsolidatedPackagesTabTest extends TestCase
     {
         $package = Package::factory()->create([
             'consolidated_package_id' => $this->consolidatedPackage->id,
-            'customs_duty' => 0,
+            'clearance_fee' => 0,
             'storage_fee' => 0,
             'delivery_fee' => 0,
         ]);

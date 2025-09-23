@@ -428,7 +428,7 @@
                 </div>
                 <div>
                     <p><span class="label">Freight:</span> ${{ is_numeric($consolidated_totals['total_freight_price'] ?? 0) ? number_format((float)$consolidated_totals['total_freight_price'], 2) : ($consolidated_totals['total_freight_price'] ?? '0.00') }}</p>
-                    <p><span class="label">Customs:</span> ${{ is_numeric($consolidated_totals['total_customs_duty'] ?? 0) ? number_format((float)$consolidated_totals['total_customs_duty'], 2) : ($consolidated_totals['total_customs_duty'] ?? '0.00') }}</p>
+                    <p><span class="label">Clearance:</span> ${{ is_numeric($consolidated_totals['total_clearance_fee'] ?? 0) ? number_format((float)$consolidated_totals['total_clearance_fee'], 2) : ($consolidated_totals['total_clearance_fee'] ?? '0.00') }}</p>
                 </div>
                 <div>
                     <p><span class="label">Storage:</span> ${{ is_numeric($consolidated_totals['total_storage_fee'] ?? 0) ? number_format((float)$consolidated_totals['total_storage_fee'], 2) : ($consolidated_totals['total_storage_fee'] ?? '0.00') }}</p>
@@ -460,7 +460,7 @@
                             @endif
                         </th>
                         <th class="text-right">Freight</th>
-                        <th class="text-right">Customs</th>
+                        <th class="text-right">Clearance</th>
                         <th class="text-right">Storage</th>
                         <th class="text-right">Delivery</th>
                         <th class="text-right">Total</th>
@@ -480,7 +480,7 @@
                         <td>{{ $package['description'] }}</td>
                         <td>{{ $package['weight_display'] }}</td>
                         <td class="text-right">${{ is_numeric($package['freight_price'] ?? 0) ? number_format((float)$package['freight_price'], 2) : ($package['freight_price'] ?? '0.00') }}</td>
-                        <td class="text-right">${{ is_numeric($package['customs_duty'] ?? 0) ? number_format((float)$package['customs_duty'], 2) : ($package['customs_duty'] ?? '0.00') }}</td>
+                        <td class="text-right">${{ is_numeric($package['clearance_fee'] ?? 0) ? number_format((float)$package['clearance_fee'], 2) : ($package['clearance_fee'] ?? '0.00') }}</td>
                         <td class="text-right">${{ is_numeric($package['storage_fee'] ?? 0) ? number_format((float)$package['storage_fee'], 2) : ($package['storage_fee'] ?? '0.00') }}</td>
                         <td class="text-right">${{ is_numeric($package['delivery_fee'] ?? 0) ? number_format((float)$package['delivery_fee'], 2) : ($package['delivery_fee'] ?? '0.00') }}</td>
                         <td class="text-right">${{ is_numeric($package['total_cost'] ?? 0) ? number_format((float)$package['total_cost'], 2) : ($package['total_cost'] ?? '0.00') }}</td>

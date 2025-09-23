@@ -52,7 +52,7 @@ class PackageDistributionBalanceTest extends TestCase
             'office_id' => $office->id,
             'status' => PackageStatus::READY,
             'freight_price' => 30.00,
-            'customs_duty' => 10.00,
+            'clearance_fee' => 10.00,
             'storage_fee' => 5.00,
             'delivery_fee' => 5.00,
             // Total cost: $50.00

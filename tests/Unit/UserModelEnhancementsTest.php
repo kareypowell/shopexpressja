@@ -110,7 +110,7 @@ class UserModelEnhancementsTest extends TestCase
         Package::factory()->create([
             'user_id' => $user->id,
             'freight_price' => 100.00,
-            'customs_duty' => 25.00,
+            'clearance_fee' => 25.00,
             'storage_fee' => 10.00,
             'delivery_fee' => 15.00,
         ]);
@@ -118,7 +118,7 @@ class UserModelEnhancementsTest extends TestCase
         Package::factory()->create([
             'user_id' => $user->id,
             'freight_price' => 200.00,
-            'customs_duty' => 50.00,
+            'clearance_fee' => 50.00,
             'storage_fee' => 20.00,
             'delivery_fee' => 30.00,
         ]);
@@ -149,7 +149,7 @@ class UserModelEnhancementsTest extends TestCase
         Package::factory()->create([
             'user_id' => $user->id,
             'freight_price' => 100.00,
-            'customs_duty' => 0,
+            'clearance_fee' => 0,
             'storage_fee' => 0,
             'delivery_fee' => 0,
         ]);
@@ -157,7 +157,7 @@ class UserModelEnhancementsTest extends TestCase
         Package::factory()->create([
             'user_id' => $user->id,
             'freight_price' => 200.00,
-            'customs_duty' => 0,
+            'clearance_fee' => 0,
             'storage_fee' => 0,
             'delivery_fee' => 0,
         ]);
@@ -216,7 +216,7 @@ class UserModelEnhancementsTest extends TestCase
         Package::factory()->create([
             'user_id' => $user->id,
             'freight_price' => 100.00,
-            'customs_duty' => 25.00,
+            'clearance_fee' => 25.00,
             'storage_fee' => 10.00,
             'delivery_fee' => 15.00,
         ]);
@@ -224,7 +224,7 @@ class UserModelEnhancementsTest extends TestCase
         Package::factory()->create([
             'user_id' => $user->id,
             'freight_price' => 200.00,
-            'customs_duty' => 50.00,
+            'clearance_fee' => 50.00,
             'storage_fee' => 20.00,
             'delivery_fee' => 30.00,
         ]);
@@ -234,7 +234,7 @@ class UserModelEnhancementsTest extends TestCase
         $this->assertEquals(2, $summary['total_packages']);
         $this->assertEquals(450.00, $summary['total_spent']);
         $this->assertEquals(300.00, $summary['breakdown']['freight']);
-        $this->assertEquals(75.00, $summary['breakdown']['customs']);
+        $this->assertEquals(75.00, $summary['breakdown']['clearance']);
         $this->assertEquals(30.00, $summary['breakdown']['storage']);
         $this->assertEquals(45.00, $summary['breakdown']['delivery']);
         $this->assertEquals(225.00, $summary['averages']['per_package']);

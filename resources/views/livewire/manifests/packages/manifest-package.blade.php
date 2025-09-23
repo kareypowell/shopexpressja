@@ -350,13 +350,13 @@
                                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                                                    Customs Duty
+                                                    Clearance Fee
                                                 </label>
                                                 <div class="relative">
                                                     <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
                                                     <input 
                                                         type="number" 
-                                                        wire:model.lazy="consolidatedPackagesNeedingFees.{{ $index }}.customs_duty"
+                                                        wire:model.lazy="consolidatedPackagesNeedingFees.{{ $index }}.clearance_fee"
                                                         step="0.01"
                                                         min="0"
                                                         class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"

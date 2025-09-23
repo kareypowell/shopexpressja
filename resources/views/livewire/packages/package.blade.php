@@ -246,7 +246,7 @@
                                     $selectedPackages = $this->availablePackagesForConsolidation->whereIn('id', $this->selectedPackagesForConsolidation);
                                     $totalWeight = $selectedPackages->sum('weight');
                                     $totalCost = $selectedPackages->sum(function($pkg) {
-                                        return ($pkg->freight_price ?? 0) + ($pkg->customs_duty ?? 0) + ($pkg->storage_fee ?? 0) + ($pkg->delivery_fee ?? 0);
+                                        return ($pkg->freight_price ?? 0) + ($pkg->clearance_fee ?? 0) + ($pkg->storage_fee ?? 0) + ($pkg->delivery_fee ?? 0);
                                     });
                                 @endphp
                                 <div class="text-center">
@@ -496,7 +496,7 @@
                                                                 </div>
                                                                 <div class="text-right ml-3">
                                                                     @php
-                                                                        $packageCost = ($package->freight_price ?? 0) + ($package->customs_duty ?? 0) + ($package->storage_fee ?? 0) + ($package->delivery_fee ?? 0);
+                                                                        $packageCost = ($package->freight_price ?? 0) + ($package->clearance_fee ?? 0) + ($package->storage_fee ?? 0) + ($package->delivery_fee ?? 0);
                                                                     @endphp
                                                                     @if($packageCost > 0)
                                                                         <div class="text-sm font-medium text-gray-900">${{ number_format($packageCost, 2) }}</div>

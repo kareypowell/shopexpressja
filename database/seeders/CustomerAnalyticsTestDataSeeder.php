@@ -104,7 +104,7 @@ class CustomerAnalyticsTestDataSeeder extends Seeder
                     'weight' => rand(1, 50) + (rand(0, 99) / 100), // 1.00 to 50.99 lbs
                     'estimated_value' => rand(10, 500),
                     'freight_price' => rand(15, 100) + (rand(0, 99) / 100),
-                    'customs_duty' => rand(0, 50) + (rand(0, 99) / 100),
+                    'clearance_fee' => rand(0, 50) + (rand(0, 99) / 100),
                     'storage_fee' => rand(0, 25) + (rand(0, 99) / 100),
                     'delivery_fee' => rand(5, 30) + (rand(0, 99) / 100),
                     'status' => $statuses[array_rand($statuses)],

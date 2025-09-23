@@ -356,39 +356,4 @@
     </div>
 </div>
 
-{{-- JavaScript for Export Polling and Downloads --}}
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    let exportPollingInterval = null;
-    
-    // Listen for export polling start
-    window.addEventListener('startExportPolling', function(event) {
-        if (exportPollingInterval) {
-            clearInterval(exportPollingInterval);
-        }
-        
-        exportPollingInterval = setInterval(function() {
-            @this.call('refreshActiveExports');
-        }, event.detail.interval);
-    });
-    
-    // Listen for file download
-    window.addEventListener('downloadFile', function(event) {
-        const link = document.createElement('a');
-        link.href = event.detail.url;
-        link.download = event.detail.filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    });
-    
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', function() {
-        if (exportPollingInterval) {
-            clearInterval(exportPollingInterval);
-        }
-    });
-});
-</script>
-@endpush
+{{-- Export functionality handled by global reports dashboard --}}

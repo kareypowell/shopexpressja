@@ -77,7 +77,7 @@ class ReceiptGeneratorService
         foreach ($distribution->items as $item) {
             $subtotal += $item->total_cost;
             $totalFreight += $item->freight_price;
-            $totalCustoms += $item->customs_duty;
+            $totalCustoms += $item->clearance_fee;
             $totalStorage += $item->storage_fee;
             $totalDelivery += $item->delivery_fee;
         }
@@ -88,7 +88,7 @@ class ReceiptGeneratorService
         return [
             'subtotal' => number_format($subtotal, 2),
             'total_freight' => number_format($totalFreight, 2),
-            'total_customs' => number_format($totalCustoms, 2),
+            'total_clearance' => number_format($totalCustoms, 2),
             'total_storage' => number_format($totalStorage, 2),
             'total_delivery' => number_format($totalDelivery, 2),
             'total_amount' => number_format($distribution->total_amount, 2),
@@ -137,7 +137,7 @@ class ReceiptGeneratorService
                     'weight_label' => $isSeaPackage ? 'Cubic Feet' : 'Weight',
                     'is_sea_package' => $isSeaPackage,
                     'freight_price' => number_format($item->freight_price, 2),
-                    'customs_duty' => number_format($item->customs_duty, 2),
+                    'clearance_fee' => number_format($item->clearance_fee, 2),
                     'storage_fee' => number_format($item->storage_fee, 2),
                     'delivery_fee' => number_format($item->delivery_fee, 2),
                     'total_cost' => number_format($item->total_cost, 2),
@@ -370,7 +370,7 @@ class ReceiptGeneratorService
                 <td>{{ $package[\'description\'] }}</td>
                 <td class="number-cell">{{ $package[\'weight\'] }} lbs</td>
                 <td class="number-cell">${{ $package[\'freight_price\'] }}</td>
-                <td class="number-cell">${{ $package[\'customs_duty\'] }}</td>
+                <td class="number-cell">${{ $package[\'clearance_fee\'] }}</td>
                 <td class="number-cell">${{ $package[\'storage_fee\'] }}</td>
                 <td class="number-cell">${{ $package[\'delivery_fee\'] }}</td>
                 <td class="number-cell">${{ $package[\'total_cost\'] }}</td>

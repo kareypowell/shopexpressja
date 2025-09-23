@@ -38,7 +38,7 @@ class ManifestLockFeeUpdateTest extends TestCase
         // Create a package in the closed manifest
         $this->package = Package::factory()->create([
             'manifest_id' => $this->closedManifest->id,
-            'customs_duty' => 0,
+            'clearance_fee' => 0,
             'storage_fee' => 0,
             'delivery_fee' => 0
         ]);
@@ -70,7 +70,7 @@ class ManifestLockFeeUpdateTest extends TestCase
 
         // Verify the package fees were not updated
         $this->package->refresh();
-        $this->assertEquals(0, $this->package->customs_duty);
+        $this->assertEquals(0, $this->package->clearance_fee);
         $this->assertEquals(0, $this->package->storage_fee);
         $this->assertEquals(0, $this->package->delivery_fee);
     }
@@ -80,7 +80,7 @@ class ManifestLockFeeUpdateTest extends TestCase
     {
         $openPackage = Package::factory()->create([
             'manifest_id' => $this->openManifest->id,
-            'customs_duty' => 0,
+            'clearance_fee' => 0,
             'storage_fee' => 0,
             'delivery_fee' => 0
         ]);

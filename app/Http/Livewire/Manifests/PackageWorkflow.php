@@ -35,7 +35,7 @@ class PackageWorkflow extends Component
     public $showFeeModal = false;
     public $feePackageId = null;
     public $feePackage = null;
-    public $customsDuty = 0;
+    public $clearanceFee = 0;
     public $storageFee = 0;
     public $deliveryFee = 0;
     public $applyCreditBalance = false;
@@ -55,7 +55,7 @@ class PackageWorkflow extends Component
     ];
 
     protected $rules = [
-        'customsDuty' => 'required|numeric|min:0',
+        'clearanceFee' => 'required|numeric|min:0',
         'storageFee' => 'required|numeric|min:0',
         'deliveryFee' => 'required|numeric|min:0',
     ];
@@ -164,13 +164,13 @@ class PackageWorkflow extends Component
             'total_packages_in_consolidated' => $consolidatedPackages->sum('total_quantity'),
             'total_weight' => $individualPackages->sum('weight') + $consolidatedPackages->sum('total_weight'),
             'total_freight_price' => $individualPackages->sum('freight_price') + $consolidatedPackages->sum('total_freight_price'),
-            'total_customs_duty' => $individualPackages->sum('customs_duty') + $consolidatedPackages->sum('total_customs_duty'),
+            'total_clearance_fee' => $individualPackages->sum('clearance_fee') + $consolidatedPackages->sum('total_clearance_fee'),
             'total_storage_fee' => $individualPackages->sum('storage_fee') + $consolidatedPackages->sum('total_storage_fee'),
             'total_delivery_fee' => $individualPackages->sum('delivery_fee') + $consolidatedPackages->sum('total_delivery_fee'),
         ];
 
         $totals['total_cost'] = $totals['total_freight_price'] + 
-                               $totals['total_customs_duty'] + 
+                               $totals['total_clearance_fee'] + 
                                $totals['total_storage_fee'] + 
                                $totals['total_delivery_fee'];
 
@@ -804,7 +804,7 @@ class PackageWorkflow extends Component
         $this->feePackage = Package::with('user.profile')->findOrFail($packageId);
         
         // Reset form fields
-        $this->customsDuty = $this->feePackage->customs_duty ?? 0;
+        $this->clearanceFee = $this->feePackage->clearance_fee ?? 0;
         $this->storageFee = $this->feePackage->storage_fee ?? 0;
         $this->deliveryFee = $this->feePackage->delivery_fee ?? 0;
         $this->applyCreditBalance = false;
@@ -826,7 +826,7 @@ class PackageWorkflow extends Component
         }
 
         $fees = [
-            'customs_duty' => $this->customsDuty,
+            'clearance_fee' => $this->clearanceFee,
             'storage_fee' => $this->storageFee,
             'delivery_fee' => $this->deliveryFee,
         ];
@@ -877,7 +877,7 @@ class PackageWorkflow extends Component
         }
 
         $fees = [
-            'customs_duty' => $this->customsDuty,
+            'clearance_fee' => $this->clearanceFee,
             'storage_fee' => $this->storageFee,
             'delivery_fee' => $this->deliveryFee,
         ];
@@ -912,7 +912,7 @@ class PackageWorkflow extends Component
         $this->showFeeModal = false;
         $this->feePackageId = null;
         $this->feePackage = null;
-        $this->customsDuty = 0;
+        $this->clearanceFee = 0;
         $this->storageFee = 0;
         $this->deliveryFee = 0;
         $this->applyCreditBalance = false;
@@ -936,7 +936,7 @@ class PackageWorkflow extends Component
                 'id' => $package->id,
                 'tracking_number' => $package->tracking_number,
                 'description' => $package->description,
-                'customs_duty' => $package->customs_duty ?? 0,
+                'clearance_fee' => $package->clearance_fee ?? 0,
                 'storage_fee' => $package->storage_fee ?? 0,
                 'delivery_fee' => $package->delivery_fee ?? 0,
                 'needs_fees' => $this->packageNeedsFeeEntry($package),
@@ -952,7 +952,7 @@ class PackageWorkflow extends Component
     private function packageNeedsFeeEntry($package): bool
     {
         // Package needs fee entry if any required fees are missing or zero
-        return ($package->customs_duty ?? 0) == 0 || 
+        return ($package->clearance_fee ?? 0) == 0 || 
                ($package->storage_fee ?? 0) == 0 || 
                ($package->delivery_fee ?? 0) == 0;
     }
@@ -981,7 +981,7 @@ class PackageWorkflow extends Component
                 $package = \App\Models\Package::findOrFail($packageData['id']);
                 
                 $package->update([
-                    'customs_duty' => $packageData['customs_duty'] ?? 0,
+                    'clearance_fee' => $packageData['clearance_fee'] ?? 0,
                     'storage_fee' => $packageData['storage_fee'] ?? 0,
                     'delivery_fee' => $packageData['delivery_fee'] ?? 0,
                 ]);
@@ -1068,7 +1068,7 @@ class PackageWorkflow extends Component
                 $package = \App\Models\Package::find($packageData['id']);
                 if ($package) {
                     $fees = [
-                        'customs_duty' => $packageData['customs_duty'],
+                        'clearance_fee' => $packageData['clearance_fee'],
                         'storage_fee' => $packageData['storage_fee'],
                         'delivery_fee' => $packageData['delivery_fee'],
                     ];

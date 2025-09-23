@@ -256,14 +256,14 @@ public function scopeForReporting($query)
 {
     return $query->with(['user', 'manifest', 'office'])
                  ->select(['id', 'user_id', 'manifest_id', 'office_id', 
-                          'freight_price', 'customs_duty', 'storage_fee', 
+                          'freight_price', 'clearance_fee', 'storage_fee', 
                           'delivery_fee', 'status', 'created_at']);
 }
 
 public function getTotalChargesAttribute(): float
 {
     return ($this->freight_price ?? 0) + 
-           ($this->customs_duty ?? 0) + 
+           ($this->clearance_fee ?? 0) + 
            ($this->storage_fee ?? 0) + 
            ($this->delivery_fee ?? 0);
 }

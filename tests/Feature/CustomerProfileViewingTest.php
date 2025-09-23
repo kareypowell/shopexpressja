@@ -53,7 +53,7 @@ class CustomerProfileViewingTest extends TestCase
             'office_id' => $office->id,
             'shipper_id' => $shipper->id,
             'freight_price' => 100.00,
-            'customs_duty' => 50.00,
+            'clearance_fee' => 50.00,
             'storage_fee' => 25.00,
             'delivery_fee' => 15.00,
             'status' => 'delivered'

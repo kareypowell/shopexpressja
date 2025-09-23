@@ -51,7 +51,7 @@ class CustomerPackagesTableTest extends TestCase
             'office_id' => $this->office->id,
             'status' => 'ready', // Set status to allow cost visibility
             'freight_price' => 100.00,
-            'customs_duty' => 25.00,
+            'clearance_fee' => 25.00,
             'storage_fee' => 10.00,
             'delivery_fee' => 15.00,
         ]);
@@ -92,7 +92,7 @@ class CustomerPackagesTableTest extends TestCase
         $component = Livewire::test(CustomerPackagesTable::class, ['customer' => $this->customer]);
 
         $package = $this->packages->first();
-        $expectedTotal = $package->freight_price + $package->customs_duty + $package->storage_fee + $package->delivery_fee;
+        $expectedTotal = $package->freight_price + $package->clearance_fee + $package->storage_fee + $package->delivery_fee;
 
         // Test the calculation using the Package model's total_cost attribute
         $actualTotal = $package->total_cost;
@@ -207,7 +207,7 @@ class CustomerPackagesTableTest extends TestCase
             'office_id' => $this->office->id,
             'shipper_id' => $this->shipper->id,
             'freight_price' => 0,
-            'customs_duty' => 0,
+            'clearance_fee' => 0,
             'storage_fee' => 0,
             'delivery_fee' => 0,
         ]);
@@ -231,7 +231,7 @@ class CustomerPackagesTableTest extends TestCase
             'office_id' => $this->office->id,
             'shipper_id' => $this->shipper->id,
             'freight_price' => 50.00,
-            'customs_duty' => 10.00,
+            'clearance_fee' => 10.00,
             'storage_fee' => 5.00,
             'delivery_fee' => 5.00,
             'tracking_number' => 'LOW_COST'
@@ -242,7 +242,7 @@ class CustomerPackagesTableTest extends TestCase
             'office_id' => $this->office->id,
             'shipper_id' => $this->shipper->id,
             'freight_price' => 200.00,
-            'customs_duty' => 50.00,
+            'clearance_fee' => 50.00,
             'storage_fee' => 20.00,
             'delivery_fee' => 30.00,
             'tracking_number' => 'HIGH_COST'

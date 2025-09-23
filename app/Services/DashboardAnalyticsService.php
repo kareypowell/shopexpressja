@@ -227,7 +227,7 @@ class DashboardAnalyticsService
             $dateRange = $this->getDateRange($filters);
             
             $revenueData = Package::whereBetween('created_at', $dateRange)
-                ->selectRaw('DATE(created_at) as date, SUM(freight_price + customs_duty + storage_fee + delivery_fee) as revenue, COUNT(*) as orders')
+                ->selectRaw('DATE(created_at) as date, SUM(freight_price + clearance_fee + storage_fee + delivery_fee) as revenue, COUNT(*) as orders')
                 ->groupBy('date')
                 ->orderBy('date')
                 ->get()

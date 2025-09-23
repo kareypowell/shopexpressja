@@ -41,7 +41,7 @@ class CustomerProfileComponentTest extends TestCase
             ]);
             $mock->shouldReceive('getFinancialSummary')->andReturn([
                 'total_spent' => 515.00,
-                'cost_breakdown' => ['freight' => 300.00, 'customs' => 125.00],
+                'cost_breakdown' => ['freight' => 300.00, 'clearance' => 125.00],
                 'average_per_package' => 257.50
             ]);
             $mock->shouldReceive('getShippingPatterns')->andReturn([]);
@@ -110,7 +110,7 @@ class CustomerProfileComponentTest extends TestCase
             'shipper_id' => $shipper->id,
             'status' => 'delivered',
             'freight_price' => 100.00,
-            'customs_duty' => 50.00,
+            'clearance_fee' => 50.00,
             'storage_fee' => 25.00,
             'delivery_fee' => 15.00,
             'weight' => 10.5
@@ -138,7 +138,7 @@ class CustomerProfileComponentTest extends TestCase
             'office_id' => $office->id,
             'shipper_id' => $shipper->id,
             'freight_price' => 100.00,
-            'customs_duty' => 50.00,
+            'clearance_fee' => 50.00,
             'storage_fee' => 25.00,
             'delivery_fee' => 15.00
         ]);
@@ -149,7 +149,7 @@ class CustomerProfileComponentTest extends TestCase
             'office_id' => $office->id,
             'shipper_id' => $shipper->id,
             'freight_price' => 200.00,
-            'customs_duty' => 75.00,
+            'clearance_fee' => 75.00,
             'storage_fee' => 30.00,
             'delivery_fee' => 20.00
         ]);
@@ -162,7 +162,7 @@ class CustomerProfileComponentTest extends TestCase
         $this->assertNotEmpty($financialSummary);
         $this->assertEquals(515.00, $financialSummary['total_spent']); // Sum of all costs
         $this->assertEquals(300.00, $financialSummary['cost_breakdown']['freight']); // 100 + 200
-        $this->assertEquals(125.00, $financialSummary['cost_breakdown']['customs']); // 50 + 75
+        $this->assertEquals(125.00, $financialSummary['cost_breakdown']['clearance']); // 50 + 75
     }
 
     /** @test */

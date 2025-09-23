@@ -395,7 +395,7 @@
                             <td>{{ $package->description ?: 'N/A' }}</td>
                             <td>{{ number_format($package->weight, 2) }} lbs</td>
                             <td class="amount">${{ number_format($package->freight_price, 2) }}</td>
-                            <td class="amount">${{ number_format($package->customs_duty, 2) }}</td>
+                            <td class="amount">${{ number_format($package->clearance_fee, 2) }}</td>
                             <td class="amount">${{ number_format($package->storage_fee, 2) }}</td>
                             <td class="amount">${{ number_format($package->delivery_fee, 2) }}</td>
                             <td class="amount"><strong>${{ number_format($package->total_cost, 2) }}</strong></td>
@@ -405,7 +405,7 @@
                         <tr class="consolidated-summary">
                             <td colspan="3"><strong>CONSOLIDATED TOTALS</strong></td>
                             <td class="amount"><strong>${{ number_format($consolidatedPackage->total_freight_price, 2) }}</strong></td>
-                            <td class="amount"><strong>${{ number_format($consolidatedPackage->total_customs_duty, 2) }}</strong></td>
+                            <td class="amount"><strong>${{ number_format($consolidatedPackage->total_clearance_fee, 2) }}</strong></td>
                             <td class="amount"><strong>${{ number_format($consolidatedPackage->total_storage_fee, 2) }}</strong></td>
                             <td class="amount"><strong>${{ number_format($consolidatedPackage->total_delivery_fee, 2) }}</strong></td>
                             <td class="amount"><strong>${{ number_format($consolidatedPackage->total_cost, 2) }}</strong></td>
@@ -423,7 +423,7 @@
                     </tr>
                     <tr>
                         <td class="totals-label">Customs Total:</td>
-                        <td class="totals-amount">${{ number_format($consolidatedPackage->total_customs_duty, 2) }}</td>
+                        <td class="totals-amount">${{ number_format($consolidatedPackage->total_clearance_fee, 2) }}</td>
                     </tr>
                     <tr>
                         <td class="totals-label">Storage Total:</td>

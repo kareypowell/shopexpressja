@@ -182,7 +182,7 @@
                                     
                                     <div class="mt-1 grid grid-cols-4 gap-4 text-sm text-gray-600">
                                         <div>Freight: ${{ number_format($consolidatedPackage->total_freight_price, 2) }}</div>
-                                        <div>Customs: ${{ number_format($consolidatedPackage->total_customs_duty, 2) }}</div>
+                                        <div>Customs: ${{ number_format($consolidatedPackage->total_clearance_fee, 2) }}</div>
                                         <div>Storage: ${{ number_format($consolidatedPackage->total_storage_fee, 2) }}</div>
                                         <div>Delivery: ${{ number_format($consolidatedPackage->total_delivery_fee, 2) }}</div>
                                     </div>
@@ -386,12 +386,12 @@
                                 
                                 <div class="grid grid-cols-3 gap-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Customs Duty</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Clearance Fee</label>
                                         <input 
                                             type="number" 
                                             step="0.01" 
                                             min="0"
-                                            wire:model="consolidatedPackagesNeedingFees.{{ $index }}.customs_duty"
+                                            wire:model="consolidatedPackagesNeedingFees.{{ $index }}.clearance_fee"
                                             class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
                                         >
                                     </div>

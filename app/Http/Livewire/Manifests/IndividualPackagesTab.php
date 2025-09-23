@@ -351,7 +351,7 @@ class IndividualPackagesTab extends Component
         $this->feePackage = Package::with(['user.profile'])->findOrFail($packageId);
         
         // Pre-populate with existing fees
-        $this->customsDuty = $this->feePackage->customs_duty ?? 0;
+        $this->clearanceFee = $this->feePackage->clearance_fee ?? 0;
         $this->storageFee = $this->feePackage->storage_fee ?? 0;
         $this->deliveryFee = $this->feePackage->delivery_fee ?? 0;
         
@@ -360,7 +360,7 @@ class IndividualPackagesTab extends Component
 
     private function packageNeedsFeeEntry($package): bool
     {
-        return ($package->customs_duty ?? 0) == 0 || 
+        return ($package->clearance_fee ?? 0) == 0 || 
                ($package->storage_fee ?? 0) == 0 || 
                ($package->delivery_fee ?? 0) == 0;
     }
@@ -395,7 +395,7 @@ class IndividualPackagesTab extends Component
             
             // Update fees
             $package->update([
-                'customs_duty' => $this->customsDuty,
+                'clearance_fee' => $this->clearanceFee,
                 'storage_fee' => $this->storageFee,
                 'delivery_fee' => $this->deliveryFee,
             ]);

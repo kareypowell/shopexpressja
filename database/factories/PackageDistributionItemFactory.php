@@ -22,7 +22,7 @@ class PackageDistributionItemFactory extends Factory
             'distribution_id' => PackageDistribution::factory(),
             'package_id' => Package::factory(),
             'freight_price' => $freightPrice,
-            'customs_duty' => $customsDuty,
+            'clearance_fee' => $customsDuty,
             'storage_fee' => $storageFee,
             'delivery_fee' => $deliveryFee,
             'total_cost' => $freightPrice + $customsDuty + $storageFee + $deliveryFee,

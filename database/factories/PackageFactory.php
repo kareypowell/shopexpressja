@@ -35,7 +35,7 @@ class PackageFactory extends Factory
             ]),
             'estimated_value' => $this->faker->randomFloat(2, 10.0, 1000.0),
             'freight_price' => $this->faker->randomFloat(2, 5.0, 100.0),
-            'customs_duty' => $this->faker->randomFloat(2, 0.0, 50.0),
+            'clearance_fee' => $this->faker->randomFloat(2, 0.0, 50.0),
             'storage_fee' => $this->faker->randomFloat(2, 0.0, 20.0),
             'delivery_fee' => $this->faker->randomFloat(2, 0.0, 30.0),
             'container_type' => $this->faker->randomElement(['box', 'barrel', 'pallet']),

@@ -149,7 +149,7 @@ class ReportDashboard extends Component
         }
 
         // Financial Summary Report
-        if ($user->can('report.viewSalesReports')) {
+        if ($user->can('report.viewFinancialReports')) {
             $this->availableReports['financial_summary'] = [
                 'name' => 'Financial Summary',
                 'description' => 'Comprehensive financial overview',
@@ -452,6 +452,8 @@ class ReportDashboard extends Component
         return $this->availableReports[$this->activeReportType] ?? [];
     }
 
+
+
     /**
      * Get summary statistics for current report
      */
@@ -473,6 +475,52 @@ class ReportDashboard extends Component
             default:
                 return [];
         }
+    }
+
+    /**
+     * Computed property for summary stats
+     */
+    public function getSummaryStatsProperty(): array
+    {
+        return $this->getSummaryStats();
+    }
+
+    /**
+     * Computed property for table data
+     */
+    public function getTableDataProperty(): array
+    {
+        return $this->getTableData();
+    }
+
+    /**
+     * Computed property for current report
+     */
+    public function getCurrentReportProperty(): array
+    {
+        return $this->getCurrentReportConfig();
+    }
+
+    /**
+     * Computed property for sorted components
+     */
+    public function getSortedComponentsProperty(): array
+    {
+        $components = [];
+        foreach ($this->dashboardLayout as $componentName => $config) {
+            if ($config['enabled']) {
+                $components[] = $componentName;
+            }
+        }
+        
+        // Sort by order
+        usort($components, function ($a, $b) {
+            $orderA = $this->dashboardLayout[$a]['order'] ?? 999;
+            $orderB = $this->dashboardLayout[$b]['order'] ?? 999;
+            return $orderA <=> $orderB;
+        });
+        
+        return $components;
     }
 
     /**
@@ -871,19 +919,7 @@ class ReportDashboard extends Component
     }
 
     /**
-     * Get sorted components for rendering
-     */
-    public function getSortedComponents(): array
-    {
-        $components = array_filter($this->dashboardLayout, fn($config) => $config['enabled'] ?? false);
-        
-        uasort($components, fn($a, $b) => ($a['order'] ?? 999) <=> ($b['order'] ?? 999));
-        
-        return array_keys($components);
-    }
-
-    /**
-     * Get the current breadcrumb title
+     * Get current breadcrumb title
      */
     public function getCurrentBreadcrumbTitle(): string
     {
@@ -899,20 +935,57 @@ class ReportDashboard extends Component
         return 'Report Dashboard';
     }
 
+    /**
+     * Get sorted components for rendering
+     */
+    public function getSortedComponents(): array
+    {
+        $components = array_filter($this->dashboardLayout, fn($config) => $config['enabled'] ?? false);
+        
+        uasort($components, fn($a, $b) => ($a['order'] ?? 999) <=> ($b['order'] ?? 999));
+        
+        return array_keys($components);
+    }
+
     public function render()
     {
         try {
+            // Validate user permissions
+            if (!Auth::check()) {
+                throw new \Exception('Authentication required');
+            }
+
+            $user = Auth::user();
+            
+            // Use the ReportPolicy gates to check access
+            if (!$user->can('report.viewAny')) {
+                throw new \Exception('Insufficient permissions to view reports');
+            }
+
+            // Validate report type
+            if (!isset($this->availableReports[$this->activeReportType])) {
+                throw new \Exception('Invalid report type: ' . $this->activeReportType);
+            }
+
             return view('livewire.reports.report-dashboard', [
                 'currentReport' => $this->getCurrentReportConfig(),
                 'summaryStats' => $this->getSummaryStats(),
                 'tableData' => $this->getTableData(),
                 'sortedComponents' => $this->getSortedComponents(),
-                'user' => Auth::user(),
+                'user' => $user,
             ]);
         } catch (\Exception $e) {
-            Log::error('ReportDashboard render error: ' . $e->getMessage());
+            Log::error('ReportDashboard render error: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'report_type' => $this->activeReportType,
+                'filters' => $this->activeFilters,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return view('livewire.reports.report-dashboard-error', [
-                'error' => 'Report dashboard temporarily unavailable. Please refresh the page.'
+                'error' => 'Report dashboard temporarily unavailable. Please refresh the page.',
+                'reportType' => $this->activeReportType,
+                'canRetry' => true
             ]);
         }
     }

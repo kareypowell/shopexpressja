@@ -358,7 +358,7 @@
                             <td><strong>{{ $package['tracking_number'] }}</strong></td>
                             <td>{{ $package['description'] }}</td>
                             <td class="amount">${{ number_format($package['freight_price'], 2) }}</td>
-                            <td class="amount">${{ number_format($package['customs_duty'], 2) }}</td>
+                            <td class="amount">${{ number_format($package['clearance_fee'], 2) }}</td>
                             <td class="amount">${{ number_format($package['storage_fee'], 2) }}</td>
                             <td class="amount">${{ number_format($package['delivery_fee'], 2) }}</td>
                             <td class="amount"><strong>${{ number_format($package['total_cost'], 2) }}</strong></td>

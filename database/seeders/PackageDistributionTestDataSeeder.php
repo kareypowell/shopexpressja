@@ -59,7 +59,7 @@ class PackageDistributionTestDataSeeder extends Seeder
                     'description' => 'Electronics - Laptop',
                     'weight' => 5.5,
                     'freight_price' => 45.00,
-                    'customs_duty' => 15.00,
+                    'clearance_fee' => 15.00,
                     'storage_fee' => 8.00,
                     'delivery_fee' => 5.00,
                     // Total: $73.00
@@ -78,7 +78,7 @@ class PackageDistributionTestDataSeeder extends Seeder
                     'description' => 'Clothing - Shoes',
                     'weight' => 2.0,
                     'freight_price' => 25.00,
-                    'customs_duty' => 8.00,
+                    'clearance_fee' => 8.00,
                     'storage_fee' => 3.00,
                     'delivery_fee' => 4.00,
                     // Total: $40.00
@@ -94,7 +94,7 @@ class PackageDistributionTestDataSeeder extends Seeder
                     'description' => 'Books - Educational',
                     'weight' => 3.2,
                     'freight_price' => 30.00,
-                    'customs_duty' => 5.00,
+                    'clearance_fee' => 5.00,
                     'storage_fee' => 4.00,
                     'delivery_fee' => 3.00,
                     // Total: $42.00
@@ -113,7 +113,7 @@ class PackageDistributionTestDataSeeder extends Seeder
                     'description' => 'Electronics - Smartphone',
                     'weight' => 1.5,
                     'freight_price' => 35.00,
-                    'customs_duty' => 25.00,
+                    'clearance_fee' => 25.00,
                     'storage_fee' => 6.00,
                     'delivery_fee' => 4.00,
                     'estimated_value' => 800.00,
@@ -133,7 +133,7 @@ class PackageDistributionTestDataSeeder extends Seeder
                     'description' => 'Home Goods - Kitchen Items',
                     'weight' => 4.0,
                     'freight_price' => 40.00,
-                    'customs_duty' => 12.00,
+                    'clearance_fee' => 12.00,
                     'storage_fee' => 5.00,
                     'delivery_fee' => 3.00,
                     // Total: $60.00
@@ -149,7 +149,7 @@ class PackageDistributionTestDataSeeder extends Seeder
                     'description' => 'Clothing - Winter Coat',
                     'weight' => 2.8,
                     'freight_price' => 28.00,
-                    'customs_duty' => 0.00, // Not yet processed
+                    'clearance_fee' => 0.00, // Not yet processed
                     'storage_fee' => 0.00,
                     'delivery_fee' => 0.00,
                 ]);

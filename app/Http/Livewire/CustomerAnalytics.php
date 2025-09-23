@@ -291,7 +291,7 @@ class CustomerAnalytics extends Component
             foreach ($customerActivity as $customer) {
                 $revenue = Package::where('user_id', $customer->id)
                     ->whereBetween('created_at', $dateRange)
-                    ->selectRaw('SUM(freight_price + customs_duty + storage_fee + delivery_fee) as total')
+                    ->selectRaw('SUM(freight_price + clearance_fee + storage_fee + delivery_fee) as total')
                     ->value('total') ?? 0;
 
                 if ($customer->packages_in_period >= 5) {

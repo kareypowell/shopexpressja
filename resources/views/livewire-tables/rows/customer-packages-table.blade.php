@@ -99,7 +99,7 @@
     <x-livewire-tables::table.cell>
         <div class="text-sm text-gray-900">
             @if($this->shouldShowCostForPackage($row))
-                ${{ number_format($row->customs_duty ?? 0, 2) }}
+                ${{ number_format($row->clearance_fee ?? 0, 2) }}
             @else
                 <span class="text-gray-400">-</span>
             @endif

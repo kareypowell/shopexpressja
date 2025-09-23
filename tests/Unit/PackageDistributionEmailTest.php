@@ -44,7 +44,7 @@ class PackageDistributionEmailTest extends TestCase
             'user_id' => $this->customer->id,
             'status' => PackageStatus::READY,
             'freight_price' => 50.00,
-            'customs_duty' => 10.00,
+            'clearance_fee' => 10.00,
             'storage_fee' => 5.00,
             'delivery_fee' => 0.00,
         ]);

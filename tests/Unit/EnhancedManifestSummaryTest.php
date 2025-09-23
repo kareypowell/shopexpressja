@@ -98,7 +98,7 @@ class EnhancedManifestSummaryTest extends TestCase
             'manifest_id' => $manifest->id,
             'estimated_value' => 50.00,
             'freight_price' => 75.00,
-            'customs_duty' => 15.00,
+            'clearance_fee' => 15.00,
             'storage_fee' => 8.00,
             'delivery_fee' => 2.00,
             // total_cost = 75 + 15 + 8 + 2 = 100.00 per package, 3 packages = $300.00
@@ -195,7 +195,7 @@ class EnhancedManifestSummaryTest extends TestCase
             'manifest_id' => $manifest->id,
             'estimated_value' => 25.00,
             'freight_price' => 35.00,
-            'customs_duty' => 8.00,
+            'clearance_fee' => 8.00,
             'storage_fee' => 5.00,
             'delivery_fee' => 2.00,
             // total_cost = 35 + 8 + 5 + 2 = 50.00 per package, 2 packages = $100.00

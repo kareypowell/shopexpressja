@@ -337,7 +337,7 @@ class ManifestSummaryServiceTest extends TestCase
         if ($value !== null) {
             // Split the value into cost components for realistic total_cost calculation
             $package->freight_price = $value * 0.6; // 60% of value
-            $package->customs_duty = $value * 0.2;  // 20% of value
+            $package->clearance_fee = $value * 0.2;  // 20% of value
             $package->storage_fee = $value * 0.15;  // 15% of value
             $package->delivery_fee = $value * 0.05; // 5% of value
             // total_cost will be 100% of the original value
@@ -360,7 +360,7 @@ class ManifestSummaryServiceTest extends TestCase
         if ($value !== null) {
             // Split the value into cost components for realistic total_cost calculation
             $package->freight_price = $value * 0.6; // 60% of value
-            $package->customs_duty = $value * 0.2;  // 20% of value
+            $package->clearance_fee = $value * 0.2;  // 20% of value
             $package->storage_fee = $value * 0.15;  // 15% of value
             $package->delivery_fee = $value * 0.05; // 5% of value
             // total_cost will be 100% of the original value
@@ -384,7 +384,7 @@ class ManifestSummaryServiceTest extends TestCase
         if ($value !== null) {
             // Split the value into cost components for realistic total_cost calculation
             $package->freight_price = $value * 0.6; // 60% of value
-            $package->customs_duty = $value * 0.2;  // 20% of value
+            $package->clearance_fee = $value * 0.2;  // 20% of value
             $package->storage_fee = $value * 0.15;  // 15% of value
             $package->delivery_fee = $value * 0.05; // 5% of value
             // total_cost will be 100% of the original value

@@ -42,7 +42,7 @@ class DashboardRevenueCalculationTest extends TestCase
             'user_id' => $customer->id,
             'status' => PackageStatus::READY,
             'freight_price' => 100.00,
-            'customs_duty' => 50.00,
+            'clearance_fee' => 50.00,
             'storage_fee' => 25.00,
             'delivery_fee' => 25.00, // Total: 200
         ]);
@@ -91,7 +91,7 @@ class DashboardRevenueCalculationTest extends TestCase
             'user_id' => $customer->id,
             'status' => PackageStatus::READY,
             'freight_price' => 4000.00,
-            'customs_duty' => 1500.00,
+            'clearance_fee' => 1500.00,
             'storage_fee' => 500.00,
             'delivery_fee' => 335.00, // Total: 6335
         ]);
@@ -143,7 +143,7 @@ class DashboardRevenueCalculationTest extends TestCase
             'user_id' => $customer1->id,
             'status' => PackageStatus::READY,
             'freight_price' => 100.00,
-            'customs_duty' => 0.00,
+            'clearance_fee' => 0.00,
             'storage_fee' => 0.00,
             'delivery_fee' => 0.00,
         ]);
@@ -152,7 +152,7 @@ class DashboardRevenueCalculationTest extends TestCase
             'user_id' => $customer2->id,
             'status' => PackageStatus::READY,
             'freight_price' => 150.00,
-            'customs_duty' => 50.00,
+            'clearance_fee' => 50.00,
             'storage_fee' => 0.00,
             'delivery_fee' => 0.00,
         ]);
@@ -187,7 +187,7 @@ class DashboardRevenueCalculationTest extends TestCase
             'user_id' => $customer->id,
             'status' => PackageStatus::READY,
             'freight_price' => 100.00,
-            'customs_duty' => 0.00,
+            'clearance_fee' => 0.00,
             'storage_fee' => 0.00,
             'delivery_fee' => 0.00,
         ]);

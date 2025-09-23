@@ -122,7 +122,7 @@ class ConsolidatedPackageModalEnhancementsTest extends TestCase
             'shipper_id' => $shipper->id,
             'office_id' => $office->id,
             'freight_price' => 150.00,
-            'customs_duty' => 50.00,
+            'clearance_fee' => 50.00,
             'tracking_number' => 'PKG001'
         ]);
         
@@ -132,7 +132,7 @@ class ConsolidatedPackageModalEnhancementsTest extends TestCase
             'shipper_id' => $shipper->id,
             'office_id' => $office->id,
             'freight_price' => 200.00,
-            'customs_duty' => 75.00,
+            'clearance_fee' => 75.00,
             'tracking_number' => 'PKG002'
         ]);
         

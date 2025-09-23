@@ -40,7 +40,7 @@ class ConsolidationCacheServiceTest extends TestCase
             'status' => PackageStatus::READY,
             'weight' => 10.5,
             'freight_price' => 100.00,
-            'customs_duty' => 25.00,
+            'clearance_fee' => 25.00,
         ]);
 
         $result = $this->consolidationService->consolidatePackages(
@@ -70,9 +70,9 @@ class ConsolidationCacheServiceTest extends TestCase
         $this->assertEquals(31.5, $totals1['weight'], '', 0.1); // 3 * 10.5
         $this->assertEquals(3, $totals1['quantity']);
         $this->assertEquals(300.00, $totals1['freight_price'], '', 0.1); // 3 * 100
-        $this->assertEquals(75.00, $totals1['customs_duty'], '', 0.1); // 3 * 25
+        $this->assertEquals(75.00, $totals1['clearance_fee'], '', 0.1); // 3 * 25
         // Total cost includes all fees, so we need to account for storage and delivery fees too
-        $expectedTotalCost = $totals1['freight_price'] + $totals1['customs_duty'] + $totals1['storage_fee'] + $totals1['delivery_fee'];
+        $expectedTotalCost = $totals1['freight_price'] + $totals1['clearance_fee'] + $totals1['storage_fee'] + $totals1['delivery_fee'];
         $this->assertEquals($expectedTotalCost, $totals1['total_cost'], '', 0.1);
     }
 

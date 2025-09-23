@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Services\SalesAnalyticsService;
 use App\Services\ReportCacheService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class CollectionsChart extends Component
 {
@@ -405,8 +406,38 @@ class CollectionsChart extends Component
 
     public function render()
     {
-        return view('livewire.reports.collections-chart', [
-            'chartData' => $this->chartData
-        ]);
+        try {
+            $chartData = $this->chartData;
+            
+            // Log chart rendering for monitoring
+            if (empty($chartData) || !isset($chartData['data'])) {
+                Log::warning('Collections chart rendered with empty data', [
+                    'chart_type' => $this->chartType,
+                    'date_range' => $this->dateRange,
+                    'manifest_type' => $this->manifestType,
+                    'user_id' => auth()->id()
+                ]);
+            }
+            
+            return view('livewire.reports.collections-chart', [
+                'chartData' => $chartData
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Collections chart render error: ' . $e->getMessage(), [
+                'chart_type' => $this->chartType,
+                'filters' => [
+                    'date_range' => $this->dateRange,
+                    'manifest_type' => $this->manifestType,
+                    'office_id' => $this->officeId
+                ],
+                'user_id' => auth()->id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return view('livewire.reports.collections-chart', [
+                'chartData' => null,
+                'error' => 'Chart temporarily unavailable'
+            ]);
+        }
     }
 }

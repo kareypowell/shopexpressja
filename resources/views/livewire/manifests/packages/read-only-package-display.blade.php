@@ -147,8 +147,8 @@
                                 <!-- Financial Summary -->
                                 <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                                     <div class="bg-gray-50 px-3 py-2 rounded">
-                                        <span class="font-medium text-gray-700">Customs:</span>
-                                        <div class="text-gray-900">${{ number_format($package->customs_duty ?? 0, 2) }}</div>
+                                        <span class="font-medium text-gray-700">Clearance:</span>
+                                        <div class="text-gray-900">${{ number_format($package->clearance_fee ?? 0, 2) }}</div>
                                     </div>
                                     <div class="bg-gray-50 px-3 py-2 rounded">
                                         <span class="font-medium text-gray-700">Storage:</span>
@@ -161,7 +161,7 @@
                                     <div class="bg-blue-50 px-3 py-2 rounded border border-blue-200">
                                         <span class="font-medium text-blue-700">Total:</span>
                                         <div class="text-blue-900 font-semibold">
-                                            ${{ number_format(($package->freight_price ?? 0) + ($package->customs_duty ?? 0) + ($package->storage_fee ?? 0) + ($package->delivery_fee ?? 0), 2) }}
+                                            ${{ number_format(($package->freight_price ?? 0) + ($package->clearance_fee ?? 0) + ($package->storage_fee ?? 0) + ($package->delivery_fee ?? 0), 2) }}
                                         </div>
                                     </div>
                                 </div>
@@ -263,8 +263,8 @@
                                             <span class="text-gray-900">${{ number_format($package->freight_price ?? 0, 2) }}</span>
                                         </div>
                                         <div class="flex justify-between">
-                                            <span class="text-gray-600">Customs Duty:</span>
-                                            <span class="text-gray-900">${{ number_format($package->customs_duty ?? 0, 2) }}</span>
+                                            <span class="text-gray-600">Clearance Fee:</span>
+                                            <span class="text-gray-900">${{ number_format($package->clearance_fee ?? 0, 2) }}</span>
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-gray-600">Storage Fee:</span>
@@ -277,7 +277,7 @@
                                         <div class="flex justify-between pt-2 border-t border-green-200">
                                             <span class="font-medium text-gray-900">Total Cost:</span>
                                             <span class="font-semibold text-green-700">
-                                                ${{ number_format(($package->freight_price ?? 0) + ($package->customs_duty ?? 0) + ($package->storage_fee ?? 0) + ($package->delivery_fee ?? 0), 2) }}
+                                                ${{ number_format(($package->freight_price ?? 0) + ($package->clearance_fee ?? 0) + ($package->storage_fee ?? 0) + ($package->delivery_fee ?? 0), 2) }}
                                             </span>
                                         </div>
                                     </div>

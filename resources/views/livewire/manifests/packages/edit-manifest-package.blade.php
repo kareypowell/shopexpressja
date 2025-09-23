@@ -182,8 +182,8 @@
                                         <input type="number" step="0.01" min="0" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="freight_price" placeholder="0.00" wire:model="freight_price" autocomplete="off">
                                     </div>
                                     <div>
-                                        <label for="customs_duty" class="block text-gray-700 text-sm font-bold mb-2">Customs Duty (JMD)</label>
-                                        <input type="number" step="0.01" min="0" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="customs_duty" placeholder="0.00" wire:model="customs_duty" autocomplete="off">
+                                        <label for="clearance_fee" class="block text-gray-700 text-sm font-bold mb-2">Clearance Fee (JMD)</label>
+                                        <input type="number" step="0.01" min="0" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="clearance_fee" placeholder="0.00" wire:model="clearance_fee" autocomplete="off">
                                     </div>
                                     <div>
                                         <label for="storage_fee" class="block text-gray-700 text-sm font-bold mb-2">Storage Fee (JMD)</label>

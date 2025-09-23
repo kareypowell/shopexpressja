@@ -87,14 +87,14 @@ class ConsolidatedPackageIntegrationTest extends TestCase
         $expectedWeight = $packages->sum('weight');
         $expectedQuantity = $packages->count();
         $expectedFreight = $packages->sum('freight_price');
-        $expectedCustoms = $packages->sum('customs_duty');
+        $expectedCustoms = $packages->sum('clearance_fee');
         $expectedStorage = $packages->sum('storage_fee');
         $expectedDelivery = $packages->sum('delivery_fee');
 
         $this->assertEquals($expectedWeight, $consolidatedPackage->total_weight);
         $this->assertEquals($expectedQuantity, $consolidatedPackage->total_quantity);
         $this->assertEquals($expectedFreight, $consolidatedPackage->total_freight_price);
-        $this->assertEquals($expectedCustoms, $consolidatedPackage->total_customs_duty);
+        $this->assertEquals($expectedCustoms, $consolidatedPackage->total_clearance_fee);
         $this->assertEquals($expectedStorage, $consolidatedPackage->total_storage_fee);
         $this->assertEquals($expectedDelivery, $consolidatedPackage->total_delivery_fee);
 
@@ -130,7 +130,7 @@ class ConsolidatedPackageIntegrationTest extends TestCase
 
         // Calculate total cost
         $totalCost = $consolidatedPackage->total_freight_price + 
-                    $consolidatedPackage->total_customs_duty + 
+                    $consolidatedPackage->total_clearance_fee + 
                     $consolidatedPackage->total_storage_fee + 
                     $consolidatedPackage->total_delivery_fee;
 
@@ -198,7 +198,7 @@ class ConsolidatedPackageIntegrationTest extends TestCase
                 'weight' => $package->weight,
                 'status' => $package->status,
                 'freight_price' => $package->freight_price,
-                'customs_duty' => $package->customs_duty,
+                'clearance_fee' => $package->clearance_fee,
                 'storage_fee' => $package->storage_fee,
                 'delivery_fee' => $package->delivery_fee,
             ];
@@ -229,7 +229,7 @@ class ConsolidatedPackageIntegrationTest extends TestCase
             $this->assertEquals($originalData['tracking_number'], $package->tracking_number);
             $this->assertEquals($originalData['weight'], $package->weight);
             $this->assertEquals($originalData['freight_price'], $package->freight_price);
-            $this->assertEquals($originalData['customs_duty'], $package->customs_duty);
+            $this->assertEquals($originalData['clearance_fee'], $package->clearance_fee);
             $this->assertEquals($originalData['storage_fee'], $package->storage_fee);
             $this->assertEquals($originalData['delivery_fee'], $package->delivery_fee);
         }
@@ -311,14 +311,14 @@ class ConsolidatedPackageIntegrationTest extends TestCase
             $calculatedWeight = $packages->sum('weight');
             $calculatedQuantity = $packages->count();
             $calculatedFreight = $packages->sum('freight_price');
-            $calculatedCustoms = $packages->sum('customs_duty');
+            $calculatedCustoms = $packages->sum('clearance_fee');
             $calculatedStorage = $packages->sum('storage_fee');
             $calculatedDelivery = $packages->sum('delivery_fee');
 
             $this->assertEquals($calculatedWeight, $consolidatedPackage->total_weight);
             $this->assertEquals($calculatedQuantity, $consolidatedPackage->total_quantity);
             $this->assertEquals($calculatedFreight, $consolidatedPackage->total_freight_price);
-            $this->assertEquals($calculatedCustoms, $consolidatedPackage->total_customs_duty);
+            $this->assertEquals($calculatedCustoms, $consolidatedPackage->total_clearance_fee);
             $this->assertEquals($calculatedStorage, $consolidatedPackage->total_storage_fee);
             $this->assertEquals($calculatedDelivery, $consolidatedPackage->total_delivery_fee);
 
@@ -366,14 +366,14 @@ class ConsolidatedPackageIntegrationTest extends TestCase
                 // Verify status-specific business rules
                 if ($status === PackageStatus::READY) {
                     // Ready packages should have all fees calculated
-                    $this->assertGreaterThan(0, $consolidatedPackage->total_customs_duty);
+                    $this->assertGreaterThan(0, $consolidatedPackage->total_clearance_fee);
                     $this->assertGreaterThan(0, $consolidatedPackage->total_storage_fee);
                     $this->assertGreaterThan(0, $consolidatedPackage->total_delivery_fee);
                 } else {
                     // Non-ready packages may have zero fees
                     $consolidatedPackage->packages->each(function ($package) {
                         if ($package->status !== PackageStatus::READY) {
-                            $this->assertEquals(0, $package->customs_duty);
+                            $this->assertEquals(0, $package->clearance_fee);
                             $this->assertEquals(0, $package->storage_fee);
                             $this->assertEquals(0, $package->delivery_fee);
                         }

@@ -45,7 +45,7 @@ class PackageFeeServiceTest extends TestCase
             'manifest_id' => $manifest->id,
             'status' => PackageStatus::CUSTOMS,
             'freight_price' => 25.00,
-            'customs_duty' => 0,
+            'clearance_fee' => 0,
             'storage_fee' => 0,
             'delivery_fee' => 0,
         ]);
@@ -55,7 +55,7 @@ class PackageFeeServiceTest extends TestCase
     public function it_validates_fees_correctly()
     {
         $validFees = [
-            'customs_duty' => 10.50,
+            'clearance_fee' => 10.50,
             'storage_fee' => 5.00,
             'delivery_fee' => 2.50,
         ];
@@ -64,14 +64,14 @@ class PackageFeeServiceTest extends TestCase
         $this->assertEmpty($errors);
         
         $invalidFees = [
-            'customs_duty' => -5,
+            'clearance_fee' => -5,
             'storage_fee' => 'invalid',
             // missing delivery_fee
         ];
         
         $errors = $this->feeService->validateFees($invalidFees);
         $this->assertNotEmpty($errors);
-        $this->assertArrayHasKey('customs_duty', $errors);
+        $this->assertArrayHasKey('clearance_fee', $errors);
         $this->assertArrayHasKey('storage_fee', $errors);
         $this->assertArrayHasKey('delivery_fee', $errors);
     }
@@ -80,7 +80,7 @@ class PackageFeeServiceTest extends TestCase
     public function it_calculates_balance_impact_correctly()
     {
         $fees = [
-            'customs_duty' => 10.00,
+            'clearance_fee' => 10.00,
             'storage_fee' => 5.00,
             'delivery_fee' => 3.00,
         ];
@@ -98,7 +98,7 @@ class PackageFeeServiceTest extends TestCase
     public function it_calculates_balance_impact_with_credit_application()
     {
         $fees = [
-            'customs_duty' => 10.00,
+            'clearance_fee' => 10.00,
             'storage_fee' => 5.00,
             'delivery_fee' => 3.00,
         ];
@@ -116,7 +116,7 @@ class PackageFeeServiceTest extends TestCase
     public function it_generates_fee_update_preview()
     {
         $fees = [
-            'customs_duty' => 15.00,
+            'clearance_fee' => 15.00,
             'storage_fee' => 8.00,
             'delivery_fee' => 4.00,
         ];
@@ -134,7 +134,7 @@ class PackageFeeServiceTest extends TestCase
     public function it_updates_package_fees_and_creates_status_history()
     {
         $fees = [
-            'customs_duty' => 10.00,
+            'clearance_fee' => 10.00,
             'storage_fee' => 5.00,
             'delivery_fee' => 3.00,
         ];
@@ -153,7 +153,7 @@ class PackageFeeServiceTest extends TestCase
         // Check package was updated
         $this->package->refresh();
         $this->assertEquals(PackageStatus::READY, $this->package->status);
-        $this->assertEquals(10.00, $this->package->customs_duty);
+        $this->assertEquals(10.00, $this->package->clearance_fee);
         $this->assertEquals(5.00, $this->package->storage_fee);
         $this->assertEquals(3.00, $this->package->delivery_fee);
         

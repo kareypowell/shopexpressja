@@ -245,7 +245,7 @@ class ComprehensiveTestDataSeeder extends Seeder
             'weight' => 0.5,
             'status' => PackageStatus::READY,
             'freight_price' => 15.00,
-            'customs_duty' => 5.00,
+            'clearance_fee' => 5.00,
             'storage_fee' => 2.00,
             'delivery_fee' => 3.00,
             // Total: $25.00
@@ -258,7 +258,7 @@ class ComprehensiveTestDataSeeder extends Seeder
             'weight' => 2.0,
             'status' => PackageStatus::READY,
             'freight_price' => 35.00,
-            'customs_duty' => 15.00,
+            'clearance_fee' => 15.00,
             'storage_fee' => 5.00,
             'delivery_fee' => 5.00,
             // Total: $60.00
@@ -271,7 +271,7 @@ class ComprehensiveTestDataSeeder extends Seeder
             'weight' => 3.5,
             'status' => PackageStatus::READY,
             'freight_price' => 25.00,
-            'customs_duty' => 8.00,
+            'clearance_fee' => 8.00,
             'storage_fee' => 4.00,
             'delivery_fee' => 3.00,
             // Total: $40.00
@@ -282,7 +282,7 @@ class ComprehensiveTestDataSeeder extends Seeder
             'weight' => 2.2,
             'status' => PackageStatus::READY,
             'freight_price' => 20.00,
-            'customs_duty' => 6.00,
+            'clearance_fee' => 6.00,
             'storage_fee' => 3.00,
             'delivery_fee' => 3.00,
             // Total: $32.00
@@ -295,7 +295,7 @@ class ComprehensiveTestDataSeeder extends Seeder
             'weight' => 5.0,
             'status' => PackageStatus::READY,
             'freight_price' => 60.00,
-            'customs_duty' => 40.00,
+            'clearance_fee' => 40.00,
             'storage_fee' => 10.00,
             'delivery_fee' => 8.00,
             'estimated_value' => 1200.00,
@@ -309,7 +309,7 @@ class ComprehensiveTestDataSeeder extends Seeder
             'weight' => 1.8,
             'status' => PackageStatus::READY,
             'freight_price' => 30.00,
-            'customs_duty' => 12.00,
+            'clearance_fee' => 12.00,
             'storage_fee' => 4.00,
             'delivery_fee' => 4.00,
             // Total: $50.00
@@ -320,7 +320,7 @@ class ComprehensiveTestDataSeeder extends Seeder
             'weight' => 1.2,
             'status' => PackageStatus::CUSTOMS,
             'freight_price' => 25.00,
-            'customs_duty' => 0.00, // Not processed yet
+            'clearance_fee' => 0.00, // Not processed yet
             'storage_fee' => 0.00,
             'delivery_fee' => 0.00,
         ]);
@@ -334,7 +334,7 @@ class ComprehensiveTestDataSeeder extends Seeder
                 'weight' => rand(10, 50) / 10, // 1.0 to 5.0
                 'status' => $statuses[$i - 1],
                 'freight_price' => rand(200, 800) / 10, // $20.00 to $80.00
-                'customs_duty' => $statuses[$i - 1] === PackageStatus::READY ? rand(50, 300) / 10 : 0,
+                'clearance_fee' => $statuses[$i - 1] === PackageStatus::READY ? rand(50, 300) / 10 : 0,
                 'storage_fee' => $statuses[$i - 1] === PackageStatus::READY ? rand(30, 100) / 10 : 0,
                 'delivery_fee' => $statuses[$i - 1] === PackageStatus::READY ? rand(30, 80) / 10 : 0,
             ]);
@@ -347,7 +347,7 @@ class ComprehensiveTestDataSeeder extends Seeder
             'weight' => 15.0,
             'status' => PackageStatus::READY,
             'freight_price' => 80.00,
-            'customs_duty' => 25.00,
+            'clearance_fee' => 25.00,
             'storage_fee' => 12.00,
             'delivery_fee' => 10.00,
             'container_type' => 'box',
@@ -365,7 +365,7 @@ class ComprehensiveTestDataSeeder extends Seeder
                 'weight' => 0.8,
                 'status' => PackageStatus::READY,
                 'freight_price' => 100.00,
-                'customs_duty' => 80.00,
+                'clearance_fee' => 80.00,
                 'storage_fee' => 15.00,
                 'delivery_fee' => 10.00,
                 'estimated_value' => 5000.00,
@@ -377,7 +377,7 @@ class ComprehensiveTestDataSeeder extends Seeder
                 'weight' => 1.5,
                 'status' => PackageStatus::READY,
                 'freight_price' => 75.00,
-                'customs_duty' => 60.00,
+                'clearance_fee' => 60.00,
                 'storage_fee' => 10.00,
                 'delivery_fee' => 8.00,
                 'estimated_value' => 3000.00,
@@ -402,7 +402,7 @@ class ComprehensiveTestDataSeeder extends Seeder
                 'weight' => 2.0,
                 'status' => PackageStatus::DELIVERED,
                 'freight_price' => 40.00,
-                'customs_duty' => 15.00,
+                'clearance_fee' => 15.00,
                 'storage_fee' => 5.00,
                 'delivery_fee' => 5.00,
                 // Total: $65.00
@@ -428,7 +428,7 @@ class ComprehensiveTestDataSeeder extends Seeder
                 'distribution_id' => $distribution->id,
                 'package_id' => $historicalPackage->id,
                 'freight_price' => 40.00,
-                'customs_duty' => 15.00,
+                'clearance_fee' => 15.00,
                 'storage_fee' => 5.00,
                 'delivery_fee' => 5.00,
                 'total_cost' => 65.00,
@@ -470,7 +470,7 @@ class ComprehensiveTestDataSeeder extends Seeder
                 'weight' => rand(10, 50) / 10,
                 'status' => $status,
                 'freight_price' => rand(150, 400) / 10,
-                'customs_duty' => $status === PackageStatus::READY ? rand(50, 150) / 10 : 0,
+                'clearance_fee' => $status === PackageStatus::READY ? rand(50, 150) / 10 : 0,
                 'storage_fee' => $status === PackageStatus::READY ? rand(20, 60) / 10 : 0,
                 'delivery_fee' => $status === PackageStatus::READY ? rand(20, 50) / 10 : 0,
             ]);

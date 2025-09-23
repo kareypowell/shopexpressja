@@ -42,7 +42,7 @@ Manual status updates to `delivered` are blocked in both the UI and backend vali
 
 When a package status is updated to `ready`, the email includes:
 - Freight Price
-- Customs Duty (if applicable)
+- Clearance Fee (if applicable)
 - Storage Fee (if applicable)
 - Delivery Fee (if applicable)
 - **Total Amount Due**

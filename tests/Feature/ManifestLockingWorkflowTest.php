@@ -266,7 +266,7 @@ class ManifestLockingWorkflowTest extends TestCase
         Package::factory()->create(['manifest_id' => $manifest->id, 'status' => 'delivered']);
         Package::factory()->create(['manifest_id' => $manifest->id, 'status' => 'processing']);
         Package::factory()->create(['manifest_id' => $manifest->id, 'status' => 'ready']);
-        Package::factory()->create(['manifest_id' => $manifest->id, 'status' => 'customs']);
+        Package::factory()->create(['manifest_id' => $manifest->id, 'status' => 'clearance']);
 
         $status = $this->lockService->getManifestLockStatus($manifest);
         $this->assertEquals(4, $status['package_count']);

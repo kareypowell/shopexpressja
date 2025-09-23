@@ -114,7 +114,7 @@ class CustomerCacheBasicTest extends TestCase
         Package::factory()->create([
             'user_id' => $this->customer->id,
             'freight_price' => 100.00,
-            'customs_duty' => 0.00,
+            'clearance_fee' => 0.00,
             'storage_fee' => 0.00,
             'delivery_fee' => 0.00,
         ]);

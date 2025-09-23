@@ -157,8 +157,8 @@
                                         <div class="text-gray-900">${{ number_format($consolidatedPackage->total_freight_price, 2) }}</div>
                                     </div>
                                     <div class="bg-gray-50 px-3 py-2 rounded">
-                                        <span class="font-medium text-gray-700">Customs:</span>
-                                        <div class="text-gray-900">${{ number_format($consolidatedPackage->total_customs_duty, 2) }}</div>
+                                        <span class="font-medium text-gray-700">Clearance:</span>
+                                        <div class="text-gray-900">${{ number_format($consolidatedPackage->total_clearance_fee, 2) }}</div>
                                     </div>
                                     <div class="bg-gray-50 px-3 py-2 rounded">
                                         <span class="font-medium text-gray-700">Storage:</span>
@@ -236,7 +236,7 @@
                                                 </div>
                                                 <div class="bg-gray-50 px-2 py-1 rounded">
                                                     <span class="text-gray-600">Customs:</span>
-                                                    <div class="font-medium">${{ number_format($package->customs_duty ?? 0, 2) }}</div>
+                                                    <div class="font-medium">${{ number_format($package->clearance_fee ?? 0, 2) }}</div>
                                                 </div>
                                                 <div class="bg-gray-50 px-2 py-1 rounded">
                                                     <span class="text-gray-600">Storage:</span>

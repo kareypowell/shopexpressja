@@ -46,19 +46,19 @@ class ConsolidationCacheService
 
             // Calculate totals from individual packages for accuracy
             $packages = $consolidatedPackage->packages()
-                ->select(['weight', 'freight_price', 'customs_duty', 'storage_fee', 'delivery_fee'])
+                ->select(['weight', 'freight_price', 'clearance_fee', 'storage_fee', 'delivery_fee'])
                 ->get();
 
             $totals = [
                 'weight' => $packages->sum('weight'),
                 'quantity' => $packages->count(),
                 'freight_price' => $packages->sum('freight_price'),
-                'customs_duty' => $packages->sum('customs_duty'),
+                'clearance_fee' => $packages->sum('clearance_fee'),
                 'storage_fee' => $packages->sum('storage_fee'),
                 'delivery_fee' => $packages->sum('delivery_fee'),
                 'total_cost' => $packages->sum(function ($package) {
                     return ($package->freight_price ?? 0) + 
-                           ($package->customs_duty ?? 0) + 
+                           ($package->clearance_fee ?? 0) + 
                            ($package->storage_fee ?? 0) + 
                            ($package->delivery_fee ?? 0);
                 }),
@@ -90,7 +90,7 @@ class ConsolidationCacheService
                 ->select([
                     'id', 'consolidated_tracking_number', 'customer_id', 'status', 
                     'total_weight', 'total_quantity', 'total_freight_price', 
-                    'total_customs_duty', 'total_storage_fee', 'total_delivery_fee',
+                    'total_clearance_fee', 'total_storage_fee', 'total_delivery_fee',
                     'consolidated_at', 'is_active'
                 ])
                 ->with('customer:id,first_name,last_name,email');

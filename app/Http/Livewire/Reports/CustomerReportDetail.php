@@ -131,9 +131,9 @@ class CustomerReportDetail extends Component
                 SUM(CASE WHEN status = "delivered" THEN 1 ELSE 0 END) as delivered_packages,
                 SUM(CASE WHEN status IN ("shipped", "customs") THEN 1 ELSE 0 END) as in_transit_packages,
                 SUM(CASE WHEN status = "pending" THEN 1 ELSE 0 END) as pending_packages,
-                SUM(COALESCE(freight_price, 0) + COALESCE(customs_duty, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) as total_charges,
+                SUM(COALESCE(freight_price, 0) + COALESCE(clearance_fee, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) as total_charges,
                 SUM(COALESCE(weight, 0)) as total_weight,
-                AVG(COALESCE(freight_price, 0) + COALESCE(customs_duty, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) as average_package_cost
+                AVG(COALESCE(freight_price, 0) + COALESCE(clearance_fee, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)) as average_package_cost
             ')
             ->first();
 

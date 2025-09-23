@@ -411,7 +411,7 @@ class ConsolidationRegressionTest extends TestCase
             'user_id' => $this->customerUser->id,
             'status' => PackageStatus::READY_FOR_PICKUP,
             'freight_price' => 40.00,
-            'customs_duty' => 5.00,
+            'clearance_fee' => 5.00,
             'storage_fee' => 2.00,
             'delivery_fee' => 8.00
         ]);
@@ -421,7 +421,7 @@ class ConsolidationRegressionTest extends TestCase
             'user_id' => $this->customerUser->id,
             'status' => PackageStatus::READY,
             'freight_price' => 30.00,
-            'customs_duty' => 4.00,
+            'clearance_fee' => 4.00,
             'storage_fee' => 1.50,
             'delivery_fee' => 6.00
         ]);
@@ -444,7 +444,7 @@ class ConsolidationRegressionTest extends TestCase
         $distributionService = app(PackageDistributionService::class);
 
         // Distribute individual package
-        $individualCost = $individualPackage->freight_price + $individualPackage->customs_duty + 
+        $individualCost = $individualPackage->freight_price + $individualPackage->clearance_fee + 
                          $individualPackage->storage_fee + $individualPackage->delivery_fee;
 
         $individualResult = $distributionService->distributePackages(
@@ -463,7 +463,7 @@ class ConsolidationRegressionTest extends TestCase
 
         // Distribute consolidated package
         $consolidatedCost = $consolidatedPackage->total_freight_price + 
-                           $consolidatedPackage->total_customs_duty + 
+                           $consolidatedPackage->total_clearance_fee + 
                            $consolidatedPackage->total_storage_fee + 
                            $consolidatedPackage->total_delivery_fee;
 

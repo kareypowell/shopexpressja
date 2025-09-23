@@ -224,20 +224,20 @@ class CustomerStatisticsService
             ->selectRaw('
                 COUNT(*) as total_packages,
                 COALESCE(SUM(freight_price), 0) as total_freight,
-                COALESCE(SUM(customs_duty), 0) as total_customs,
+                COALESCE(SUM(clearance_fee), 0) as total_clearance,
                 COALESCE(SUM(storage_fee), 0) as total_storage,
                 COALESCE(SUM(delivery_fee), 0) as total_delivery,
                 COALESCE(AVG(freight_price), 0) as avg_freight,
-                COALESCE(AVG(customs_duty), 0) as avg_customs,
+                COALESCE(AVG(clearance_fee), 0) as avg_clearance,
                 COALESCE(AVG(storage_fee), 0) as avg_storage,
                 COALESCE(AVG(delivery_fee), 0) as avg_delivery,
-                COALESCE(MAX(freight_price + customs_duty + storage_fee + delivery_fee), 0) as highest_package_cost,
-                COALESCE(MIN(freight_price + customs_duty + storage_fee + delivery_fee), 0) as lowest_package_cost
+                COALESCE(MAX(freight_price + clearance_fee + storage_fee + delivery_fee), 0) as highest_package_cost,
+                COALESCE(MIN(freight_price + clearance_fee + storage_fee + delivery_fee), 0) as lowest_package_cost
             ')
             ->first();
 
         $totalSpent = ($financialStats->total_freight ?? 0) + 
-                     ($financialStats->total_customs ?? 0) + 
+                     ($financialStats->total_clearance ?? 0) + 
                      ($financialStats->total_storage ?? 0) + 
                      ($financialStats->total_delivery ?? 0);
 
@@ -246,7 +246,7 @@ class CustomerStatisticsService
 
         // Calculate cost distribution percentages
         $freightPercentage = $totalSpent > 0 ? (($financialStats->total_freight ?? 0) / $totalSpent) * 100 : 0;
-        $customsPercentage = $totalSpent > 0 ? (($financialStats->total_customs ?? 0) / $totalSpent) * 100 : 0;
+        $customsPercentage = $totalSpent > 0 ? (($financialStats->total_clearance ?? 0) / $totalSpent) * 100 : 0;
         $storagePercentage = $totalSpent > 0 ? (($financialStats->total_storage ?? 0) / $totalSpent) * 100 : 0;
         $deliveryPercentage = $totalSpent > 0 ? (($financialStats->total_delivery ?? 0) / $totalSpent) * 100 : 0;
 
@@ -255,7 +255,7 @@ class CustomerStatisticsService
             'average_per_package' => round($averagePerPackage, 2),
             'cost_breakdown' => [
                 'freight' => round($financialStats->total_freight ?? 0, 2),
-                'customs' => round($financialStats->total_customs ?? 0, 2),
+                'customs' => round($financialStats->total_clearance ?? 0, 2),
                 'storage' => round($financialStats->total_storage ?? 0, 2),
                 'delivery' => round($financialStats->total_delivery ?? 0, 2),
             ],
@@ -267,7 +267,7 @@ class CustomerStatisticsService
             ],
             'average_costs' => [
                 'freight' => round($financialStats->avg_freight ?? 0, 2),
-                'customs' => round($financialStats->avg_customs ?? 0, 2),
+                'customs' => round($financialStats->avg_clearance ?? 0, 2),
                 'storage' => round($financialStats->avg_storage ?? 0, 2),
                 'delivery' => round($financialStats->avg_delivery ?? 0, 2),
             ],
@@ -348,7 +348,7 @@ class CustomerStatisticsService
                 {$yearFunction} as year,
                 {$monthFunction} as month,
                 COUNT(*) as package_count,
-                COALESCE(SUM(freight_price + customs_duty + storage_fee + delivery_fee), 0) as total_spent
+                COALESCE(SUM(freight_price + clearance_fee + storage_fee + delivery_fee), 0) as total_spent
             ")
             ->groupBy('year', 'month')
             ->orderBy('year', 'desc')
@@ -389,7 +389,7 @@ class CustomerStatisticsService
                     WHEN {$monthFunction} IN (9, 10, 11) THEN 'Fall'
                 END as season,
                 COUNT(*) as package_count,
-                COALESCE(AVG(freight_price + customs_duty + storage_fee + delivery_fee), 0) as avg_cost
+                COALESCE(AVG(freight_price + clearance_fee + storage_fee + delivery_fee), 0) as avg_cost
             ")
             ->groupBy('season')
             ->get();

@@ -35,7 +35,7 @@ class ConsolidatedPackageFeeModalIntegrationTest extends TestCase
             'consolidated_package_id' => $this->consolidatedPackage->id,
             'user_id' => $this->user->id,
             'status' => PackageStatus::PROCESSING,
-            'customs_duty' => 0,
+            'clearance_fee' => 0,
             'storage_fee' => 0,
             'delivery_fee' => 0,
         ]);
@@ -53,7 +53,7 @@ class ConsolidatedPackageFeeModalIntegrationTest extends TestCase
                 'id' => $package->id,
                 'tracking_number' => $package->tracking_number,
                 'description' => $package->description,
-                'customs_duty' => 25.00,
+                'clearance_fee' => 25.00,
                 'storage_fee' => 10.00,
                 'delivery_fee' => 20.00,
                 'needs_fees' => true,
@@ -77,7 +77,7 @@ class ConsolidatedPackageFeeModalIntegrationTest extends TestCase
         // Verify database changes
         foreach ($packages as $package) {
             $package->refresh();
-            $this->assertEquals(25.00, $package->customs_duty);
+            $this->assertEquals(25.00, $package->clearance_fee);
             $this->assertEquals(10.00, $package->storage_fee);
             $this->assertEquals(20.00, $package->delivery_fee);
         }
@@ -114,7 +114,7 @@ class ConsolidatedPackageFeeModalIntegrationTest extends TestCase
                 'id' => $package->id,
                 'tracking_number' => $package->tracking_number,
                 'description' => $package->description,
-                'customs_duty' => 15.00,
+                'clearance_fee' => 15.00,
                 'storage_fee' => 8.00,
                 'delivery_fee' => 12.00,
                 'needs_fees' => true,

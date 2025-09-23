@@ -347,7 +347,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $query->withCount('packages')
                     ->with(['packages' => function($query) {
-                        $query->select('user_id', 'freight_price', 'customs_duty', 'storage_fee', 'delivery_fee', 'created_at');
+                        $query->select('user_id', 'freight_price', 'clearance_fee', 'storage_fee', 'delivery_fee', 'created_at');
                     }]);
     }
 
@@ -369,7 +369,7 @@ class User extends Authenticatable implements MustVerifyEmail
                 }
             ])
             ->withSum('packages', 'freight_price')
-            ->withSum('packages', 'customs_duty')
+            ->withSum('packages', 'clearance_fee')
             ->withSum('packages', 'storage_fee')
             ->withSum('packages', 'delivery_fee')
             ->withAvg('packages', 'weight');
@@ -480,7 +480,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getTotalSpentAttribute(): float
     {
         return $this->packages()
-            ->selectRaw('COALESCE(SUM(freight_price), 0) + COALESCE(SUM(customs_duty), 0) + COALESCE(SUM(storage_fee), 0) + COALESCE(SUM(delivery_fee), 0) as total')
+            ->selectRaw('COALESCE(SUM(freight_price), 0) + COALESCE(SUM(clearance_fee), 0) + COALESCE(SUM(storage_fee), 0) + COALESCE(SUM(delivery_fee), 0) as total')
             ->value('total') ?? 0.0;
     }
 
@@ -531,15 +531,15 @@ class User extends Authenticatable implements MustVerifyEmail
             ->selectRaw('
                 COUNT(*) as total_packages,
                 COALESCE(SUM(freight_price), 0) as total_freight,
-                COALESCE(SUM(customs_duty), 0) as total_customs,
+                COALESCE(SUM(clearance_fee), 0) as total_customs,
                 COALESCE(SUM(storage_fee), 0) as total_storage,
                 COALESCE(SUM(delivery_fee), 0) as total_delivery,
                 COALESCE(AVG(freight_price), 0) as avg_freight,
-                COALESCE(AVG(customs_duty), 0) as avg_customs,
+                COALESCE(AVG(clearance_fee), 0) as avg_customs,
                 COALESCE(AVG(storage_fee), 0) as avg_storage,
                 COALESCE(AVG(delivery_fee), 0) as avg_delivery,
-                COALESCE(MAX(freight_price + customs_duty + storage_fee + delivery_fee), 0) as highest_package_cost,
-                COALESCE(MIN(freight_price + customs_duty + storage_fee + delivery_fee), 0) as lowest_package_cost
+                COALESCE(MAX(freight_price + clearance_fee + storage_fee + delivery_fee), 0) as highest_package_cost,
+                COALESCE(MIN(freight_price + clearance_fee + storage_fee + delivery_fee), 0) as lowest_package_cost
             ')
             ->first();
 
@@ -593,7 +593,7 @@ class User extends Authenticatable implements MustVerifyEmail
         $categoryTotals = $this->packages()
             ->selectRaw('
                 COALESCE(SUM(freight_price), 0) as freight_total,
-                COALESCE(SUM(customs_duty), 0) as customs_total,
+                COALESCE(SUM(clearance_fee), 0) as customs_total,
                 COALESCE(SUM(storage_fee), 0) as storage_total,
                 COALESCE(SUM(delivery_fee), 0) as delivery_total,
                 COUNT(*) as package_count
@@ -641,9 +641,9 @@ class User extends Authenticatable implements MustVerifyEmail
         $stats = $this->packages()
             ->selectRaw('
                 COUNT(*) as total_packages,
-                COALESCE(AVG(freight_price + customs_duty + storage_fee + delivery_fee), 0) as avg_total_cost,
+                COALESCE(AVG(freight_price + clearance_fee + storage_fee + delivery_fee), 0) as avg_total_cost,
                 COALESCE(AVG(freight_price), 0) as avg_freight,
-                COALESCE(AVG(customs_duty), 0) as avg_customs,
+                COALESCE(AVG(clearance_fee), 0) as avg_customs,
                 COALESCE(AVG(storage_fee), 0) as avg_storage,
                 COALESCE(AVG(delivery_fee), 0) as avg_delivery,
                 COALESCE(AVG(weight), 0) as avg_weight,
@@ -698,7 +698,7 @@ class User extends Authenticatable implements MustVerifyEmail
             }
             
             $monthlyDataRaw[$key]->package_count++;
-            $monthlyDataRaw[$key]->total_spent += ($package->freight_price + $package->customs_duty + $package->storage_fee + $package->delivery_fee);
+            $monthlyDataRaw[$key]->total_spent += ($package->freight_price + $package->clearance_fee + $package->storage_fee + $package->delivery_fee);
         }
 
         // Sort by key and calculate averages
@@ -1243,7 +1243,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->packages()
             ->where('status', 'ready')
-            ->sum(\DB::raw('freight_price + customs_duty + storage_fee + delivery_fee'));
+            ->sum(\DB::raw('freight_price + clearance_fee + storage_fee + delivery_fee'));
     }
 
     /**
