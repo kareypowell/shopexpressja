@@ -1,69 +1,17 @@
-<div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {{-- Breadcrumb Navigation --}}
-        <nav class="flex mb-4" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                <li class="inline-flex items-center">
-                    <a href="{{ route('home') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
-                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
-                        </svg>
-                        Dashboard
-                    </a>
-                </li>
-                <li class="inline-flex items-center">
-                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                    </svg>
-                    <a href="{{ route('reports.index') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
-                        Reports & Analytics
-                    </a>
-                </li>
-                <li class="inline-flex items-center">
-                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                    </svg>
-                    <span class="inline-flex items-center text-sm font-medium text-gray-500">
-                        {{ $this->getCurrentBreadcrumbTitle() }}
-                    </span>
-                </li>
-            </ol>
-        </nav>
-        
-        {{-- Header --}}
-        <div class="mb-8">
-            <div class="flex justify-between items-start">
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Business Reports</h1>
-                    <p class="mt-2 text-sm text-gray-600">
-                        Comprehensive analytics and reporting dashboard
-                    </p>
-                    @if($this->lastUpdated)
-                        <p class="mt-1 text-xs text-gray-500">
-                            Last updated: {{ $this->lastUpdated }}
-                        </p>
-                    @endif
+                    <h1 class="text-2xl font-bold text-gray-900">Business Reports</h1>
+                    <p class="text-sm text-gray-500 mt-1">Comprehensive analytics and reporting dashboard</p>
+                    <p class="text-xs text-gray-400 mt-1">Last updated: {{ $lastUpdated }}</p>
                 </div>
-                
                 <div class="flex items-center space-x-4">
-                    {{-- Auto Refresh Toggle --}}
-                    <button 
-                        wire:click="toggleAutoRefresh"
-                        class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 {{ $this->autoRefresh ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
-                    >
-                        <svg class="w-4 h-4 mr-2 {{ $this->autoRefresh ? 'animate-spin' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                        </svg>
-                        {{ $this->autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh OFF' }}
-                    </button>
-                    
-                    {{-- Refresh Button --}}
-                    <button 
-                        wire:click="refreshReport" 
-                        wire:loading.attr="disabled"
-                        class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-                    >
+                    <button wire:click="refreshData" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            wire:loading.attr="disabled">
                         <svg wire:loading.remove class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                         </svg>
@@ -71,185 +19,470 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <span wire:loading.remove>Refresh</span>
-                        <span wire:loading>Refreshing...</span>
+                        Refresh
                     </button>
                 </div>
             </div>
-            
-            {{-- Report Type Navigation --}}
-            @if(count($this->availableReports) > 1)
-                <div class="mt-6">
-                    <nav class="flex space-x-8" aria-label="Report Types">
-                        @foreach($this->availableReports as $reportType => $config)
-                            <button
-                                wire:click="changeReportType('{{ $reportType }}')"
-                                class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 {{ $this->activeReportType === $reportType ? 'bg-' . $config['color'] . '-100 text-' . $config['color'] . '-800' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100' }}"
-                            >
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    @if($config['icon'] === 'currency-dollar')
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                                    @elseif($config['icon'] === 'truck')
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    @elseif($config['icon'] === 'users')
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                                    @elseif($config['icon'] === 'chart-bar')
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                    @endif
-                                </svg>
-                                <div class="text-left">
-                                    <div class="font-medium">{{ $config['name'] }}</div>
-                                    <div class="text-xs opacity-75">{{ $config['description'] }}</div>
-                                </div>
-                            </button>
-                        @endforeach
-                    </nav>
-                </div>
-            @endif
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Report Type Selector -->
+        <div class="mb-8">
+            <div class="flex flex-wrap gap-2">
+                <button wire:click="$set('reportType', 'sales')" 
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $reportType === 'sales' ? 'bg-blue-100 text-blue-700 border-2 border-blue-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50' }}">
+                    Sales & Collections
+                </button>
+                <button wire:click="$set('reportType', 'manifests')" 
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $reportType === 'manifests' ? 'bg-green-100 text-green-700 border-2 border-green-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50' }}">
+                    Manifest Performance
+                </button>
+                <button wire:click="$set('reportType', 'customers')" 
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $reportType === 'customers' ? 'bg-purple-100 text-purple-700 border-2 border-purple-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50' }}">
+                    Customer Analytics
+                </button>
+                <button wire:click="$set('reportType', 'financial')" 
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $reportType === 'financial' ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50' }}">
+                    Financial Summary
+                </button>
+            </div>
         </div>
 
-        {{-- Error Display --}}
-        @if($this->error)
-            <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+        <!-- Date Range Filter -->
+        <div class="mb-8">
+            <div class="bg-white rounded-lg shadow-sm border p-4">
+                <div class="flex items-center space-x-4">
+                    <label class="text-sm font-medium text-gray-700">Date Range:</label>
+                    <select wire:model="dateRange" class="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="7">Last 7 days</option>
+                        <option value="30">Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                        <option value="365">Last year</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        @if($error)
+            <div class="mb-8 bg-red-50 border border-red-200 rounded-lg p-4">
                 <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                        </svg>
-                    </div>
+                    <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                    </svg>
                     <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">Error</h3>
-                        <div class="mt-2 text-sm text-red-700">
-                            <p>{{ $this->error }}</p>
-                        </div>
+                        <p class="text-sm text-red-800">{{ $error }}</p>
                     </div>
                 </div>
             </div>
         @endif
 
-        {{-- Dashboard Components --}}
-        <div class="space-y-6">
-            @foreach($this->sortedComponents as $componentName)
-                @if($componentName === 'filters' && $this->shouldShowComponent('filters'))
-                    {{-- Report Filters Component --}}
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        @livewire('reports.report-filters', ['reportType' => $this->activeReportType], key('report-filters-' . $this->activeReportType))
-                    </div>
-                @elseif($componentName === 'summary_cards' && $this->shouldShowComponent('summary_cards'))
-                    {{-- Summary Statistics Cards --}}
-                    @if(!empty($this->summaryStats))
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            @foreach($this->summaryStats as $stat)
-                                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0">
-                                            <div class="w-8 h-8 bg-{{ $stat['color'] ?? 'blue' }}-100 rounded-lg flex items-center justify-center">
-                                                <svg class="w-5 h-5 text-{{ $stat['color'] ?? 'blue' }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                                </svg>
-                                            </div>
-                                        </div>
-                                        <div class="ml-4">
-                                            <h3 class="text-sm font-medium text-gray-900">{{ $stat['label'] }}</h3>
-                                            <p class="text-2xl font-bold text-gray-900">{{ $stat['value'] }}</p>
-                                            @if(isset($stat['change']))
-                                                <p class="text-sm {{ $stat['change'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                                                    {{ $stat['change'] >= 0 ? '+' : '' }}{{ $stat['change'] }}%
-                                                    <span class="text-gray-500">vs last period</span>
-                                                </p>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            @foreach($this->getSummaryStats() as $stat)
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-600">{{ $stat['label'] }}</p>
+                            <p class="text-2xl font-bold text-gray-900 mt-2">{{ $stat['value'] }}</p>
                         </div>
-                    @endif
-                @elseif($componentName === 'main_chart' && $this->shouldShowComponent('main_chart'))
-                    {{-- Main Chart Component --}}
-                    @if($this->activeReportType === 'sales_collections')
-                        @livewire('reports.collections-chart', ['filters' => $this->activeFilters], key('collections-chart-' . md5(serialize($this->activeFilters))))
-                    @elseif($this->activeReportType === 'manifest_performance')
-                        @livewire('reports.manifest-performance-chart', ['filters' => $this->activeFilters], key('manifest-chart-' . md5(serialize($this->activeFilters))))
-                    @elseif($this->activeReportType === 'financial_summary')
-                        @livewire('reports.financial-analytics-chart', ['filters' => $this->activeFilters], key('financial-chart-' . md5(serialize($this->activeFilters))))
-                    @else
-                        {{-- Fallback Generic Chart --}}
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div class="flex justify-between items-center mb-6">
-                                <h3 class="text-lg font-semibold text-gray-900">
-                                    {{ $this->currentReport['name'] ?? 'Report' }} Visualization
-                                </h3>
-                                <button 
-                                    wire:click="loadChartData"
-                                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
-                                >
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                    </svg>
-                                    Load Chart
-                                </button>
-                            </div>
-                            
-                            <div class="h-96" id="report-chart-container">
-                                @if($this->chartsLoaded && !empty($this->chartData))
-                                    {{-- Chart will be rendered here via JavaScript --}}
-                                    <canvas id="report-main-chart" class="w-full h-full"></canvas>
-                                @else
-                                    <div class="flex items-center justify-center h-full bg-gray-50 rounded-lg">
-                                        <div class="text-center">
-                                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                            </svg>
-                                            <h3 class="mt-2 text-sm font-medium text-gray-900">No chart data</h3>
-                                            <p class="mt-1 text-sm text-gray-500">Click "Load Chart" to visualize the data</p>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
+                        <div class="w-12 h-12 bg-{{ $stat['color'] }}-100 rounded-lg flex items-center justify-center">
+                            @if($stat['color'] === 'blue')
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                </svg>
+                            @elseif($stat['color'] === 'green')
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            @elseif($stat['color'] === 'red')
+                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                            @else
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            @endif
                         </div>
-                    @endif
-                @elseif($componentName === 'data_table' && $this->shouldShowComponent('data_table'))
-                    {{-- Data Table Component --}}
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        @livewire('reports.report-data-table', [
-                            'reportType' => $this->activeReportType,
-                            'data' => $this->tableData,
-                            'filters' => $this->activeFilters
-                        ], key('report-data-table-' . $this->activeReportType))
                     </div>
-                @elseif($componentName === 'export_controls' && $this->shouldShowComponent('export_controls'))
-                    {{-- Export Controls Component --}}
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                        @livewire('reports.report-exporter', [
-                            'reportType' => $this->activeReportType,
-                            'reportData' => $this->reportData,
-                            'filters' => $this->activeFilters
-                        ], key('report-exporter-' . $this->activeReportType))
-                    </div>
-                @endif
+                </div>
             @endforeach
         </div>
 
-        {{-- Loading Overlay --}}
-        <div wire:loading.flex wire:target="refreshReport,changeReportType,loadReportData" class="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 items-center justify-center">
-            <div class="bg-white rounded-lg p-6 shadow-lg">
-                <div class="flex items-center">
-                    <svg class="animate-spin h-5 w-5 text-blue-600 mr-3" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span class="text-gray-900">Loading report data...</span>
-                </div>
+        <!-- Chart Section -->
+        <div class="bg-white rounded-lg shadow-sm border p-6 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    @if($reportType === 'sales') Sales & Collections Trend
+                    @elseif($reportType === 'manifests') Manifest Performance
+                    @elseif($reportType === 'customers') Customer Activity
+                    @else Financial Overview
+                    @endif
+                </h3>
+                <button class="text-sm text-gray-500 hover:text-gray-700">
+                    View Details →
+                </button>
+            </div>
+            
+            <div class="h-80 relative bg-gray-50 rounded-lg">
+                @if($isLoading)
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center">
+                            <svg class="animate-spin w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <p class="text-sm text-gray-500">Loading chart data...</p>
+                        </div>
+                    </div>
+                @else
+                    <canvas id="reportChart" class="w-full h-full" wire:ignore></canvas>
+                    <div id="chartFallback" class="absolute inset-0 flex items-center justify-center hidden">
+                        <div class="text-center">
+                            <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            <p class="text-sm text-gray-500">Chart visualization will appear here</p>
+                            <p class="text-xs text-gray-400 mt-1">Data is loading...</p>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="bg-white rounded-lg shadow-sm border">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    @if($reportType === 'sales') Recent Manifests
+                    @elseif($reportType === 'manifests') Manifest Details
+                    @elseif($reportType === 'customers') Customer Overview
+                    @else Financial Breakdown
+                    @endif
+                </h3>
+            </div>
+            
+            <div class="overflow-x-auto">
+                @if($isLoading)
+                    <div class="p-8 text-center">
+                        <svg class="animate-spin w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p class="text-sm text-gray-500">Loading data...</p>
+                    </div>
+                @else
+                    <table class="min-w-full divide-y divide-gray-200">
+                        @if($reportType === 'sales')
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manifest</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packages</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Owed</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Collected</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @forelse(($reportData['manifests'] ?? []) as $manifest)
+                                    <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            @if(isset($manifest['manifest_id']))
+                                                <a href="{{ route('admin.manifests.packages', $manifest['manifest_id']) }}" 
+                                                   class="text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center transition-colors duration-150"
+                                                   title="Click to view manifest details">
+                                                    {{ $manifest['manifest_name'] ?? 'N/A' }}
+                                                    <svg class="w-3 h-3 ml-1 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                                    </svg>
+                                                </a>
+                                            @else
+                                                {{ $manifest['manifest_name'] ?? 'N/A' }}
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                {{ ucfirst($manifest['manifest_type'] ?? 'N/A') }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ number_format($manifest['package_count'] ?? 0) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            ${{ number_format($manifest['total_owed'] ?? 0, 2) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">
+                                            ${{ number_format($manifest['total_collected'] ?? 0, 2) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600">
+                                            ${{ number_format($manifest['outstanding_balance'] ?? 0, 2) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ round($manifest['collection_rate'] ?? 0, 1) }}%
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">
+                                            No data available for the selected period.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        @elseif($reportType === 'customers')
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packages</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Spent</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @forelse(($reportData['customers'] ?? []) as $customer)
+                                    <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            @if(isset($customer['customer_id']))
+                                                <a href="{{ route('admin.customers.show', $customer['customer_id']) }}" 
+                                                   class="text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center transition-colors duration-150"
+                                                   title="Click to view customer profile">
+                                                    {{ $customer['customer_name'] ?? 'N/A' }}
+                                                    <svg class="w-3 h-3 ml-1 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                                    </svg>
+                                                </a>
+                                            @else
+                                                {{ $customer['customer_name'] ?? 'N/A' }}
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ $customer['customer_email'] ?? 'N/A' }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ number_format($customer['package_count'] ?? 0) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            ${{ number_format($customer['total_spent'] ?? 0, 2) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm {{ ($customer['account_balance'] ?? 0) < 0 ? 'text-red-600' : 'text-green-600' }}">
+                                            ${{ number_format($customer['account_balance'] ?? 0, 2) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ ($customer['account_balance'] ?? 0) < 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
+                                                {{ ($customer['account_balance'] ?? 0) < 0 ? 'Outstanding' : 'Current' }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500">
+                                            No customer data available.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        @else
+                            <tbody class="bg-white">
+                                <tr>
+                                    <td class="px-6 py-8 text-center text-sm text-gray-500">
+                                        Report data will be displayed here.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        @endif
+                    </table>
+                @endif
             </div>
         </div>
     </div>
-
-    {{-- Package Detail Modal --}}
-    <div x-data="{ show: false }" 
-         @show-manifest-details.window="show = true"
-         @close-modal.window="show = false">
-        @livewire('reports.manifest-package-detail-modal')
-    </div>
 </div>
 
-{{-- Chart.js Integration will be handled by individual chart components --}}
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('livewire:load', function () {
+    let chart = null;
+    
+    function getChartDataFromLivewire() {
+        // Call Livewire method to get chart data
+        return @this.call('getChartData').then(function(chartData) {
+            return chartData;
+        }).catch(function(error) {
+            console.error('Failed to get chart data from Livewire:', error);
+            // Return fallback data
+            const reportType = @this.reportType || 'sales';
+            return getChartDataFallback(reportType);
+        });
+    }
+
+    function getChartDataFallback(reportType) {
+        switch (reportType) {
+            case 'sales':
+                return {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Revenue ($)',
+                        data: [12000, 15000, 18000, 14000, 16000, 19000],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.1
+                    }]
+                };
+            case 'manifests':
+                return {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'Manifests',
+                        data: [25, 32, 28, 35],
+                        borderColor: 'rgb(34, 197, 94)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        tension: 0.1
+                    }]
+                };
+            case 'customers':
+                return {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Active Customers',
+                        data: [45, 52, 38, 65, 59, 80, 72],
+                        borderColor: 'rgb(147, 51, 234)',
+                        backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                        tension: 0.1
+                    }]
+                };
+            case 'financial':
+                return {
+                    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                    datasets: [{
+                        label: 'Financial Performance',
+                        data: [85000, 92000, 78000, 105000],
+                        borderColor: 'rgb(245, 158, 11)',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        tension: 0.1
+                    }]
+                };
+            default:
+                return {
+                    labels: [],
+                    datasets: []
+                };
+        }
+    }
+    
+    function initChart() {
+        const ctx = document.getElementById('reportChart');
+        const fallback = document.getElementById('chartFallback');
+        
+        if (!ctx) {
+            console.log('Chart canvas not found');
+            if (fallback) fallback.classList.remove('hidden');
+            return;
+        }
+        
+        try {
+            if (chart) {
+                chart.destroy();
+            }
+            
+            // Get chart data directly from server-side rendering
+            const chartData = {!! json_encode($this->getChartData()) !!};
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Hide fallback if chart loads successfully
+            if (fallback) fallback.classList.add('hidden');
+            console.log('Chart initialized successfully with real data');
+        } catch (error) {
+            console.error('Failed to create chart:', error);
+            // Show fallback if chart fails
+            if (fallback) fallback.classList.remove('hidden');
+            
+            // Try fallback data
+            try {
+                const reportType = @this.reportType || 'sales';
+                const fallbackData = getChartDataFallback(reportType);
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: fallbackData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.1)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.1)'
+                                }
+                            }
+                        }
+                    }
+                });
+                if (fallback) fallback.classList.add('hidden');
+                console.log('Chart initialized with fallback data');
+            } catch (fallbackError) {
+                console.error('Even fallback chart failed:', fallbackError);
+            }
+        }
+    }
+    
+    // Initialize chart after component loads
+    setTimeout(initChart, 1000);
+    
+    // Reinitialize chart when data changes
+    window.addEventListener('chartDataUpdated', function() {
+        console.log('Chart data updated event received');
+        setTimeout(initChart, 200);
+    });
+    
+    // Listen for Livewire updates
+    Livewire.hook('message.processed', (message, component) => {
+        if (component.fingerprint.name === 'reports.report-dashboard') {
+            setTimeout(initChart, 200);
+        }
+    });
+});
+</script>
+@endpush

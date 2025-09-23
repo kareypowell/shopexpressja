@@ -174,6 +174,13 @@
               Customer Analytics
             </a>
 
+            <a href="{{ route('reports.financial') }}" class="{{ \Route::is('reports.financial') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+              <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              Financial Summary
+            </a>
+
             <!-- Report Management Submenu -->
             <div x-data="{ reportMgmtOpen: {{ (\Route::is('reports.templates.*') || \Route::is('reports.filters.*') || \Route::is('reports.exports.*')) ? 'true' : 'false' }} }" class="space-y-1">
               <button @click="reportMgmtOpen = !reportMgmtOpen" class="{{ (\Route::is('reports.templates.*') || \Route::is('reports.filters.*') || \Route::is('reports.exports.*')) ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group w-full flex items-center px-2 py-2 text-sm font-medium rounded-md text-left">
@@ -528,6 +535,9 @@
               </a>
               <a href="{{ route('reports.customers') }}" class="{{ \Route::is('reports.customers') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
                 Customer Analytics
+              </a>
+              <a href="{{ route('reports.financial') }}" class="{{ \Route::is('reports.financial') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
+                Financial Summary
               </a>
               <a href="{{ route('reports.templates.index') }}" class="{{ \Route::is('reports.templates.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
                 Report Templates

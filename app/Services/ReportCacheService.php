@@ -191,6 +191,54 @@ class ReportCacheService
     }
 
     /**
+     * Remember data in cache (Laravel Cache::remember style)
+     */
+    public function remember(string $key, int $ttlMinutes, callable $callback): mixed
+    {
+        try {
+            $cachedData = $this->getCachedReportData($key);
+            
+            if ($cachedData !== null) {
+                return $cachedData;
+            }
+            
+            // Execute callback to get fresh data
+            $freshData = $callback();
+            
+            // Cache the fresh data
+            $this->cacheReportData($key, $freshData, $ttlMinutes);
+            
+            return $freshData;
+        } catch (\Exception $e) {
+            Log::error('Cache remember failed', [
+                'key' => $key,
+                'error' => $e->getMessage()
+            ]);
+            
+            // If caching fails, still return the fresh data
+            return $callback();
+        }
+    }
+
+    /**
+     * Forget cached data by key
+     */
+    public function forget(string $key): void
+    {
+        try {
+            $cacheKey = $this->buildCacheKey($key);
+            Cache::forget($cacheKey);
+            
+            Log::info('Cache key forgotten', ['key' => $cacheKey]);
+        } catch (\Exception $e) {
+            Log::error('Failed to forget cache key', [
+                'key' => $key,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Cache sales report data
      */
     public function cacheSalesData(array $filters, array $data): void
