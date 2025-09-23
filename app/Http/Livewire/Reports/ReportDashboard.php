@@ -18,7 +18,11 @@ class ReportDashboard extends Component
     public $reportData = [];
     public $lastUpdated;
 
-    protected $listeners = ['refreshData' => 'loadData'];
+    protected $listeners = [
+        'refreshData' => 'loadData',
+        'retryReportGeneration' => 'retryGeneration',
+        'showFallbackData' => 'showFallbackData'
+    ];
 
     public function mount($type = 'sales')
     {
@@ -539,8 +543,8 @@ class ReportDashboard extends Component
     {
         return view('livewire.reports.report-dashboard');
     }
-}   
- /**
+
+    /**
      * Handle service error response
      */
     protected function handleServiceError(array $errorResult): void
@@ -565,12 +569,6 @@ class ReportDashboard extends Component
     /**
      * Retry report generation (called from error handler)
      */
-    protected $listeners = [
-        'refreshData' => 'loadData',
-        'retryReportGeneration' => 'retryGeneration',
-        'showFallbackData' => 'showFallbackData'
-    ];
-
     public function retryGeneration()
     {
         $this->loadData();
@@ -626,3 +624,4 @@ class ReportDashboard extends Component
 
         return null;
     }
+}

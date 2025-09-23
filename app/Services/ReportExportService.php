@@ -65,9 +65,7 @@ class ReportExportService
             Storage::disk('local')->put($filePath, $pdfContent);
             
             return $filePath;
-        } catch (Exception $e) {
-            throw new \App\Exceptions\ExportException('PDF', $e->getMessage());
-        }
+        }, 'export', ['template' => $template, 'format' => 'pdf']);
     }
 
     /**
@@ -75,12 +73,17 @@ class ReportExportService
      */
     public function exportToCsv(array $reportData, array $headers, array $options = [], ?User $user = null): string
     {
-        try {
+        return $this->executeWithErrorHandling(function() use ($reportData, $headers, $options, $user) {
             // Apply privacy protection if user is provided
             if ($user) {
                 // Validate export permissions
                 if (!$this->privacyService->validateExportPermissions($user, $reportData)) {
-                    throw new Exception('User does not have permission to export sensitive data');
+                    throw new ReportException(
+                        'User does not have permission to export sensitive data',
+                        'export',
+                        ['format' => 'csv', 'user_id' => $user->id],
+                        1003
+                    );
                 }
                 
                 // Apply privacy protection to data
@@ -102,9 +105,7 @@ class ReportExportService
             $csvExport->store($filePath);
             
             return $filePath;
-        } catch (Exception $e) {
-            throw new \App\Exceptions\ExportException('CSV', $e->getMessage());
-        }
+        }, 'export', ['format' => 'csv']);
     }
 
     /**
