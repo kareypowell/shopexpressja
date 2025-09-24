@@ -343,7 +343,7 @@ class ConsolidatedPackageNotificationTemplatesTest extends TestCase
         // Check cost breakdown (when showCosts is true)
         $this->assertStringContainsString('Cost Breakdown', $renderedView);
         $this->assertStringContainsString('$45.00', $renderedView); // freight
-        $this->assertStringContainsString('$12.50', $renderedView); // customs
+        $this->assertStringContainsString('$12.50', $renderedView); // clearance
         $this->assertStringContainsString('$8.00', $renderedView);  // storage
         $this->assertStringContainsString('$15.00', $renderedView); // delivery
         

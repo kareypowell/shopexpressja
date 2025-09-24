@@ -193,7 +193,7 @@
                                     </div>
                                     
                                     <div class="mt-1 grid grid-cols-4 gap-4 text-sm text-gray-600">
-                                        <div>Customs: ${{ number_format($package->clearance_fee ?? 0, 2) }}</div>
+                                        <div>Clearance: ${{ number_format($package->clearance_fee ?? 0, 2) }}</div>
                                         <div>Storage: ${{ number_format($package->storage_fee ?? 0, 2) }}</div>
                                         <div>Delivery: ${{ number_format($package->delivery_fee ?? 0, 2) }}</div>
                                         <div>Total: ${{ number_format(($package->freight_price ?? 0) + ($package->clearance_fee ?? 0) + ($package->storage_fee ?? 0) + ($package->delivery_fee ?? 0), 2) }}</div>
@@ -380,10 +380,10 @@
                                 type="number" 
                                 step="0.01" 
                                 min="0"
-                                wire:model="customsDuty"
+                                wire:model="clearanceFee"
                                 class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
                             >
-                            @error('customsDuty')
+                            @error('clearanceFee')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>

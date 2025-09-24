@@ -174,7 +174,7 @@ class CustomerQueryOptimizationTest extends TestCase
         
         $customerFinancial = $financial[$customer->id];
         $this->assertEquals(200.00, $customerFinancial->total_freight); // 100 * 2
-        $this->assertEquals(50.00, $customerFinancial->total_customs); // 25 * 2
+        $this->assertEquals(50.00, $customerFinancial->total_clearance); // 25 * 2
         $this->assertEquals(20.00, $customerFinancial->total_storage); // 10 * 2
         $this->assertEquals(30.00, $customerFinancial->total_delivery); // 15 * 2
         $this->assertEquals(2, $customerFinancial->package_count);

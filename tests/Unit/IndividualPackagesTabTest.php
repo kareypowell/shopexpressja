@@ -338,7 +338,7 @@ class IndividualPackagesTabTest extends TestCase
 
         $component->assertSet('showFeeModal', true)
                   ->assertSet('feePackageId', $package->id)
-                  ->assertSet('customsDuty', 10.00)
+                  ->assertSet('clearanceFee', 10.00)
                   ->assertSet('storageFee', 5.00)
                   ->assertSet('deliveryFee', 15.00);
     }
@@ -349,12 +349,12 @@ class IndividualPackagesTabTest extends TestCase
         $component = Livewire::test(IndividualPackagesTab::class, ['manifest' => $this->manifest])
             ->set('showFeeModal', true)
             ->set('feePackageId', 1)
-            ->set('customsDuty', 10.00)
+            ->set('clearanceFee', 10.00)
             ->call('closeFeeModal');
 
         $component->assertSet('showFeeModal', false)
                   ->assertSet('feePackageId', null)
-                  ->assertSet('customsDuty', 0)
+                  ->assertSet('clearanceFee', 0)
                   ->assertSet('storageFee', 0)
                   ->assertSet('deliveryFee', 0);
     }

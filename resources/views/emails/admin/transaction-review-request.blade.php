@@ -217,7 +217,7 @@
             <span class="info-label">Breakdown:</span>
             <span class="info-value">
                 Freight: ${{ number_format($package->freight_price, 2) }}, 
-                Customs: ${{ number_format($package->clearance_fee, 2) }}, 
+                Clearance: ${{ number_format($package->clearance_fee, 2) }}, 
                 Storage: ${{ number_format($package->storage_fee, 2) }}, 
                 Delivery: ${{ number_format($package->delivery_fee, 2) }}
             </span>

@@ -196,7 +196,7 @@
                                     
                                     <div class="mt-1 grid grid-cols-4 gap-4 text-sm text-gray-600">
                                         <div>Freight: ${{ number_format($consolidatedPackage->total_freight_price, 2) }}</div>
-                                        <div>Customs: ${{ number_format($consolidatedPackage->total_clearance_fee, 2) }}</div>
+                                        <div>Clearance: ${{ number_format($consolidatedPackage->total_clearance_fee, 2) }}</div>
                                         <div>Storage: ${{ number_format($consolidatedPackage->total_storage_fee, 2) }}</div>
                                         <div>Delivery: ${{ number_format($consolidatedPackage->total_delivery_fee, 2) }}</div>
                                     </div>

@@ -346,7 +346,7 @@
                             <th>Tracking Number</th>
                             <th>Description</th>
                             <th>Freight</th>
-                            <th>Customs</th>
+                            <th>Clearance</th>
                             <th>Storage</th>
                             <th>Delivery</th>
                             <th>Total</th>
@@ -376,8 +376,8 @@
                         <td class="totals-amount">${{ $totals['total_freight'] }}</td>
                     </tr>
                     <tr>
-                        <td class="totals-label">Customs Total:</td>
-                        <td class="totals-amount">${{ $totals['total_customs'] }}</td>
+                        <td class="totals-label">Clearance Total:</td>
+                        <td class="totals-amount">${{ $totals['total_clearance'] }}</td>
                     </tr>
                     <tr>
                         <td class="totals-label">Storage Total:</td>

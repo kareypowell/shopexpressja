@@ -495,7 +495,7 @@ class IndividualPackagesTabFeatureTest extends TestCase
 
         $component = Livewire::test(IndividualPackagesTab::class, ['manifest' => $this->manifest])
             ->set('feePackageId', $package->id)
-            ->set('customsDuty', 20.00)
+            ->set('clearanceFee', 20.00)
             ->set('storageFee', 10.00)
             ->set('deliveryFee', 25.00)
             ->call('processFeeUpdate');

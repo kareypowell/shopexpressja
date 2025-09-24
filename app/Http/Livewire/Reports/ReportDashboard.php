@@ -150,7 +150,7 @@ class ReportDashboard extends Component
                     'revenue_breakdown' => [
                         'total_revenue' => 0,
                         'freight_revenue' => 0,
-                        'customs_revenue' => 0,
+                        'clearance_revenue' => 0,
                         'storage_revenue' => 0,
                         'delivery_revenue' => 0,
                         'package_count' => 0

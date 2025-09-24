@@ -62,7 +62,7 @@ class ManifestLockFeeUpdateTest extends TestCase
 
         Livewire::test(IndividualPackagesTab::class, ['manifest' => $this->closedManifest])
             ->set('feePackageId', $this->package->id)
-            ->set('customsDuty', 50.00)
+            ->set('clearanceFee', 50.00)
             ->set('storageFee', 25.00)
             ->set('deliveryFee', 15.00)
             ->call('processFeeUpdate')

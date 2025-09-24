@@ -109,7 +109,7 @@ class ReadOnlyPackageDisplayTest extends TestCase
         $component->assertSee('Test package description');
         $component->assertSee('5.50 lbs');
         $component->assertSee('$25.00'); // Freight
-        $component->assertSee('$10.00'); // Customs
+        $component->assertSee('$10.00'); // Clearance
         $component->assertSee('$5.00');  // Storage
         $component->assertSee('$15.00'); // Delivery
         $component->assertSee('$55.00'); // Total (25+10+5+15)

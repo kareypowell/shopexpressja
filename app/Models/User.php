@@ -531,11 +531,11 @@ class User extends Authenticatable implements MustVerifyEmail
             ->selectRaw('
                 COUNT(*) as total_packages,
                 COALESCE(SUM(freight_price), 0) as total_freight,
-                COALESCE(SUM(clearance_fee), 0) as total_customs,
+                COALESCE(SUM(clearance_fee), 0) as total_clearance,
                 COALESCE(SUM(storage_fee), 0) as total_storage,
                 COALESCE(SUM(delivery_fee), 0) as total_delivery,
                 COALESCE(AVG(freight_price), 0) as avg_freight,
-                COALESCE(AVG(clearance_fee), 0) as avg_customs,
+                COALESCE(AVG(clearance_fee), 0) as avg_clearance,
                 COALESCE(AVG(storage_fee), 0) as avg_storage,
                 COALESCE(AVG(delivery_fee), 0) as avg_delivery,
                 COALESCE(MAX(freight_price + clearance_fee + storage_fee + delivery_fee), 0) as highest_package_cost,
@@ -544,13 +544,13 @@ class User extends Authenticatable implements MustVerifyEmail
             ->first();
 
         $totalSpent = ($packages->total_freight ?? 0) + 
-                     ($packages->total_customs ?? 0) + 
+                     ($packages->total_clearance ?? 0) + 
                      ($packages->total_storage ?? 0) + 
                      ($packages->total_delivery ?? 0);
 
         // Calculate cost distribution percentages
         $freightPercentage = $totalSpent > 0 ? (($packages->total_freight ?? 0) / $totalSpent) * 100 : 0;
-        $customsPercentage = $totalSpent > 0 ? (($packages->total_customs ?? 0) / $totalSpent) * 100 : 0;
+        $clearancePercentage = $totalSpent > 0 ? (($packages->total_clearance ?? 0) / $totalSpent) * 100 : 0;
         $storagePercentage = $totalSpent > 0 ? (($packages->total_storage ?? 0) / $totalSpent) * 100 : 0;
         $deliveryPercentage = $totalSpent > 0 ? (($packages->total_delivery ?? 0) / $totalSpent) * 100 : 0;
 
@@ -559,20 +559,20 @@ class User extends Authenticatable implements MustVerifyEmail
             'total_spent' => round($totalSpent, 2),
             'breakdown' => [
                 'freight' => round($packages->total_freight ?? 0, 2),
-                'customs' => round($packages->total_customs ?? 0, 2),
+                'clearance' => round($packages->total_clearance ?? 0, 2),
                 'storage' => round($packages->total_storage ?? 0, 2),
                 'delivery' => round($packages->total_delivery ?? 0, 2),
             ],
             'cost_percentages' => [
                 'freight' => round($freightPercentage, 1),
-                'customs' => round($customsPercentage, 1),
+                'clearance' => round($clearancePercentage, 1),
                 'storage' => round($storagePercentage, 1),
                 'delivery' => round($deliveryPercentage, 1),
             ],
             'averages' => [
                 'per_package' => $packages->total_packages > 0 ? round($totalSpent / $packages->total_packages, 2) : 0,
                 'freight' => round($packages->avg_freight ?? 0, 2),
-                'customs' => round($packages->avg_customs ?? 0, 2),
+                'clearance' => round($packages->avg_clearance ?? 0, 2),
                 'storage' => round($packages->avg_storage ?? 0, 2),
                 'delivery' => round($packages->avg_delivery ?? 0, 2),
             ],
@@ -593,7 +593,7 @@ class User extends Authenticatable implements MustVerifyEmail
         $categoryTotals = $this->packages()
             ->selectRaw('
                 COALESCE(SUM(freight_price), 0) as freight_total,
-                COALESCE(SUM(clearance_fee), 0) as customs_total,
+                COALESCE(SUM(clearance_fee), 0) as clearance_total,
                 COALESCE(SUM(storage_fee), 0) as storage_total,
                 COALESCE(SUM(delivery_fee), 0) as delivery_total,
                 COUNT(*) as package_count
@@ -601,7 +601,7 @@ class User extends Authenticatable implements MustVerifyEmail
             ->first();
 
         $grandTotal = ($categoryTotals->freight_total ?? 0) + 
-                     ($categoryTotals->customs_total ?? 0) + 
+                     ($categoryTotals->clearance_total ?? 0) + 
                      ($categoryTotals->storage_total ?? 0) + 
                      ($categoryTotals->delivery_total ?? 0);
 
@@ -611,10 +611,10 @@ class User extends Authenticatable implements MustVerifyEmail
                 'percentage' => $grandTotal > 0 ? round((($categoryTotals->freight_total ?? 0) / $grandTotal) * 100, 1) : 0,
                 'average_per_package' => $categoryTotals->package_count > 0 ? round(($categoryTotals->freight_total ?? 0) / $categoryTotals->package_count, 2) : 0,
             ],
-            'customs' => [
-                'total' => round($categoryTotals->customs_total ?? 0, 2),
-                'percentage' => $grandTotal > 0 ? round((($categoryTotals->customs_total ?? 0) / $grandTotal) * 100, 1) : 0,
-                'average_per_package' => $categoryTotals->package_count > 0 ? round(($categoryTotals->customs_total ?? 0) / $categoryTotals->package_count, 2) : 0,
+            'clearance' => [
+                'total' => round($categoryTotals->clearance_total ?? 0, 2),
+                'percentage' => $grandTotal > 0 ? round((($categoryTotals->clearance_total ?? 0) / $grandTotal) * 100, 1) : 0,
+                'average_per_package' => $categoryTotals->package_count > 0 ? round(($categoryTotals->clearance_total ?? 0) / $categoryTotals->package_count, 2) : 0,
             ],
             'storage' => [
                 'total' => round($categoryTotals->storage_total ?? 0, 2),
@@ -643,7 +643,7 @@ class User extends Authenticatable implements MustVerifyEmail
                 COUNT(*) as total_packages,
                 COALESCE(AVG(freight_price + clearance_fee + storage_fee + delivery_fee), 0) as avg_total_cost,
                 COALESCE(AVG(freight_price), 0) as avg_freight,
-                COALESCE(AVG(clearance_fee), 0) as avg_customs,
+                COALESCE(AVG(clearance_fee), 0) as avg_clearance,
                 COALESCE(AVG(storage_fee), 0) as avg_storage,
                 COALESCE(AVG(delivery_fee), 0) as avg_delivery,
                 COALESCE(AVG(weight), 0) as avg_weight,
@@ -655,7 +655,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'total_cost' => round($stats->avg_total_cost ?? 0, 2),
             'by_category' => [
                 'freight' => round($stats->avg_freight ?? 0, 2),
-                'customs' => round($stats->avg_customs ?? 0, 2),
+                'clearance' => round($stats->avg_clearance ?? 0, 2),
                 'storage' => round($stats->avg_storage ?? 0, 2),
                 'delivery' => round($stats->avg_delivery ?? 0, 2),
             ],

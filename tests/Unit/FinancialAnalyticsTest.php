@@ -55,7 +55,7 @@ class FinancialAnalyticsTest extends TestCase
             $this->assertArrayHasKey('period', $trend);
             $this->assertArrayHasKey('total_revenue', $trend);
             $this->assertArrayHasKey('freight_revenue', $trend);
-            $this->assertArrayHasKey('customs_revenue', $trend);
+            $this->assertArrayHasKey('clearance_revenue', $trend);
             $this->assertArrayHasKey('storage_revenue', $trend);
             $this->assertArrayHasKey('delivery_revenue', $trend);
             $this->assertArrayHasKey('order_count', $trend);

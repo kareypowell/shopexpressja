@@ -915,7 +915,7 @@ class SalesAnalyticsService
 
         $breakdown = [
             ['service' => 'Freight', 'amount' => (float) $revenueData->freight_revenue],
-            ['service' => 'Customs', 'amount' => (float) $revenueData->clearance_revenue],
+            ['service' => 'Clearance', 'amount' => (float) $revenueData->clearance_revenue],
             ['service' => 'Storage', 'amount' => (float) $revenueData->storage_revenue],
             ['service' => 'Delivery', 'amount' => (float) $revenueData->delivery_revenue]
         ];
@@ -1080,7 +1080,7 @@ class SalesAnalyticsService
                 'margin' => 25.0 // Estimated margin
             ],
             [
-                'name' => 'Customs',
+                'name' => 'Clearance',
                 'revenue' => DB::table('packages as p')
                     ->join('manifests as m', 'p.manifest_id', '=', 'm.id')
                     ->whereBetween('m.shipment_date', [$dateFrom, $dateTo])

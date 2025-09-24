@@ -269,14 +269,14 @@
                                     <input 
                                         type="number" 
                                         id="customs-duty"
-                                        wire:model.lazy="customsDuty"
+                                        wire:model.lazy="clearanceFee"
                                         step="0.01"
                                         min="0"
                                         class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
                                         placeholder="0.00"
                                     >
                                 </div>
-                                @error('customsDuty')
+                                @error('clearanceFee')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>

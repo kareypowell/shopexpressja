@@ -56,7 +56,7 @@ class PackageDistributionEmailTest extends TestCase
         $this->mock(ReceiptGeneratorService::class, function ($mock) {
             $mock->shouldReceive('calculateTotals')->andReturn([
                 'freight_total' => 100.00, // 2 * 50
-                'customs_total' => 20.00,  // 2 * 10
+                'clearance_total' => 20.00,  // 2 * 10
                 'storage_total' => 10.00,  // 2 * 5
                 'delivery_total' => 0.00,  // 2 * 0
                 'grand_total' => 130.00,
@@ -126,7 +126,7 @@ class PackageDistributionEmailTest extends TestCase
             
             // Check totals calculation
             $this->assertEquals(100.00, $mail->totals['total_freight']); // 2 * 50
-            $this->assertEquals(20.00, $mail->totals['total_customs']); // 2 * 10
+            $this->assertEquals(20.00, $mail->totals['total_clearance']); // 2 * 10
             $this->assertEquals(10.00, $mail->totals['total_storage']); // 2 * 5
             $this->assertEquals(0.00, $mail->totals['total_delivery']); // 2 * 0
             $this->assertEquals(130.00, $mail->totals['total_amount']);

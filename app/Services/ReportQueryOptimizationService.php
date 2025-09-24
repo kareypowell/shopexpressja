@@ -16,7 +16,7 @@ class ReportQueryOptimizationService
     /**
      * Execute optimized query with caching and monitoring
      */
-    public function executeOptimizedQuery(string $cacheKey, callable $queryCallback, int $ttl = 900): mixed
+    public function executeOptimizedQuery(string $cacheKey, callable $queryCallback, int $ttl = 900)
     {
         // Check cache first
         if (Cache::has($cacheKey)) {

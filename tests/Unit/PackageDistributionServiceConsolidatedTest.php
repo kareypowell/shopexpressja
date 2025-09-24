@@ -92,7 +92,7 @@ class PackageDistributionServiceConsolidatedTest extends TestCase
             ->andReturn([
                 'subtotal' => '105.00',
                 'total_freight' => '50.00',
-                'total_customs' => '30.00',
+                'total_clearance' => '30.00',
                 'total_storage' => '10.00',
                 'total_delivery' => '15.00',
                 'total_amount' => '105.00',
@@ -176,7 +176,7 @@ class PackageDistributionServiceConsolidatedTest extends TestCase
         $this->receiptGenerator->shouldReceive('calculateTotals')->once()->andReturn([
             'subtotal' => '65.00',
             'total_freight' => '30.00',
-            'total_customs' => '20.00',
+            'total_clearance' => '20.00',
             'total_storage' => '5.00',
             'total_delivery' => '10.00',
             'total_amount' => '65.00',
@@ -243,7 +243,7 @@ class PackageDistributionServiceConsolidatedTest extends TestCase
         $this->receiptGenerator->shouldReceive('calculateTotals')->once()->andReturn([
             'subtotal' => '80.00',
             'total_freight' => '40.00',
-            'total_customs' => '25.00',
+            'total_clearance' => '25.00',
             'total_storage' => '5.00',
             'total_delivery' => '10.00',
             'total_amount' => '80.00',
@@ -306,7 +306,7 @@ class PackageDistributionServiceConsolidatedTest extends TestCase
         $this->receiptGenerator->shouldReceive('calculateTotals')->once()->andReturn([
             'subtotal' => '100.00',
             'total_freight' => '50.00',
-            'total_customs' => '30.00',
+            'total_clearance' => '30.00',
             'total_storage' => '10.00',
             'total_delivery' => '10.00',
             'total_amount' => '100.00',
@@ -433,7 +433,7 @@ class PackageDistributionServiceConsolidatedTest extends TestCase
         $this->receiptGenerator->shouldReceive('calculateTotals')->once()->andReturn([
             'subtotal' => '65.00',
             'total_freight' => '30.00',
-            'total_customs' => '20.00',
+            'total_clearance' => '20.00',
             'total_storage' => '5.00',
             'total_delivery' => '10.00',
             'total_amount' => '65.00',

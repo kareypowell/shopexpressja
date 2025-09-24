@@ -198,7 +198,7 @@ class ManifestSummaryService
     }
 
     /**
-     * Calculate total cost of packages (freight + customs + storage + delivery)
+     * Calculate total cost of packages (freight + clearance + storage + delivery)
      *
      * @param Collection $packages
      * @return float Total cost

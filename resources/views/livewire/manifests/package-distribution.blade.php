@@ -132,7 +132,7 @@
                                             <div>Freight: ${{ number_format($package->freight_price, 2) }}</div>
                                         @endif
                                         @if($package->clearance_fee > 0)
-                                            <div>Customs: ${{ number_format($package->clearance_fee, 2) }}</div>
+                                            <div>Clearance: ${{ number_format($package->clearance_fee, 2) }}</div>
                                         @endif
                                         @if($package->storage_fee > 0)
                                             <div>Storage: ${{ number_format($package->storage_fee, 2) }}</div>
@@ -346,7 +346,7 @@
                                             Freight
                                         </th>
                                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Customs
+                                            Clearance
                                         </th>
                                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Storage

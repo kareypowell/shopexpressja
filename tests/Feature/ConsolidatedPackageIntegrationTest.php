@@ -87,14 +87,14 @@ class ConsolidatedPackageIntegrationTest extends TestCase
         $expectedWeight = $packages->sum('weight');
         $expectedQuantity = $packages->count();
         $expectedFreight = $packages->sum('freight_price');
-        $expectedCustoms = $packages->sum('clearance_fee');
+        $expectedClearnace = $packages->sum('clearance_fee');
         $expectedStorage = $packages->sum('storage_fee');
         $expectedDelivery = $packages->sum('delivery_fee');
 
         $this->assertEquals($expectedWeight, $consolidatedPackage->total_weight);
         $this->assertEquals($expectedQuantity, $consolidatedPackage->total_quantity);
         $this->assertEquals($expectedFreight, $consolidatedPackage->total_freight_price);
-        $this->assertEquals($expectedCustoms, $consolidatedPackage->total_clearance_fee);
+        $this->assertEquals($expectedClearnace, $consolidatedPackage->total_clearance_fee);
         $this->assertEquals($expectedStorage, $consolidatedPackage->total_storage_fee);
         $this->assertEquals($expectedDelivery, $consolidatedPackage->total_delivery_fee);
 
@@ -311,14 +311,14 @@ class ConsolidatedPackageIntegrationTest extends TestCase
             $calculatedWeight = $packages->sum('weight');
             $calculatedQuantity = $packages->count();
             $calculatedFreight = $packages->sum('freight_price');
-            $calculatedCustoms = $packages->sum('clearance_fee');
+            $calculatedClearance = $packages->sum('clearance_fee');
             $calculatedStorage = $packages->sum('storage_fee');
             $calculatedDelivery = $packages->sum('delivery_fee');
 
             $this->assertEquals($calculatedWeight, $consolidatedPackage->total_weight);
             $this->assertEquals($calculatedQuantity, $consolidatedPackage->total_quantity);
             $this->assertEquals($calculatedFreight, $consolidatedPackage->total_freight_price);
-            $this->assertEquals($calculatedCustoms, $consolidatedPackage->total_clearance_fee);
+            $this->assertEquals($calculatedClearance, $consolidatedPackage->total_clearance_fee);
             $this->assertEquals($calculatedStorage, $consolidatedPackage->total_storage_fee);
             $this->assertEquals($calculatedDelivery, $consolidatedPackage->total_delivery_fee);
 

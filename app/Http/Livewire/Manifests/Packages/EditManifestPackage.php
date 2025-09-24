@@ -366,7 +366,7 @@ class EditManifestPackage extends Component
                 // Validate that required fees are set (use form values, not database values)
                 if (!$this->freight_price || !$this->clearance_fee || !$this->storage_fee || !$this->delivery_fee) {
                     $this->dispatchBrowserEvent('toastr:error', [
-                        'message' => 'Cannot set package to ready status. Please ensure all fees (freight, customs, storage, delivery) are properly set before marking as ready.',
+                        'message' => 'Cannot set package to ready status. Please ensure all fees (freight, clearance, storage, delivery) are properly set before marking as ready.',
                     ]);
                     return;
                 }

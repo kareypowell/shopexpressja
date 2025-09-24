@@ -103,14 +103,14 @@ class PackageReceiptEmail extends Mailable implements ShouldQueue
     {
         $subtotal = 0;
         $totalFreight = 0;
-        $totalCustoms = 0;
+        $totalClearance = 0;
         $totalStorage = 0;
         $totalDelivery = 0;
 
         foreach ($distribution->items as $item) {
             $subtotal += $item->total_cost;
             $totalFreight += $item->freight_price;
-            $totalCustoms += $item->clearance_fee;
+            $totalClearance += $item->clearance_fee;
             $totalStorage += $item->storage_fee;
             $totalDelivery += $item->delivery_fee;
         }
@@ -121,7 +121,7 @@ class PackageReceiptEmail extends Mailable implements ShouldQueue
         return [
             'subtotal' => $subtotal,
             'total_freight' => $totalFreight,
-            'total_customs' => $totalCustoms,
+            'total_Clearance' => $totalClearance,
             'total_storage' => $totalStorage,
             'total_delivery' => $totalDelivery,
             'total_amount' => $distribution->total_amount,

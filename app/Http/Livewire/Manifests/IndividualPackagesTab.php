@@ -39,7 +39,7 @@ class IndividualPackagesTab extends Component
     public $showFeeModal = false;
     public $feePackageId = null;
     public $feePackage = null;
-    public $customsDuty = 0;
+    public $clearanceFee = 0;
     public $storageFee = 0;
     public $deliveryFee = 0;
     
@@ -60,7 +60,7 @@ class IndividualPackagesTab extends Component
         'bulkStatus' => 'required|string',
         'selectedPackages' => 'required|array|min:1',
         'consolidationNotes' => 'nullable|string|max:500',
-        'customsDuty' => 'required|numeric|min:0',
+        'clearanceFee' => 'required|numeric|min:0',
         'storageFee' => 'required|numeric|min:0',
         'deliveryFee' => 'required|numeric|min:0'
     ];
@@ -370,7 +370,7 @@ class IndividualPackagesTab extends Component
         $this->showFeeModal = false;
         $this->feePackageId = null;
         $this->feePackage = null;
-        $this->customsDuty = 0;
+        $this->clearanceFee = 0;
         $this->storageFee = 0;
         $this->deliveryFee = 0;
     }
@@ -385,7 +385,7 @@ class IndividualPackagesTab extends Component
         }
 
         $this->validate([
-            'customsDuty' => 'required|numeric|min:0',
+            'clearanceFee' => 'required|numeric|min:0',
             'storageFee' => 'required|numeric|min:0',
             'deliveryFee' => 'required|numeric|min:0'
         ]);

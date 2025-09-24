@@ -842,7 +842,7 @@ class PackageWorkflow extends Component
     /**
      * Update fees when form values change
      */
-    public function updatedCustomsDuty()
+    public function updatedClearanceFee()
     {
         $this->updateFeePreview();
     }

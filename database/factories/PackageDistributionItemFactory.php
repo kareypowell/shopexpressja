@@ -14,7 +14,7 @@ class PackageDistributionItemFactory extends Factory
     public function definition()
     {
         $freightPrice = $this->faker->randomFloat(2, 10, 100);
-        $customsDuty = $this->faker->randomFloat(2, 5, 50);
+        $clearanceDuty = $this->faker->randomFloat(2, 5, 50);
         $storageFee = $this->faker->randomFloat(2, 2, 20);
         $deliveryFee = $this->faker->randomFloat(2, 5, 25);
 
@@ -22,10 +22,10 @@ class PackageDistributionItemFactory extends Factory
             'distribution_id' => PackageDistribution::factory(),
             'package_id' => Package::factory(),
             'freight_price' => $freightPrice,
-            'clearance_fee' => $customsDuty,
+            'clearance_fee' => $clearanceDuty,
             'storage_fee' => $storageFee,
             'delivery_fee' => $deliveryFee,
-            'total_cost' => $freightPrice + $customsDuty + $storageFee + $deliveryFee,
+            'total_cost' => $freightPrice + $clearanceDuty + $storageFee + $deliveryFee,
         ];
     }
 }

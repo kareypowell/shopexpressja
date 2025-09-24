@@ -104,7 +104,7 @@
                                 @endif
                                 @if($package->clearance_fee)
                                     <div class="flex justify-between">
-                                        <span>Customs:</span>
+                                        <span>Clearance:</span>
                                         <span>${{ number_format($package->clearance_fee, 2) }}</span>
                                     </div>
                                 @endif

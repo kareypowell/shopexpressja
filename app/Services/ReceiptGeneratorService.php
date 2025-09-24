@@ -70,14 +70,14 @@ class ReceiptGeneratorService
     {
         $subtotal = 0;
         $totalFreight = 0;
-        $totalCustoms = 0;
+        $totalClearnace = 0;
         $totalStorage = 0;
         $totalDelivery = 0;
 
         foreach ($distribution->items as $item) {
             $subtotal += $item->total_cost;
             $totalFreight += $item->freight_price;
-            $totalCustoms += $item->clearance_fee;
+            $totalClearnace += $item->clearance_fee;
             $totalStorage += $item->storage_fee;
             $totalDelivery += $item->delivery_fee;
         }
@@ -88,7 +88,7 @@ class ReceiptGeneratorService
         return [
             'subtotal' => number_format($subtotal, 2),
             'total_freight' => number_format($totalFreight, 2),
-            'total_clearance' => number_format($totalCustoms, 2),
+            'total_clearance' => number_format($totalClearnace, 2),
             'total_storage' => number_format($totalStorage, 2),
             'total_delivery' => number_format($totalDelivery, 2),
             'total_amount' => number_format($distribution->total_amount, 2),
@@ -357,7 +357,7 @@ class ReceiptGeneratorService
                 <th>Description</th>
                 <th>Weight</th>
                 <th>Freight</th>
-                <th>Customs</th>
+                <th>Clearnace</th>
                 <th>Storage</th>
                 <th>Delivery</th>
                 <th>Total</th>

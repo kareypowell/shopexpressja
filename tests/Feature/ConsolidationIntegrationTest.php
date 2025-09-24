@@ -425,7 +425,7 @@ class ConsolidationIntegrationTest extends TestCase
         $originalTotalWeight = $packages->sum('weight');
         $originalTotalQuantity = $packages->sum('quantity');
         $originalTotalFreight = $packages->sum('freight_price');
-        $originalTotalCustoms = $packages->sum('clearance_fee');
+        $originalTotalClearnace = $packages->sum('clearance_fee');
         $originalTotalStorage = $packages->sum('storage_fee');
         $originalTotalDelivery = $packages->sum('delivery_fee');
 
@@ -441,7 +441,7 @@ class ConsolidationIntegrationTest extends TestCase
         $this->assertEquals($originalTotalWeight, $consolidatedPackage->total_weight);
         $this->assertEquals($originalTotalQuantity, $consolidatedPackage->total_quantity);
         $this->assertEquals($originalTotalFreight, $consolidatedPackage->total_freight_price);
-        $this->assertEquals($originalTotalCustoms, $consolidatedPackage->total_clearance_fee);
+        $this->assertEquals($originalTotalClearnace, $consolidatedPackage->total_clearance_fee);
         $this->assertEquals($originalTotalStorage, $consolidatedPackage->total_storage_fee);
         $this->assertEquals($originalTotalDelivery, $consolidatedPackage->total_delivery_fee);
 
