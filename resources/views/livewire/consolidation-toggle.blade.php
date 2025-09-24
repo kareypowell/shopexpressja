@@ -79,6 +79,7 @@
     </div>
 </div>
 
+@push('styles')
 <style>
 .consolidation-toggle-container {
     transition: all 0.3s ease;
@@ -92,7 +93,9 @@
     transition: transform 0.2s ease-in-out;
 }
 </style>
+@endpush
 
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Add smooth animations for toggle interactions
@@ -155,3 +158,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+@endpush

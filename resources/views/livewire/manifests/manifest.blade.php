@@ -24,6 +24,6 @@
     @endif
 
     @if($isOpen)
-    @include('livewire.manifests.create')
+        @include('livewire.manifests.create')
     @endif
 </div>

@@ -361,6 +361,7 @@
     </div>
 </div>
 
+@push('scripts')
 <script>
 function togglePackageDetails(detailsId) {
     const detailsElement = document.getElementById(detailsId);
@@ -395,7 +396,9 @@ document.addEventListener('click', function(event) {
     }
 });
 </script>
+@endpush
 
+@push('styles')
 <style>
 /* Read-only specific styling */
 .read-only-package-display {
@@ -447,3 +450,4 @@ document.addEventListener('click', function(event) {
     }
 }
 </style>
+@endpush

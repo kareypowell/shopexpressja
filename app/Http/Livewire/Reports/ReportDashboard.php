@@ -66,6 +66,8 @@ class ReportDashboard extends Component
                 'date_to' => $endDate
             ];
 
+
+
             // Try to load data with comprehensive error handling
             $businessService = app(BusinessReportService::class);
             
@@ -88,11 +90,14 @@ class ReportDashboard extends Component
             }
             
             // Handle the result from the service
-            if ($result['success']) {
+            if (isset($result['success']) && $result['success']) {
                 $this->reportData = $result['data'];
-            } else {
+            } elseif (isset($result['success']) && !$result['success']) {
                 // Handle error response from service
                 $this->handleServiceError($result);
+            } else {
+                // Handle case where service returns raw data (backward compatibility)
+                $this->reportData = $result;
             }
 
         } catch (\Exception $e) {
@@ -624,4 +629,6 @@ class ReportDashboard extends Component
 
         return null;
     }
+
+
 }

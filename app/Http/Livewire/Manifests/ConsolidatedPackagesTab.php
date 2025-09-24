@@ -79,21 +79,38 @@ class ConsolidatedPackagesTab extends Component
 
     public function render()
     {
-        $consolidatedPackages = $this->getConsolidatedPackages();
-        $statusOptions = $this->getStatusOptions();
-        $canEdit = $this->canEditManifest;
-        
-        // Use read-only template when manifest is closed
-        $template = $canEdit 
-            ? 'livewire.manifests.consolidated-packages-tab'
-            : 'livewire.manifests.packages.read-only-consolidated-display';
-        
-        return view($template, [
-            'consolidatedPackages' => $consolidatedPackages,
-            'statusOptions' => $statusOptions,
-            'canEdit' => $canEdit,
-            'manifest' => $this->manifest,
-        ]);
+        try {
+            $consolidatedPackages = $this->getConsolidatedPackages();
+            $statusOptions = $this->getStatusOptions();
+            $canEdit = $this->canEditManifest;
+            
+            // Use read-only template when manifest is closed
+            $template = $canEdit 
+                ? 'livewire.manifests.consolidated-packages-tab'
+                : 'livewire.manifests.packages.read-only-consolidated-display';
+            
+            return view($template, [
+                'consolidatedPackages' => $consolidatedPackages,
+                'statusOptions' => $statusOptions,
+                'canEdit' => $canEdit,
+                'manifest' => $this->manifest,
+            ]);
+        } catch (\Exception $e) {
+            // Log the error and return a simple error view
+            \Log::error('ConsolidatedPackagesTab render error: ' . $e->getMessage(), [
+                'manifest_id' => $this->manifest->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Return a simple error message
+            return view('livewire.manifests.consolidated-packages-tab', [
+                'consolidatedPackages' => collect(),
+                'statusOptions' => [],
+                'canEdit' => false,
+                'manifest' => $this->manifest,
+                'error' => 'Unable to load consolidated packages: ' . $e->getMessage()
+            ]);
+        }
     }
 
     public function getConsolidatedPackages()

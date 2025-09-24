@@ -563,61 +563,62 @@
         @endif
     </div>
 
-    <!-- JavaScript for enhanced UI interactions -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Enhanced toggle functionality for consolidated package details
-            document.querySelectorAll('[onclick*="toggle"]').forEach(button => {
-                button.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const targetId = this.getAttribute('onclick').match(/getElementById\('([^']+)'\)/)[1];
-                    const target = document.getElementById(targetId);
-                    const toggleText = this.querySelector('.toggle-text');
-                    const toggleIcon = this.querySelector('svg');
-                    
-                    if (target) {
-                        target.classList.toggle('hidden');
-                        
-                        if (target.classList.contains('hidden')) {
-                            toggleText.textContent = 'Show Details';
-                            toggleIcon.style.transform = 'rotate(0deg)';
-                        } else {
-                            toggleText.textContent = 'Hide Details';
-                            toggleIcon.style.transform = 'rotate(180deg)';
-                        }
-                    }
-                });
-            });
-
-            // Add smooth transitions for package selection
-            document.querySelectorAll('[wire\\:click*="togglePackageSelection"]').forEach(element => {
-                element.addEventListener('click', function() {
-                    this.style.transform = 'scale(0.98)';
-                    setTimeout(() => {
-                        this.style.transform = 'scale(1)';
-                    }, 150);
-                });
-            });
-
-            // Auto-scroll to consolidation summary when packages are selected
-            window.addEventListener('livewire:load', function() {
-                Livewire.hook('message.processed', (message, component) => {
-                    if (component.fingerprint.name === 'package') {
-                        const selectedCount = component.data.selectedPackagesForConsolidation.length;
-                        if (selectedCount > 0) {
-                            const summaryElement = document.querySelector('.bg-gradient-to-r.from-blue-50');
-                            if (summaryElement) {
-                                summaryElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                            }
-                        }
-                    }
-                });
-            });
-        });
-    </script>
-
     <!-- Consolidation History Component -->
     @if($showHistoryModal && $selectedConsolidatedPackageForHistory)
         @livewire('consolidation-history', ['consolidatedPackage' => $selectedConsolidatedPackageForHistory], key('history-'.$selectedConsolidatedPackageForHistory->id))
     @endif
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enhanced toggle functionality for consolidated package details
+        document.querySelectorAll('[onclick*="toggle"]').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('onclick').match(/getElementById\('([^']+)'\)/)[1];
+                const target = document.getElementById(targetId);
+                const toggleText = this.querySelector('.toggle-text');
+                const toggleIcon = this.querySelector('svg');
+                
+                if (target) {
+                    target.classList.toggle('hidden');
+                    
+                    if (target.classList.contains('hidden')) {
+                        toggleText.textContent = 'Show Details';
+                        toggleIcon.style.transform = 'rotate(0deg)';
+                    } else {
+                        toggleText.textContent = 'Hide Details';
+                        toggleIcon.style.transform = 'rotate(180deg)';
+                    }
+                }
+            });
+        });
+
+        // Add smooth transitions for package selection
+        document.querySelectorAll('[wire\\:click*="togglePackageSelection"]').forEach(element => {
+            element.addEventListener('click', function() {
+                this.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 150);
+            });
+        });
+
+        // Auto-scroll to consolidation summary when packages are selected
+        window.addEventListener('livewire:load', function() {
+            Livewire.hook('message.processed', (message, component) => {
+                if (component.fingerprint.name === 'package') {
+                    const selectedCount = component.data.selectedPackagesForConsolidation.length;
+                    if (selectedCount > 0) {
+                        const summaryElement = document.querySelector('.bg-gradient-to-r.from-blue-50');
+                        if (summaryElement) {
+                            summaryElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }
+                    }
+                }
+            });
+        });
+    });
+</script>
+@endpush

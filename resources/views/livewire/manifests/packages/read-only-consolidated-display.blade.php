@@ -319,8 +319,7 @@
             </div>
         @endif
     </div>
-</div>
-
+@push('scripts')
 <script>
 function toggleConsolidatedDetails(detailsId) {
     const detailsElement = document.getElementById(detailsId);
@@ -355,7 +354,9 @@ document.addEventListener('click', function(event) {
     }
 });
 </script>
+@endpush
 
+@push('styles')
 <style>
 /* Read-only consolidated display specific styling */
 .read-only-consolidated-display {
@@ -406,3 +407,4 @@ document.addEventListener('click', function(event) {
     }
 }
 </style>
+@endpush

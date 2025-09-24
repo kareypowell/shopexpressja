@@ -486,8 +486,10 @@
             </div>
         </div>
     @endif
+
 </div>
 
+@push('scripts')
 <script>
 function toggleIndividualDropdown(dropdownId) {
     // Close all other dropdowns first
@@ -529,3 +531,4 @@ document.addEventListener('keydown', function(event) {
     }
 });
 </script>
+@endpush

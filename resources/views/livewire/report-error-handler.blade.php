@@ -77,13 +77,15 @@
                 </div>
             </div>
         </div>
-
-        <script>
-            window.addEventListener('auto-hide-error', event => {
-                setTimeout(() => {
-                    @this.call('clearError');
-                }, event.detail.delay);
-            });
-        </script>
     @endif
+
+    @push('scripts')
+    <script>
+        window.addEventListener('auto-hide-error', event => {
+            setTimeout(() => {
+                @this.call('clearError');
+            }, event.detail.delay);
+        });
+    </script>
+    @endpush
 </div>

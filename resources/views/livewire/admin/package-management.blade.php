@@ -469,32 +469,33 @@
             </div>
         @endif
     </div>
+</div>
 
-    <!-- JavaScript for enhanced UI interactions -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Enhanced toggle functionality for consolidated package details
-            document.querySelectorAll('[onclick*="toggle"]').forEach(button => {
-                button.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const targetId = this.getAttribute('onclick').match(/getElementById\('([^']+)'\)/)[1];
-                    const target = document.getElementById(targetId);
-                    const toggleText = this.querySelector('.toggle-text');
-                    const toggleIcon = this.querySelector('svg');
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enhanced toggle functionality for consolidated package details
+        document.querySelectorAll('[onclick*="toggle"]').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('onclick').match(/getElementById\('([^']+)'\)/)[1];
+                const target = document.getElementById(targetId);
+                const toggleText = this.querySelector('.toggle-text');
+                const toggleIcon = this.querySelector('svg');
+                
+                if (target) {
+                    target.classList.toggle('hidden');
                     
-                    if (target) {
-                        target.classList.toggle('hidden');
-                        
-                        if (target.classList.contains('hidden')) {
-                            toggleText.textContent = 'Show Details';
-                            toggleIcon.style.transform = 'rotate(0deg)';
-                        } else {
-                            toggleText.textContent = 'Hide Details';
-                            toggleIcon.style.transform = 'rotate(180deg)';
-                        }
+                    if (target.classList.contains('hidden')) {
+                        toggleText.textContent = 'Show Details';
+                        toggleIcon.style.transform = 'rotate(0deg)';
+                    } else {
+                        toggleText.textContent = 'Hide Details';
+                        toggleIcon.style.transform = 'rotate(180deg)';
                     }
-                });
+                }
             });
         });
-    </script>
-</div>
+    });
+</script>
+@endpush

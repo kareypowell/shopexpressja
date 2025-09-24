@@ -1113,8 +1113,7 @@
             </div>
         </div>
     @endif
-</div>
-
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Auto-hide flash messages after 5 seconds
@@ -1211,6 +1210,5 @@
         });
     });
 </script>
-            </div>
-        </div>
+@endpush
 </div>

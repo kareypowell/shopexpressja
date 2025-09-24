@@ -424,13 +424,15 @@
             </div>
         </div>
     @endif
-
-    <script>
-        function toggleConsolidatedDetails(consolidatedPackageId) {
-            const detailsElement = document.getElementById('consolidated-details-' + consolidatedPackageId);
-            if (detailsElement) {
-                detailsElement.classList.toggle('hidden');
-            }
-        }
-    </script>
 </div>
+
+@push('scripts')
+<script>
+    function toggleConsolidatedDetails(consolidatedPackageId) {
+        const detailsElement = document.getElementById('consolidated-details-' + consolidatedPackageId);
+        if (detailsElement) {
+            detailsElement.classList.toggle('hidden');
+        }
+    }
+</script>
+@endpush
