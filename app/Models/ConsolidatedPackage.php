@@ -419,4 +419,13 @@ class ConsolidatedPackage extends Model
             });
         }, 'customer:id,name,email']);
     }
+
+    /**
+     * Set consolidated tracking number attribute with automatic uppercase conversion
+     */
+    public function setConsolidatedTrackingNumberAttribute($value)
+    {
+        // Convert consolidated tracking number to uppercase and trim whitespace
+        $this->attributes['consolidated_tracking_number'] = $value ? strtoupper(trim($value)) : $value;
+    }
 }

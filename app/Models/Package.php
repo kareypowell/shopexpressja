@@ -221,6 +221,24 @@ class Package extends Model
         }
     }
 
+    /**
+     * Set tracking number attribute with automatic uppercase conversion
+     */
+    public function setTrackingNumberAttribute($value)
+    {
+        // Convert tracking number to uppercase and trim whitespace
+        $this->attributes['tracking_number'] = $value ? strtoupper(trim($value)) : $value;
+    }
+
+    /**
+     * Set warehouse receipt number attribute with automatic uppercase conversion
+     */
+    public function setWarehouseReceiptNoAttribute($value)
+    {
+        // Convert warehouse receipt number to uppercase and trim whitespace
+        $this->attributes['warehouse_receipt_no'] = $value ? strtoupper(trim($value)) : $value;
+    }
+
     public function getFormattedWeightAttribute()
     {
         return number_format($this->weight, 2);

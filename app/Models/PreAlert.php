@@ -39,4 +39,13 @@ class PreAlert extends Model
     {
         return number_format($this->value, 2);
     }
+
+    /**
+     * Set tracking number attribute with automatic uppercase conversion
+     */
+    public function setTrackingNumberAttribute($value)
+    {
+        // Convert tracking number to uppercase and trim whitespace
+        $this->attributes['tracking_number'] = $value ? strtoupper(trim($value)) : $value;
+    }
 }

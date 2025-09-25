@@ -183,6 +183,7 @@ Route::middleware(['auth', 'verified', 'admin.access'])->prefix('admin')->group(
     
     // Financial routes - accessible by both admin and superadmin
     Route::get('/transactions', \App\Http\Livewire\Admin\TransactionManagement::class)->name('transactions');
+    Route::get('/transactions/{transaction}/receipt', [App\Http\Controllers\Admin\TransactionController::class, 'viewReceipt'])->name('transaction.receipt');
     Route::get('/rates', Rate::class)->name('view-rates');
     Route::get('/purchase-requests', AdminPurchaseRequest::class)->name('view-purchase-requests');
     Route::get('/pre-alerts', AdminPreAlert::class)->name('view-pre-alerts');
@@ -243,6 +244,7 @@ Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
     Route::get('/purchase-requests', PurchaseRequest::class)->name('purchase-requests');
     Route::get('/purchase-requests/{purchase_request_id}/view', PurchaseRequest::class)->name('view-purchase-request');
     Route::get('/rates', Rate::class)->name('rates');
+    Route::get('/transactions/{transaction}/receipt', [App\Http\Controllers\Customer\TransactionController::class, 'viewReceipt'])->name('customer.transaction.receipt');
 });
 
 // Purchaser routes

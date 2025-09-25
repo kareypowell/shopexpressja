@@ -121,7 +121,7 @@ class PackageReceiptEmail extends Mailable implements ShouldQueue
         return [
             'subtotal' => $subtotal,
             'total_freight' => $totalFreight,
-            'total_Clearance' => $totalClearance,
+            'total_clearance' => $totalClearance,  // Fixed: lowercase 'c' to match template
             'total_storage' => $totalStorage,
             'total_delivery' => $totalDelivery,
             'total_amount' => $distribution->total_amount,

@@ -200,6 +200,8 @@ class TransactionManagement extends Component
         }
     }
 
+
+
     public function getTransactionsProperty()
     {
         $query = CustomerTransaction::with(['user', 'createdBy'])

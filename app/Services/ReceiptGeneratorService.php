@@ -35,13 +35,29 @@ class ReceiptGeneratorService
             // Generate PDF
             $pdf = Pdf::loadView('receipts.package-distribution', $data);
             
-            // Set PDF options
+            // Set PDF options for better layout
             $pdf->setPaper('a4', 'portrait');
             $pdf->setOptions([
                 'isHtml5ParserEnabled' => true,
                 'isRemoteEnabled' => true,
-                'defaultFont' => 'sans-serif'
+                'defaultFont' => 'sans-serif',
+                'dpi' => 150,
+                'defaultPaperSize' => 'a4',
+                'chroot' => public_path(),
+                'debugKeepTemp' => false,
+                'debugCss' => false,
+                'debugLayout' => false,
+                'debugLayoutLines' => false,
+                'debugLayoutBlocks' => false,
+                'debugLayoutInline' => false,
+                'debugLayoutPaddingBox' => false,
             ]);
+            
+            // Set margins to ensure content fits properly
+            $pdf->setOption('margin-top', '12mm');
+            $pdf->setOption('margin-right', '8mm');
+            $pdf->setOption('margin-bottom', '12mm');
+            $pdf->setOption('margin-left', '8mm');
 
             // Generate filename
             $filename = 'receipts/' . $distribution->receipt_number . '.pdf';
@@ -70,14 +86,14 @@ class ReceiptGeneratorService
     {
         $subtotal = 0;
         $totalFreight = 0;
-        $totalClearnace = 0;
+        $totalClearance = 0;
         $totalStorage = 0;
         $totalDelivery = 0;
 
         foreach ($distribution->items as $item) {
             $subtotal += $item->total_cost;
             $totalFreight += $item->freight_price;
-            $totalClearnace += $item->clearance_fee;
+            $totalClearance += $item->clearance_fee;
             $totalStorage += $item->storage_fee;
             $totalDelivery += $item->delivery_fee;
         }
@@ -88,7 +104,7 @@ class ReceiptGeneratorService
         return [
             'subtotal' => number_format($subtotal, 2),
             'total_freight' => number_format($totalFreight, 2),
-            'total_clearance' => number_format($totalClearnace, 2),
+            'total_clearance' => number_format($totalClearance, 2),
             'total_storage' => number_format($totalStorage, 2),
             'total_delivery' => number_format($totalDelivery, 2),
             'total_amount' => number_format($distribution->total_amount, 2),

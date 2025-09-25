@@ -24,6 +24,8 @@ use App\Policies\RolePolicy;
 use App\Models\AuditLog;
 use App\Policies\AuditLogPolicy;
 use App\Policies\ReportPolicy;
+use App\Models\CustomerTransaction;
+use App\Policies\CustomerTransactionPolicy;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 
@@ -44,6 +46,7 @@ class AuthServiceProvider extends ServiceProvider
         Manifest::class => ManifestPolicy::class,
         Role::class => RolePolicy::class,
         AuditLog::class => AuditLogPolicy::class,
+        CustomerTransaction::class => CustomerTransactionPolicy::class,
         'App\Models\Report' => ReportPolicy::class,
     ];
 

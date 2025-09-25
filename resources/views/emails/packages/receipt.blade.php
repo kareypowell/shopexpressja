@@ -373,60 +373,60 @@
                 <table class="totals-table">
                     <tr>
                         <td class="totals-label">Freight Total:</td>
-                        <td class="totals-amount">${{ $totals['total_freight'] }}</td>
+                        <td class="totals-amount">${{ number_format($totals['total_freight'] ?? 0, 2) }}</td>
                     </tr>
                     <tr>
                         <td class="totals-label">Clearance Total:</td>
-                        <td class="totals-amount">${{ $totals['total_clearance'] }}</td>
+                        <td class="totals-amount">${{ number_format($totals['total_clearance'] ?? 0, 2) }}</td>
                     </tr>
                     <tr>
                         <td class="totals-label">Storage Total:</td>
-                        <td class="totals-amount">${{ $totals['total_storage'] }}</td>
+                        <td class="totals-amount">${{ number_format($totals['total_storage'] ?? 0, 2) }}</td>
                     </tr>
                     <tr>
                         <td class="totals-label">Delivery Total:</td>
-                        <td class="totals-amount">${{ $totals['total_delivery'] }}</td>
+                        <td class="totals-amount">${{ number_format($totals['total_delivery'] ?? 0, 2) }}</td>
                     </tr>
                     <tr>
                         <td class="totals-label">Grand Total:</td>
-                        <td class="totals-amount">${{ number_format($totals['total_amount'], 2) }}</td>
+                        <td class="totals-amount">${{ number_format($totals['total_amount'] ?? 0, 2) }}</td>
                     </tr>
-                    @if($totals['write_off_amount'] > 0)
+                    @if(($totals['write_off_amount'] ?? 0) > 0)
                     <tr>
                         <td class="totals-label">Write-off/Discount:</td>
-                        <td class="totals-amount" style="color: #059669;">-${{ number_format($totals['write_off_amount'], 2) }}</td>
+                        <td class="totals-amount" style="color: #059669;">-${{ number_format($totals['write_off_amount'] ?? 0, 2) }}</td>
                     </tr>
                     @endif
                     <tr>
                         <td class="totals-label">Cash Collected:</td>
-                        <td class="totals-amount">${{ number_format($totals['amount_collected'], 2) }}</td>
+                        <td class="totals-amount">${{ number_format($totals['amount_collected'] ?? 0, 2) }}</td>
                     </tr>
-                    @if($totals['credit_applied'] > 0)
+                    @if(($totals['credit_applied'] ?? 0) > 0)
                     <tr>
                         <td class="totals-label">Credit Applied:</td>
-                        <td class="totals-amount" style="color: #0ea5e9;">${{ number_format($totals['credit_applied'], 2) }}</td>
+                        <td class="totals-amount" style="color: #0ea5e9;">${{ number_format($totals['credit_applied'] ?? 0, 2) }}</td>
                     </tr>
                     @endif
-                    @if($totals['account_balance_applied'] > 0)
+                    @if(($totals['account_balance_applied'] ?? 0) > 0)
                     <tr>
                         <td class="totals-label">Account Balance Applied:</td>
-                        <td class="totals-amount" style="color: #7c3aed;">${{ number_format($totals['account_balance_applied'], 2) }}</td>
+                        <td class="totals-amount" style="color: #7c3aed;">${{ number_format($totals['account_balance_applied'] ?? 0, 2) }}</td>
                     </tr>
                     @endif
-                    @if($totals['outstanding_balance'] > 0)
+                    @if(($totals['outstanding_balance'] ?? 0) > 0)
                     <tr>
                         <td class="totals-label">Outstanding Balance:</td>
-                        <td class="totals-amount" style="color: #dc2626;">${{ number_format($totals['outstanding_balance'], 2) }}</td>
+                        <td class="totals-amount" style="color: #dc2626;">${{ number_format($totals['outstanding_balance'] ?? 0, 2) }}</td>
                     </tr>
                     @endif
                 </table>
             </div>
 
-            @if($totals['outstanding_balance'] > 0)
+            @if(($totals['outstanding_balance'] ?? 0) > 0)
             <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
                 <p style="color: #92400e; font-weight: 600; margin-bottom: 5px;">Outstanding Balance</p>
                 <p style="color: #92400e; font-size: 14px;">
-                    You have an outstanding balance of ${{ number_format($totals['outstanding_balance'], 2) }}. 
+                    You have an outstanding balance of ${{ number_format($totals['outstanding_balance'] ?? 0, 2) }}. 
                     Please contact us to arrange payment.
                 </p>
             </div>

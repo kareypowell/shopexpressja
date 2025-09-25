@@ -182,17 +182,17 @@
         }
 
         .table-container {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
             margin-bottom: 25px;
             border: 1px solid #e5e7eb;
             border-radius: 8px;
+            /* Removed overflow-x: auto to prevent cut-off in PDF */
         }
 
         .items-table {
             width: 100%;
-            min-width: 800px;
             border-collapse: collapse;
+            table-layout: fixed; /* Fixed layout for better column control */
+            page-break-inside: avoid; /* Avoid breaking table across pages */
         }
 
         .items-table thead {
@@ -202,14 +202,17 @@
 
         .items-table th,
         .items-table td {
-            padding: 12px;
+            padding: 6px 4px; /* Further reduced padding for better fit */
             text-align: left;
-            font-size: 14px;
+            font-size: 10px; /* Further reduced font size for better fit */
             border-bottom: 1px solid #e5e7eb;
+            word-wrap: break-word; /* Allow text wrapping */
+            overflow: hidden; /* Prevent content overflow */
         }
 
         .items-table th {
             font-weight: 600;
+            font-size: 9px; /* Even smaller header font */
         }
 
         .items-table .text-right {
@@ -220,6 +223,8 @@
             color: #0891b2;
             font-weight: 600;
             font-family: 'Courier New', monospace;
+            word-break: break-all; /* Break long tracking numbers */
+            font-size: 9px; /* Smaller font for tracking numbers */
         }
 
         /* Payment Summary */
@@ -360,6 +365,16 @@
             <h3>Package Details</h3>
             <div class="table-container">
                 <table class="items-table">
+                <colgroup>
+                    <col style="width: 16%;">  <!-- Tracking -->
+                    <col style="width: 22%;">  <!-- Description -->
+                    <col style="width: 10%;">  <!-- Weight/Volume -->
+                    <col style="width: 10%;">  <!-- Freight -->
+                    <col style="width: 10%;">  <!-- Clearance -->
+                    <col style="width: 10%;">  <!-- Storage -->
+                    <col style="width: 10%;">  <!-- Delivery -->
+                    <col style="width: 12%;">  <!-- Total -->
+                </colgroup>
                 <thead>
                     <tr>
                         <th>Tracking</th>
@@ -387,8 +402,8 @@
                 <tbody>
                     @foreach($packages as $package)
                     <tr>
-                        <td class="tracking-number">{{ $package['tracking_number'] }}</td>
-                        <td>{{ $package['description'] }}</td>
+                        <td class="tracking-number">{{ Str::limit($package['tracking_number'], 15) }}</td>
+                        <td>{{ Str::limit($package['description'], 30) }}</td>
                         <td>{{ $package['weight_display'] }}</td>
                         <td class="text-right">${{ $package['freight_price'] }}</td>
                         <td class="text-right">${{ $package['clearance_fee'] }}</td>

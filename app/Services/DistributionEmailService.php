@@ -61,6 +61,19 @@ class DistributionEmailService
             ];
 
         } catch (Exception $e) {
+            Log::error('Package receipt email failed', [
+                'distribution_id' => $distribution->id,
+                'customer_email' => $customer->email,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Mark email as failed in database
+            $distribution->update([
+                'email_sent' => false,
+                'email_sent_at' => null
+            ]);
+            
             Log::error('Failed to send receipt email', [
                 'distribution_id' => $distribution->id,
                 'customer_id' => $customer->id,
