@@ -39,4 +39,18 @@ class UserFactory extends Factory
             ];
         });
     }
+
+    /**
+     * Create user without role to avoid role factory conflicts
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    public function withoutRole()
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'role_id' => null,
+            ];
+        });
+    }
 }

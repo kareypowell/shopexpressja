@@ -2,7 +2,7 @@
 
 ## Backend Framework
 - **Laravel 8.x**: PHP framework with Eloquent ORM
-- **PHP 7.4+**: Server-side language
+- **PHP 7.4**: Server-side language (always design code for PHP 7 compatibility)
 - **MySQL/MariaDB**: Primary database with comprehensive indexing strategy
 
 ## Frontend Stack

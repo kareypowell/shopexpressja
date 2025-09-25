@@ -501,16 +501,16 @@ function manifestTabs() {
         },
         
         initializeMemoryManagement() {
-            // Track memory usage and cleanup intervals
+            // Track memory usage and cleanup intervals - REDUCED FREQUENCY
             this.memoryCleanupInterval = setInterval(() => {
                 this.performMemoryCleanup();
-            }, 30000); // Clean up every 30 seconds
+            }, 300000); // Clean up every 5 minutes instead of 30 seconds
             
             // Monitor memory usage if available
             if (performance.memory) {
                 this.memoryMonitorInterval = setInterval(() => {
                     this.monitorMemoryUsage();
-                }, 10000); // Monitor every 10 seconds
+                }, 60000); // Monitor every 1 minute instead of 10 seconds
             }
             
             // Setup page visibility API for cleanup when tab is hidden
@@ -525,21 +525,25 @@ function manifestTabs() {
         
         performMemoryCleanup() {
             try {
-                // Clear old cached data
+                console.log('Performing safe memory cleanup...');
+                
+                // Clear old cached data (safe operation)
                 this.clearOldCacheData();
                 
-                // Remove unused DOM elements
-                this.cleanupUnusedDOMElements();
+                // DISABLED: DOM cleanup was too aggressive and caused blank screens
+                // this.cleanupUnusedDOMElements();
                 
-                // Clear old event listeners that might be orphaned
-                this.cleanupOrphanedEventListeners();
+                // DISABLED: Event listener cleanup was interfering with Livewire
+                // this.cleanupOrphanedEventListeners();
                 
                 // Force garbage collection if available (development only)
                 if (window.gc && typeof window.gc === 'function') {
                     window.gc();
                 }
+                
+                console.log('Memory cleanup completed safely');
             } catch (error) {
-                console.warn('Memory cleanup failed:', error);
+                console.error('Memory cleanup failed:', error);
             }
         },
         
@@ -581,24 +585,21 @@ function manifestTabs() {
         },
         
         cleanupUnusedDOMElements() {
-            // Remove any orphaned Livewire components
-            const orphanedElements = document.querySelectorAll('[wire\\:id]:not([wire\\:id=""])');
+            // DISABLED: This was removing valid Livewire components and causing blank screens
+            // The original logic was too aggressive and removed the EnhancedManifestSummary component
+            
+            // Only clean up truly orphaned elements that are marked as such
+            const orphanedElements = document.querySelectorAll('[data-livewire-orphaned="true"]');
             orphanedElements.forEach(element => {
-                if (!element.closest('.manifest-tabs-container')) {
+                try {
                     element.remove();
+                } catch (error) {
+                    console.warn('Failed to remove orphaned element:', error);
                 }
             });
             
-            // Clean up any detached event listeners
-            const tabElements = document.querySelectorAll('[role="tab"]');
-            tabElements.forEach(tab => {
-                // Clone and replace to remove all event listeners
-                if (tab.dataset.cleaned !== 'true') {
-                    const newTab = tab.cloneNode(true);
-                    tab.parentNode.replaceChild(newTab, tab);
-                    newTab.dataset.cleaned = 'true';
-                }
-            });
+            // DISABLED: Tab element cleanup was also too aggressive
+            // This was cloning and replacing elements unnecessarily
         },
         
         cleanupOrphanedEventListeners() {

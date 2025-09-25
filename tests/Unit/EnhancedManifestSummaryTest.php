@@ -19,8 +19,9 @@ class EnhancedManifestSummaryTest extends TestCase
     {
         parent::setUp();
         
-        // Create a test user and authenticate
-        $user = User::factory()->create();
+        // Create a test user and authenticate using existing role
+        $customerRole = \App\Models\Role::where('name', 'customer')->first();
+        $user = User::factory()->create(['role_id' => $customerRole->id]);
         $this->actingAs($user);
     }
 
