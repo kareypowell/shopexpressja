@@ -46,6 +46,11 @@ class UserObserver
     }
 
     /**
+     * Store role change data temporarily
+     */
+    private static $roleChangeData = [];
+
+    /**
      * Handle the User "updating" event to capture role changes.
      *
      * @param User $user
@@ -58,8 +63,8 @@ class UserObserver
             $oldRoleId = $user->getOriginal('role_id');
             $newRoleId = $user->role_id;
             
-            // Store the role change data for the updated event
-            $user->_roleChangeData = [
+            // Store the role change data using user ID as key
+            self::$roleChangeData[$user->id] = [
                 'old_role_id' => $oldRoleId,
                 'new_role_id' => $newRoleId,
             ];
@@ -79,7 +84,7 @@ class UserObserver
         $originalValues = $user->getOriginal();
         
         // Log user update to audit system (excluding role changes as they're handled separately)
-        if (!isset($user->_roleChangeData)) {
+        if (!isset(self::$roleChangeData[$user->id])) {
             $this->auditService->logModelUpdated($user, $originalValues);
         }
         
@@ -102,8 +107,8 @@ class UserObserver
         }
 
         // Handle role change if it occurred
-        if (isset($user->_roleChangeData)) {
-            $roleChangeData = $user->_roleChangeData;
+        if (isset(self::$roleChangeData[$user->id])) {
+            $roleChangeData = self::$roleChangeData[$user->id];
             
             // Fire the role changed event
             event(new RoleChanged(
@@ -113,7 +118,7 @@ class UserObserver
             ));
             
             // Clean up the temporary data
-            unset($user->_roleChangeData);
+            unset(self::$roleChangeData[$user->id]);
         }
 
         // Only handle cache for customers

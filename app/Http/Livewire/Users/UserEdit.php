@@ -39,11 +39,13 @@ class UserEdit extends Component
 
     protected function rules()
     {
+        $availableRoles = $this->availableRoles->pluck('name')->toArray();
+        
         $rules = [
             'firstName' => 'required|string|max:255',
             'lastName' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $this->user->id,
-            'newRole' => 'required|exists:roles,name',
+            'newRole' => 'required|in:' . implode(',', $availableRoles),
         ];
 
         if ($this->changePassword) {
@@ -64,6 +66,10 @@ class UserEdit extends Component
         'newPasswordConfirmation' => 'password confirmation',
         'newRole' => 'role',
         'roleChangeReason' => 'role change reason',
+    ];
+
+    protected $messages = [
+        'newRole.in' => 'You do not have permission to assign the selected role.',
     ];
 
     public function mount(User $user)
@@ -116,6 +122,13 @@ class UserEdit extends Component
         $this->showRoleChangeModal = false;
     }
 
+    public function openRoleChangeModal()
+    {
+        if ($this->currentRole !== $this->newRole) {
+            $this->showRoleChangeModal = true;
+        }
+    }
+
     public function update()
     {
         // Re-check authorization before updating
@@ -124,6 +137,22 @@ class UserEdit extends Component
         $this->isUpdating = true;
 
         try {
+            // Check if the current user has permission to assign the new role
+            $availableRoles = $this->availableRoles->pluck('name')->toArray();
+            if (!in_array($this->newRole, $availableRoles)) {
+                $this->isUpdating = false;
+                session()->flash('error', 'You do not have permission to assign the "' . ucfirst($this->newRole) . '" role.');
+                return;
+            }
+
+            // Check if role change requires reason but modal wasn't completed
+            if ($this->currentRole !== $this->newRole && empty($this->roleChangeReason)) {
+                $this->showRoleChangeModal = true;
+                $this->isUpdating = false;
+                session()->flash('error', 'Please provide a reason for the role change before updating.');
+                return;
+            }
+
             // Validate the form data
             $this->validate();
 
@@ -164,6 +193,13 @@ class UserEdit extends Component
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
             $this->isUpdating = false;
+            
+            // If role change reason is missing, show the modal
+            if ($this->currentRole !== $this->newRole && empty($this->roleChangeReason)) {
+                $this->showRoleChangeModal = true;
+                session()->flash('error', 'Please provide a reason for the role change.');
+            }
+            
             throw $e;
         } catch (\Exception $e) {
             DB::rollBack();

@@ -71,6 +71,37 @@
         </div>
     </div>
 
+    <!-- Flash Messages -->
+    @if (session()->has('success'))
+        <div class="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Tab Content -->
     <div class="bg-white shadow">
         <div class="px-4 sm:px-6 lg:max-w-6xl lg:mx-auto lg:px-8 py-6">
@@ -158,6 +189,24 @@
                         </div>
                     </div>
 
+                    @error('roleChangeReason') 
+                        <div class="bg-red-50 border border-red-200 rounded-md p-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-red-800">Role Change Reason Required</h3>
+                                    <div class="mt-2 text-sm text-red-700">
+                                        <p>{{ $message }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @enderror
+
                     @if($currentRole !== $newRole)
                         <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
                             <div class="flex">
@@ -170,6 +219,19 @@
                                     <h3 class="text-sm font-medium text-yellow-800">Role Change Detected</h3>
                                     <div class="mt-2 text-sm text-yellow-700">
                                         <p>You are changing this user's role from <strong>{{ ucfirst($currentRole) }}</strong> to <strong>{{ ucfirst($newRole) }}</strong>. This will immediately affect their permissions and access level.</p>
+                                        @if(empty($roleChangeReason))
+                                            <div class="mt-3">
+                                                <p class="mb-2 font-medium">⚠️ You must provide a reason for this role change before updating.</p>
+                                                <button wire:click="openRoleChangeModal" type="button" class="inline-flex items-center px-3 py-2 border border-yellow-300 shadow-sm text-sm leading-4 font-medium rounded-md text-yellow-800 bg-yellow-50 hover:bg-yellow-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                    </svg>
+                                                    Provide Reason for Role Change
+                                                </button>
+                                            </div>
+                                        @else
+                                            <p class="mt-2 text-green-700">✓ Role change reason provided: "{{ $roleChangeReason }}"</p>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
