@@ -11,16 +11,23 @@
             box-sizing: border-box;
         }
 
+        @page {
+            size: letter;
+            margin: 1in;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            line-height: 1.6;
+            line-height: 1.4;
             color: #374151;
             background-color: white;
             padding: 20px;
+            font-size: 12px;
         }
 
         .invoice-container {
-            max-width: 800px;
+            width: 100%;
+            max-width: 7.5in;
             margin: 0 auto;
             background-color: white;
         }
@@ -28,7 +35,7 @@
         /* Header Section */
         .header {
             width: 100%;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .header-table {
@@ -61,7 +68,7 @@
 
         .header-title h1 {
             font-weight: 900;
-            font-size: 30px;
+            font-size: 28px;
             color: #111827;
             margin-bottom: 5px;
         }
@@ -99,8 +106,9 @@
         /* Company Info */
         .company-info {
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
         }
 
         .company-info p {
@@ -113,7 +121,7 @@
             background-color: #f9fafb;
             border: 1px solid #e5e7eb;
             border-radius: 8px;
-            padding: 25px;
+            padding: 20px;
             margin-bottom: 25px;
         }
 
@@ -131,13 +139,13 @@
         .details-section h3 {
             font-weight: 700;
             color: #111827;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-size: 16px;
         }
 
         .details-section p {
-            font-size: 14px;
-            margin-bottom: 4px;
+            font-size: 13px;
+            margin-bottom: 5px;
         }
 
         .details-section .label {
@@ -155,12 +163,13 @@
             font-weight: 900;
             font-size: 24px;
             color: #d97706;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
         }
 
         .total-label {
             font-size: 14px;
             color: #d97706;
+            font-weight: 600;
         }
 
         .receipt-number {
@@ -168,9 +177,10 @@
             font-weight: 700;
             color: #0891b2;
             background: #f0f9ff;
-            padding: 4px 8px;
+            padding: 5px 10px;
             border-radius: 4px;
             border: 1px solid #e0f2fe;
+            font-size: 13px;
         }
 
         /* Items Section */
@@ -202,29 +212,31 @@
 
         .items-table th,
         .items-table td {
-            padding: 6px 4px; /* Further reduced padding for better fit */
+            padding: 10px 8px;
             text-align: left;
-            font-size: 10px; /* Further reduced font size for better fit */
+            font-size: 12px;
             border-bottom: 1px solid #e5e7eb;
-            word-wrap: break-word; /* Allow text wrapping */
-            overflow: hidden; /* Prevent content overflow */
+            word-wrap: break-word;
+            overflow: hidden;
         }
 
         .items-table th {
             font-weight: 600;
-            font-size: 9px; /* Even smaller header font */
+            font-size: 12px;
         }
 
         .items-table .text-right {
             text-align: right;
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
         }
 
         .tracking-number {
             color: #0891b2;
             font-weight: 600;
             font-family: 'Courier New', monospace;
-            word-break: break-all; /* Break long tracking numbers */
-            font-size: 9px; /* Smaller font for tracking numbers */
+            word-break: break-all;
+            font-size: 11px;
         }
 
         /* Payment Summary */
@@ -254,13 +266,14 @@
         }
 
         .summary-row td {
-            padding: 8px 0;
+            padding: 6px 0;
             font-size: 14px;
         }
 
         .summary-label {
             text-align: right;
             padding-right: 20px;
+            font-weight: 500;
         }
 
         .summary-amount {
@@ -270,14 +283,14 @@
         }
 
         .summary-total {
-            border-top: 1px solid #e5e7eb;
-            border-bottom: 1px solid #e5e7eb;
+            border-top: 2px solid #e5e7eb;
+            border-bottom: 2px solid #e5e7eb;
             font-weight: 700;
-            font-size: 18px;
+            font-size: 16px;
         }
 
         .summary-total td {
-            padding: 12px 0;
+            padding: 10px 0;
         }
 
         .summary-paid {
@@ -288,14 +301,16 @@
         /* Footer */
         .footer {
             text-align: center;
-            padding-top: 25px;
-            border-top: 1px solid #e5e7eb;
+            padding-top: 30px;
+            border-top: 2px solid #e5e7eb;
+            margin-top: 40px;
         }
 
         .footer h4 {
             font-weight: 700;
             color: #111827;
             margin-bottom: 8px;
+            font-size: 18px;
         }
 
         .footer p {
@@ -319,7 +334,7 @@
                     </td>
                     <td class="header-right">
                         <div class="status-badge {{ strtolower($payment_status) }}">{{ $payment_status }}</div><br>
-                        <span style="font-size: 14px; color: #6b7280;">Generated {{ date('F j, Y \a\t g:i A') }}</span>
+                        <span style="font-size: 13px; color: #6b7280;">Generated {{ date('F j, Y \a\t g:i A') }}</span>
                     </td>
                 </tr>
             </table>
@@ -366,14 +381,13 @@
             <div class="table-container">
                 <table class="items-table">
                 <colgroup>
-                    <col style="width: 16%;">  <!-- Tracking -->
-                    <col style="width: 22%;">  <!-- Description -->
+                    <col style="width: 20%;">  <!-- Tracking -->
+                    <col style="width: 28%;">  <!-- Description -->
                     <col style="width: 10%;">  <!-- Weight/Volume -->
-                    <col style="width: 10%;">  <!-- Freight -->
-                    <col style="width: 10%;">  <!-- Clearance -->
-                    <col style="width: 10%;">  <!-- Storage -->
-                    <col style="width: 10%;">  <!-- Delivery -->
-                    <col style="width: 12%;">  <!-- Total -->
+                    <col style="width: 10.5%;">  <!-- Freight -->
+                    <col style="width: 10.5%;">  <!-- Clearance -->
+                    <col style="width: 10.5%;">  <!-- Storage -->
+                    <col style="width: 10.5%;">  <!-- Delivery -->
                 </colgroup>
                 <thead>
                     <tr>
@@ -396,20 +410,18 @@
                         <th class="text-right">Clearance</th>
                         <th class="text-right">Storage</th>
                         <th class="text-right">Delivery</th>
-                        <th class="text-right">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($packages as $package)
                     <tr>
-                        <td class="tracking-number">{{ Str::limit($package['tracking_number'], 15) }}</td>
-                        <td>{{ Str::limit($package['description'], 30) }}</td>
+                        <td class="tracking-number">{{ Str::limit($package['tracking_number'], 18) }}</td>
+                        <td>{{ Str::limit($package['description'], 35) }}</td>
                         <td>{{ $package['weight_display'] }}</td>
                         <td class="text-right">${{ $package['freight_price'] }}</td>
                         <td class="text-right">${{ $package['clearance_fee'] }}</td>
                         <td class="text-right">${{ $package['storage_fee'] }}</td>
                         <td class="text-right">${{ $package['delivery_fee'] }}</td>
-                        <td class="text-right">${{ $package['total_cost'] }}</td>
                     </tr>
                     @endforeach
                 </tbody>

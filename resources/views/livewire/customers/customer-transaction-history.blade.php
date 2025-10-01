@@ -126,7 +126,7 @@
                                     
                                     <!-- Actions -->
                                     <div class="flex items-center space-x-2">
-                                        @if($transaction->type === 'payment' && $transaction->reference_type === 'package_distribution')
+                                        @if($transaction->type === 'payment' && in_array($transaction->reference_type, ['package_distribution', 'consolidated_package_distribution']))
                                             <a 
                                                 href="{{ route('customer.transaction.receipt', $transaction->id) }}"
                                                 target="_blank"

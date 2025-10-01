@@ -86,7 +86,7 @@ class PackageDistributionService
 
             // Parse balance options
             $applyCreditBalance = $balanceOptions['credit'] ?? $balanceOptions['applyCreditBalance'] ?? false;
-            $applyAccountBalance = $balanceOptions['account'] ?? $balanceOptions['applyCreditBalance'] ?? false;
+            $applyAccountBalance = $balanceOptions['account'] ?? $balanceOptions['applyAccountBalance'] ?? false;
             
             // Apply available balances
             $creditApplied = 0;
@@ -339,7 +339,7 @@ class PackageDistributionService
 
             // Parse balance options - support both old and new format for backward compatibility
             $applyCreditBalance = $balanceOptions['credit'] ?? $balanceOptions['applyCreditBalance'] ?? false;
-            $applyAccountBalance = $balanceOptions['account'] ?? $balanceOptions['applyCreditBalance'] ?? false;
+            $applyAccountBalance = $balanceOptions['account'] ?? $balanceOptions['applyAccountBalance'] ?? false;
             
             // Apply available balances based on user selection
             $creditApplied = 0;

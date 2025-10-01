@@ -13,10 +13,10 @@
 
         body {
             font-family: Arial, sans-serif;
-            line-height: 1.6;
+            line-height: 1.3;
             color: #374151;
             background-color: white;
-            padding: 20px;
+            padding: 10px;
         }
 
         .invoice-container {
@@ -28,7 +28,7 @@
         /* Header Section */
         .header {
             width: 100%;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
         }
 
         .header-table {
@@ -48,9 +48,9 @@
         }
 
         .logo {
-            height: 60px;
+            height: 50px;
             width: auto;
-            margin-right: 15px;
+            margin-right: 12px;
             vertical-align: middle;
         }
 
@@ -61,13 +61,13 @@
 
         .header-title h1 {
             font-weight: 900;
-            font-size: 30px;
+            font-size: 22px;
             color: #111827;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
 
         .header-title p {
-            font-size: 14px;
+            font-size: 13px;
             color: #6b7280;
         }
 
@@ -99,22 +99,22 @@
         /* Company Info */
         .company-info {
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
         }
 
         .company-info p {
             color: #374151;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         /* Receipt Details */
         .receipt-details {
             background-color: #f9fafb;
             border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 25px;
-            margin-bottom: 25px;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 12px;
         }
 
         .details-table {
@@ -125,19 +125,19 @@
         .details-column {
             width: 33.33%;
             vertical-align: top;
-            padding-right: 20px;
+            padding-right: 15px;
         }
 
         .details-section h3 {
             font-weight: 700;
             color: #111827;
-            margin-bottom: 8px;
-            font-size: 16px;
+            margin-bottom: 6px;
+            font-size: 15px;
         }
 
         .details-section p {
-            font-size: 14px;
-            margin-bottom: 4px;
+            font-size: 13px;
+            margin-bottom: 3px;
         }
 
         .details-section .label {
@@ -146,20 +146,20 @@
 
         .total-highlight {
             background-color: #fef3c7;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 10px;
+            border-radius: 6px;
             text-align: center;
         }
 
         .total-amount {
             font-weight: 900;
-            font-size: 24px;
+            font-size: 18px;
             color: #d97706;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .total-label {
-            font-size: 14px;
+            font-size: 12px;
             color: #d97706;
         }
 
@@ -177,16 +177,16 @@
         .consolidated-summary {
             background-color: #dbeafe;
             border: 1px solid #3b82f6;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 25px;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
         }
 
         .consolidated-summary h3 {
             font-weight: 700;
             color: #1e40af;
-            margin-bottom: 15px;
-            font-size: 18px;
+            margin-bottom: 10px;
+            font-size: 16px;
         }
 
         .consolidated-details {
@@ -197,13 +197,13 @@
         .consolidated-details > div {
             display: table-cell;
             width: 33.33%;
-            padding-right: 20px;
+            padding-right: 15px;
             vertical-align: top;
         }
 
         .consolidated-details p {
-            font-size: 14px;
-            margin-bottom: 8px;
+            font-size: 13px;
+            margin-bottom: 5px;
         }
 
         .consolidated-details .label {
@@ -215,23 +215,21 @@
         .items-section h3 {
             font-weight: 700;
             color: #111827;
-            margin-bottom: 15px;
-            font-size: 18px;
+            margin-bottom: 10px;
+            font-size: 16px;
         }
 
         .table-container {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
             border: 1px solid #e5e7eb;
-            border-radius: 8px;
+            border-radius: 6px;
         }
 
         .items-table {
             width: 100%;
-            min-width: 800px;
             border-collapse: collapse;
             margin-bottom: 0;
+            table-layout: fixed;
         }
 
         .items-table thead {
@@ -241,14 +239,17 @@
 
         .items-table th,
         .items-table td {
-            padding: 12px;
+            padding: 6px 4px;
             text-align: left;
-            font-size: 14px;
+            font-size: 11px;
             border-bottom: 1px solid #e5e7eb;
+            word-wrap: break-word;
+            overflow: hidden;
         }
 
         .items-table th {
             font-weight: 600;
+            font-size: 10px;
         }
 
         .items-table .text-right {
@@ -263,16 +264,18 @@
             color: #0891b2;
             font-weight: 600;
             font-family: 'Courier New', monospace;
+            font-size: 10px;
+            word-break: break-all;
         }
 
         .weight-badge {
             background-color: #e0e7ff;
             color: #3730a3;
-            padding: 2px 6px;
+            padding: 1px 4px;
             border-radius: 3px;
-            font-size: 10px;
+            font-size: 8px;
             font-weight: bold;
-            margin-left: 8px;
+            margin-left: 4px;
         }
 
         .sea-badge {
@@ -288,7 +291,7 @@
         /* Payment Summary */
         .payment-summary {
             width: 100%;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .summary-table {
@@ -312,13 +315,13 @@
         }
 
         .summary-row td {
-            padding: 8px 0;
-            font-size: 14px;
+            padding: 4px 0;
+            font-size: 12px;
         }
 
         .summary-label {
             text-align: right;
-            padding-right: 20px;
+            padding-right: 15px;
         }
 
         .summary-amount {
@@ -331,11 +334,11 @@
             border-top: 1px solid #e5e7eb;
             border-bottom: 1px solid #e5e7eb;
             font-weight: 700;
-            font-size: 18px;
+            font-size: 16px;
         }
 
         .summary-total td {
-            padding: 12px 0;
+            padding: 8px 0;
         }
 
         .summary-paid {
@@ -346,18 +349,18 @@
         /* Footer */
         .footer {
             text-align: center;
-            padding-top: 25px;
+            padding-top: 15px;
             border-top: 1px solid #e5e7eb;
         }
 
         .footer h4 {
             font-weight: 700;
             color: #111827;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
 
         .footer p {
-            font-size: 14px;
+            font-size: 13px;
             color: #6b7280;
         }
     </style>
@@ -442,6 +445,16 @@
             <h3>Individual Packages in Consolidation</h3>
             <div class="table-container">
                 <table class="items-table">
+                <colgroup>
+                    <col style="width: 18%;">  <!-- Tracking -->
+                    <col style="width: 22%;">  <!-- Description -->
+                    <col style="width: 10%;">  <!-- Weight/Volume -->
+                    <col style="width: 10%;">  <!-- Freight -->
+                    <col style="width: 10%;">  <!-- Clearance -->
+                    <col style="width: 10%;">  <!-- Storage -->
+                    <col style="width: 10%;">  <!-- Delivery -->
+                    <col style="width: 10%;">  <!-- Total -->
+                </colgroup>
                 <thead>
                     <tr>
                         <th>Tracking</th>

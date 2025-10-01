@@ -306,6 +306,11 @@ class PackageDistribution extends Component
         $this->updatePaymentStatus();
     }
 
+    public function updatedApplyAccountBalance()
+    {
+        $this->updatePaymentStatus();
+    }
+
     public function loadPackagesFromSession($packageIds)
     {
         $packages = Package::whereIn('id', $packageIds)
@@ -518,10 +523,24 @@ class PackageDistribution extends Component
         $totalCost = (float) ($this->totalCost ?: 0);
         
         $netTotal = $totalCost - $writeOffAmount;
-        $balanceApplied = 0;
-        if ($this->applyCreditBalance && $this->getCustomerTotalAvailableBalanceProperty() > 0) {
-            $balanceApplied = min($this->getCustomerTotalAvailableBalanceProperty(), max(0, $netTotal - $amountCollected));
+        
+        // Calculate balance applications separately
+        $remainingAfterCash = max(0, $netTotal - $amountCollected);
+        $creditApplied = 0;
+        $accountApplied = 0;
+        
+        // Apply credit balance first if selected
+        if ($this->applyCreditBalance && $this->getCustomerCreditBalanceProperty() > 0) {
+            $creditApplied = min($this->getCustomerCreditBalanceProperty(), $remainingAfterCash);
+            $remainingAfterCash -= $creditApplied;
         }
+        
+        // Apply account balance if selected and there's still remaining amount
+        if ($this->applyAccountBalance && $this->getCustomerAccountBalanceProperty() > 0 && $remainingAfterCash > 0) {
+            $accountApplied = min($this->getCustomerAccountBalanceProperty(), $remainingAfterCash);
+        }
+        
+        $balanceApplied = $creditApplied + $accountApplied;
         $totalReceived = $amountCollected + $balanceApplied;
         $outstandingBalance = max(0, $netTotal - $totalReceived);
 
@@ -582,7 +601,10 @@ class PackageDistribution extends Component
             'net_total' => $netTotal,
             'amount_collected' => $amountCollected,
             'balance_applied' => $balanceApplied,
+            'credit_applied' => $creditApplied,
+            'account_balance_applied' => $accountApplied,
             'apply_credit_balance' => $this->applyCreditBalance,
+            'apply_account_balance' => $this->applyAccountBalance,
             'total_received' => $totalReceived,
             'payment_status' => $this->paymentStatus,
             'outstanding_balance' => $outstandingBalance,

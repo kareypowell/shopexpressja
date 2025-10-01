@@ -244,6 +244,7 @@ Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
     Route::get('/purchase-requests', PurchaseRequest::class)->name('purchase-requests');
     Route::get('/purchase-requests/{purchase_request_id}/view', PurchaseRequest::class)->name('view-purchase-request');
     Route::get('/rates', Rate::class)->name('rates');
+    Route::get('/transactions', \App\Http\Livewire\Customers\CustomerTransactionHistory::class)->name('customer.transactions');
     Route::get('/transactions/{transaction}/receipt', [App\Http\Controllers\Customer\TransactionController::class, 'viewReceipt'])->name('customer.transaction.receipt');
 });
 

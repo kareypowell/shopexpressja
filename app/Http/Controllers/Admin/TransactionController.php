@@ -27,8 +27,8 @@ class TransactionController extends Controller
             abort(404, 'Receipt not available for this transaction type.');
         }
 
-        // Check if this is a package distribution payment
-        if ($transaction->reference_type !== 'package_distribution') {
+        // Check if this is a package distribution payment (individual or consolidated)
+        if (!in_array($transaction->reference_type, ['package_distribution', 'consolidated_package_distribution'])) {
             abort(404, 'Receipt not available for this transaction type.');
         }
 

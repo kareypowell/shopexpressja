@@ -103,7 +103,7 @@
         </div>
 
         <!-- 💰 FINANCIAL -->
-        <div x-data="{ open: {{ (\Route::is('view-purchase-requests') || \Route::is('transactions') || \Route::is('view-rates')) ? 'true' : 'false' }} }" class="space-y-1">
+        <div x-data="{ open: {{ (\Route::is('view-purchase-requests') || \Route::is('transactions') || \Route::is('customer.transactions') || \Route::is('view-rates')) ? 'true' : 'false' }} }" class="space-y-1">
           <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white group w-full flex items-center px-2 py-2 text-left text-base font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <span class="mr-3 text-lg">💰</span>
             <span class="flex-1">Financial</span>
@@ -119,12 +119,23 @@
               Purchase Requests
             </a>
 
+            @if(auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
             <a href="/admin/transactions" class="{{ \Route::is('transactions') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
               </svg>
               Transactions
             </a>
+            @endif
+
+            @if(auth()->user()->isCustomer())
+            <a href="{{ route('customer.transactions') }}" class="{{ \Route::is('customer.transactions') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
+              </svg>
+              Transaction History
+            </a>
+            @endif
 
             <a href="/admin/rates" class="{{ \Route::is('view-rates') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5">
@@ -488,7 +499,7 @@
           </div>
 
           <!-- 💰 FINANCIAL (Mobile) -->
-          <div x-data="{ open: {{ (\Route::is('view-purchase-requests') || \Route::is('transactions') || \Route::is('view-rates')) ? 'true' : 'false' }} }" class="space-y-1">
+          <div x-data="{ open: {{ (\Route::is('view-purchase-requests') || \Route::is('transactions') || \Route::is('customer.transactions') || \Route::is('view-rates')) ? 'true' : 'false' }} }" class="space-y-1">
             <button @click="open = !open" class="text-gray-300 hover:bg-gray-700 hover:text-white group w-full flex items-center pl-2 pr-1 py-2 text-left text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
               <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -502,9 +513,16 @@
               <a href="/admin/purchase-requests" class="{{ \Route::is('view-purchase-requests') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
                 Purchase Requests
               </a>
+              @if(auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
               <a href="/admin/transactions" class="{{ \Route::is('transactions') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
                 Transactions
               </a>
+              @endif
+              @if(auth()->user()->isCustomer())
+              <a href="{{ route('customer.transactions') }}" class="{{ \Route::is('customer.transactions') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
+                Transaction History
+              </a>
+              @endif
               <a href="/admin/rates" class="{{ \Route::is('view-rates') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-xs font-medium rounded-md">
                 Rates
               </a>

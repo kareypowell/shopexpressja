@@ -127,12 +127,12 @@ class BusinessReportService
      */
     protected function calculateCollectedForManifest(int $manifestId): float
     {
-        // Get all package distributions for packages in this manifest
-        return DB::table('package_distributions as pd')
-            ->join('package_distribution_items as pdi', 'pd.id', '=', 'pdi.distribution_id')
+        // Get the sum of individual package costs from distribution items for packages in this manifest
+        // This correctly accounts for the actual amount collected per package, not the total distribution amount
+        return DB::table('package_distribution_items as pdi')
             ->join('packages as p', 'pdi.package_id', '=', 'p.id')
             ->where('p.manifest_id', $manifestId)
-            ->sum('pd.total_amount') ?? 0;
+            ->sum('pdi.total_cost') ?? 0;
     }
 
     /**
@@ -140,44 +140,69 @@ class BusinessReportService
      */
     protected function getCollectionsData($dateFrom, $dateTo, $manifestIds = null, $officeIds = null): array
     {
-        $query = CustomerTransaction::query()
+        // Get collections from package distributions (actual collections tied to specific packages/manifests)
+        $distributionQuery = DB::table('package_distributions as pd')
+            ->join('package_distribution_items as pdi', 'pd.id', '=', 'pdi.distribution_id')
+            ->join('packages as p', 'pdi.package_id', '=', 'p.id')
+            ->whereBetween('pd.distributed_at', [$dateFrom, $dateTo]);
+
+        if ($manifestIds) {
+            $distributionQuery->whereIn('p.manifest_id', $manifestIds);
+        }
+
+        if ($officeIds) {
+            $distributionQuery->whereIn('p.office_id', $officeIds);
+        }
+
+        $distributionCollections = $distributionQuery
+            ->selectRaw('
+                DATE(pd.distributed_at) as collection_date,
+                SUM(pdi.total_cost) as daily_amount,
+                COUNT(DISTINCT pd.id) as distribution_count,
+                COUNT(DISTINCT pd.customer_id) as unique_customers
+            ')
+            ->groupBy('collection_date')
+            ->orderBy('collection_date', 'desc')
+            ->get();
+
+        // Also get general payment transactions for context
+        $paymentQuery = CustomerTransaction::query()
             ->where('type', CustomerTransaction::TYPE_PAYMENT)
             ->whereBetween('created_at', [$dateFrom, $dateTo])
             ->with(['user:id,first_name,last_name,email']);
 
         // Filter by manifest if specified
         if ($manifestIds) {
-            $query->whereHas('user.packages', function($q) use ($manifestIds) {
+            $paymentQuery->whereHas('user.packages', function($q) use ($manifestIds) {
                 $q->whereIn('manifest_id', $manifestIds);
             });
         }
 
         // Filter by office if specified
         if ($officeIds) {
-            $query->whereHas('user.packages', function($q) use ($officeIds) {
+            $paymentQuery->whereHas('user.packages', function($q) use ($officeIds) {
                 $q->whereIn('office_id', $officeIds);
             });
         }
 
-        $payments = $query->orderBy('created_at', 'desc')->get();
+        $payments = $paymentQuery->orderBy('created_at', 'desc')->get();
 
-        $dailyCollections = $payments->groupBy(function($payment) {
-            return $payment->created_at->format('Y-m-d');
-        })->map(function($dayPayments) {
+        $dailyCollections = $distributionCollections->map(function($collection) {
             return [
-                'date' => $dayPayments->first()->created_at->format('Y-m-d'),
-                'total_amount' => $dayPayments->sum('amount'),
-                'transaction_count' => $dayPayments->count(),
-                'unique_customers' => $dayPayments->unique('user_id')->count()
+                'date' => $collection->collection_date,
+                'total_amount' => $collection->daily_amount,
+                'transaction_count' => $collection->distribution_count,
+                'unique_customers' => $collection->unique_customers
             ];
-        })->values();
+        });
 
         return [
             'daily_collections' => $dailyCollections,
-            'total_collected' => $payments->sum('amount'),
-            'total_transactions' => $payments->count(),
-            'unique_customers' => $payments->unique('user_id')->count(),
-            'average_payment' => $payments->count() > 0 ? $payments->sum('amount') / $payments->count() : 0,
+            'total_collected' => $distributionCollections->sum('daily_amount'),
+            'total_transactions' => $distributionCollections->sum('distribution_count'),
+            'unique_customers' => $distributionCollections->sum('unique_customers'),
+            'average_payment' => $distributionCollections->count() > 0 ? 
+                $distributionCollections->sum('daily_amount') / $distributionCollections->sum('distribution_count') : 0,
             'recent_payments' => $payments->take(10)->map(function($payment) {
                 return [
                     'id' => $payment->id,
@@ -312,21 +337,28 @@ class BusinessReportService
      */
     protected function calculateSalesSummary(array $manifestData, array $collectionsData, array $outstandingData): array
     {
-        $totalOwed = collect($manifestData)->sum('total_owed');
-        $totalCollected = collect($manifestData)->sum('total_collected');
-        $totalOutstanding = collect($manifestData)->sum('outstanding_balance');
+        $manifestCollection = collect($manifestData);
+        
+        $totalOwed = $manifestCollection->sum('total_owed');
+        $totalCollected = $manifestCollection->sum('total_collected');
+        $totalOutstanding = $manifestCollection->sum('outstanding_balance');
 
         return [
             'total_revenue_owed' => $totalOwed,
             'total_revenue_collected' => $totalCollected,
             'total_outstanding' => $totalOutstanding,
             'overall_collection_rate' => $totalOwed > 0 ? ($totalCollected / $totalOwed) * 100 : 0,
-            'total_manifests' => count($manifestData),
-            'total_packages' => collect($manifestData)->sum('package_count'),
-            'delivered_packages' => collect($manifestData)->sum('delivered_count'),
-            'delivery_rate' => collect($manifestData)->sum('package_count') > 0 ? 
-                (collect($manifestData)->sum('delivered_count') / collect($manifestData)->sum('package_count')) * 100 : 0,
-            'average_manifest_value' => count($manifestData) > 0 ? $totalOwed / count($manifestData) : 0,
+            'total_manifests' => $manifestCollection->count(),
+            'total_packages' => $manifestCollection->sum('package_count'),
+            'delivered_packages' => $manifestCollection->sum('delivered_count'),
+            'delivery_rate' => $manifestCollection->sum('package_count') > 0 ? 
+                ($manifestCollection->sum('delivered_count') / $manifestCollection->sum('package_count')) * 100 : 0,
+            'average_manifest_value' => $manifestCollection->count() > 0 ? $totalOwed / $manifestCollection->count() : 0,
+            'average_collection_rate' => $manifestCollection->count() > 0 ? 
+                $manifestCollection->avg('collection_rate') : 0,
+            'manifests_fully_collected' => $manifestCollection->where('collection_rate', '>=', 100)->count(),
+            'manifests_partially_collected' => $manifestCollection->where('collection_rate', '>', 0)->where('collection_rate', '<', 100)->count(),
+            'manifests_uncollected' => $manifestCollection->where('collection_rate', '=', 0)->count(),
             'customers_with_debt' => $outstandingData['customer_count'],
             'total_debt_amount' => $outstandingData['total_outstanding']
         ];
