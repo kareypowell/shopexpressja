@@ -63,8 +63,8 @@
         <div class="mt-3 text-xs text-gray-500 border-t border-gray-100 pt-2">
             <strong>Quick Reference:</strong> 
             <span class="text-gray-400">Gray</span> = New, 
-            <span class="text-wax-flower-600">Purple</span> = Processing, 
-            <span class="text-wax-flower-600">Brand</span> = Shipped, 
+            <span class="text-shiraz-600">Purple</span> = Processing, 
+            <span class="text-shiraz-600">Brand</span> = Shipped, 
             <span class="text-yellow-600">Yellow</span> = Customs, 
             <span class="text-green-600">Green</span> = Ready/Delivered, 
             <span class="text-red-600">Red</span> = Delayed

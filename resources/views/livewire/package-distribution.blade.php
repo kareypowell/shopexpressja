@@ -62,13 +62,13 @@
                                 id="customerSearch" 
                                 placeholder="Search by name or account number..." 
                                 autocomplete="off"
-                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-l-md placeholder-gray-400 focus:outline-none focus:ring-wax-flower-500 focus:border-wax-flower-500 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('selectedCustomerId') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror"
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-l-md placeholder-gray-400 focus:outline-none focus:ring-shiraz-500 focus:border-shiraz-500 transition duration-150 ease-in-out sm:text-sm sm:leading-5 @error('selectedCustomerId') border-red-300 text-red-900 placeholder-red-300 focus:border-red-300 focus:ring-red @enderror"
                             >
                             @if($selectedCustomerId)
                                 <button 
                                     type="button" 
                                     wire:click="clearCustomerSelection"
-                                    class="px-3 py-2 border border-l-0 border-gray-300 rounded-r-md bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-wax-flower-500 focus:border-wax-flower-500 transition duration-150 ease-in-out"
+                                    class="px-3 py-2 border border-l-0 border-gray-300 rounded-r-md bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-shiraz-500 focus:border-shiraz-500 transition duration-150 ease-in-out"
                                     title="Clear selection"
                                 >
                                     <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,7 +91,7 @@
                                     @foreach($filteredCustomers as $customer)
                                         <div 
                                             wire:click="selectCustomer({{ $customer->id }})"
-                                            class="px-3 py-2 cursor-pointer hover:bg-wax-flower-50 hover:text-wax-flower-900 border-b border-gray-100 last:border-b-0"
+                                            class="px-3 py-2 cursor-pointer hover:bg-shiraz-50 hover:text-shiraz-900 border-b border-gray-100 last:border-b-0"
                                         >
                                             <div class="font-medium">{{ $customer->full_name ?? $customer->name }}</div>
                                             <div class="text-sm text-gray-500">Account: {{ $customer->profile->account_number ?? 'N/A' }}</div>
@@ -127,7 +127,7 @@
                         <button 
                             wire:click="clearSelection"
                             type="button"
-                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500 mt-6"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shiraz-500 mt-6"
                         >
                             Clear Selection
                         </button>
@@ -174,7 +174,7 @@
                         <div class="flex items-center space-x-2">
                             <button 
                                 wire:click="toggleConsolidatedView"
-                                class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md {{ $showConsolidatedView ? 'text-white bg-wax-flower-600 border-wax-flower-600' : 'text-gray-700 bg-white hover:bg-gray-50' }} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
+                                class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md {{ $showConsolidatedView ? 'text-white bg-shiraz-600 border-shiraz-600' : 'text-gray-700 bg-white hover:bg-gray-50' }} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shiraz-500"
                             >
                                 @if($showConsolidatedView)
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,7 +195,7 @@
                                 type="text" 
                                 wire:model.debounce.300ms="search"
                                 placeholder="{{ $showConsolidatedView ? 'Search consolidated packages...' : 'Search packages...' }}"
-                                class="block w-64 border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                class="block w-64 border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                             >
                         </div>
                     </div>
@@ -207,14 +207,14 @@
                     <!-- Consolidated Package Selection -->
                     <div class="px-6 py-4">
                         @if(count($selectedConsolidatedPackages) > 0)
-                            <div class="mb-4 bg-wax-flower-50 border border-wax-flower-200 rounded-lg p-4">
+                            <div class="mb-4 bg-shiraz-50 border border-shiraz-200 rounded-lg p-4">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-sm font-medium text-wax-flower-800">
+                                    <span class="text-sm font-medium text-shiraz-800">
                                         {{ count($selectedConsolidatedPackages) }} consolidated package(s) selected for distribution
                                     </span>
                                     <button 
                                         wire:click="resetForm"
-                                        class="text-sm text-wax-flower-600 hover:text-wax-flower-800"
+                                        class="text-sm text-shiraz-600 hover:text-shiraz-800"
                                     >
                                         Clear Selection
                                     </button>
@@ -231,7 +231,7 @@
                                             <input 
                                                 type="checkbox" 
                                                 wire:model="selectAllConsolidatedPackages"
-                                                class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                                class="h-4 w-4 text-shiraz-600 focus:ring-shiraz-500 border-gray-300 rounded"
                                                 title="Select All"
                                             >
                                         </th>
@@ -260,7 +260,7 @@
                                                     type="checkbox" 
                                                     wire:model="selectedConsolidatedPackages"
                                                     value="{{ $consolidatedPackage->id }}"
-                                                    class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                                    class="h-4 w-4 text-shiraz-600 focus:ring-shiraz-500 border-gray-300 rounded"
                                                 >
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
@@ -316,14 +316,14 @@
                     <!-- Package Selection -->
                     <div class="px-6 py-4">
                         @if(count($selectedPackages) > 0)
-                            <div class="mb-4 bg-wax-flower-50 border border-wax-flower-200 rounded-lg p-4">
+                            <div class="mb-4 bg-shiraz-50 border border-shiraz-200 rounded-lg p-4">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-sm font-medium text-wax-flower-800">
+                                    <span class="text-sm font-medium text-shiraz-800">
                                         {{ count($selectedPackages) }} package(s) selected for distribution
                                     </span>
                                     <button 
                                         wire:click="resetForm"
-                                        class="text-sm text-wax-flower-600 hover:text-wax-flower-800"
+                                        class="text-sm text-shiraz-600 hover:text-shiraz-800"
                                     >
                                         Clear Selection
                                     </button>
@@ -340,7 +340,7 @@
                                         <input 
                                             type="checkbox" 
                                             wire:model="selectAllPackages"
-                                            class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                            class="h-4 w-4 text-shiraz-600 focus:ring-shiraz-500 border-gray-300 rounded"
                                             title="Select All"
                                         >
                                     </th>
@@ -369,7 +369,7 @@
                                                 type="checkbox" 
                                                 wire:model="selectedPackages"
                                                 value="{{ $package->id }}"
-                                                class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                                class="h-4 w-4 text-shiraz-600 focus:ring-shiraz-500 border-gray-300 rounded"
                                             >
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
@@ -443,7 +443,7 @@
                                         step="0.01"
                                         min="0"
                                         placeholder="0.00"
-                                        class="block w-full pl-7 pr-12 border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                        class="block w-full pl-7 pr-12 border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                     >
                                 </div>
                                 @error('amountCollected')
@@ -461,7 +461,7 @@
                                     <button 
                                         type="button"
                                         wire:click="toggleAdvancedOptions"
-                                        class="inline-flex items-center text-sm text-wax-flower-600 hover:text-wax-flower-800 font-medium"
+                                        class="inline-flex items-center text-sm text-shiraz-600 hover:text-shiraz-800 font-medium"
                                     >
                                         <svg class="w-4 h-4 mr-1 transform {{ $showAdvancedOptions ? 'rotate-90' : '' }} transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -484,7 +484,7 @@
                                                             type="checkbox" 
                                                             id="apply-credit"
                                                             wire:model="applyCreditBalance"
-                                                            class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                                            class="h-4 w-4 text-shiraz-600 focus:ring-shiraz-500 border-gray-300 rounded"
                                                         >
                                                         <label for="apply-credit" class="ml-2 block text-sm text-gray-900">
                                                             Apply credit balance (${{ number_format($this->customerCreditBalance, 2) }})
@@ -498,7 +498,7 @@
                                                             type="checkbox" 
                                                             id="apply-account"
                                                             wire:model="applyAccountBalance"
-                                                            class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                                            class="h-4 w-4 text-shiraz-600 focus:ring-shiraz-500 border-gray-300 rounded"
                                                         >
                                                         <label for="apply-account" class="ml-2 block text-sm text-gray-900">
                                                             Apply account balance (${{ number_format($this->customerAccountBalance, 2) }})
@@ -527,7 +527,7 @@
                                                         type="radio" 
                                                         wire:model="writeOffType" 
                                                         value="fixed"
-                                                        class="focus:ring-wax-flower-500 h-4 w-4 text-wax-flower-600 border-gray-300"
+                                                        class="focus:ring-shiraz-500 h-4 w-4 text-shiraz-600 border-gray-300"
                                                     >
                                                     <span class="ml-2 text-sm text-gray-700">Fixed Amount</span>
                                                 </label>
@@ -536,7 +536,7 @@
                                                         type="radio" 
                                                         wire:model="writeOffType" 
                                                         value="percentage"
-                                                        class="focus:ring-wax-flower-500 h-4 w-4 text-wax-flower-600 border-gray-300"
+                                                        class="focus:ring-shiraz-500 h-4 w-4 text-shiraz-600 border-gray-300"
                                                     >
                                                     <span class="ml-2 text-sm text-gray-700">Percentage</span>
                                                 </label>
@@ -556,7 +556,7 @@
                                                         min="0"
                                                         max="{{ $totalCost }}"
                                                         placeholder="0.00"
-                                                        class="block w-full pl-7 pr-12 border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                                        class="block w-full pl-7 pr-12 border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                                     >
                                                 </div>
                                                 @error('writeOffAmount')
@@ -575,7 +575,7 @@
                                                         min="0"
                                                         max="100"
                                                         placeholder="0.0"
-                                                        class="block w-full pr-8 border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                                        class="block w-full pr-8 border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                                     >
                                                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                                         <span class="text-gray-500 sm:text-sm">%</span>
@@ -603,7 +603,7 @@
                                                     id="write-off-reason"
                                                     wire:model="writeOffReason"
                                                     placeholder="e.g., Customer loyalty discount, damaged package compensation"
-                                                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                                 >
                                                 @error('writeOffReason')
                                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -621,7 +621,7 @@
                                                 wire:model="distributionNotes"
                                                 rows="2"
                                                 placeholder="Add any notes about this distribution..."
-                                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                             ></textarea>
                                             @error('distributionNotes')
                                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -736,7 +736,7 @@
                             <button 
                                 wire:click="resetForm"
                                 type="button"
-                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shiraz-500"
                             >
                                 Reset
                             </button>
@@ -744,7 +744,7 @@
                             <button 
                                 wire:click="showDistributionConfirmation"
                                 type="button"
-                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-wax-flower-600 hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-shiraz-600 hover:bg-shiraz-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shiraz-500"
                                 @if(($showConsolidatedView && count($selectedConsolidatedPackages) === 0) || (!$showConsolidatedView && count($selectedPackages) === 0) || $amountCollected < 0) disabled @endif
                             >
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1083,7 +1083,7 @@
                         <button 
                             wire:click="cancelDistribution"
                             type="button"
-                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shiraz-500"
                             @if($isProcessing) disabled @endif
                         >
                             Cancel
@@ -1143,7 +1143,7 @@
                     
                     // Find currently highlighted item
                     items.forEach((item, index) => {
-                        if (item.classList.contains('bg-wax-flower-100')) {
+                        if (item.classList.contains('bg-shiraz-100')) {
                             currentIndex = index;
                         }
                     });
@@ -1153,11 +1153,11 @@
                             e.preventDefault();
                             // Remove current highlight
                             if (currentIndex >= 0) {
-                                items[currentIndex].classList.remove('bg-wax-flower-100');
+                                items[currentIndex].classList.remove('bg-shiraz-100');
                             }
                             // Add highlight to next item
                             currentIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
-                            items[currentIndex].classList.add('bg-wax-flower-100');
+                            items[currentIndex].classList.add('bg-shiraz-100');
                             items[currentIndex].scrollIntoView({ block: 'nearest' });
                             break;
                             
@@ -1165,11 +1165,11 @@
                             e.preventDefault();
                             // Remove current highlight
                             if (currentIndex >= 0) {
-                                items[currentIndex].classList.remove('bg-wax-flower-100');
+                                items[currentIndex].classList.remove('bg-shiraz-100');
                             }
                             // Add highlight to previous item
                             currentIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
-                            items[currentIndex].classList.add('bg-wax-flower-100');
+                            items[currentIndex].classList.add('bg-shiraz-100');
                             items[currentIndex].scrollIntoView({ block: 'nearest' });
                             break;
                             

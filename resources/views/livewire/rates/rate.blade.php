@@ -9,7 +9,7 @@
             </p>
         </div>
 
-        <!-- <button wire:click="create()" class="bg-wax-flower-500 hover:bg-wax-flower-700 text-white font-bold py-2 px-4 rounded">
+        <!-- <button wire:click="create()" class="bg-shiraz-500 hover:bg-shiraz-700 text-white font-bold py-2 px-4 rounded">
             Create Purchase Request
         </button> -->
     </div>

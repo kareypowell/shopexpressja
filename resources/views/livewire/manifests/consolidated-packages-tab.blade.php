@@ -24,7 +24,7 @@
                     id="consolidated-search"
                     wire:model.debounce.300ms="search"
                     placeholder="Search by tracking number, customer..."
-                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                 >
             </div>
 
@@ -34,7 +34,7 @@
                 <select 
                     id="consolidated-status-filter"
                     wire:model="statusFilter"
-                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                 >
                     <option value="">All Statuses</option>
                     @foreach($statusOptions as $value => $label)
@@ -48,7 +48,7 @@
                 <label for="consolidated-sort" class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
                 <select 
                     wire:model="sortBy"
-                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                 >
                     <option value="consolidated_tracking_number">Tracking Number</option>
                     <option value="status">Status</option>
@@ -62,7 +62,7 @@
             <div class="flex items-end">
                 <button 
                     wire:click="clearFilters"
-                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shiraz-500"
                 >
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -75,10 +75,10 @@
 
     <!-- Bulk Actions -->
     @if(count($selectedConsolidatedPackages) > 0)
-        <div class="bg-wax-flower-50 border border-wax-flower-200 rounded-lg p-4 mb-4">
+        <div class="bg-shiraz-50 border border-shiraz-200 rounded-lg p-4 mb-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm font-medium text-wax-flower-800">
+                    <span class="text-sm font-medium text-shiraz-800">
                         {{ count($selectedConsolidatedPackages) }} consolidated package(s) selected
                     </span>
                     
@@ -86,7 +86,7 @@
                     <div class="flex items-center space-x-2">
                         <select 
                             wire:model="bulkStatus"
-                            class="border-wax-flower-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                            class="border-shiraz-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                         >
                             <option value="">Select status...</option>
                             @foreach($statusOptions as $value => $label)
@@ -96,7 +96,7 @@
 
                         <button 
                             wire:click="confirmBulkStatusUpdate"
-                            class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-wax-flower-600 hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
+                            class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-shiraz-600 hover:bg-shiraz-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shiraz-500"
                             @if(!$bulkStatus) disabled @endif
                         >
                             Update Status
@@ -133,7 +133,7 @@
                     <input 
                         type="checkbox" 
                         wire:model="selectAll"
-                        class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                        class="h-4 w-4 text-shiraz-600 focus:ring-shiraz-500 border-gray-300 rounded"
                         onclick="event.stopPropagation()"
                     >
                     <label class="text-sm text-gray-700">Select All</label>
@@ -151,7 +151,7 @@
                                     type="checkbox" 
                                     wire:model="selectedConsolidatedPackages"
                                     value="{{ $consolidatedPackage->id }}"
-                                    class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                    class="h-4 w-4 text-shiraz-600 focus:ring-shiraz-500 border-gray-300 rounded"
                                     onclick="event.stopPropagation()"
                                 >
                                 
@@ -207,7 +207,7 @@
                                 <!-- Status Update Dropdown -->
                                 <select 
                                     wire:change="updateConsolidatedPackageStatus({{ $consolidatedPackage->id }}, $event.target.value)"
-                                    class="text-sm border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500"
+                                    class="text-sm border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500"
                                     onclick="event.stopPropagation()"
                                 >
                                     <option value="">Change Status</option>
@@ -223,7 +223,7 @@
                                 <div class="relative">
                                     <button 
                                         onclick="event.stopPropagation(); toggleDropdown('dropdown-{{ $consolidatedPackage->id }}')"
-                                        class="inline-flex items-center p-2 border border-gray-300 rounded-full shadow-sm text-gray-400 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
+                                        class="inline-flex items-center p-2 border border-gray-300 rounded-full shadow-sm text-gray-400 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shiraz-500"
                                     >
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
@@ -290,7 +290,7 @@
                                             @if($canEdit)
                                                 <a 
                                                     href="{{ route('admin.manifests.packages.edit', [$manifest->id, $package->id]) }}"
-                                                    class="inline-flex items-center px-2 py-1 text-xs font-medium text-wax-flower-600 hover:text-wax-flower-900 border border-wax-flower-300 rounded hover:bg-wax-flower-50 focus:outline-none focus:ring-2 focus:ring-wax-flower-500"
+                                                    class="inline-flex items-center px-2 py-1 text-xs font-medium text-shiraz-600 hover:text-shiraz-900 border border-shiraz-300 rounded hover:bg-shiraz-50 focus:outline-none focus:ring-2 focus:ring-shiraz-500"
                                                     title="Edit Package"
                                                 >
                                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -350,7 +350,7 @@
                                 id="bulk-notes"
                                 wire:model="bulkNotes"
                                 rows="3"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                 placeholder="Add notes about this status update..."
                             ></textarea>
                         </div>
@@ -358,7 +358,7 @@
                     <div class="items-center px-4 py-3">
                         <button 
                             wire:click="executeBulkStatusUpdate"
-                            class="px-4 py-2 bg-wax-flower-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-wax-flower-500"
+                            class="px-4 py-2 bg-shiraz-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-shiraz-700 focus:outline-none focus:ring-2 focus:ring-shiraz-500"
                         >
                             Confirm Update
                         </button>
@@ -406,7 +406,7 @@
                                             step="0.01" 
                                             min="0"
                                             wire:model="consolidatedPackagesNeedingFees.{{ $index }}.clearance_fee"
-                                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                         >
                                     </div>
                                     <div>
@@ -416,7 +416,7 @@
                                             step="0.01" 
                                             min="0"
                                             wire:model="consolidatedPackagesNeedingFees.{{ $index }}.storage_fee"
-                                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                         >
                                     </div>
                                     <div>
@@ -426,7 +426,7 @@
                                             step="0.01" 
                                             min="0"
                                             wire:model="consolidatedPackagesNeedingFees.{{ $index }}.delivery_fee"
-                                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                         >
                                     </div>
                                 </div>
@@ -443,7 +443,7 @@
                         </button>
                         <button 
                             wire:click="processConsolidatedFeeUpdate"
-                            class="px-4 py-2 bg-wax-flower-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-wax-flower-500"
+                            class="px-4 py-2 bg-shiraz-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-shiraz-700 focus:outline-none focus:ring-2 focus:ring-shiraz-500"
                         >
                             Update Fees & Set to Ready
                         </button>
@@ -475,7 +475,7 @@
                                 id="unconsolidation-notes"
                                 wire:model="unconsolidationNotes"
                                 rows="3"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                 placeholder="Reason for unconsolidation..."
                             ></textarea>
                         </div>

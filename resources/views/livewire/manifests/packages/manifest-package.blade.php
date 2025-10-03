@@ -28,7 +28,7 @@
             </button>
 
             @if($canEdit)
-                <button wire:click="create()" class="bg-wax-flower-500 hover:bg-wax-flower-700 text-white font-bold py-2 px-4 rounded">
+                <button wire:click="create()" class="bg-shiraz-500 hover:bg-shiraz-700 text-white font-bold py-2 px-4 rounded">
                     Add Package
                 </button>
             @else
@@ -371,7 +371,7 @@
                                                         wire:model.lazy="consolidatedPackagesNeedingFees.{{ $index }}.clearance_fee"
                                                         step="0.01"
                                                         min="0"
-                                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                                         placeholder="0.00"
                                                     >
                                                 </div>
@@ -388,7 +388,7 @@
                                                         wire:model.lazy="consolidatedPackagesNeedingFees.{{ $index }}.storage_fee"
                                                         step="0.01"
                                                         min="0"
-                                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                                         placeholder="0.00"
                                                     >
                                                 </div>
@@ -405,7 +405,7 @@
                                                         wire:model.lazy="consolidatedPackagesNeedingFees.{{ $index }}.delivery_fee"
                                                         step="0.01"
                                                         min="0"
-                                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                                         placeholder="0.00"
                                                     >
                                                 </div>
@@ -426,7 +426,7 @@
                             </button>
                             <button 
                                 wire:click="processConsolidatedFeeUpdate" 
-                                class="px-4 py-2 bg-wax-flower-600 text-white text-sm font-medium rounded-md hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-wax-flower-500"
+                                class="px-4 py-2 bg-shiraz-600 text-white text-sm font-medium rounded-md hover:bg-shiraz-700 focus:outline-none focus:ring-2 focus:ring-shiraz-500"
                             >
                                 Update Fees & Set Ready
                             </button>

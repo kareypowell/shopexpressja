@@ -3,7 +3,7 @@
 <div>
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
         <a href="{{ route('home') }}">
-            <x-logo class="w-auto h-32 mx-auto text-wax-flower-600" />
+            <x-logo class="w-auto h-32 mx-auto text-shiraz-600" />
         </a>
 
         <h2 class="mt-6 text-3xl font-extrabold text-center text-gray-900 leading-9">
@@ -12,7 +12,7 @@
 
         <p class="mt-2 text-sm text-center text-gray-600 leading-5 max-w">
             Or
-            <a href="{{ route('login') }}" class="font-medium text-wax-flower-600 hover:text-wax-flower-500 focus:outline-none focus:underline transition ease-in-out duration-150">
+            <a href="{{ route('login') }}" class="font-medium text-shiraz-600 hover:text-shiraz-500 focus:outline-none focus:underline transition ease-in-out duration-150">
                 sign in to your account
             </a>
         </p>
@@ -186,7 +186,7 @@
 
                 <div class="mt-6">
                     <span class="block w-full rounded-md shadow-sm">
-                        <button type="submit" class="flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-wax-flower-600 border border-transparent rounded-md hover:bg-wax-flower-500 focus:outline-none focus:border-wax-flower-700 focus:ring-wax-flower active:bg-wax-flower-700 transition duration-150 ease-in-out">
+                        <button type="submit" class="flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-shiraz-600 border border-transparent rounded-md hover:bg-shiraz-500 focus:outline-none focus:border-shiraz-700 focus:ring-shiraz active:bg-shiraz-700 transition duration-150 ease-in-out">
                             Register
                         </button>
                     </span>

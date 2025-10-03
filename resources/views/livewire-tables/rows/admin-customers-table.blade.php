@@ -66,7 +66,7 @@
     @can('customer.view', $row)
       <button 
         wire:click="viewCustomer({{ $row->id }})" 
-        class="inline-flex items-center justify-center w-8 h-8 border border-transparent rounded shadow-sm text-white bg-wax-flower-600 hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500 transition-colors duration-200"
+        class="inline-flex items-center justify-center w-8 h-8 border border-transparent rounded shadow-sm text-white bg-shiraz-600 hover:bg-shiraz-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shiraz-500 transition-colors duration-200"
         title="View customer profile"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

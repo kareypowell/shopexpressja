@@ -5,7 +5,7 @@
                 All Manifests
             </h3>
 
-            <a href="{{ route('admin.manifests.create') }}" class="bg-wax-flower-500 hover:bg-wax-flower-700 text-white font-bold py-2 px-4 rounded">
+            <a href="{{ route('admin.manifests.create') }}" class="bg-shiraz-500 hover:bg-shiraz-700 text-white font-bold py-2 px-4 rounded">
                 Create Manifest
             </a>
         </div>

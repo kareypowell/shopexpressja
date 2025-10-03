@@ -12,7 +12,7 @@
                 <div class="flex items-center mb-4">
                     <div class="flex-auto">
                         <h1 class="text-lg font-bold text-gray-900 flex items-center">
-                            <!-- <x-air class="h-8 w-auto mr-2 text-wax-flower-600 flex-shrink-0" /> -->
+                            <!-- <x-air class="h-8 w-auto mr-2 text-shiraz-600 flex-shrink-0" /> -->
                             <span>Update manifest details</span>
                         </h1>
                         <p class="mt-2 text-sm text-gray-700">You will only be able to upadate this manifest while it's still open.</p>
@@ -111,10 +111,10 @@
                             </div>
                         </div>
                         <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                            <button wire:click.prevent="update()" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-wax-flower-600 text-base font-medium text-white hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500 sm:col-start-2 sm:text-sm">
+                            <button wire:click.prevent="update()" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-shiraz-600 text-base font-medium text-white hover:bg-shiraz-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shiraz-500 sm:col-start-2 sm:text-sm">
                                 Update
                             </button>
-                            <a href="/admin/manifests" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+                            <a href="/admin/manifests" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shiraz-500 sm:mt-0 sm:col-start-1 sm:text-sm">
                                 Cancel
                             </a>
                         </div>
@@ -129,7 +129,7 @@
                 <div class="flex items-center mb-4">
                     <div class="flex-auto">
                         <h1 class="text-lg font-bold text-gray-900 flex items-center">
-                            <x-sea class="h-8 w-auto mr-2 text-wax-flower-600 flex-shrink-0" />
+                            <x-sea class="h-8 w-auto mr-2 text-shiraz-600 flex-shrink-0" />
                             <span>Preview your invoice</span>
                         </h1>
                         <p class="mt-2 text-sm text-gray-700">.</p>

@@ -7,7 +7,7 @@
                 <div class="flex items-center mb-4">
                     <div class="flex-auto">
                         <h1 class="text-lg font-bold text-gray-900 flex items-center">
-                            <x-air class="h-8 w-auto mr-2 text-wax-flower-600 flex-shrink-0" />
+                            <x-air class="h-8 w-auto mr-2 text-shiraz-600 flex-shrink-0" />
                             <span>Air Freight Address</span>
                         </h1>
                         <p class="mt-2 text-sm text-gray-700">Use the address below to send items via air. Be sure to enter your address in this format.</p>
@@ -26,7 +26,7 @@
                             </tr>
                             <tr>
                                 <td class="py-3 text-sm font-medium text-gray-900">Address Line 2</td>
-                                <td class="py-3 text-sm font-bold text-wax-flower-500">{{ 'A' . auth()->user()->profile->account_number }}</td>
+                                <td class="py-3 text-sm font-bold text-shiraz-500">{{ 'A' . auth()->user()->profile->account_number }}</td>
                             </tr>
                             <tr>
                                 <td class="py-3 text-sm font-medium text-gray-900">City</td>
@@ -52,7 +52,7 @@
                 <div class="flex items-center mb-4">
                     <div class="flex-auto">
                         <h1 class="text-lg font-bold text-gray-900 flex items-center">
-                            <x-sea class="h-8 w-auto mr-2 text-wax-flower-600 flex-shrink-0" />
+                            <x-sea class="h-8 w-auto mr-2 text-shiraz-600 flex-shrink-0" />
                             <span>Sea Freight Address</span>
                         </h1>
                         <p class="mt-2 text-sm text-gray-700">Use the address below to send items via ocean. Be sure to enter your address in this format.</p>
@@ -71,7 +71,7 @@
                             </tr>
                             <tr>
                                 <td class="py-3 text-sm font-medium text-gray-900">Address Line 2</td>
-                                <td class="py-3 text-sm font-bold text-wax-flower-500">{{ 'O' . auth()->user()->profile->account_number }}</td>
+                                <td class="py-3 text-sm font-bold text-shiraz-500">{{ 'O' . auth()->user()->profile->account_number }}</td>
                             </tr>
                             <tr>
                                 <td class="py-3 text-sm font-medium text-gray-900">City</td>

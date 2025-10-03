@@ -63,10 +63,10 @@
 
     <!-- Bulk Actions -->
     @if(count($selectedPackages) > 0)
-        <div class="bg-wax-flower-50 border border-wax-flower-200 rounded-lg p-4 mb-4">
+        <div class="bg-shiraz-50 border border-shiraz-200 rounded-lg p-4 mb-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm font-medium text-wax-flower-800">
+                    <span class="text-sm font-medium text-shiraz-800">
                         {{ count($selectedPackages) }} package(s) selected
                     </span>
                     
@@ -121,7 +121,7 @@
                     <div class="flex items-center space-x-2">
                         <select 
                             wire:model="bulkStatus"
-                            class="border-wax-flower-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                            class="border-shiraz-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                         >
                             <option value="">Custom status...</option>
                             @foreach($statusOptions as $value => $label)
@@ -131,7 +131,7 @@
 
                         <button 
                             wire:click="confirmBulkStatusUpdate"
-                            class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-wax-flower-600 hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500"
+                            class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-shiraz-600 hover:bg-shiraz-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shiraz-500"
                             @if(!$bulkStatus) disabled @endif
                         >
                             Update
@@ -194,7 +194,7 @@
                                 id="notes"
                                 wire:model="notes"
                                 rows="3"
-                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                 placeholder="Add any notes about this status change..."
                             ></textarea>
                         </div>
@@ -202,7 +202,7 @@
                     <div class="items-center px-4 py-3">
                         <button 
                             wire:click="executeBulkStatusUpdate" 
-                            class="px-4 py-2 bg-wax-flower-500 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-wax-flower-600 focus:outline-none focus:ring-2 focus:ring-wax-flower-300"
+                            class="px-4 py-2 bg-shiraz-500 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-shiraz-600 focus:outline-none focus:ring-2 focus:ring-shiraz-300"
                         >
                             Confirm
                         </button>
@@ -272,7 +272,7 @@
                                         wire:model.lazy="clearanceFee"
                                         step="0.01"
                                         min="0"
-                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                         placeholder="0.00"
                                     >
                                 </div>
@@ -293,7 +293,7 @@
                                         wire:model.lazy="storageFee"
                                         step="0.01"
                                         min="0"
-                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                         placeholder="0.00"
                                     >
                                 </div>
@@ -314,7 +314,7 @@
                                         wire:model.lazy="deliveryFee"
                                         step="0.01"
                                         min="0"
-                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                        class="pl-8 block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                         placeholder="0.00"
                                     >
                                 </div>
@@ -332,7 +332,7 @@
                                         type="checkbox" 
                                         id="apply-credit"
                                         wire:model="applyCreditBalance"
-                                        class="h-4 w-4 text-wax-flower-600 focus:ring-wax-flower-500 border-gray-300 rounded"
+                                        class="h-4 w-4 text-shiraz-600 focus:ring-shiraz-500 border-gray-300 rounded"
                                     >
                                     <label for="apply-credit" class="ml-2 block text-sm text-gray-900">
                                         Apply available credit balance (${{ number_format($feePackage->user->credit_balance, 2) }})
@@ -404,7 +404,7 @@
                             </button>
                             <button 
                                 wire:click="processFeeUpdate" 
-                                class="px-4 py-2 bg-wax-flower-600 text-white text-sm font-medium rounded-md hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-wax-flower-500"
+                                class="px-4 py-2 bg-shiraz-600 text-white text-sm font-medium rounded-md hover:bg-shiraz-700 focus:outline-none focus:ring-2 focus:ring-shiraz-500"
                                 @if(!$feePreview || !$feePreview['valid']) disabled @endif
                             >
                                 Update Fees & Set Ready

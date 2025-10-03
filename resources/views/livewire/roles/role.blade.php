@@ -19,7 +19,7 @@
 
         <div class="flex space-x-2">
             @can('create', App\Models\Role::class)
-                <button wire:click="showCreateModal" class="bg-wax-flower-500 hover:bg-wax-flower-700 text-white font-bold py-2 px-4 rounded">
+                <button wire:click="showCreateModal" class="bg-shiraz-500 hover:bg-shiraz-700 text-white font-bold py-2 px-4 rounded">
                     Create Role
                 </button>
             @endcan
@@ -39,7 +39,7 @@
                 <div class="p-5">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-wax-flower-500 rounded-full flex items-center justify-center">
+                            <div class="w-8 h-8 bg-shiraz-500 rounded-full flex items-center justify-center">
                                 <span class="text-white font-semibold text-sm">{{ strtoupper(substr($role->name, 0, 1)) }}</span>
                             </div>
                         </div>
@@ -105,13 +105,13 @@
                     <form wire:submit.prevent="createRole">
                         <div class="mb-4">
                             <label for="name" class="block text-sm font-medium text-gray-700">Role Name</label>
-                            <input type="text" wire:model="name" id="name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500">
+                            <input type="text" wire:model="name" id="name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500">
                             @error('name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
                         
                         <div class="mb-4">
                             <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea wire:model="description" id="description" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500"></textarea>
+                            <textarea wire:model="description" id="description" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500"></textarea>
                             @error('description') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
                         
@@ -119,7 +119,7 @@
                             <button type="button" wire:click="closeModals" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
                                 Cancel
                             </button>
-                            <button type="submit" class="bg-wax-flower-500 hover:bg-wax-flower-700 text-white font-bold py-2 px-4 rounded">
+                            <button type="submit" class="bg-shiraz-500 hover:bg-shiraz-700 text-white font-bold py-2 px-4 rounded">
                                 Create Role
                             </button>
                         </div>
@@ -139,13 +139,13 @@
                     <form wire:submit.prevent="updateRole">
                         <div class="mb-4">
                             <label for="edit_name" class="block text-sm font-medium text-gray-700">Role Name</label>
-                            <input type="text" wire:model="name" id="edit_name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500">
+                            <input type="text" wire:model="name" id="edit_name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500">
                             @error('name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
                         
                         <div class="mb-4">
                             <label for="edit_description" class="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea wire:model="description" id="edit_description" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500"></textarea>
+                            <textarea wire:model="description" id="edit_description" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500"></textarea>
                             @error('description') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
                         
@@ -153,7 +153,7 @@
                             <button type="button" wire:click="closeModals" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
                                 Cancel
                             </button>
-                            <button type="submit" class="bg-wax-flower-500 hover:bg-wax-flower-700 text-white font-bold py-2 px-4 rounded">
+                            <button type="submit" class="bg-shiraz-500 hover:bg-shiraz-700 text-white font-bold py-2 px-4 rounded">
                                 Update Role
                             </button>
                         </div>
@@ -217,7 +217,7 @@
                         @else
                             <div class="space-y-4">
                                 @foreach($auditTrail as $audit)
-                                    <div class="border-l-4 border-wax-flower-500 pl-4 py-2">
+                                    <div class="border-l-4 border-shiraz-500 pl-4 py-2">
                                         <div class="flex justify-between items-start">
                                             <div>
                                                 <p class="text-sm font-medium text-gray-900">

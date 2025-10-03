@@ -350,7 +350,7 @@
                                             wire:model="reviewReason"
                                             id="reviewReason"
                                             rows="4"
-                                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-wax-flower-500 focus:border-wax-flower-500 sm:text-sm"
+                                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
                                             placeholder="Please describe your concern about this transaction..."
                                         ></textarea>
                                         @error('reviewReason') 
@@ -372,7 +372,7 @@
                         <button 
                             wire:click="closeReviewModal"
                             type="button" 
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shiraz-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                         >
                             Cancel
                         </button>

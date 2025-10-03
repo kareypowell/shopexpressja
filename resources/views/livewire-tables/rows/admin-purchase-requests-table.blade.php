@@ -19,7 +19,7 @@
 
 <x-livewire-tables::table.cell>
   <div>
-    <a href="{{ $row->item_url }}" class="text-wax-flower-500 font-semibold" target="_new">Click here to view {{ $row->item_name }}</a>
+    <a href="{{ $row->item_url }}" class="text-shiraz-500 font-semibold" target="_new">Click here to view {{ $row->item_name }}</a>
   </div>
 </x-livewire-tables::table.cell>
 
@@ -77,7 +77,7 @@
 
 <x-livewire-tables::table.cell>
   <div>
-    <a href="{{ route('view-purchase-request', $row->id) }}" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-wax-flower-600 hover:bg-wax-flower-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wax-flower-500">
+    <a href="{{ route('view-purchase-request', $row->id) }}" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-shiraz-600 hover:bg-shiraz-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shiraz-500">
       View
     </a>
   </div>
