@@ -1,4 +1,4 @@
-name: Deploy SHS-Client to DigitalOcean
+name: Deploy ShopExpressJA-App to DigitalOcean
 on:
   push:
     branches: [ main ]
@@ -37,7 +37,7 @@ jobs:
           script: |
             whoami
             pwd
-            cd /var/www/html/app.shipsharkltd.com || exit 1
+            cd /var/www/html/app.shopexpressja.com || exit 1
             
             # Pull latest changes
             git pull origin main
