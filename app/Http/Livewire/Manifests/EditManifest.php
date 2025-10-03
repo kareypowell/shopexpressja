@@ -36,10 +36,16 @@ class EditManifest extends Component
 
     public ?int $manifest_id;
 
-    public function mount($manifest_id = null)
+    public function mount($manifest = null)
     {
-        // Get manifest_id from route parameter or passed parameter (for testing)
-        $this->manifest_id = $manifest_id ?? request()->route('manifest_id');
+        // Handle both direct ID and model binding
+        if ($manifest instanceof Manifest) {
+            $this->manifest_id = $manifest->id;
+            $manifest_model = $manifest;
+        } else {
+            $this->manifest_id = $manifest;
+            $manifest_model = $manifest ? Manifest::find($manifest) : null;
+        }
 
         // Initialize properties with empty strings to avoid null issues
         $this->flight_number = '';
@@ -51,26 +57,23 @@ class EditManifest extends Component
         $this->estimated_arrival_date = '';
 
         // Load the manifest data
-        if ($this->manifest_id) {
-            $manifest = Manifest::find($this->manifest_id);
-            if ($manifest) {
-                $this->type = $manifest->type;
-                $this->name = $manifest->name;
-                $this->reservation_number = $manifest->reservation_number;
-                $this->exchange_rate = $manifest->exchange_rate;
-                $this->shipment_date = $manifest->shipment_date;
+        if ($manifest_model) {
+            $this->type = $manifest_model->type;
+            $this->name = $manifest_model->name;
+            $this->reservation_number = $manifest_model->reservation_number;
+            $this->exchange_rate = $manifest_model->exchange_rate;
+            $this->shipment_date = $manifest_model->shipment_date;
 
-                // Load type-specific information
-                if ($manifest->isSeaManifest()) {
-                    $this->vessel_name = $manifest->vessel_name ?? '';
-                    $this->voyage_number = $manifest->voyage_number ?? '';
-                    $this->departure_port = $manifest->departure_port ?? '';
-                    $this->arrival_port = $manifest->arrival_port ?? '';
-                    $this->estimated_arrival_date = $manifest->estimated_arrival_date ?? '';
-                } else {
-                    $this->flight_number = $manifest->flight_number ?? '';
-                    $this->flight_destination = $manifest->flight_destination ?? '';
-                }
+            // Load type-specific information
+            if ($manifest_model->isSeaManifest()) {
+                $this->vessel_name = $manifest_model->vessel_name ?? '';
+                $this->voyage_number = $manifest_model->voyage_number ?? '';
+                $this->departure_port = $manifest_model->departure_port ?? '';
+                $this->arrival_port = $manifest_model->arrival_port ?? '';
+                $this->estimated_arrival_date = $manifest_model->estimated_arrival_date ?? '';
+            } else {
+                $this->flight_number = $manifest_model->flight_number ?? '';
+                $this->flight_destination = $manifest_model->flight_destination ?? '';
             }
         }
     }
