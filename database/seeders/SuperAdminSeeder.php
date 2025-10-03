@@ -26,7 +26,7 @@ class SuperAdminSeeder extends Seeder
         }
 
         // Check if superadmin user already exists
-        $existingSuperAdmin = User::where('email', 'admin@shipshark.com')->first();
+        $existingSuperAdmin = User::where('email', 'admin@shopexpressja.com')->first();
         
         if ($existingSuperAdmin) {
             $this->command->info('SuperAdmin user already exists.');
@@ -37,7 +37,7 @@ class SuperAdminSeeder extends Seeder
         $superAdmin = User::create([
             'first_name' => 'System',
             'last_name' => 'Administrator',
-            'email' => 'admin@shipshark.com',
+            'email' => 'admin@shopexpressja.com',
             'email_verified_at' => now(),
             'password' => Hash::make('password'), // Change this in production!
             'role_id' => $superAdminRole->id,
@@ -59,7 +59,7 @@ class SuperAdminSeeder extends Seeder
         ]);
 
         $this->command->info('SuperAdmin user created successfully!');
-        $this->command->info('Email: admin@shipshark.com');
+        $this->command->info('Email: admin@shopexpressja.com');
         $this->command->info('Password: password');
         $this->command->warn('Please change the default password in production!');
     }
