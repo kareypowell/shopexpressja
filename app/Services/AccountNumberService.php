@@ -36,7 +36,7 @@ class AccountNumberService
      */
     private function generateAccountNumber(): string
     {
-        return 'SHS' . mt_rand(1000000, 9999999);
+        return 'SEJA' . mt_rand(1000000, 9999999);
     }
 
     /**
