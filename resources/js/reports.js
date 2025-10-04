@@ -20,22 +20,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Toast notifications
-    window.addEventListener('toastr:success', event => {
-        if (typeof toastr !== 'undefined') {
-            toastr.success(event.detail.message);
-        }
-    });
-    
-    window.addEventListener('toastr:error', event => {
-        if (typeof toastr !== 'undefined') {
-            toastr.error(event.detail.message);
-        }
-    });
-    
-    window.addEventListener('toastr:info', event => {
-        if (typeof toastr !== 'undefined') {
-            toastr.info(event.detail.message);
-        }
-    });
+    // Toast notifications are handled globally in base.blade.php
 });

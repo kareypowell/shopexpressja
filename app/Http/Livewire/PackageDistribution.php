@@ -66,7 +66,6 @@ class PackageDistribution extends Component
     public function rules()
     {
         $rules = [
-            'amountCollected' => 'required|numeric|min:0',
             'selectedCustomerId' => 'required|exists:users,id',
             'writeOffAmount' => 'nullable|numeric|min:0',
             'writeOffType' => 'required|in:fixed,percentage',
@@ -84,8 +83,35 @@ class PackageDistribution extends Component
             $rules['selectedPackages.*'] = 'exists:packages,id';
         }
         
-        // Only require write-off reason if write-off amount is greater than 0
+        // Calculate amounts for validation
         $writeOffAmount = $this->getCalculatedWriteOffAmount();
+        $netTotal = $this->totalCost - $writeOffAmount;
+        
+        // Calculate available balances
+        $creditApplied = 0;
+        $accountApplied = 0;
+        if ($this->selectedCustomer) {
+            if ($this->applyCreditBalance && $this->selectedCustomer->credit_balance > 0) {
+                $creditApplied = min($this->selectedCustomer->credit_balance, $netTotal);
+            }
+            
+            $remainingAfterCash = max(0, $netTotal - $this->amountCollected - $creditApplied);
+            if ($this->applyAccountBalance && $this->selectedCustomer->account_balance > 0 && $remainingAfterCash > 0) {
+                $accountApplied = min($this->selectedCustomer->account_balance, $remainingAfterCash);
+            }
+        }
+        
+        $totalBalanceApplied = $creditApplied + $accountApplied;
+        $totalReceived = $this->amountCollected + $totalBalanceApplied;
+        
+        // Require cash collection if total received is less than net total
+        if ($totalReceived < $netTotal) {
+            $rules['amountCollected'] = 'required|numeric|min:0.01';
+        } else {
+            $rules['amountCollected'] = 'required|numeric|min:0';
+        }
+        
+        // Only require write-off reason if write-off amount is greater than 0
         if ($writeOffAmount > 0) {
             $rules['writeOffReason'] = 'required|string|max:500';
         }
@@ -107,7 +133,7 @@ class PackageDistribution extends Component
         'selectedConsolidatedPackages.min' => 'Please select at least one consolidated package for distribution.',
         'amountCollected.required' => 'Please enter the amount collected from the customer.',
         'amountCollected.numeric' => 'Amount collected must be a valid number.',
-        'amountCollected.min' => 'Amount collected cannot be negative.',
+        'amountCollected.min' => 'Cash collection is required when customer balances do not cover the full amount. Please enter at least $0.01.',
         'selectedCustomerId.required' => 'Please select a customer.',
         'writeOffReason.required_with' => 'Please provide a reason when applying a write-off amount.',
     ];
@@ -787,6 +813,42 @@ class PackageDistribution extends Component
         return 0;
     }
 
+    public function validateDistribution()
+    {
+        // First run standard validation
+        $this->validate();
+        
+        // Additional custom validation for cash collection requirement
+        $writeOffAmount = $this->getCalculatedWriteOffAmount();
+        $netTotal = $this->totalCost - $writeOffAmount;
+        
+        // Calculate available balances
+        $creditApplied = 0;
+        $accountApplied = 0;
+        if ($this->selectedCustomer) {
+            if ($this->applyCreditBalance && $this->selectedCustomer->credit_balance > 0) {
+                $creditApplied = min($this->selectedCustomer->credit_balance, $netTotal);
+            }
+            
+            $remainingAfterCash = max(0, $netTotal - $this->amountCollected - $creditApplied);
+            if ($this->applyAccountBalance && $this->selectedCustomer->account_balance > 0 && $remainingAfterCash > 0) {
+                $accountApplied = min($this->selectedCustomer->account_balance, $remainingAfterCash);
+            }
+        }
+        
+        $totalBalanceApplied = $creditApplied + $accountApplied;
+        $totalReceived = $this->amountCollected + $totalBalanceApplied;
+        
+        // Check if cash collection is required
+        if ($totalReceived < $netTotal && $this->amountCollected <= 0) {
+            $shortfall = $netTotal - $totalBalanceApplied;
+            $this->addError('amountCollected', "Cash collection of at least $" . number_format($shortfall, 2) . " is required to complete this distribution. Customer balances only cover $" . number_format($totalBalanceApplied, 2) . " of the $" . number_format($netTotal, 2) . " total.");
+            return false;
+        }
+        
+        return true;
+    }
+
     public function getCustomerTotalAvailableBalanceProperty()
     {
         if ($this->selectedCustomer) {
@@ -795,11 +857,7 @@ class PackageDistribution extends Component
         return 0;
     }
 
-    protected function validateDistribution()
-    {
-        // Use the dynamic validation rules
-        $this->validate($this->rules());
-    }
+
 
     public function clearSelection()
     {

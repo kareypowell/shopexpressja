@@ -27,7 +27,6 @@ class PackageDistribution extends Component
     public $creditApplied = 0;
 
     protected $rules = [
-        'amountCollected' => 'required|numeric|min:0',
         'selectedPackages' => 'required|array|min:1',
         'selectedPackages.*' => 'exists:packages,id',
     ];
@@ -37,7 +36,7 @@ class PackageDistribution extends Component
         'selectedPackages.min' => 'Please select at least one package for distribution.',
         'amountCollected.required' => 'Please enter the amount collected.',
         'amountCollected.numeric' => 'Amount collected must be a valid number.',
-        'amountCollected.min' => 'Amount collected cannot be negative.',
+        'amountCollected.min' => 'Cash collection is required when customer balances do not cover the full amount. Please enter at least $0.01.',
     ];
 
     public function mount($manifest = null, $customerId = null)
@@ -154,7 +153,10 @@ class PackageDistribution extends Component
 
     public function showDistributionConfirmation()
     {
-        $this->validate();
+        // Custom validation with cash collection requirement
+        if (!$this->validateDistribution()) {
+            return;
+        }
 
         // Check if selected packages belong to multiple customers
         $selectedPackageModels = $this->packages->whereIn('id', $this->selectedPackages);
@@ -305,6 +307,33 @@ class PackageDistribution extends Component
             default:
                 return 'Unknown';
         }
+    }
+
+    public function validateDistribution()
+    {
+        // First run standard validation
+        $this->validate();
+        
+        // Additional custom validation for cash collection requirement
+        $netTotal = $this->totalCost;
+        
+        // Calculate available balances
+        $creditApplied = 0;
+        if ($this->customer && $this->applyCreditBalance && $this->customer->credit_balance > 0) {
+            $creditApplied = min($this->customer->credit_balance, $netTotal);
+        }
+        
+        $totalBalanceApplied = $creditApplied;
+        $totalReceived = $this->amountCollected + $totalBalanceApplied;
+        
+        // Check if cash collection is required
+        if ($totalReceived < $netTotal && $this->amountCollected <= 0) {
+            $shortfall = $netTotal - $totalBalanceApplied;
+            $this->addError('amountCollected', "Cash collection of at least $" . number_format($shortfall, 2) . " is required to complete this distribution. Customer balances only cover $" . number_format($totalBalanceApplied, 2) . " of the $" . number_format($netTotal, 2) . " total.");
+            return false;
+        }
+        
+        return true;
     }
 
     private function getCustomerAddress()
