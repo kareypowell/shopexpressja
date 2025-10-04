@@ -26,7 +26,7 @@
                             </tr>
                             <tr>
                                 <td class="py-3 text-sm font-medium text-gray-900">Address Line 2</td>
-                                <td class="py-3 text-sm font-bold text-shiraz-500">{{ 'A' . auth()->user()->profile->account_number }}</td>
+                                <td class="py-3 text-sm font-bold text-shiraz-500">{{ auth()->user()->profile->account_number }}</td>
                             </tr>
                             <tr>
                                 <td class="py-3 text-sm font-medium text-gray-900">City</td>
