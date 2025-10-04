@@ -163,7 +163,7 @@ class ReceiptGeneratorService
                 'name' => config('app.name', 'ShipShark Ltd'),
                 'address' => 'Shop #24b Reliance Plaza, Mandeville, Manchester',
                 'phone' => '876-237-1191',
-                'email' => 'support@shipsharkltd.com',
+                'email' => 'support@shopexpressja.com',
                 'website' => 'www.shipsharkltd.com',
             ],
         ];

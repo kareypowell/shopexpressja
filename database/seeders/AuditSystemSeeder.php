@@ -150,8 +150,8 @@ class AuditSystemSeeder extends Seeder
                 'security_alerts' => true,
                 'system_health' => true,
                 'recipients' => [
-                    'security@shipsharkltd.com',
-                    'admin@shipsharkltd.com'
+                    'security@shopexpressja.com',
+                    'admin@shopexpressja.com'
                 ],
                 'description' => 'Email notification configuration'
             ],

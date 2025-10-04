@@ -91,7 +91,7 @@ AUDIT_RETENTION_DEFAULT=365
 # Security Monitoring
 AUDIT_FAILED_LOGIN_THRESHOLD=5
 AUDIT_SUSPICIOUS_ACTIVITY_THRESHOLD=10
-AUDIT_SECURITY_ALERT_EMAIL=security@shipsharkltd.com
+AUDIT_SECURITY_ALERT_EMAIL=security@shopexpressja.com
 
 # Performance Settings
 AUDIT_BATCH_SIZE=100
@@ -185,8 +185,8 @@ Set up security alert notifications:
         'enabled' => true,
         'channels' => ['mail', 'slack'],
         'recipients' => [
-            'security@shipsharkltd.com',
-            'admin@shipsharkltd.com'
+            'security@shopexpressja.com',
+            'admin@shopexpressja.com'
         ]
     ]
 ]
@@ -488,9 +488,9 @@ class CustomAuditRetentionService extends AuditRetentionService {
 - Custom audit dashboards
 
 ### Support Contacts
-- System Administrator: admin@shipsharkltd.com
-- Security Team: security@shipsharkltd.com
-- Development Team: dev@shipsharkltd.com
+- System Administrator: admin@shopexpressja.com
+- Security Team: security@shopexpressja.com
+- Development Team: dev@shopexpressja.com
 
 ---
 

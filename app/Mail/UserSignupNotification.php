@@ -34,7 +34,7 @@ class UserSignupNotification extends Mailable
     public function build()
     {
         return $this->subject('Ship Heaven Sharks - New User Signups [weekly]')
-            ->from('no-reply@shipsharkltd.com')
+            ->from('no-reply@shopexpressja.com')
             ->markdown('emails.users.signups', [
                 'newUsers' => $this->newUsers,
                 'newUserCount' => $this->newUserCount

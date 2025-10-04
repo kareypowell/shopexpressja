@@ -73,7 +73,7 @@ AUDIT_RETENTION_AUTHENTICATION=365
 AUDIT_RETENTION_SECURITY_EVENTS=1095
 AUDIT_RETENTION_MODEL_CHANGES=730
 AUDIT_RETENTION_BUSINESS_ACTIONS=1095
-AUDIT_SECURITY_ALERT_EMAIL=security@shipsharkltd.com
+AUDIT_SECURITY_ALERT_EMAIL=security@shopexpressja.com
 EOF
 ```
 
@@ -335,8 +335,8 @@ sudo supervisorctl restart all
 
 ## Support Contacts
 
-- **System Administrator**: admin@shipsharkltd.com
-- **Development Team**: dev@shipsharkltd.com
+- **System Administrator**: admin@shopexpressja.com
+- **Development Team**: dev@shopexpressja.com
 - **Emergency Contact**: [Your emergency contact]
 
 ---

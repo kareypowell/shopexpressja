@@ -17,7 +17,7 @@ class ReportingSystemSeeder extends Seeder
     public function run()
     {
         // Get or create an admin user for the templates
-        $adminUser = User::where('email', 'admin@shipsharkltd.com')->first();
+        $adminUser = User::where('email', 'admin@shopexpressja.com')->first();
         if (!$adminUser) {
             // If no admin user exists, use the first user or create a basic one
             $adminUser = User::first();
@@ -25,7 +25,7 @@ class ReportingSystemSeeder extends Seeder
                 $adminUser = User::create([
                     'first_name' => 'System',
                     'last_name' => 'Admin',
-                    'email' => 'system@shipsharkltd.com',
+                    'email' => 'system@shopexpressja.com',
                     'password' => bcrypt('password'),
                     'role_id' => 1
                 ]);

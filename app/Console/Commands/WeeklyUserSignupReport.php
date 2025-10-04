@@ -49,9 +49,9 @@ class WeeklyUserSignupReport extends Command
         $newUserCount = $newUsers->count();
 
         if ($newUserCount > 0) {
-            Mail::to('support@shipsharkltd.com')
+            Mail::to('support@shopexpressja.com')
                 ->send((new UserSignupNotification($newUsers, $newUserCount))
-                    ->from('noreply@shipsharkltd.com', 'Ship Heaven Shark Ltd.'));
+                    ->from('noreply@shopexpressja.com', 'Ship Heaven Shark Ltd.'));
 
             $this->info("Weekly user signup report sent successfully. Total new users: {$newUserCount}");
         } else {

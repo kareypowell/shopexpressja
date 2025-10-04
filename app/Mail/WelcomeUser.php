@@ -32,7 +32,7 @@ class WelcomeUser extends Mailable
     public function build()
     {
         return $this->subject('Ship Heaven Sharks Ltd. - Welcome')
-            ->from('no-reply@shipsharkltd.com')
+            ->from('no-reply@shopexpressja.com')
             ->markdown('emails.users.welcome', [
                 'firstName' => $this->firstName
             ]);

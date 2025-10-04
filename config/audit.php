@@ -91,7 +91,7 @@ return [
         'suspicious_activity_threshold' => env('AUDIT_SUSPICIOUS_ACTIVITY_THRESHOLD', 10),
         'bulk_operation_threshold' => env('AUDIT_BULK_OPERATION_THRESHOLD', 50),
         'ip_change_detection' => env('AUDIT_IP_CHANGE_DETECTION', true),
-        'alert_email' => env('AUDIT_SECURITY_ALERT_EMAIL', 'security@shipsharkltd.com'),
+        'alert_email' => env('AUDIT_SECURITY_ALERT_EMAIL', 'security@shopexpressja.com'),
     ],
 
     /*
@@ -220,14 +220,14 @@ return [
             'enabled' => true,
             'channels' => ['mail'],
             'recipients' => [
-                env('AUDIT_SECURITY_ALERT_EMAIL', 'security@shipsharkltd.com'),
+                env('AUDIT_SECURITY_ALERT_EMAIL', 'security@shopexpressja.com'),
             ],
         ],
         'system_health' => [
             'enabled' => true,
             'channels' => ['mail'],
             'recipients' => [
-                env('AUDIT_ADMIN_EMAIL', 'admin@shipsharkltd.com'),
+                env('AUDIT_ADMIN_EMAIL', 'admin@shopexpressja.com'),
             ],
         ],
     ],

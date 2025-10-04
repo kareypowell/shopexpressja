@@ -127,7 +127,7 @@
             <p>
                 <strong>{{ config('app.name', 'ShipShark Ltd') }}</strong><br>
                 Shop #24b Reliance Plaza, Mandeville, Manchester<br>
-                Phone: 876-237-1191 | Email: support@shipsharkltd.com
+                Phone: 876-237-1191 | Email: support@shopexpressja.com
             </p>
         </div>
     </div>

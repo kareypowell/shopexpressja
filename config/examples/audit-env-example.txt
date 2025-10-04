@@ -63,10 +63,10 @@ AUDIT_BULK_OPERATION_THRESHOLD=50
 AUDIT_IP_CHANGE_DETECTION=true
 
 # Email address for security alerts
-AUDIT_SECURITY_ALERT_EMAIL=security@shipsharkltd.com
+AUDIT_SECURITY_ALERT_EMAIL=security@shopexpressja.com
 
 # Email address for system administration alerts
-AUDIT_ADMIN_EMAIL=admin@shipsharkltd.com
+AUDIT_ADMIN_EMAIL=admin@shopexpressja.com
 
 # =============================================================================
 # PERFORMANCE OPTIMIZATION

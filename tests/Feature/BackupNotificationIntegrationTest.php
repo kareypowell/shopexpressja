@@ -28,7 +28,7 @@ class BackupNotificationIntegrationTest extends TestCase
         Storage::fake('local');
         
         // Set up test configuration
-        Config::set('backup.notifications.email', 'admin@shipsharkltd.com');
+        Config::set('backup.notifications.email', 'admin@shopexpressja.com');
         Config::set('backup.notifications.notify_on_success', true);
         Config::set('backup.notifications.notify_on_failure', true);
         Config::set('backup.notifications.health_alerts', true);
@@ -132,7 +132,7 @@ class BackupNotificationIntegrationTest extends TestCase
         $notificationService = app(BackupNotificationService::class);
         $preferences = $notificationService->getNotificationPreferences();
 
-        $this->assertEquals('admin@shipsharkltd.com', $preferences['email']);
+        $this->assertEquals('admin@shopexpressja.com', $preferences['email']);
         $this->assertTrue($preferences['notify_on_success']);
         $this->assertTrue($preferences['notify_on_failure']);
     }
