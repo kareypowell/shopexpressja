@@ -44,8 +44,8 @@ class CustomerWelcomeEmail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Welcome to Ship Heaven Sharks Ltd. - Your Account is Ready!')
-            ->from('no-reply@shipsharkltd.com', 'Ship Heaven Sharks Ltd.')
+        return $this->subject('Welcome to Shop Express JA - Your Account is Ready!')
+            ->from('no-reply@shopexpressja.com', 'Shop Express JA')
             ->markdown('emails.customers.welcome', [
                 'customer' => $this->customer,
                 'firstName' => $this->customer->first_name,
@@ -55,7 +55,7 @@ class CustomerWelcomeEmail extends Mailable
                 'accountNumber' => $this->accountNumber,
                 'loginUrl' => route('login'),
                 'shippingInfoUrl' => route('shipping-information'),
-                'supportEmail' => 'support@shipsharkltd.com',
+                'supportEmail' => 'support@shopexpressja.com',
             ]);
     }
 

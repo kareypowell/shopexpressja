@@ -47,7 +47,7 @@
         </div>
 
         <!-- Sea Freight Address Card -->
-        <div class="w-full bg-white rounded-lg shadow h-full">
+        {{-- <div class="w-full bg-white rounded-lg shadow h-full">
             <div class="p-6">
                 <div class="flex items-center mb-4">
                     <div class="flex-auto">
@@ -89,6 +89,6 @@
                     </table>
                 </div>
             </div>
-        </div>
+        </div> --}}
     </div>
 </div>

@@ -1,9 +1,9 @@
 @component('mail::message')
-# Welcome to Ship Heaven Sharks Ltd.!
+# Welcome to Shop Express JA!
 
 Hi {{ $firstName }},
 
-Welcome to the Ship Heaven Sharks Ltd. family! We're excited to have you as our customer and look forward to being your trusted freight forwarding partner.
+Welcome to the Shop Express JA family! We're excited to have you as our customer and look forward to being your trusted freight forwarding partner.
 
 ## Your Account Details
 
@@ -59,10 +59,10 @@ Our support team is here to help you every step of the way. If you have any ques
 
 We're committed to providing you with excellent service and making your shipping experience as smooth as possible.
 
-Thank you for choosing Ship Heaven Sharks Ltd. as your freight forwarding partner!
+Thank you for choosing Shop Express JA as your freight forwarding partner!
 
 Best regards,<br>
-The Ship Heaven Sharks Team
+The Shop Express JA Team
 
 ---
 
