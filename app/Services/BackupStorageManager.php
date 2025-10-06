@@ -12,12 +12,13 @@ class BackupStorageManager
 {
     private BackupConfig $config;
     private string $storagePath;
+    private bool $directoriesInitialized = false;
 
     public function __construct(BackupConfig $config)
     {
         $this->config = $config;
         $this->storagePath = $this->config->getStoragePath();
-        $this->ensureStorageDirectoryExists();
+        // Don't create directories during construction - do it lazily when needed
     }
 
     /**
@@ -25,14 +26,27 @@ class BackupStorageManager
      */
     public function organizeBackupFile(string $filePath, string $type): string
     {
+        $this->initializeDirectories();
+        
         $filename = basename($filePath);
         $date = Carbon::now()->format('Y/m/d');
         $organizedPath = "{$this->storagePath}/{$type}/{$date}/{$filename}";
         
-        $this->ensureDirectoryExists(dirname($organizedPath));
-        
-        if (File::exists($filePath) && $filePath !== $organizedPath) {
-            File::move($filePath, $organizedPath);
+        try {
+            $this->ensureDirectoryExists(dirname($organizedPath));
+            
+            if (File::exists($filePath) && $filePath !== $organizedPath) {
+                File::move($filePath, $organizedPath);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to organize backup file', [
+                'original_path' => $filePath,
+                'target_path' => $organizedPath,
+                'error' => $e->getMessage()
+            ]);
+            
+            // Return original path if organization fails
+            return $filePath;
         }
         
         return $organizedPath;
@@ -135,6 +149,7 @@ class BackupStorageManager
      */
     public function getStorageUsage(): array
     {
+        // Don't initialize directories just for reading usage - they might not exist yet
         $totalSize = 0;
         $fileCount = 0;
         $typeBreakdown = [];
@@ -209,7 +224,9 @@ class BackupStorageManager
      */
     public function getAvailableDiskSpace(): int
     {
-        return disk_free_space($this->storagePath) ?: 0;
+        // Use parent directory if storage path doesn't exist yet
+        $pathToCheck = File::exists($this->storagePath) ? $this->storagePath : dirname($this->storagePath);
+        return disk_free_space($pathToCheck) ?: 0;
     }
 
     /**
@@ -228,6 +245,7 @@ class BackupStorageManager
      */
     public function cleanupOrphanedFiles(): array
     {
+        // Don't initialize directories just for cleanup - they might not exist yet
         $removedCount = 0;
         $freedSpace = 0;
         $errors = [];
@@ -278,13 +296,28 @@ class BackupStorageManager
     }
 
     /**
-     * Ensure storage directory exists
+     * Initialize storage directories if not already done
      */
-    private function ensureStorageDirectoryExists(): void
+    private function initializeDirectories(): void
     {
-        $this->ensureDirectoryExists($this->storagePath);
-        $this->ensureDirectoryExists("{$this->storagePath}/database");
-        $this->ensureDirectoryExists("{$this->storagePath}/files");
+        if ($this->directoriesInitialized) {
+            return;
+        }
+
+        try {
+            $this->ensureDirectoryExists($this->storagePath);
+            $this->ensureDirectoryExists("{$this->storagePath}/database");
+            $this->ensureDirectoryExists("{$this->storagePath}/files");
+            $this->directoriesInitialized = true;
+        } catch (\Exception $e) {
+            Log::warning('Failed to create backup storage directories', [
+                'path' => $this->storagePath,
+                'error' => $e->getMessage()
+            ]);
+            
+            // Don't throw the exception to prevent service instantiation failure
+            // The directories will be created when needed during backup operations
+        }
     }
 
     /**
@@ -293,7 +326,27 @@ class BackupStorageManager
     private function ensureDirectoryExists(string $path): void
     {
         if (!File::exists($path)) {
-            File::makeDirectory($path, 0755, true);
+            try {
+                // Try to create with 0755 permissions first
+                if (!File::makeDirectory($path, 0755, true)) {
+                    throw new \RuntimeException("Failed to create directory: {$path}");
+                }
+            } catch (\Exception $e) {
+                // If that fails, try with more permissive permissions
+                try {
+                    if (!File::makeDirectory($path, 0775, true)) {
+                        throw new \RuntimeException("Failed to create directory with fallback permissions: {$path}");
+                    }
+                    Log::info('Created backup directory with fallback permissions', ['path' => $path]);
+                } catch (\Exception $fallbackException) {
+                    Log::error('Failed to create backup directory', [
+                        'path' => $path,
+                        'original_error' => $e->getMessage(),
+                        'fallback_error' => $fallbackException->getMessage()
+                    ]);
+                    throw $e; // Re-throw original exception
+                }
+            }
         }
     }
 
@@ -302,6 +355,11 @@ class BackupStorageManager
      */
     public function cleanupOldBackups(bool $dryRun = false): array
     {
+        // Initialize directories if needed for cleanup operations
+        if (!$dryRun) {
+            $this->initializeDirectories();
+        }
+        
         $deletedFiles = [];
         $errors = [];
         $totalFreedSpace = 0;
@@ -435,7 +493,10 @@ class BackupStorageManager
     {
         $usage = $this->getStorageUsage();
         $availableSpace = $this->getAvailableDiskSpace();
-        $totalDiskSpace = disk_total_space($this->storagePath) ?: 0;
+        
+        // Use parent directory if storage path doesn't exist yet
+        $pathToCheck = File::exists($this->storagePath) ? $this->storagePath : dirname($this->storagePath);
+        $totalDiskSpace = disk_total_space($pathToCheck) ?: 0;
         
         $diskUsagePercent = $totalDiskSpace > 0 
             ? round(($totalDiskSpace - $availableSpace) / $totalDiskSpace * 100, 1)
