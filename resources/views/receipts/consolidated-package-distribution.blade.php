@@ -372,7 +372,7 @@
             <table class="header-table">
                 <tr>
                     <td class="header-left">
-                        <img src="{{ asset('img/shipsharkltd-logo.png') }}" alt="{{ $company['name'] }}" class="logo">
+                        <img src="{{ public_path('img/shop-express-ja-logo.png') }}" alt="{{ $company['name'] }}" class="logo">
                         <div class="header-title">
                             <h1>RECEIPT</h1>
                             <p>Consolidated Package Distribution Receipt</p>

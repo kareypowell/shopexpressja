@@ -39,9 +39,22 @@
         }
 
         .company-logo {
+            margin-bottom: 10px;
+        }
+
+        .company-logo img {
+            height: 60px;
+            width: auto;
+            max-width: 200px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .company-logo-fallback {
             font-size: 28px;
             font-weight: bold;
-            margin-bottom: 10px;
+            color: white;
+            display: none;
         }
 
         .header-subtitle {
@@ -290,7 +303,10 @@
     <div class="email-container">
         <!-- Header -->
         <div class="email-header">
-            <div class="company-logo">{{ $company_name }}</div>
+            <div class="company-logo">
+                <img src="{{ url('/img/shop-express-ja-logo.png') }}" alt="{{ $company_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                <div class="company-logo-fallback">{{ $company_name }}</div>
+            </div>
             <div class="header-subtitle">Consolidated Package Delivery Receipt</div>
         </div>
 

@@ -160,11 +160,11 @@ class ReceiptGeneratorService
                 ];
             })->toArray(),
             'company' => [
-                'name' => config('app.name', 'ShipShark Ltd'),
-                'address' => 'Shop #24b Reliance Plaza, Mandeville, Manchester',
-                'phone' => '876-237-1191',
+                'name' => config('app.name', 'Shop Express JA'),
+                'address' => '57 Law Street, Kingston, Jamaica',
+                'phone' => '876-453-7789',
                 'email' => 'support@shopexpressja.com',
-                'website' => 'www.shipsharkltd.com',
+                'website' => 'www.shopexpressjs.com',
             ],
         ];
     }

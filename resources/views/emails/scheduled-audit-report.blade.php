@@ -75,7 +75,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>{{ config('app.name', 'ShipShark Ltd') }}</h1>
+        <h1>{{ config('app.name', 'Shop Express JA') }}</h1>
         <p>Scheduled Audit Report</p>
     </div>
 
@@ -122,12 +122,12 @@
         </ul>
 
         <div class="footer">
-            <p>This is an automated message from {{ config('app.name', 'ShipShark Ltd') }} audit system.</p>
+            <p>This is an automated message from {{ config('app.name', 'Shop Express JA') }} audit system.</p>
             <p>If you believe you received this email in error, please contact your system administrator.</p>
             <p>
-                <strong>{{ config('app.name', 'ShipShark Ltd') }}</strong><br>
-                Shop #24b Reliance Plaza, Mandeville, Manchester<br>
-                Phone: 876-237-1191 | Email: support@shopexpressja.com
+                <strong>{{ config('app.name', 'Shop Express JA') }}</strong><br>
+                57 Law Street, Kingston, Jamaica<br>
+                Phone: 876-453-7789 | Email: support@shopexpressja.com
             </p>
         </div>
     </div>
