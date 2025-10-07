@@ -267,6 +267,14 @@ class Package extends Model
     }
 
     /**
+     * Determine if package belongs to an air manifest
+     */
+    public function isAirPackage(): bool
+    {
+        return $this->manifest && $this->manifest->type === 'air';
+    }
+
+    /**
      * Calculate total cost for the package
      */
     public function getTotalCostAttribute(): float

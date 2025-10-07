@@ -16,9 +16,11 @@ use App\Models\ConsolidatedPackage;
 use Illuminate\Support\Facades\Log;
 use App\Notifications\MissingPreAlertNotification;
 use App\Services\SeaRateCalculator;
+use App\Services\AirRateCalculator;
 use App\Rules\ValidContainerDimensions;
 use App\Rules\ValidPackageItems;
 use App\Exceptions\SeaRateNotFoundException;
+use App\Exceptions\AirRateNotFoundException;
 use App\Enums\PackageStatus;
 use App\Services\PackageStatusService;
 use App\Services\ManifestLockService;
@@ -1278,16 +1280,42 @@ class ManifestPackage extends Component
         if ($this->isSeaManifest()) {
             return $this->calculateSeaFreightPrice($package);
         } else {
-            return $this->calculateAirFreightPrice();
+            return $this->calculateAirFreightPrice($package);
         }
     }
 
     /**
-     * Calculate freight price for air packages (existing logic)
+     * Calculate freight price for air packages using AirRateCalculator
+     *
+     * @param Package|null $package Package instance for calculation
+     * @return float The calculated freight price
+     */
+    private function calculateAirFreightPrice(?Package $package = null): float
+    {
+        // If no package provided, fall back to legacy calculation
+        if (!$package) {
+            return $this->calculateAirFreightPriceLegacy();
+        }
+
+        try {
+            $airRateCalculator = new AirRateCalculator();
+            return $airRateCalculator->calculateFreightPrice($package);
+        } catch (AirRateNotFoundException $e) {
+            // Re-throw the specific exception to be handled by caller
+            throw $e;
+        } catch (\Exception $e) {
+            // Log the error and fall back to legacy calculation
+            Log::error('Air freight price calculation failed: ' . $e->getMessage());
+            return $this->calculateAirFreightPriceLegacy();
+        }
+    }
+
+    /**
+     * Legacy air freight price calculation for backward compatibility
      *
      * @return float The calculated freight price
      */
-    private function calculateAirFreightPrice(): float
+    private function calculateAirFreightPriceLegacy(): float
     {
         // Get the exchange rate for the manifest
         $xrt = Manifest::find($this->manifest_id)->exchange_rate ?: 1;
