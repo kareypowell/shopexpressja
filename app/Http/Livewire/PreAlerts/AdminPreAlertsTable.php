@@ -14,14 +14,11 @@ class AdminPreAlertsTable extends DataTableComponent
     public function columns(): array
     {
         return [
-            Column::make("Customer", "user.full_name")
-                ->searchable()
-                ->sortable(),
-            Column::make("Account Number", "user.profile.account_number")
-                ->searchable()
+            Column::make("Customer")
+                ->sortable(fn($query, $direction) => $query->orderBy('users.first_name', $direction)),
+            Column::make("Account Number")
                 ->sortable(),
             Column::make("Shipper", "shipper.name")
-                ->searchable()
                 ->sortable(),
             Column::make("Tracking Number", "tracking_number")
                 ->searchable()
@@ -41,11 +38,13 @@ class AdminPreAlertsTable extends DataTableComponent
     public function query(): Builder
     {
         return PreAlert::query()
-            ->orderBy('id', 'desc')
-            ->with('user')
+            ->select('pre_alerts.*', 'users.first_name', 'users.last_name', 'profiles.account_number')
+            ->join('users', 'pre_alerts.user_id', '=', 'users.id')
+            ->leftJoin('profiles', 'users.id', '=', 'profiles.user_id')
             ->with('shipper')
+            ->orderBy('pre_alerts.id', 'desc')
             ->when($this->getFilter('search'), fn($query, $search) => $query->search($search))
-            ->when($this->getFilter('tracking_number'), fn($query, $tracking_number) => $query->where('tracking_number', $tracking_number));
+            ->when($this->getFilter('tracking_number'), fn($query, $tracking_number) => $query->where('pre_alerts.tracking_number', $tracking_number));
     }
 
     public function rowView(): string

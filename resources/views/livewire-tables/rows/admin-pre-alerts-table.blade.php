@@ -1,12 +1,12 @@
 <x-livewire-tables::table.cell>
   <div>
-    {{ $row->user->full_name }}
+    {{ $row->first_name }} {{ $row->last_name }}
   </div>
 </x-livewire-tables::table.cell>
 
 <x-livewire-tables::table.cell>
   <div>
-    <x-badges.shs>{{ $row->user->profile->account_number }}</x-badges.shs>
+    <x-badges.shs>{{ $row->account_number ?? 'N/A' }}</x-badges.shs>
   </div>
 </x-livewire-tables::table.cell>
 

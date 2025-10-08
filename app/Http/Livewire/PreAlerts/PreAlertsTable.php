@@ -15,7 +15,6 @@ class PreAlertsTable extends DataTableComponent
     {
         return [
             Column::make("Shipper", "shipper.name")
-                ->searchable()
                 ->sortable(),
             Column::make("Tracking Number", "tracking_number")
                 ->searchable()
@@ -27,7 +26,6 @@ class PreAlertsTable extends DataTableComponent
                 ->searchable()
                 ->sortable(),
             Column::make("Status", "packagePreAlert.status")
-                ->searchable()
                 ->sortable(),
             Column::make("Created at", "created_at")
                 ->sortable(),
