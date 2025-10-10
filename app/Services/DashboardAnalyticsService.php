@@ -70,12 +70,48 @@ class DashboardAnalyticsService
         $cacheKey = $this->cacheKey('shipment_metrics', $filters);
         
         return $this->cacheService->remember($cacheKey, 300, function () use ($filters) {
-            $dateRange = $this->getDateRange($filters);
-
-            $totalPackages = Package::whereBetween('created_at', $dateRange)->count();
+            \Log::info('DashboardAnalyticsService getShipmentMetrics start', [
+                'filters' => $filters,
+                'cache_key' => $this->cacheKey('shipment_metrics', $filters)
+            ]);
             
-            // Use correct PackageStatus enum values
-            $packagesByStatus = Package::whereBetween('created_at', $dateRange)
+            $dateRange = $this->getDateRange($filters);
+            \Log::info('Date range calculated', [
+                'start' => $dateRange[0],
+                'end' => $dateRange[1]
+            ]);
+
+            // Build base query with date range
+            $baseQuery = Package::whereBetween('created_at', $dateRange);
+            
+            // Apply service type filters if specified
+            if (isset($filters['service_types']) && !empty($filters['service_types'])) {
+                \Log::info('Applying service type filters', ['service_types' => $filters['service_types']]);
+                $baseQuery->whereHas('manifest', function($query) use ($filters) {
+                    $query->whereIn('type', $filters['service_types']);
+                });
+            } else {
+                \Log::info('No service type filters applied', [
+                    'service_types_isset' => isset($filters['service_types']),
+                    'service_types_empty' => empty($filters['service_types']),
+                    'service_types_value' => $filters['service_types'] ?? 'not_set'
+                ]);
+            }
+
+            $totalPackages = $baseQuery->count();
+            \Log::info('Total packages after base query', ['count' => $totalPackages]);
+            
+            // Use correct PackageStatus enum values with service type filtering
+            $statusQuery = Package::whereBetween('created_at', $dateRange);
+            
+            // Apply service type filters if specified
+            if (isset($filters['service_types']) && !empty($filters['service_types'])) {
+                $statusQuery->whereHas('manifest', function($query) use ($filters) {
+                    $query->whereIn('type', $filters['service_types']);
+                });
+            }
+            
+            $packagesByStatus = $statusQuery
                 ->selectRaw('
                     COUNT(CASE WHEN status = ? THEN 1 END) as shipped,
                     COUNT(CASE WHEN status = ? THEN 1 END) as delivered,
@@ -95,13 +131,35 @@ class DashboardAnalyticsService
                 ])
                 ->first()
                 ->toArray();
+                
+            \Log::info('Status query results', [
+                'status_counts' => $packagesByStatus,
+                'enum_constants' => [
+                    'SHIPPED' => \App\Enums\PackageStatus::SHIPPED,
+                    'DELIVERED' => \App\Enums\PackageStatus::DELIVERED,
+                    'DELAYED' => \App\Enums\PackageStatus::DELAYED,
+                    'PENDING' => \App\Enums\PackageStatus::PENDING,
+                    'PROCESSING' => \App\Enums\PackageStatus::PROCESSING,
+                    'READY' => \App\Enums\PackageStatus::READY,
+                    'CUSTOMS' => \App\Enums\PackageStatus::CUSTOMS
+                ]
+            ]);
 
             // Calculate in_transit as shipped + customs
             $inTransit = ($packagesByStatus['shipped'] ?? 0) + ($packagesByStatus['customs'] ?? 0);
 
             // Calculate average processing time for completed packages (ready or delivered)
-            $completedPackages = Package::whereBetween('created_at', $dateRange)
-                ->whereIn('status', [\App\Enums\PackageStatus::READY, \App\Enums\PackageStatus::DELIVERED])
+            $completedQuery = Package::whereBetween('created_at', $dateRange)
+                ->whereIn('status', [\App\Enums\PackageStatus::READY, \App\Enums\PackageStatus::DELIVERED]);
+                
+            // Apply service type filters if specified
+            if (isset($filters['service_types']) && !empty($filters['service_types'])) {
+                $completedQuery->whereHas('manifest', function($query) use ($filters) {
+                    $query->whereIn('type', $filters['service_types']);
+                });
+            }
+            
+            $completedPackages = $completedQuery
                 ->select('created_at', 'updated_at')
                 ->get();
                 
@@ -147,20 +205,42 @@ class DashboardAnalyticsService
             $customerRole = \App\Models\Role::where('name', 'customer')->first();
             $customerRoleId = $customerRole ? $customerRole->id : 3; // fallback to 3 if role not found
             
-            $currentRevenue = DB::table('customer_transactions')
+            $revenueQuery = DB::table('customer_transactions')
                 ->join('users', 'customer_transactions.user_id', '=', 'users.id')
                 ->where('users.role_id', $customerRoleId) // Only customers, not admins
                 ->whereBetween('customer_transactions.created_at', $dateRange)
-                ->where('customer_transactions.type', \App\Models\CustomerTransaction::TYPE_CHARGE)
-                ->sum('customer_transactions.amount') ?? 0;
+                ->where('customer_transactions.type', \App\Models\CustomerTransaction::TYPE_CHARGE);
+                
+            // Apply service type filters if specified
+            if (isset($filters['service_types']) && !empty($filters['service_types'])) {
+                $revenueQuery->join('packages', function($join) {
+                    $join->on('customer_transactions.reference_id', '=', 'packages.id')
+                         ->where('customer_transactions.reference_type', '=', 'package_distribution');
+                })
+                ->join('manifests', 'packages.manifest_id', '=', 'manifests.id')
+                ->whereIn('manifests.type', $filters['service_types']);
+            }
+            
+            $currentRevenue = $revenueQuery->sum('customer_transactions.amount') ?? 0;
 
             // Previous period revenue from service charges only
-            $previousRevenue = DB::table('customer_transactions')
+            $previousRevenueQuery = DB::table('customer_transactions')
                 ->join('users', 'customer_transactions.user_id', '=', 'users.id')
                 ->where('users.role_id', $customerRoleId) // Only customers, not admins
                 ->whereBetween('customer_transactions.created_at', $previousRange)
-                ->where('customer_transactions.type', \App\Models\CustomerTransaction::TYPE_CHARGE)
-                ->sum('customer_transactions.amount') ?? 0;
+                ->where('customer_transactions.type', \App\Models\CustomerTransaction::TYPE_CHARGE);
+                
+            // Apply service type filters if specified
+            if (isset($filters['service_types']) && !empty($filters['service_types'])) {
+                $previousRevenueQuery->join('packages', function($join) {
+                    $join->on('customer_transactions.reference_id', '=', 'packages.id')
+                         ->where('customer_transactions.reference_type', '=', 'package_distribution');
+                })
+                ->join('manifests', 'packages.manifest_id', '=', 'manifests.id')
+                ->whereIn('manifests.type', $filters['service_types']);
+            }
+            
+            $previousRevenue = $previousRevenueQuery->sum('customer_transactions.amount') ?? 0;
 
             $growthPercentage = $previousRevenue > 0 
                 ? (($currentRevenue - $previousRevenue) / $previousRevenue) * 100 
@@ -168,12 +248,21 @@ class DashboardAnalyticsService
 
             // Count unique orders (package distributions) for average order value
             // Use charges only to avoid double counting
-            $totalOrders = DB::table('customer_transactions')
+            $ordersQuery = DB::table('customer_transactions')
                 ->join('users', 'customer_transactions.user_id', '=', 'users.id')
                 ->where('users.role_id', $customerRoleId) // Only customers, not admins
                 ->whereBetween('customer_transactions.created_at', $dateRange)
                 ->where('customer_transactions.reference_type', 'package_distribution')
-                ->where('customer_transactions.type', \App\Models\CustomerTransaction::TYPE_CHARGE)
+                ->where('customer_transactions.type', \App\Models\CustomerTransaction::TYPE_CHARGE);
+                
+            // Apply service type filters if specified
+            if (isset($filters['service_types']) && !empty($filters['service_types'])) {
+                $ordersQuery->join('packages', 'customer_transactions.reference_id', '=', 'packages.id')
+                ->join('manifests', 'packages.manifest_id', '=', 'manifests.id')
+                ->whereIn('manifests.type', $filters['service_types']);
+            }
+            
+            $totalOrders = $ordersQuery
                 ->distinct('customer_transactions.reference_id')
                 ->count('customer_transactions.reference_id');
             
@@ -254,7 +343,16 @@ class DashboardAnalyticsService
         return $this->cacheService->remember($cacheKey, 600, function () use ($filters) {
             $dateRange = $this->getDateRange($filters);
             
-            $volumeData = Package::whereBetween('created_at', $dateRange)
+            $volumeQuery = Package::whereBetween('created_at', $dateRange);
+            
+            // Apply service type filters if specified
+            if (isset($filters['service_types']) && !empty($filters['service_types'])) {
+                $volumeQuery->whereHas('manifest', function($query) use ($filters) {
+                    $query->whereIn('type', $filters['service_types']);
+                });
+            }
+            
+            $volumeData = $volumeQuery
                 ->selectRaw('DATE(created_at) as date, COUNT(*) as volume, SUM(weight) as total_weight')
                 ->groupBy('date')
                 ->orderBy('date')
@@ -282,7 +380,16 @@ class DashboardAnalyticsService
         return $this->cacheService->remember($cacheKey, 600, function () use ($filters) {
             $dateRange = $this->getDateRange($filters);
             
-            $statusData = Package::whereBetween('created_at', $dateRange)
+            $statusQuery = Package::whereBetween('created_at', $dateRange);
+            
+            // Apply service type filters if specified
+            if (isset($filters['service_types']) && !empty($filters['service_types'])) {
+                $statusQuery->whereHas('manifest', function($query) use ($filters) {
+                    $query->whereIn('type', $filters['service_types']);
+                });
+            }
+            
+            $statusData = $statusQuery
                 ->selectRaw('DATE(created_at) as date, status, COUNT(*) as count')
                 ->groupBy('date', 'status')
                 ->orderBy('date')
@@ -318,8 +425,17 @@ class DashboardAnalyticsService
         return $this->cacheService->remember($cacheKey, 600, function () use ($filters) {
             $dateRange = $this->getDateRange($filters);
             
-            $processingData = Package::whereBetween('created_at', $dateRange)
-                ->whereIn('status', ['ready_for_pickup', 'delivered'])
+            $processingQuery = Package::whereBetween('created_at', $dateRange)
+                ->whereIn('status', ['ready_for_pickup', 'delivered']);
+                
+            // Apply service type filters if specified
+            if (isset($filters['service_types']) && !empty($filters['service_types'])) {
+                $processingQuery->whereHas('manifest', function($query) use ($filters) {
+                    $query->whereIn('type', $filters['service_types']);
+                });
+            }
+            
+            $processingData = $processingQuery
                 ->select('created_at', 'updated_at', 'status')
                 ->get()
                 ->map(function ($package) {
@@ -358,8 +474,15 @@ class DashboardAnalyticsService
         return $this->cacheService->remember($cacheKey, 600, function () use ($filters) {
             $dateRange = $this->getDateRange($filters);
             
-            $methodData = Package::whereBetween('packages.created_at', $dateRange)
-                ->join('manifests', 'packages.manifest_id', '=', 'manifests.id')
+            $methodQuery = Package::whereBetween('packages.created_at', $dateRange)
+                ->join('manifests', 'packages.manifest_id', '=', 'manifests.id');
+                
+            // Apply service type filters if specified
+            if (isset($filters['service_types']) && !empty($filters['service_types'])) {
+                $methodQuery->whereIn('manifests.type', $filters['service_types']);
+            }
+            
+            $methodData = $methodQuery
                 ->select('manifests.type', DB::raw('COUNT(*) as count'), DB::raw('SUM(packages.weight) as total_weight'))
                 ->groupBy('manifests.type')
                 ->get()
@@ -395,13 +518,28 @@ class DashboardAnalyticsService
         return $this->cacheService->remember($cacheKey, 300, function () use ($filters) {
             $dateRange = $this->getDateRange($filters);
             
-            $totalPackages = Package::whereBetween('created_at', $dateRange)->count();
-            $deliveredPackages = Package::whereBetween('created_at', $dateRange)
-                ->whereIn('status', ['delivered', 'ready_for_pickup'])
-                ->count();
-            $delayedPackages = Package::whereBetween('created_at', $dateRange)
-                ->where('status', 'delayed')
-                ->count();
+            $totalQuery = Package::whereBetween('created_at', $dateRange);
+            $deliveredQuery = Package::whereBetween('created_at', $dateRange)
+                ->whereIn('status', ['delivered', 'ready_for_pickup']);
+            $delayedQuery = Package::whereBetween('created_at', $dateRange)
+                ->where('status', 'delayed');
+                
+            // Apply service type filters if specified
+            if (isset($filters['service_types']) && !empty($filters['service_types'])) {
+                $totalQuery->whereHas('manifest', function($query) use ($filters) {
+                    $query->whereIn('type', $filters['service_types']);
+                });
+                $deliveredQuery->whereHas('manifest', function($query) use ($filters) {
+                    $query->whereIn('type', $filters['service_types']);
+                });
+                $delayedQuery->whereHas('manifest', function($query) use ($filters) {
+                    $query->whereIn('type', $filters['service_types']);
+                });
+            }
+            
+            $totalPackages = $totalQuery->count();
+            $deliveredPackages = $deliveredQuery->count();
+            $delayedPackages = $delayedQuery->count();
             
             $onTimeDeliveryRate = $totalPackages > 0 
                 ? round((($deliveredPackages - $delayedPackages) / $totalPackages) * 100, 1)
@@ -422,12 +560,68 @@ class DashboardAnalyticsService
     }
 
     /**
-     * Generate cache key for dashboard data
+     * Generate cache key for dashboard data with normalized filters
      */
     public function cacheKey(string $type, array $filters): string
     {
-        $filterHash = md5(serialize($filters));
-        return "dashboard.{$type}.{$filterHash}";
+        // Normalize filters to ensure consistent cache keys
+        $normalizedFilters = $this->normalizeFilters($filters);
+        $filterHash = md5(serialize($normalizedFilters));
+        $cacheKey = "dashboard.{$type}.{$filterHash}";
+        
+        \Log::info('Cache key generated', [
+            'type' => $type,
+            'original_filters' => $filters,
+            'normalized_filters' => $normalizedFilters,
+            'serialized' => serialize($normalizedFilters),
+            'hash' => $filterHash,
+            'cache_key' => $cacheKey
+        ]);
+        
+        return $cacheKey;
+    }
+
+    /**
+     * Normalize filters to ensure consistent cache key generation
+     */
+    protected function normalizeFilters(array $filters): array
+    {
+        // Start with default values
+        $normalized = [
+            'date_range' => '30',
+            'custom_start' => null,
+            'custom_end' => null,
+            'service_types' => []
+        ];
+
+        // Override with provided values, ensuring consistent types
+        if (isset($filters['date_range'])) {
+            $normalized['date_range'] = (string) $filters['date_range'];
+        }
+
+        if (isset($filters['custom_start']) && !empty($filters['custom_start'])) {
+            $normalized['custom_start'] = (string) $filters['custom_start'];
+        }
+
+        if (isset($filters['custom_end']) && !empty($filters['custom_end'])) {
+            $normalized['custom_end'] = (string) $filters['custom_end'];
+        }
+
+        if (isset($filters['service_types'])) {
+            // Ensure service_types is always an array and sort for consistency
+            $serviceTypes = is_array($filters['service_types']) ? $filters['service_types'] : [];
+            // Remove empty values and sort
+            $serviceTypes = array_filter($serviceTypes, function($value) {
+                return !empty($value);
+            });
+            sort($serviceTypes);
+            $normalized['service_types'] = $serviceTypes;
+        }
+
+        // Sort keys for consistent serialization
+        ksort($normalized);
+
+        return $normalized;
     }
 
     /**
@@ -439,13 +633,39 @@ class DashboardAnalyticsService
     }
 
     /**
+     * Clear all dashboard cache
+     */
+    public function clearDashboardCache(): void
+    {
+        // Clear all dashboard-related cache keys
+        $patterns = [
+            'dashboard.customer_metrics.*',
+            'dashboard.shipment_metrics.*',
+            'dashboard.financial_metrics.*',
+            'dashboard.customer_growth.*',
+            'dashboard.revenue_analytics.*',
+            'dashboard.shipment_volume.*',
+            'dashboard.package_status_distribution.*',
+            'dashboard.processing_time_analysis.*',
+            'dashboard.shipping_method_breakdown.*',
+            'dashboard.delivery_performance.*'
+        ];
+
+        foreach ($patterns as $pattern) {
+            $this->invalidateCache($pattern);
+        }
+    }
+
+    /**
      * Get date range from filters
      */
     protected function getDateRange(array $filters): array
     {
         $days = $filters['date_range'] ?? 30;
         
-        if (isset($filters['custom_start']) && isset($filters['custom_end'])) {
+        // Check if custom dates are provided and not empty
+        if (isset($filters['custom_start']) && isset($filters['custom_end']) 
+            && !empty($filters['custom_start']) && !empty($filters['custom_end'])) {
             return [
                 Carbon::parse($filters['custom_start'])->startOfDay(),
                 Carbon::parse($filters['custom_end'])->endOfDay(),
@@ -465,7 +685,9 @@ class DashboardAnalyticsService
     {
         $days = $filters['date_range'] ?? 30;
         
-        if (isset($filters['custom_start']) && isset($filters['custom_end'])) {
+        // Check if custom dates are provided and not empty
+        if (isset($filters['custom_start']) && isset($filters['custom_end']) 
+            && !empty($filters['custom_start']) && !empty($filters['custom_end'])) {
             $start = Carbon::parse($filters['custom_start']);
             $end = Carbon::parse($filters['custom_end']);
             $duration = $start->diffInDays($end);

@@ -42,11 +42,19 @@ class DashboardMetrics extends Component
         'refreshMetrics' => 'loadMetrics'
     ];
 
-    protected DashboardAnalyticsService $analyticsService;
+    protected ?DashboardAnalyticsService $analyticsService = null;
 
     public function boot(DashboardAnalyticsService $analyticsService)
     {
         $this->analyticsService = $analyticsService;
+    }
+
+    protected function getAnalyticsService(): DashboardAnalyticsService
+    {
+        if ($this->analyticsService === null) {
+            $this->analyticsService = app(DashboardAnalyticsService::class);
+        }
+        return $this->analyticsService;
     }
 
     public function mount(array $filters = [])
@@ -57,11 +65,22 @@ class DashboardMetrics extends Component
             'custom_end' => null,
         ], $filters);
         
+        // Log the filters for debugging
+        \Log::info('DashboardMetrics mount filters', [
+            'received_filters' => $filters,
+            'final_filters' => $this->filters
+        ]);
+        
         $this->loadMetrics();
     }
 
     public function updateFilters(array $filters)
     {
+        \Log::info('DashboardMetrics updateFilters', [
+            'old_filters' => $this->filters,
+            'new_filters' => $filters
+        ]);
+        
         $this->filters = $filters;
         $this->loadMetrics();
     }
@@ -72,21 +91,35 @@ class DashboardMetrics extends Component
         $this->error = null;
 
         try {
+            \Log::info('DashboardMetrics loadMetrics start', [
+                'filters' => $this->filters
+            ]);
+            
+            $analyticsService = $this->getAnalyticsService();
+            
             // Load customer metrics
-            $customerMetrics = $this->analyticsService->getCustomerMetrics($this->filters);
+            $customerMetrics = $analyticsService->getCustomerMetrics($this->filters);
+            \Log::info('Customer metrics loaded', $customerMetrics);
             $this->metrics['customers'] = array_merge($this->metrics['customers'], $customerMetrics);
             
             // Load package/shipment metrics
-            $packageMetrics = $this->analyticsService->getShipmentMetrics($this->filters);
+            $packageMetrics = $analyticsService->getShipmentMetrics($this->filters);
+            \Log::info('Package metrics loaded', $packageMetrics);
             $this->metrics['packages'] = array_merge($this->metrics['packages'], $packageMetrics);
             
             // Load financial metrics
-            $revenueMetrics = $this->analyticsService->getFinancialMetrics($this->filters);
+            $revenueMetrics = $analyticsService->getFinancialMetrics($this->filters);
+            \Log::info('Revenue metrics loaded', $revenueMetrics);
             $this->metrics['revenue'] = array_merge($this->metrics['revenue'], $revenueMetrics);
 
+            \Log::info('DashboardMetrics loadMetrics completed', [
+                'final_metrics' => $this->metrics
+            ]);
+
         } catch (\Exception $e) {
-            Log::error('Dashboard metrics loading failed', [
+            \Log::error('Dashboard metrics loading failed', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
                 'filters' => $this->filters
             ]);
             
@@ -183,7 +216,7 @@ class DashboardMetrics extends Component
      */
     public function getPeriodLabel(): string
     {
-        if (isset($this->filters['custom_start']) && isset($this->filters['custom_end'])) {
+        if (!empty($this->filters['custom_start']) && !empty($this->filters['custom_end'])) {
             return 'Custom Period';
         }
         
