@@ -91,13 +91,19 @@ class PackageDistribution extends Component
         $creditApplied = 0;
         $accountApplied = 0;
         if ($this->selectedCustomer) {
+            $remainingAmount = $netTotal;
+            
             if ($this->applyCreditBalance && $this->selectedCustomer->credit_balance > 0) {
-                $creditApplied = min($this->selectedCustomer->credit_balance, $netTotal);
+                $creditApplied = min($this->selectedCustomer->credit_balance, $remainingAmount);
+                $remainingAmount -= $creditApplied;
             }
             
-            $remainingAfterCash = max(0, $netTotal - $this->amountCollected - $creditApplied);
-            if ($this->applyAccountBalance && $this->selectedCustomer->account_balance > 0 && $remainingAfterCash > 0) {
-                $accountApplied = min($this->selectedCustomer->account_balance, $remainingAfterCash);
+            // Apply cash payment
+            $remainingAmount -= $this->amountCollected;
+            
+            if ($this->applyAccountBalance && $this->selectedCustomer->account_balance > 0 && $remainingAmount > 0) {
+                $accountApplied = min($this->selectedCustomer->account_balance, $remainingAmount);
+                $remainingAmount -= $accountApplied;
             }
         }
         
@@ -494,19 +500,23 @@ class PackageDistribution extends Component
         $netTotal = $totalCost - $writeOffAmount;
         
         // Calculate total received (cash + balances applied)
-        $remainingAfterCash = max(0, $netTotal - $amountCollected);
+        $remainingAmount = $netTotal;
         $creditApplied = 0;
         $accountApplied = 0;
         
         // Apply credit balance first if selected
         if ($this->applyCreditBalance && $this->getCustomerCreditBalanceProperty() > 0) {
-            $creditApplied = min($this->getCustomerCreditBalanceProperty(), $remainingAfterCash);
-            $remainingAfterCash -= $creditApplied;
+            $creditApplied = min($this->getCustomerCreditBalanceProperty(), $remainingAmount);
+            $remainingAmount -= $creditApplied;
         }
         
+        // Apply cash payment
+        $remainingAmount -= $amountCollected;
+        
         // Apply account balance if selected and there's still remaining amount
-        if ($this->applyAccountBalance && $this->getCustomerAccountBalanceProperty() > 0 && $remainingAfterCash > 0) {
-            $accountApplied = min($this->getCustomerAccountBalanceProperty(), $remainingAfterCash);
+        if ($this->applyAccountBalance && $this->getCustomerAccountBalanceProperty() > 0 && $remainingAmount > 0) {
+            $accountApplied = min($this->getCustomerAccountBalanceProperty(), $remainingAmount);
+            $remainingAmount -= $accountApplied;
         }
         
         $totalReceived = $amountCollected + $creditApplied + $accountApplied;
@@ -551,19 +561,23 @@ class PackageDistribution extends Component
         $netTotal = $totalCost - $writeOffAmount;
         
         // Calculate balance applications separately
-        $remainingAfterCash = max(0, $netTotal - $amountCollected);
+        $remainingAmount = $netTotal;
         $creditApplied = 0;
         $accountApplied = 0;
         
         // Apply credit balance first if selected
         if ($this->applyCreditBalance && $this->getCustomerCreditBalanceProperty() > 0) {
-            $creditApplied = min($this->getCustomerCreditBalanceProperty(), $remainingAfterCash);
-            $remainingAfterCash -= $creditApplied;
+            $creditApplied = min($this->getCustomerCreditBalanceProperty(), $remainingAmount);
+            $remainingAmount -= $creditApplied;
         }
         
+        // Apply cash payment
+        $remainingAmount -= $amountCollected;
+        
         // Apply account balance if selected and there's still remaining amount
-        if ($this->applyAccountBalance && $this->getCustomerAccountBalanceProperty() > 0 && $remainingAfterCash > 0) {
-            $accountApplied = min($this->getCustomerAccountBalanceProperty(), $remainingAfterCash);
+        if ($this->applyAccountBalance && $this->getCustomerAccountBalanceProperty() > 0 && $remainingAmount > 0) {
+            $accountApplied = min($this->getCustomerAccountBalanceProperty(), $remainingAmount);
+            $remainingAmount -= $accountApplied;
         }
         
         $balanceApplied = $creditApplied + $accountApplied;
@@ -826,13 +840,19 @@ class PackageDistribution extends Component
         $creditApplied = 0;
         $accountApplied = 0;
         if ($this->selectedCustomer) {
+            $remainingAmount = $netTotal;
+            
             if ($this->applyCreditBalance && $this->selectedCustomer->credit_balance > 0) {
-                $creditApplied = min($this->selectedCustomer->credit_balance, $netTotal);
+                $creditApplied = min($this->selectedCustomer->credit_balance, $remainingAmount);
+                $remainingAmount -= $creditApplied;
             }
             
-            $remainingAfterCash = max(0, $netTotal - $this->amountCollected - $creditApplied);
-            if ($this->applyAccountBalance && $this->selectedCustomer->account_balance > 0 && $remainingAfterCash > 0) {
-                $accountApplied = min($this->selectedCustomer->account_balance, $remainingAfterCash);
+            // Apply cash payment
+            $remainingAmount -= $this->amountCollected;
+            
+            if ($this->applyAccountBalance && $this->selectedCustomer->account_balance > 0 && $remainingAmount > 0) {
+                $accountApplied = min($this->selectedCustomer->account_balance, $remainingAmount);
+                $remainingAmount -= $accountApplied;
             }
         }
         
