@@ -56,3 +56,79 @@ With the fix, the same scenario from the screenshot should now show:
 
 ## Impact
 This fix ensures accurate financial calculations in the package distribution system, preventing discrepancies in customer account balances and outstanding amounts.
+---
+
+
+# Additional Calculation Precision Fixes ✅
+
+## Issue Identified
+Floating point precision errors in monetary calculations were causing inconsistent payment status calculations and distribution processing issues.
+
+## Root Cause
+JavaScript and PHP floating point arithmetic can introduce precision errors when dealing with decimal numbers, leading to:
+- Incorrect payment status determinations
+- Failed overpayment detection
+- Inconsistent monetary calculations
+
+## Files Fixed
+- `app/Services/PackageDistributionService.php`
+- `app/Http/Livewire/PackageDistribution.php`
+
+## 1. PackageDistributionService.php Fixes
+
+### calculatePackageTotals method:
+- ✅ Added proper rounding to 2 decimal places for all individual fee calculations
+- ✅ Added rounding for consolidated package totals
+- ✅ Added rounding for the final total to prevent floating point precision issues
+
+### Payment transaction handling (both individual and consolidated):
+- ✅ Added proper rounding for all monetary values at the start of transaction processing
+- ✅ Fixed $totalPaid and $netChargeAmount calculations with proper rounding
+- ✅ Fixed $servicePaymentAmount calculation with proper rounding
+- ✅ Fixed overpayment calculations with proper rounding and tolerance-based comparison (> 0.01)
+
+### validatePaymentAmount method:
+- ✅ Already had proper rounding and tolerance-based comparison (1 cent tolerance)
+
+## 2. PackageDistribution.php (Livewire Component) Fixes
+
+### calculateTotals method:
+- ✅ Added proper rounding to 2 decimal places for both individual and consolidated package totals
+
+### updatePaymentStatus method:
+- ✅ Already had proper rounding and tolerance-based comparison
+
+### getCalculatedWriteOffAmount method:
+- ✅ Already had proper rounding
+
+## Key Improvements Implemented
+
+1. **Consistent Rounding**: All monetary calculations now use `round($value, 2)` to ensure 2 decimal place precision
+2. **Tolerance-Based Comparisons**: Overpayment detection now uses `> 0.01` instead of `> 0` to account for floating point precision
+3. **Early Rounding**: Values are rounded at the beginning of calculation methods to prevent accumulation of precision errors
+4. **Comprehensive Coverage**: Fixed both individual package and consolidated package distribution calculations
+
+## Code Examples
+
+### Before (Precision Issues):
+```php
+$totalPaid = $amountCollected + $totalBalanceApplied;
+$actualOverpayment = $totalCovered - $totalAmount;
+if ($actualOverpayment > 0) { // Could fail due to precision
+```
+
+### After (Precision Fixed):
+```php
+$totalPaid = round($amountCollected + $totalBalanceApplied, 2);
+$actualOverpayment = round($totalCovered - $totalAmount, 2);
+if ($actualOverpayment > 0.01) { // Tolerance-based comparison
+```
+
+## Result
+
+These fixes resolve the calculation precision issues with individual package distributions, ensuring that:
+- Payment statuses are calculated correctly
+- Monetary values are handled with proper precision throughout the distribution process
+- Floating point precision errors are eliminated
+- Overpayment detection works reliably with proper tolerance
+- All financial calculations maintain 2-decimal precision consistently

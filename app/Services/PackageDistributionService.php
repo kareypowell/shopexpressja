@@ -445,11 +445,13 @@ class PackageDistributionService
             }
 
             // Handle cash payments and account charges differently
-            $totalPaid = $amountCollected + $totalBalanceApplied;
+            // Apply proper rounding at the start of transaction processing
+            $totalAmount = round($totalAmount, 2);
+            $amountCollected = round($amountCollected, 2);
+            $totalBalanceApplied = round($totalBalanceApplied, 2);
             
-            // Calculate what needs to be charged vs paid
-            $totalPaid = $amountCollected + $totalBalanceApplied;
-            $netChargeAmount = $totalAmount - $totalBalanceApplied;
+            $totalPaid = round($amountCollected + $totalBalanceApplied, 2);
+            $netChargeAmount = round($totalAmount - $totalBalanceApplied, 2);
             
             if ($totalPaid >= $totalAmount) {
                 // Customer paid enough - record charge and payment for audit trail
@@ -478,7 +480,7 @@ class PackageDistributionService
                 // Record cash payment if provided
                 if ($amountCollected > 0) {
                     // Calculate how much of the cash payment covers the service vs overpayment
-                    $servicePaymentAmount = min($amountCollected, $netChargeAmount);
+                    $servicePaymentAmount = round(min($amountCollected, $netChargeAmount), 2);
                     
                     if ($servicePaymentAmount > 0) {
                         $customer->recordPayment(
@@ -559,10 +561,10 @@ class PackageDistributionService
 
             // Handle true overpayment - only when customer paid more cash than needed
             // Calculate if there's actual overpayment from cash payment
-            $totalCovered = $totalBalanceApplied + $amountCollected;
-            $actualOverpayment = $totalCovered - $totalAmount;
+            $totalCovered = round($totalBalanceApplied + $amountCollected, 2);
+            $actualOverpayment = round($totalCovered - $totalAmount, 2);
             
-            if ($actualOverpayment > 0) {
+            if ($actualOverpayment > 0.01) {
                 // Customer paid more cash than needed - convert overpayment to credit
                 $customer->addOverpaymentCredit(
                     $actualOverpayment,
@@ -679,7 +681,7 @@ class PackageDistributionService
     {
         // If consolidated package is provided, use its totals
         if ($consolidatedPackage) {
-            return $consolidatedPackage->total_cost;
+            return round($consolidatedPackage->total_cost, 2);
         }
 
         $total = 0;
@@ -688,21 +690,21 @@ class PackageDistributionService
             $packageTotal = 0;
             
             if (is_array($package)) {
-                $packageTotal += isset($package['freight_price']) ? $package['freight_price'] : 0;
-                $packageTotal += isset($package['clearance_fee']) ? $package['clearance_fee'] : 0;
-                $packageTotal += isset($package['storage_fee']) ? $package['storage_fee'] : 0;
-                $packageTotal += isset($package['delivery_fee']) ? $package['delivery_fee'] : 0;
+                $packageTotal += round(isset($package['freight_price']) ? $package['freight_price'] : 0, 2);
+                $packageTotal += round(isset($package['clearance_fee']) ? $package['clearance_fee'] : 0, 2);
+                $packageTotal += round(isset($package['storage_fee']) ? $package['storage_fee'] : 0, 2);
+                $packageTotal += round(isset($package['delivery_fee']) ? $package['delivery_fee'] : 0, 2);
             } else {
-                $packageTotal += $package->freight_price ? $package->freight_price : 0;
-                $packageTotal += $package->clearance_fee ? $package->clearance_fee : 0;
-                $packageTotal += $package->storage_fee ? $package->storage_fee : 0;
-                $packageTotal += $package->delivery_fee ? $package->delivery_fee : 0;
+                $packageTotal += round($package->freight_price ? $package->freight_price : 0, 2);
+                $packageTotal += round($package->clearance_fee ? $package->clearance_fee : 0, 2);
+                $packageTotal += round($package->storage_fee ? $package->storage_fee : 0, 2);
+                $packageTotal += round($package->delivery_fee ? $package->delivery_fee : 0, 2);
             }
 
-            $total += $packageTotal;
+            $total += round($packageTotal, 2);
         }
 
-        return $total;
+        return round($total, 2);
     }
 
     /**
@@ -927,8 +929,14 @@ class PackageDistributionService
      */
     protected function handleConsolidatedPaymentTransactions(User $customer, PackageDistribution $distribution, ConsolidatedPackage $consolidatedPackage, $packages, User $user, float $totalAmount, float $amountCollected, float $totalBalanceApplied, float $writeOffAmount): void
     {
-        $totalPaid = $amountCollected + $totalBalanceApplied;
-        $netChargeAmount = $totalAmount - $totalBalanceApplied;
+        // Apply proper rounding at the start of transaction processing
+        $totalAmount = round($totalAmount, 2);
+        $amountCollected = round($amountCollected, 2);
+        $totalBalanceApplied = round($totalBalanceApplied, 2);
+        $writeOffAmount = round($writeOffAmount, 2);
+        
+        $totalPaid = round($amountCollected + $totalBalanceApplied, 2);
+        $netChargeAmount = round($totalAmount - $totalBalanceApplied, 2);
         
         if ($totalPaid >= $totalAmount) {
             // Customer paid enough
@@ -950,7 +958,7 @@ class PackageDistributionService
             }
             
             if ($amountCollected > 0) {
-                $servicePaymentAmount = min($amountCollected, $netChargeAmount);
+                $servicePaymentAmount = round(min($amountCollected, $netChargeAmount), 2);
                 
                 if ($servicePaymentAmount > 0) {
                     $customer->recordPayment(
@@ -1027,10 +1035,10 @@ class PackageDistributionService
         }
 
         // Handle overpayment
-        $totalCovered = $totalBalanceApplied + $amountCollected;
-        $actualOverpayment = $totalCovered - $totalAmount;
+        $totalCovered = round($totalBalanceApplied + $amountCollected, 2);
+        $actualOverpayment = round($totalCovered - $totalAmount, 2);
         
-        if ($actualOverpayment > 0) {
+        if ($actualOverpayment > 0.01) {
             $customer->addOverpaymentCredit(
                 $actualOverpayment,
                 "Overpayment credit from consolidated package distribution - Receipt #{$distribution->receipt_number}",

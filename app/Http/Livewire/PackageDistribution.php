@@ -470,7 +470,7 @@ class PackageDistribution extends Component
                     ->where('customer_id', $this->selectedCustomerId)
                     ->get();
 
-                $this->totalCost = $consolidatedPackages->sum('total_cost');
+                $this->totalCost = round($consolidatedPackages->sum('total_cost'), 2);
             }
         } else {
             // Calculate totals for individual packages
@@ -479,7 +479,7 @@ class PackageDistribution extends Component
                     ->where('user_id', $this->selectedCustomerId)
                     ->get();
 
-                $this->totalCost = $packages->sum('total_cost');
+                $this->totalCost = round($packages->sum('total_cost'), 2);
             }
         }
     }
