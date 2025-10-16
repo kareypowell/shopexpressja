@@ -16,7 +16,7 @@
     <!-- Filters -->
     <div class="bg-white rounded-lg shadow p-4">
         <!-- First Row - Main Filters -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
             <!-- Search -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
@@ -61,20 +61,6 @@
                 </select>
             </div>
 
-            <!-- Review Status -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Review Status</label>
-                <select 
-                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled
-                >
-                    <option value="">All Statuses</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Second Row - Additional Filters -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <!-- Manifest Filter -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Manifest</label>
@@ -94,14 +80,20 @@
                 </select>
             </div>
 
-            <!-- Empty spaces for alignment -->
-            <div></div>
-            <div></div>
-            <div></div>
+            <!-- Review Status -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Review Status</label>
+                <select 
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled
+                >
+                    <option value="">All Statuses</option>
+                </select>
+            </div>
         </div>
 
-        <!-- Third Row - Date Filters -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Second Row - Date Filters -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <!-- Date From -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
@@ -132,7 +124,8 @@
                 </button>
             </div>
 
-            <!-- Empty space for alignment -->
+            <!-- Empty spaces for alignment -->
+            <div></div>
             <div></div>
         </div>
 
