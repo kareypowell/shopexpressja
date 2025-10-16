@@ -938,14 +938,22 @@ class PackageDistributionService
         $totalPaid = round($amountCollected + $totalBalanceApplied, 2);
         $netChargeAmount = round($totalAmount - $totalBalanceApplied, 2);
         
+        // Get manifest information from packages for linking
+        $manifestIds = $packages->pluck('manifest_id')->filter()->unique();
+        $primaryManifest = null;
+        if ($manifestIds->count() === 1) {
+            // All packages from same manifest - link transactions to it
+            $primaryManifest = \App\Models\Manifest::find($manifestIds->first());
+        }
+        
         if ($totalPaid >= $totalAmount) {
             // Customer paid enough
             if ($netChargeAmount > 0) {
-                $customer->recordCharge(
+                $transaction = $customer->recordCharge(
                     $netChargeAmount,
                     "Consolidated package distribution charge - Receipt #{$distribution->receipt_number}",
                     $user->id,
-                    'consolidated_package_distribution',
+                    'App\\Models\\PackageDistribution',
                     $distribution->id,
                     [
                         'distribution_id' => $distribution->id,
@@ -953,19 +961,25 @@ class PackageDistributionService
                         'consolidated_tracking_number' => $consolidatedPackage->consolidated_tracking_number,
                         'total_amount' => $totalAmount,
                         'package_ids' => $packages->pluck('id')->toArray(),
+                        'manifest_ids' => $manifestIds->toArray(),
                     ]
                 );
+                
+                // Link to primary manifest if available
+                if ($primaryManifest) {
+                    $transaction->linkToManifest($primaryManifest);
+                }
             }
             
             if ($amountCollected > 0) {
                 $servicePaymentAmount = round(min($amountCollected, $netChargeAmount), 2);
                 
                 if ($servicePaymentAmount > 0) {
-                    $customer->recordPayment(
+                    $transaction = $customer->recordPayment(
                         $servicePaymentAmount,
                         "Payment received for consolidated package distribution - Receipt #{$distribution->receipt_number}",
                         $user->id,
-                        'consolidated_package_distribution',
+                        'App\\Models\\PackageDistribution',
                         $distribution->id,
                         [
                             'distribution_id' => $distribution->id,
@@ -974,18 +988,24 @@ class PackageDistributionService
                             'amount_collected' => $amountCollected,
                             'service_payment_portion' => $servicePaymentAmount,
                             'package_ids' => $packages->pluck('id')->toArray(),
+                            'manifest_ids' => $manifestIds->toArray(),
                         ]
                     );
+                    
+                    // Link to primary manifest if available
+                    if ($primaryManifest) {
+                        $transaction->linkToManifest($primaryManifest);
+                    }
                 }
             }
         } else {
             // Customer didn't pay enough
             if ($netChargeAmount > 0) {
-                $customer->recordCharge(
+                $transaction = $customer->recordCharge(
                     $netChargeAmount,
                     "Consolidated package distribution charge - Receipt #{$distribution->receipt_number}",
                     $user->id,
-                    'consolidated_package_distribution',
+                    'App\\Models\\PackageDistribution',
                     $distribution->id,
                     [
                         'distribution_id' => $distribution->id,
@@ -993,8 +1013,14 @@ class PackageDistributionService
                         'consolidated_tracking_number' => $consolidatedPackage->consolidated_tracking_number,
                         'total_amount' => $totalAmount,
                         'package_ids' => $packages->pluck('id')->toArray(),
+                        'manifest_ids' => $manifestIds->toArray(),
                     ]
                 );
+                
+                // Link to primary manifest if available
+                if ($primaryManifest) {
+                    $transaction->linkToManifest($primaryManifest);
+                }
             }
             
             if ($amountCollected > 0) {

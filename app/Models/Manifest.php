@@ -200,4 +200,69 @@ class Manifest extends Model
         return $this->packages()->where('status', '!=', 'delivered')->count() === 0 
                && $this->packages()->count() > 0;
     }
+
+    /**
+     * Get all transactions linked to this manifest
+     */
+    public function transactions()
+    {
+        // Use direct manifest_id column if available for better performance
+        if (\Schema::hasColumn('customer_transactions', 'manifest_id')) {
+            return $this->hasMany(CustomerTransaction::class, 'manifest_id');
+        }
+        
+        return $this->hasMany(CustomerTransaction::class, 'reference_id')
+            ->where('reference_type', 'App\\Models\\Manifest');
+    }
+
+    /**
+     * Get total amount collected for this manifest
+     */
+    public function getTotalCollectedAmount(): float
+    {
+        return $this->transactions()
+            ->whereIn('type', [CustomerTransaction::TYPE_PAYMENT, CustomerTransaction::TYPE_CREDIT])
+            ->sum('amount') ?? 0.0;
+    }
+
+    /**
+     * Get total amount charged for this manifest
+     */
+    public function getTotalChargedAmount(): float
+    {
+        return $this->transactions()
+            ->whereIn('type', [CustomerTransaction::TYPE_CHARGE, CustomerTransaction::TYPE_DEBIT])
+            ->sum('amount') ?? 0.0;
+    }
+
+    /**
+     * Get total write-off amount for this manifest
+     */
+    public function getTotalWriteOffAmount(): float
+    {
+        return $this->transactions()
+            ->where('type', CustomerTransaction::TYPE_WRITE_OFF)
+            ->sum('amount') ?? 0.0;
+    }
+
+    /**
+     * Get financial summary for this manifest
+     */
+    public function getFinancialSummary(): array
+    {
+        $totalOwed = $this->packages()
+            ->sum(\DB::raw('COALESCE(freight_price, 0) + COALESCE(clearance_fee, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)'));
+
+        $totalCollected = $this->getTotalCollectedAmount();
+        $totalWriteOff = $this->getTotalWriteOffAmount();
+        $outstandingBalance = max(0, $totalOwed - $totalCollected - $totalWriteOff);
+
+        return [
+            'total_owed' => $totalOwed,
+            'total_collected' => $totalCollected,
+            'total_write_off' => $totalWriteOff,
+            'outstanding_balance' => $outstandingBalance,
+            'collection_rate' => $totalOwed > 0 ? ($totalCollected / $totalOwed) * 100 : 0,
+        ];
+    }
 }

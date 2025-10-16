@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class CustomerTransaction extends Model
 {
@@ -18,6 +19,7 @@ class CustomerTransaction extends Model
         'description',
         'reference_type',
         'reference_id',
+        'manifest_id',
         'created_by',
         'metadata',
         'flagged_for_review',
@@ -141,6 +143,102 @@ class CustomerTransaction extends Model
         return $this->belongsTo(User::class, 'resolved_by');
     }
 
+    /**
+     * Get the manifest if this transaction is linked to one
+     */
+    public function manifest()
+    {
+        // Use direct manifest_id column if available, otherwise fall back to reference fields
+        if (Schema::hasColumn('customer_transactions', 'manifest_id')) {
+            return $this->belongsTo(Manifest::class, 'manifest_id');
+        }
+        
+        return $this->belongsTo(Manifest::class, 'reference_id')
+            ->where('reference_type', 'App\\Models\\Manifest');
+    }
+
+    /**
+     * Get the package if this transaction is linked to one
+     */
+    public function package()
+    {
+        return $this->belongsTo(Package::class, 'reference_id')
+            ->where('reference_type', 'App\\Models\\Package');
+    }
+
+    /**
+     * Get the package distribution if this transaction is linked to one
+     */
+    public function packageDistribution()
+    {
+        return $this->belongsTo(PackageDistribution::class, 'reference_id')
+            ->where('reference_type', 'App\\Models\\PackageDistribution');
+    }
+
+    /**
+     * Link this transaction to a manifest
+     */
+    public function linkToManifest(Manifest $manifest): bool
+    {
+        $updateData = [
+            'reference_type' => 'App\\Models\\Manifest',
+            'reference_id' => $manifest->id,
+        ];
+        
+        // Also update direct manifest_id column if it exists
+        if (Schema::hasColumn('customer_transactions', 'manifest_id')) {
+            $updateData['manifest_id'] = $manifest->id;
+        }
+        
+        return $this->update($updateData);
+    }
+
+    /**
+     * Link this transaction to a package
+     */
+    public function linkToPackage(Package $package): bool
+    {
+        return $this->update([
+            'reference_type' => 'App\\Models\\Package',
+            'reference_id' => $package->id,
+        ]);
+    }
+
+    /**
+     * Link this transaction to a package distribution
+     */
+    public function linkToPackageDistribution(PackageDistribution $distribution): bool
+    {
+        return $this->update([
+            'reference_type' => 'App\\Models\\PackageDistribution',
+            'reference_id' => $distribution->id,
+        ]);
+    }
+
+    /**
+     * Check if transaction is linked to a manifest
+     */
+    public function isLinkedToManifest(): bool
+    {
+        return $this->reference_type === 'App\\Models\\Manifest' && $this->reference_id;
+    }
+
+    /**
+     * Check if transaction is linked to a package
+     */
+    public function isLinkedToPackage(): bool
+    {
+        return $this->reference_type === 'App\\Models\\Package' && $this->reference_id;
+    }
+
+    /**
+     * Check if transaction is linked to a package distribution
+     */
+    public function isLinkedToPackageDistribution(): bool
+    {
+        return $this->reference_type === 'App\\Models\\PackageDistribution' && $this->reference_id;
+    }
+
     public function scopeForUser($query, $userId)
     {
         return $query->where('user_id', $userId);
@@ -154,5 +252,69 @@ class CustomerTransaction extends Model
     public function scopeRecent($query, $days = 30)
     {
         return $query->where('created_at', '>=', now()->subDays($days));
+    }
+
+    /**
+     * Scope to filter transactions by manifest
+     */
+    public function scopeForManifest($query, $manifestId)
+    {
+        // Use direct manifest_id column if available for better performance
+        if (Schema::hasColumn('customer_transactions', 'manifest_id')) {
+            return $query->where('manifest_id', $manifestId);
+        }
+        
+        return $query->where('reference_type', 'App\\Models\\Manifest')
+                    ->where('reference_id', $manifestId);
+    }
+
+    /**
+     * Scope to filter transactions by package
+     */
+    public function scopeForPackage($query, $packageId)
+    {
+        return $query->where('reference_type', 'App\\Models\\Package')
+                    ->where('reference_id', $packageId);
+    }
+
+    /**
+     * Scope to filter transactions by package distribution
+     */
+    public function scopeForPackageDistribution($query, $distributionId)
+    {
+        return $query->where('reference_type', 'App\\Models\\PackageDistribution')
+                    ->where('reference_id', $distributionId);
+    }
+
+    /**
+     * Scope to get transactions linked to manifests
+     */
+    public function scopeLinkedToManifests($query)
+    {
+        // Use direct manifest_id column if available for better performance
+        if (Schema::hasColumn('customer_transactions', 'manifest_id')) {
+            return $query->whereNotNull('manifest_id');
+        }
+        
+        return $query->where('reference_type', 'App\\Models\\Manifest')
+                    ->whereNotNull('reference_id');
+    }
+
+    /**
+     * Scope to get transactions linked to packages
+     */
+    public function scopeLinkedToPackages($query)
+    {
+        return $query->where('reference_type', 'App\\Models\\Package')
+                    ->whereNotNull('reference_id');
+    }
+
+    /**
+     * Scope to get transactions linked to package distributions
+     */
+    public function scopeLinkedToPackageDistributions($query)
+    {
+        return $query->where('reference_type', 'App\\Models\\PackageDistribution')
+                    ->whereNotNull('reference_id');
     }
 }

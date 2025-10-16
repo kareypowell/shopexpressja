@@ -1247,6 +1247,105 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get actual outstanding amount based on non-delivered package statuses
+     * This is the correct way to calculate outstanding amounts - only count packages
+     * that are actually still outstanding based on their status
+     * 
+     * Outstanding = Sum of packages with non-delivered status (ready, customs, pending, processing, shipped, delayed)
+     */
+    public function getActualOutstandingAmount()
+    {
+        return $this->packages()
+            ->whereIn('status', ['ready', 'customs', 'pending', 'processing', 'shipped', 'delayed'])
+            ->sum(\DB::raw('COALESCE(freight_price, 0) + COALESCE(clearance_fee, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)'));
+    }
+
+    /**
+     * Get collection metrics (DEPRECATED - INCORRECT CALCULATION)
+     * 
+     * @deprecated This method uses incorrect calculation logic. Use getActualOutstandingAmount() instead.
+     * 
+     * The problem with this method:
+     * Outstanding = Total Owed - All Collections - All Write-offs
+     * 
+     * This is incorrect because it subtracts collections and write-offs for delivered packages
+     * from the total, even though those packages shouldn't be considered "outstanding" anymore.
+     */
+    public function getCollectionMetrics()
+    {
+        // Get total amount owed across all packages
+        $totalOwed = $this->packages()
+            ->sum(\DB::raw('COALESCE(freight_price, 0) + COALESCE(clearance_fee, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)'));
+
+        // Get total collections (payments received)
+        $totalCollections = $this->transactions()
+            ->whereIn('type', ['payment', 'credit'])
+            ->sum('amount');
+
+        // Get total write-offs
+        $totalWriteOffs = $this->transactions()
+            ->where('type', 'write_off')
+            ->sum('amount');
+
+        // INCORRECT CALCULATION - includes delivered packages
+        $incorrectOutstanding = $totalOwed - $totalCollections - $totalWriteOffs;
+
+        return [
+            'total_owed' => $totalOwed,
+            'total_collections' => $totalCollections,
+            'total_write_offs' => $totalWriteOffs,
+            'outstanding_balance' => max(0, $incorrectOutstanding), // This is wrong!
+        ];
+    }
+
+    /**
+     * Compare old vs new outstanding calculation methods
+     * This method demonstrates the difference between the incorrect and correct calculations
+     */
+    public function compareOutstandingCalculations()
+    {
+        // Old incorrect method
+        $oldMetrics = $this->getCollectionMetrics();
+        
+        // New correct method
+        $correctOutstanding = $this->getActualOutstandingAmount();
+        
+        // Additional breakdown for clarity
+        $deliveredPackagesTotal = $this->packages()
+            ->where('status', 'delivered')
+            ->sum(\DB::raw('COALESCE(freight_price, 0) + COALESCE(clearance_fee, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)'));
+            
+        $nonDeliveredPackagesTotal = $this->packages()
+            ->whereIn('status', ['ready', 'customs', 'pending', 'processing', 'shipped', 'delayed'])
+            ->sum(\DB::raw('COALESCE(freight_price, 0) + COALESCE(clearance_fee, 0) + COALESCE(storage_fee, 0) + COALESCE(delivery_fee, 0)'));
+
+        return [
+            'old_calculation' => [
+                'method' => 'Total Owed - All Collections - All Write-offs',
+                'total_owed' => $oldMetrics['total_owed'],
+                'total_collections' => $oldMetrics['total_collections'],
+                'total_write_offs' => $oldMetrics['total_write_offs'],
+                'outstanding_balance' => $oldMetrics['outstanding_balance'],
+                'problem' => 'Includes collections/write-offs for delivered packages'
+            ],
+            'new_calculation' => [
+                'method' => 'Sum of packages with non-delivered status',
+                'outstanding_balance' => $correctOutstanding,
+                'explanation' => 'Only counts packages that are actually still outstanding'
+            ],
+            'breakdown' => [
+                'delivered_packages_total' => $deliveredPackagesTotal,
+                'non_delivered_packages_total' => $nonDeliveredPackagesTotal,
+                'total_all_packages' => $deliveredPackagesTotal + $nonDeliveredPackagesTotal
+            ],
+            'difference' => [
+                'amount' => $oldMetrics['outstanding_balance'] - $correctOutstanding,
+                'explanation' => 'The difference represents the incorrect inclusion of delivered package amounts in the old calculation'
+            ]
+        ];
+    }
+
+    /**
      * Get formatted pending package charges
      */
     public function getFormattedPendingPackageChargesAttribute()
@@ -1423,6 +1522,21 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Record a payment transaction linked to a manifest
+     */
+    public function recordPaymentForManifest($amount, $description, Manifest $manifest, $createdBy = null, $metadata = null)
+    {
+        return $this->recordPayment(
+            $amount,
+            $description,
+            $createdBy,
+            'App\\Models\\Manifest',
+            $manifest->id,
+            $metadata
+        );
+    }
+
+    /**
      * Record a charge transaction
      */
     public function recordCharge($amount, $description, $createdBy = null, $referenceType = null, $referenceId = null, $metadata = null)
@@ -1442,6 +1556,21 @@ class User extends Authenticatable implements MustVerifyEmail
             'created_by' => $createdBy,
             'metadata' => $metadata,
         ]);
+    }
+
+    /**
+     * Record a charge transaction linked to a manifest
+     */
+    public function recordChargeForManifest($amount, $description, Manifest $manifest, $createdBy = null, $metadata = null)
+    {
+        return $this->recordCharge(
+            $amount,
+            $description,
+            $createdBy,
+            'App\\Models\\Manifest',
+            $manifest->id,
+            $metadata
+        );
     }
 
     /**
