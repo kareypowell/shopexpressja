@@ -101,8 +101,22 @@ class ReportDashboard extends Component
             }
 
         } catch (\Exception $e) {
-            Log::error('Report Dashboard Error: ' . $e->getMessage());
-            $this->error = 'Unable to load reports. Please try again.';
+            Log::error('Report Dashboard Error: ' . $e->getMessage(), [
+                'report_type' => $this->reportType,
+                'date_range' => $this->dateRange,
+                'user_id' => Auth::id(),
+                'exception' => $e->getTraceAsString()
+            ]);
+            
+            // Check if it's a cache-related error
+            if (str_contains($e->getMessage(), 'file_put_contents') || 
+                str_contains($e->getMessage(), 'No such file or directory') ||
+                str_contains($e->getMessage(), 'cache')) {
+                $this->error = 'Cache system issue detected. Please contact your system administrator to fix cache directories.';
+            } else {
+                $this->error = 'Unable to load reports. Please try again.';
+            }
+            
             $this->reportData = $this->getEmptyData();
         } finally {
             $this->isLoading = false;
@@ -275,11 +289,15 @@ class ReportDashboard extends Component
 
         // If we still don't have data, use fallback
         if (empty($labels)) {
+            // Convert collections to array if it's a Collection, then use array_column
+            $collectionsArray = is_array($collections) ? $collections : collect($collections)->toArray();
+            $totalAmount = array_sum(array_column($collectionsArray, 'total_amount'));
+            
             return [
                 'labels' => ['Today'],
                 'datasets' => [[
                     'label' => 'Daily Collections ($)',
-                    'data' => [array_sum(array_column($collections, 'total_amount'))],
+                    'data' => [$totalAmount],
                     'borderColor' => 'rgb(59, 130, 246)',
                     'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
                     'tension' => 0.1

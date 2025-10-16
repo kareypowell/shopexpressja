@@ -82,18 +82,27 @@ class ReportErrorHandlingService
      */
     protected function trackErrorRate(string $reportType, ?int $userId): void
     {
-        $hourKey = now()->format('Y-m-d-H');
-        
-        // Track global error rate
-        $globalKey = self::ERROR_RATE_LIMIT_PREFIX . "global_{$reportType}_{$hourKey}";
-        Cache::increment($globalKey, 1);
-        Cache::put($globalKey, Cache::get($globalKey, 0), 3600);
-        
-        // Track user-specific error rate if user is provided
-        if ($userId) {
-            $userKey = self::ERROR_RATE_LIMIT_PREFIX . "user_{$userId}_{$reportType}_{$hourKey}";
-            Cache::increment($userKey, 1);
-            Cache::put($userKey, Cache::get($userKey, 0), 3600);
+        try {
+            $hourKey = now()->format('Y-m-d-H');
+            
+            // Track global error rate
+            $globalKey = self::ERROR_RATE_LIMIT_PREFIX . "global_{$reportType}_{$hourKey}";
+            Cache::increment($globalKey, 1);
+            Cache::put($globalKey, Cache::get($globalKey, 0), 3600);
+            
+            // Track user-specific error rate if user is provided
+            if ($userId) {
+                $userKey = self::ERROR_RATE_LIMIT_PREFIX . "user_{$userId}_{$reportType}_{$hourKey}";
+                Cache::increment($userKey, 1);
+                Cache::put($userKey, Cache::get($userKey, 0), 3600);
+            }
+        } catch (\Exception $e) {
+            // If cache fails, log the error tracking failure but don't throw
+            Log::warning("Failed to track error rate for report", [
+                'report_type' => $reportType,
+                'user_id' => $userId,
+                'error' => $e->getMessage()
+            ]);
         }
     }
 
@@ -102,8 +111,17 @@ class ReportErrorHandlingService
      */
     protected function getFallbackData(string $reportType, array $context): ?array
     {
-        $cacheKey = "report_fallback_{$reportType}_" . md5(serialize($context));
-        return Cache::get($cacheKey);
+        try {
+            $cacheKey = "report_fallback_{$reportType}_" . md5(serialize($context));
+            return Cache::get($cacheKey);
+        } catch (\Exception $e) {
+            // If cache fails, return null - no fallback data available
+            Log::warning("Failed to retrieve fallback data for report", [
+                'report_type' => $reportType,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
     }
 
     /**
@@ -111,8 +129,16 @@ class ReportErrorHandlingService
      */
     public function storeFallbackData(string $reportType, array $context, array $data): void
     {
-        $cacheKey = "report_fallback_{$reportType}_" . md5(serialize($context));
-        Cache::put($cacheKey, $data, 3600); // Store for 1 hour
+        try {
+            $cacheKey = "report_fallback_{$reportType}_" . md5(serialize($context));
+            Cache::put($cacheKey, $data, 3600); // Store for 1 hour
+        } catch (\Exception $e) {
+            // If cache fails, log but don't throw - this is not critical
+            Log::warning("Failed to store fallback data for report", [
+                'report_type' => $reportType,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     /**

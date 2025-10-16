@@ -262,19 +262,24 @@ class ReportMonitoringService
             'context' => $context
         ];
         
-        // Get existing metrics
-        $metrics = Cache::get(self::PERFORMANCE_METRICS_KEY, []);
-        
-        // Add new metric
-        $metrics[] = $metric;
-        
-        // Keep only last 100 metrics
-        if (count($metrics) > 100) {
-            $metrics = array_slice($metrics, -100);
+        try {
+            // Get existing metrics
+            $metrics = Cache::get(self::PERFORMANCE_METRICS_KEY, []);
+            
+            // Add new metric
+            $metrics[] = $metric;
+            
+            // Keep only last 100 metrics
+            if (count($metrics) > 100) {
+                $metrics = array_slice($metrics, -100);
+            }
+            
+            // Store back to cache
+            Cache::put(self::PERFORMANCE_METRICS_KEY, $metrics, 3600); // 1 hour
+        } catch (\Exception $e) {
+            // If cache fails, just log the metric directly
+            Log::info("Performance Metric (Cache Failed)", $metric);
         }
-        
-        // Store back to cache
-        Cache::put(self::PERFORMANCE_METRICS_KEY, $metrics, 3600); // 1 hour
         
         // Log slow queries
         if ($responseTime > self::ALERT_THRESHOLD_RESPONSE_TIME) {
