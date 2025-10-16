@@ -14,112 +14,169 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-lg shadow">
-        <div class="p-4 border-b border-gray-200">
-            <div class="flex justify-between items-center">
-                <h3 class="text-lg font-medium text-gray-900">Filters</h3>
-                <button 
-                    wire:click="toggleFilters"
-                    class="text-blue-600 hover:text-blue-800"
+    <div class="bg-white rounded-lg shadow p-4">
+        <!-- First Row - Main Filters -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <!-- Search -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                <input 
+                    type="text" 
+                    wire:model="search"
+                    placeholder="Search by description, customer name, or reference..."
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                    {{ $showFilters ? 'Hide Filters' : 'Show Filters' }}
-                </button>
+            </div>
+
+            <!-- Transaction Type -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <select 
+                    wire:model="transactionType"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    <option value="">All Types</option>
+                    @foreach($transactionTypes as $type => $label)
+                        <option value="{{ $type }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Customer Filter -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+                <select 
+                    wire:model="selectedCustomerId"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    <option value="">Search customers...</option>
+                    @foreach($customers as $customer)
+                        <option value="{{ $customer->id }}">
+                            {{ $customer->full_name }} 
+                            @if($customer->profile && $customer->profile->account_number)
+                                ({{ $customer->profile->account_number }})
+                            @endif
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Review Status -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Review Status</label>
+                <select 
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled
+                >
+                    <option value="">All Statuses</option>
+                </select>
             </div>
         </div>
 
-        @if($showFilters)
-        <div class="p-4 space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Search -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-                    <input 
-                        type="text" 
-                        wire:model="search"
-                        placeholder="Search transactions, customers, manifests..."
-                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                </div>
-
-                <!-- Customer Filter -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Customer</label>
-                    <select 
-                        wire:model="selectedCustomerId"
-                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        <option value="">All Customers</option>
-                        @foreach($customers as $customer)
-                            <option value="{{ $customer->id }}">
-                                {{ $customer->full_name }} 
-                                @if($customer->profile && $customer->profile->account_number)
-                                    ({{ $customer->profile->account_number }})
-                                @endif
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Manifest Filter -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Manifest</label>
-                    <select 
-                        wire:model="selectedManifestId"
-                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        <option value="">All Manifests</option>
-                        @foreach($manifests as $manifest)
-                            <option value="{{ $manifest->id }}">{{ $manifest->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Transaction Type Filter -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Type</label>
-                    <select 
-                        wire:model="transactionType"
-                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        <option value="">All Types</option>
-                        @foreach($transactionTypes as $type => $label)
-                            <option value="{{ $type }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Date From -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
-                    <input 
-                        type="date" 
-                        wire:model="dateFrom"
-                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                </div>
-
-                <!-- Date To -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
-                    <input 
-                        type="date" 
-                        wire:model="dateTo"
-                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                </div>
+        <!-- Second Row - Additional Filters -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <!-- Manifest Filter -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Manifest</label>
+                <select 
+                    wire:model="selectedManifestId"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    <option value="">All Manifests</option>
+                    @foreach($manifests as $manifest)
+                        <option value="{{ $manifest->id }}">
+                            {{ $manifest->name }}
+                            @if($manifest->type)
+                                ({{ ucfirst($manifest->type) }})
+                            @endif
+                        </option>
+                    @endforeach
+                </select>
             </div>
 
-            <div class="flex justify-end">
+            <!-- Empty spaces for alignment -->
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+
+        <!-- Third Row - Date Filters -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Date From -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+                <input 
+                    type="date" 
+                    wire:model="dateFrom"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+            </div>
+
+            <!-- Date To -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+                <input 
+                    type="date" 
+                    wire:model="dateTo"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+            </div>
+
+            <!-- Clear Filters Button -->
+            <div class="flex items-end">
                 <button 
                     wire:click="clearFilters"
-                    class="text-gray-600 hover:text-gray-800 px-4 py-2"
+                    class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-md text-sm font-medium border border-gray-300"
                 >
                     Clear Filters
                 </button>
             </div>
+
+            <!-- Empty space for alignment -->
+            <div></div>
         </div>
+
+        <!-- Active Filters Display -->
+        @if($selectedManifestId || $selectedCustomerId || $transactionType || $dateFrom || $dateTo || $search)
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <div class="flex items-center space-x-2 flex-wrap">
+                    <span class="text-sm text-gray-600">Active filters:</span>
+                    @if($selectedManifestId)
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            Manifest: {{ $manifests->where('id', $selectedManifestId)->first()->name ?? 'Unknown' }}
+                            <button wire:click="$set('selectedManifestId', '')" class="ml-1 text-blue-600 hover:text-blue-800">×</button>
+                        </span>
+                    @endif
+                    @if($selectedCustomerId)
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Customer: {{ $customers->where('id', $selectedCustomerId)->first()->full_name ?? 'Unknown' }}
+                            <button wire:click="$set('selectedCustomerId', '')" class="ml-1 text-green-600 hover:text-green-800">×</button>
+                        </span>
+                    @endif
+                    @if($transactionType)
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            Type: {{ $transactionTypes[$transactionType] ?? $transactionType }}
+                            <button wire:click="$set('transactionType', '')" class="ml-1 text-purple-600 hover:text-purple-800">×</button>
+                        </span>
+                    @endif
+                    @if($search)
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            Search: "{{ $search }}"
+                            <button wire:click="$set('search', '')" class="ml-1 text-gray-600 hover:text-gray-800">×</button>
+                        </span>
+                    @endif
+                    @if($dateFrom || $dateTo)
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Date Range: {{ $dateFrom ?? 'Start' }} - {{ $dateTo ?? 'End' }}
+                            <button wire:click="$set('dateFrom', ''); $set('dateTo', '')" class="ml-1 text-yellow-600 hover:text-yellow-800">×</button>
+                        </span>
+                    @endif
+                </div>
+            </div>
         @endif
     </div>
+
+
 
     <!-- Transactions Table -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
@@ -128,7 +185,7 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Date
+                            Date & Time
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Customer
@@ -137,16 +194,19 @@
                             Type
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Description
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Amount
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Description
+                            Balance After
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Manifest
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Created By
+                            Actions
                         </th>
                     </tr>
                 </thead>
@@ -173,6 +233,9 @@
                                     {{ ucfirst(str_replace('_', ' ', $transaction->type)) }}
                                 </span>
                             </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                {{ $transaction->description }}
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium
                                 @if($transaction->isCredit()) text-green-600
                                 @else text-red-600
@@ -181,25 +244,25 @@
                                 @if($transaction->isCredit()) + @else - @endif
                                 ${{ number_format($transaction->amount, 2) }}
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-900">
-                                {{ $transaction->description }}
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                ${{ number_format($transaction->balance_after, 2) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 @if($transaction->manifest)
-                                    <a href="#" class="text-blue-600 hover:text-blue-800">
+                                    <span class="text-blue-600">
                                         {{ $transaction->manifest->name }}
-                                    </a>
+                                    </span>
                                 @else
                                     <span class="text-gray-400">-</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $transaction->createdBy->full_name ?? 'System' }}
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <button class="text-indigo-600 hover:text-indigo-900">View</button>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                            <td colspan="8" class="px-6 py-12 text-center text-gray-500">
                                 No transactions found matching your criteria.
                             </td>
                         </tr>

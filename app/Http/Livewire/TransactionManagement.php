@@ -252,8 +252,12 @@ class TransactionManagement extends Component
 
     public function getManifestsProperty()
     {
-        return Manifest::orderBy('name')->get();
+        return Manifest::orderBy('name')
+            ->withCount('transactions')
+            ->get();
     }
+
+
 
     public function getTransactionTypesProperty()
     {
