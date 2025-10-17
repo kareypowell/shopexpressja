@@ -85,8 +85,20 @@ class BusinessReportService
                        ($package->delivery_fee ?? 0);
             });
 
-            // Calculate collected amounts based on package distributions
-            $totalCollected = $this->calculateCollectedForManifest($manifest->id);
+            // Calculate actual collections (from distributions)
+            $actualCollected = DB::table('package_distribution_items as pdi')
+                ->join('packages as p', 'pdi.package_id', '=', 'p.id')
+                ->where('p.manifest_id', $manifest->id)
+                ->sum('pdi.total_cost') ?? 0;
+            
+            // Calculate write-offs for this manifest
+            $totalWriteOffs = DB::table('customer_transactions')
+                ->where('type', 'write_off')
+                ->where('manifest_id', $manifest->id)
+                ->sum('amount') ?? 0;
+            
+            // Total collected includes both actual collections and write-offs
+            $totalCollected = $actualCollected + $totalWriteOffs;
             
             $packageCount = $packages->count();
             $deliveredCount = $packages->where('status', 'delivered')->count();
@@ -99,7 +111,8 @@ class BusinessReportService
                 'package_count' => $packageCount,
                 'delivered_count' => $deliveredCount,
                 'total_owed' => $totalOwed,
-                'total_collected' => $totalCollected,
+                'total_collected' => $actualCollected,
+                'total_write_offs' => $totalWriteOffs,
                 'outstanding_balance' => $totalOwed - $totalCollected,
                 'collection_rate' => $totalOwed > 0 ? ($totalCollected / $totalOwed) * 100 : 0,
                 'packages' => $packages->map(function ($package) {

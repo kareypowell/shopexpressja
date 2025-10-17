@@ -183,6 +183,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packages</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Owed</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Collected</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Written Off</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
                                 </tr>
@@ -218,6 +219,9 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">
                                             ${{ number_format($manifest['total_collected'] ?? 0, 2) }}
                                         </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-orange-600">
+                                            ${{ number_format($manifest['total_write_offs'] ?? 0, 2) }}
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600">
                                             ${{ number_format($manifest['outstanding_balance'] ?? 0, 2) }}
                                         </td>
@@ -227,7 +231,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">
+                                        <td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500">
                                             No data available for the selected period.
                                         </td>
                                     </tr>

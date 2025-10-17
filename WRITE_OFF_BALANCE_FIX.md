@@ -68,6 +68,29 @@ datasets: [
 ]
 ```
 
+### 4. report-dashboard.blade.php - Table Structure
+**Added:** "Written Off" column to show write-offs separately from collections.
+
+```html
+<!-- Before: 7 columns -->
+MANIFEST | TYPE | PACKAGES | TOTAL OWED | COLLECTED | OUTSTANDING | RATE
+
+<!-- After: 8 columns -->
+MANIFEST | TYPE | PACKAGES | TOTAL OWED | COLLECTED | WRITTEN OFF | OUTSTANDING | RATE
+```
+
+### 5. BusinessReportService.php - Manifest Data
+**Enhanced:** Each manifest now includes separate tracking of collections vs write-offs.
+
+```php
+return [
+    'total_collected' => $actualCollected,      // Only actual payments
+    'total_write_offs' => $totalWriteOffs,      // Forgiven debt
+    'outstanding_balance' => $totalOwed - ($actualCollected + $totalWriteOffs),
+    ...
+];
+```
+
 ## Impact
 
 ### Reports
@@ -87,9 +110,14 @@ datasets: [
 1. `app/Services/BusinessReportService.php`
    - `calculateCollectedForManifest()` - Include write-offs in collected amount
    - `getCollectionsData()` - Add daily write-off tracking
+   - Manifest data mapping - Separate collections from write-offs
 
 2. `app/Http/Livewire/Reports/ReportDashboard.php`
    - `getSalesChartData()` - Add write-offs dataset to chart
+
+3. `resources/views/livewire/reports/report-dashboard.blade.php`
+   - Added "Written Off" column to manifest table
+   - Updated colspan for empty state
 
 ## Testing Recommendations
 1. Verify outstanding balances match expected values after write-offs
