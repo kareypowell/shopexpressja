@@ -21,7 +21,7 @@ class BackfillTransactionManifestLinks extends Command
                             {--dry-run : Show what would be updated without making changes}
                             {--batch-size=100 : Number of transactions to process per batch}
                             {--force : Skip confirmation prompt}
-                            {--v|verbose : Show detailed output}';
+                            {--debug : Show detailed debug output}';
 
     /**
      * The console command description.
@@ -208,7 +208,7 @@ class BackfillTransactionManifestLinks extends Command
         $manifestId = $this->findManifestForTransaction($transaction);
         
         if (!$manifestId) {
-            if ($this->option('verbose')) {
+            if ($this->option('debug')) {
                 $this->warn("  No manifest found for transaction #{$transaction->id}");
             }
             return false;
@@ -234,7 +234,7 @@ class BackfillTransactionManifestLinks extends Command
         ]);
 
         if (!$updated) {
-            if ($this->option('verbose')) {
+            if ($this->option('debug')) {
                 $this->warn("  Failed to update transaction #{$transaction->id}");
             }
             return false;
