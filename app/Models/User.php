@@ -1432,7 +1432,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Record a write-off/discount transaction
      */
-    public function recordWriteOff($amount, $description, $createdBy = null, $referenceType = null, $referenceId = null, $metadata = null)
+    public function recordWriteOff($amount, $description, $createdBy = null, $referenceType = null, $referenceId = null, $metadata = null, $manifestId = null)
     {
         // Write-offs are recorded as credits but don't affect account balance
         // They represent forgiven debt or discounts given
@@ -1446,6 +1446,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'reference_id' => $referenceId,
             'created_by' => $createdBy,
             'metadata' => $metadata,
+            'manifest_id' => $manifestId,
         ]);
     }
 
@@ -1502,7 +1503,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Record a payment transaction
      */
-    public function recordPayment($amount, $description, $createdBy = null, $referenceType = null, $referenceId = null, $metadata = null)
+    public function recordPayment($amount, $description, $createdBy = null, $referenceType = null, $referenceId = null, $metadata = null, $manifestId = null)
     {
         $balanceBefore = $this->account_balance;
         $this->account_balance += $amount;
@@ -1518,6 +1519,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'reference_id' => $referenceId,
             'created_by' => $createdBy,
             'metadata' => $metadata,
+            'manifest_id' => $manifestId,
         ]);
     }
 
@@ -1539,7 +1541,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Record a charge transaction
      */
-    public function recordCharge($amount, $description, $createdBy = null, $referenceType = null, $referenceId = null, $metadata = null)
+    public function recordCharge($amount, $description, $createdBy = null, $referenceType = null, $referenceId = null, $metadata = null, $manifestId = null)
     {
         $balanceBefore = $this->account_balance;
         $this->account_balance -= $amount;
@@ -1555,6 +1557,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'reference_id' => $referenceId,
             'created_by' => $createdBy,
             'metadata' => $metadata,
+            'manifest_id' => $manifestId,
         ]);
     }
 

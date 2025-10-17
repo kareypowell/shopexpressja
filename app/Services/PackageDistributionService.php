@@ -444,6 +444,9 @@ class PackageDistributionService
                 }
             }
 
+            // Get manifest_id from the first package (all packages should be from same manifest ideally)
+            $manifestId = $packages->first()->manifest_id ?? null;
+            
             // Handle cash payments and account charges differently
             // Apply proper rounding at the start of transaction processing
             $totalAmount = round($totalAmount, 2);
@@ -473,7 +476,8 @@ class PackageDistributionService
                             'total_balance_applied' => $totalBalanceApplied,
                             'net_charge' => $netChargeAmount,
                             'package_ids' => $packageIds,
-                        ]
+                        ],
+                        $manifestId
                     );
                 }
                 
@@ -495,7 +499,8 @@ class PackageDistributionService
                                 'amount_collected' => $amountCollected,
                                 'service_payment_portion' => $servicePaymentAmount,
                                 'package_ids' => $packageIds,
-                            ]
+                            ],
+                            $manifestId
                         );
                     }
                 }
@@ -516,7 +521,8 @@ class PackageDistributionService
                             'total_balance_applied' => $totalBalanceApplied,
                             'net_charge' => $netChargeAmount,
                             'package_ids' => $packageIds,
-                        ]
+                        ],
+                        $manifestId
                     );
                 }
                 
@@ -532,7 +538,8 @@ class PackageDistributionService
                             'total_amount' => $totalAmount,
                             'amount_collected' => $amountCollected,
                             'package_ids' => $packageIds,
-                        ]
+                        ],
+                        $manifestId
                     );
                 }
             }
@@ -555,7 +562,8 @@ class PackageDistributionService
                         'write_off_amount' => $writeOffAmount,
                         'write_off_reason' => $options['writeOffReason'] ?? 'Discount applied',
                         'package_ids' => $packageIds,
-                    ]
+                    ],
+                    $manifestId
                 );
             }
 

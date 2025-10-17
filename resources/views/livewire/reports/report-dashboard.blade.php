@@ -291,6 +291,68 @@
                                     </tr>
                                 @endforelse
                             </tbody>
+                        @elseif($reportType === 'manifests')
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manifest</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packages</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Owed</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Collected</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Written Off</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @forelse(($reportData['manifests'] ?? $reportData ?? []) as $manifest)
+                                    <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            @if(isset($manifest['manifest_id']))
+                                                <a href="{{ route('admin.manifests.packages', $manifest['manifest_id']) }}" 
+                                                   class="text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center transition-colors duration-150"
+                                                   title="Click to view manifest details">
+                                                    {{ $manifest['manifest_name'] ?? 'N/A' }}
+                                                    <svg class="w-3 h-3 ml-1 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                                    </svg>
+                                                </a>
+                                            @else
+                                                {{ $manifest['manifest_name'] ?? 'N/A' }}
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                {{ ucfirst($manifest['manifest_type'] ?? 'N/A') }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ number_format($manifest['package_count'] ?? 0) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            ${{ number_format($manifest['total_owed'] ?? 0, 2) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">
+                                            ${{ number_format($manifest['total_collected'] ?? 0, 2) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-orange-600">
+                                            ${{ number_format($manifest['total_write_offs'] ?? 0, 2) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600">
+                                            ${{ number_format($manifest['outstanding_balance'] ?? 0, 2) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ round($manifest['collection_rate'] ?? 0, 1) }}%
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500">
+                                            No manifest data available for the selected period.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
                         @else
                             <tbody class="bg-white">
                                 <tr>
