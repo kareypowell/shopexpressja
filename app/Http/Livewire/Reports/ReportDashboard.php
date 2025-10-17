@@ -309,24 +309,24 @@ class ReportDashboard extends Component
             ];
         }
 
-        $datasets = [[
-            'label' => 'Daily Collections ($)',
-            'data' => $collectionData,
-            'borderColor' => 'rgb(59, 130, 246)',
-            'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
-            'tension' => 0.1
-        ]];
-        
-        // Only add write-offs dataset if there's data
-        if (array_sum($writeOffData) > 0) {
-            $datasets[] = [
+        $datasets = [
+            [
+                'label' => 'Daily Collections ($)',
+                'data' => $collectionData,
+                'borderColor' => 'rgb(59, 130, 246)',
+                'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
+                'tension' => 0.1,
+                'fill' => false
+            ],
+            [
                 'label' => 'Daily Write-Offs ($)',
                 'data' => $writeOffData,
                 'borderColor' => 'rgb(239, 68, 68)',
                 'backgroundColor' => 'rgba(239, 68, 68, 0.1)',
-                'tension' => 0.1
-            ];
-        }
+                'tension' => 0.1,
+                'fill' => false
+            ]
+        ];
 
         return [
             'labels' => $labels,

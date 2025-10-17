@@ -92,6 +92,7 @@ class BusinessReportService
                 ->sum('pdi.total_cost') ?? 0;
             
             // Calculate write-offs for this manifest
+            // Only count transactions with type = 'write_off'
             $totalWriteOffs = DB::table('customer_transactions')
                 ->where('type', 'write_off')
                 ->where('manifest_id', $manifest->id)
@@ -187,6 +188,7 @@ class BusinessReportService
             ->get();
         
         // Get daily write-offs for the same period
+        // Only count transactions with type = 'write_off'
         $writeOffQuery = DB::table('customer_transactions')
             ->where('type', 'write_off')
             ->whereBetween('created_at', [$dateFrom, $dateTo]);
