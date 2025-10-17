@@ -1,9 +1,10 @@
 <div x-data="{ 
     init() {
-        // Close dropdown when clicking outside
+        // Close dropdowns when clicking outside
         document.addEventListener('click', (e) => {
             if (!this.$el.contains(e.target)) {
                 @this.hideCustomerDropdown();
+                @this.hideManifestDropdown();
             }
         });
     }
@@ -142,26 +143,98 @@
                 </div>
 
                 <!-- Manifest Filter -->
-                <div>
-                    <label for="filterManifest" class="block text-sm font-medium text-gray-700 mb-1">Manifest</label>
-                    <select 
-                        wire:model="filterManifest"
-                        id="filterManifest"
-                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
-                    >
-                        <option value="">All Manifests</option>
-                        @foreach($manifests as $manifest)
-                            <option value="{{ $manifest->id }}">
-                                {{ $manifest->name }}
-                                @if($manifest->type)
-                                    ({{ ucfirst($manifest->type) }})
+                <div class="relative">
+                    <label for="manifestSearch" class="block text-sm font-medium text-gray-700 mb-1">Manifest</label>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            wire:model.debounce.300ms="manifestSearch"
+                            wire:focus="showManifestDropdown"
+                            wire:keydown.enter="selectFirstManifest"
+                            wire:keydown.escape="hideManifestDropdown"
+                            id="manifestSearch"
+                            placeholder="{{ $selectedManifestName ?: 'Search manifests...' }}"
+                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm pr-10"
+                            autocomplete="off"
+                            wire:loading.attr="disabled"
+                            wire:target="manifestSearch"
+                        >
+                        @if($selectedManifestName)
+                            <button 
+                                wire:click="clearManifestFilter"
+                                type="button"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                            >
+                                <svg class="h-4 w-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        @else
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <div wire:loading wire:target="manifestSearch" class="animate-spin h-4 w-4 text-shiraz-500">
+                                    <svg fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </div>
+                                <svg wire:loading.remove wire:target="manifestSearch" class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                        @endif
+                    </div>
+                    
+                    @if($showManifestDropdown && ($manifestSearch || !$selectedManifestName))
+                        <div class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                            @if($manifests->count() > 0)
+                                @if(!$selectedManifestName)
+                                    <div 
+                                        wire:click="clearManifestFilter"
+                                        class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-gray-50 text-gray-700 border-b border-gray-100"
+                                    >
+                                        <div class="flex items-center">
+                                            <span class="font-normal block truncate">All Manifests</span>
+                                        </div>
+                                    </div>
                                 @endif
-                                @if($manifest->transactions_count > 0)
-                                    - {{ $manifest->transactions_count }} txns
-                                @endif
-                            </option>
-                        @endforeach
-                    </select>
+                                @foreach($manifests as $manifest)
+                                    <div 
+                                        wire:click="selectManifest({{ $manifest->id }}, '{{ addslashes($manifest->name) }}')"
+                                        class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-shiraz-50 hover:text-shiraz-900 {{ $filterManifest == $manifest->id ? 'bg-shiraz-50 text-shiraz-900' : 'text-gray-900' }}"
+                                    >
+                                        <div class="flex items-center">
+                                            <span class="font-normal block truncate">{{ $manifest->name }}</span>
+                                            @if($filterManifest == $manifest->id)
+                                                <span class="absolute inset-y-0 right-0 flex items-center pr-4">
+                                                    <svg class="h-4 w-4 text-shiraz-600" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="text-xs text-gray-500 ml-0">
+                                            @if($manifest->type)
+                                                {{ ucfirst($manifest->type) }}
+                                            @endif
+                                            @if($manifest->transactions_count > 0)
+                                                @if($manifest->type) • @endif
+                                                {{ $manifest->transactions_count }} transaction{{ $manifest->transactions_count != 1 ? 's' : '' }}
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="cursor-default select-none relative py-2 pl-3 pr-9 text-gray-500">
+                                    <div class="flex items-center justify-center">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                        </svg>
+                                        No manifests found
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Review Status -->

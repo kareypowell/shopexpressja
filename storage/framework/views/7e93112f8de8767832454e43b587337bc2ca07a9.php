@@ -1,1 +1,0 @@
-<img <?php echo e($attributes); ?> src="<?php echo e(asset('/img/shop-express-ja-logo.png')); ?>" alt="Shop Express JA" class="object-contain"><?php /**PATH /Users/kareypowell/Code/shopexpressja/resources/views/components/logo-white.blade.php ENDPATH**/ ?>

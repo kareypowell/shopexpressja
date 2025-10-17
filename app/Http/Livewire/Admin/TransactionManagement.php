@@ -22,8 +22,11 @@ class TransactionManagement extends Component
     public $filterCustomer = '';
     public $filterManifest = '';
     public $customerSearch = '';
+    public $manifestSearch = '';
     public $showCustomerDropdown = false;
+    public $showManifestDropdown = false;
     public $selectedCustomerName = '';
+    public $selectedManifestName = '';
     public $selectedTransaction = null;
     public $showTransactionModal = false;
     public $showDisputeModal = false;
@@ -67,6 +70,11 @@ class TransactionManagement extends Component
         $this->showCustomerDropdown = true;
     }
 
+    public function updatingManifestSearch()
+    {
+        $this->showManifestDropdown = true;
+    }
+
     public function selectCustomer($customerId, $customerName)
     {
         $this->filterCustomer = $customerId;
@@ -76,12 +84,30 @@ class TransactionManagement extends Component
         $this->resetPage();
     }
 
+    public function selectManifest($manifestId, $manifestName)
+    {
+        $this->filterManifest = $manifestId;
+        $this->selectedManifestName = $manifestName;
+        $this->manifestSearch = '';
+        $this->showManifestDropdown = false;
+        $this->resetPage();
+    }
+
     public function clearCustomerFilter()
     {
         $this->filterCustomer = '';
         $this->selectedCustomerName = '';
         $this->customerSearch = '';
         $this->showCustomerDropdown = false;
+        $this->resetPage();
+    }
+
+    public function clearManifestFilter()
+    {
+        $this->filterManifest = '';
+        $this->selectedManifestName = '';
+        $this->manifestSearch = '';
+        $this->showManifestDropdown = false;
         $this->resetPage();
     }
 
@@ -95,12 +121,31 @@ class TransactionManagement extends Component
         $this->showCustomerDropdown = false;
     }
 
+    public function showManifestDropdown()
+    {
+        $this->showManifestDropdown = true;
+    }
+
+    public function hideManifestDropdown()
+    {
+        $this->showManifestDropdown = false;
+    }
+
     public function selectFirstCustomer()
     {
         $customers = $this->customers;
         if ($customers->count() > 0) {
             $firstCustomer = $customers->first();
             $this->selectCustomer($firstCustomer->id, $firstCustomer->full_name);
+        }
+    }
+
+    public function selectFirstManifest()
+    {
+        $manifests = $this->manifests;
+        if ($manifests->count() > 0) {
+            $firstManifest = $manifests->first();
+            $this->selectManifest($firstManifest->id, $firstManifest->name);
         }
     }
 
@@ -111,6 +156,14 @@ class TransactionManagement extends Component
             $customer = User::find($this->filterCustomer);
             if ($customer) {
                 $this->selectedCustomerName = $customer->full_name;
+            }
+        }
+
+        // Initialize selected manifest name if filterManifest is set
+        if ($this->filterManifest) {
+            $manifest = Manifest::find($this->filterManifest);
+            if ($manifest) {
+                $this->selectedManifestName = $manifest->name;
             }
         }
     }
@@ -124,8 +177,11 @@ class TransactionManagement extends Component
         $this->filterCustomer = '';
         $this->filterManifest = '';
         $this->customerSearch = '';
+        $this->manifestSearch = '';
         $this->selectedCustomerName = '';
+        $this->selectedManifestName = '';
         $this->showCustomerDropdown = false;
+        $this->showManifestDropdown = false;
         $this->filterReviewStatus = '';
         $this->resetPage();
     }
@@ -311,8 +367,20 @@ class TransactionManagement extends Component
 
     public function getManifestsProperty()
     {
-        return Manifest::orderBy('name')
+        $query = Manifest::query();
+        
+        if ($this->manifestSearch) {
+            $searchTerm = trim($this->manifestSearch);
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('reservation_number', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('type', 'like', '%' . $searchTerm . '%');
+            });
+        }
+        
+        return $query->orderBy('name')
             ->withCount('transactions')
+            ->limit(15)
             ->get();
     }
 
