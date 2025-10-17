@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\CustomerTransaction;
 use App\Models\User;
+use App\Models\Manifest;
 use App\Models\PackageDistribution;
 use App\Services\TransactionReviewService;
 use Carbon\Carbon;
@@ -19,6 +20,7 @@ class TransactionManagement extends Component
     public $filterDateFrom = '';
     public $filterDateTo = '';
     public $filterCustomer = '';
+    public $filterManifest = '';
     public $customerSearch = '';
     public $showCustomerDropdown = false;
     public $selectedCustomerName = '';
@@ -36,6 +38,7 @@ class TransactionManagement extends Component
         'filterDateFrom' => ['except' => ''],
         'filterDateTo' => ['except' => ''],
         'filterCustomer' => ['except' => ''],
+        'filterManifest' => ['except' => ''],
         'filterReviewStatus' => ['except' => ''],
     ];
 
@@ -50,6 +53,11 @@ class TransactionManagement extends Component
     }
 
     public function updatingFilterCustomer()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFilterManifest()
     {
         $this->resetPage();
     }
@@ -114,6 +122,7 @@ class TransactionManagement extends Component
         $this->filterDateFrom = '';
         $this->filterDateTo = '';
         $this->filterCustomer = '';
+        $this->filterManifest = '';
         $this->customerSearch = '';
         $this->selectedCustomerName = '';
         $this->showCustomerDropdown = false;
@@ -230,6 +239,11 @@ class TransactionManagement extends Component
             $query->where('user_id', $this->filterCustomer);
         }
 
+        // Apply manifest filter
+        if ($this->filterManifest) {
+            $query->forManifest($this->filterManifest);
+        }
+
         // Apply date filters
         if ($this->filterDateFrom) {
             $query->whereDate('created_at', '>=', $this->filterDateFrom);
@@ -295,6 +309,13 @@ class TransactionManagement extends Component
         ];
     }
 
+    public function getManifestsProperty()
+    {
+        return Manifest::orderBy('name')
+            ->withCount('transactions')
+            ->get();
+    }
+
     public function render()
     {
         return view('livewire.admin.transaction-management', [
@@ -302,6 +323,7 @@ class TransactionManagement extends Component
             'customers' => $this->customers,
             'transactionTypes' => $this->transactionTypes,
             'reviewStatusOptions' => $this->reviewStatusOptions,
+            'manifests' => $this->manifests,
         ])->layout('layouts.app');
     }
 }

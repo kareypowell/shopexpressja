@@ -26,7 +26,7 @@
     <!-- Filters -->
     <div class="bg-white shadow rounded-lg mb-6">
         <div class="px-4 py-5 sm:p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                 <!-- Search -->
                 <div class="lg:col-span-2">
                     <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
@@ -139,6 +139,30 @@
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
+                </div>
+
+                <!-- Manifest Filter -->
+                <div>
+                    <label for="filterManifest" class="block text-sm font-medium text-gray-700 mb-1">Manifest</label>
+                    <select 
+                        wire:model="filterManifest"
+                        id="filterManifest"
+                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
+                    >
+                        <option value="">All Manifests</option>
+                        <?php $__currentLoopData = $manifests; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $manifest): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($manifest->id); ?>">
+                                <?php echo e($manifest->name); ?>
+
+                                <?php if($manifest->type): ?>
+                                    (<?php echo e(ucfirst($manifest->type)); ?>)
+                                <?php endif; ?>
+                                <?php if($manifest->transactions_count > 0): ?>
+                                    - <?php echo e($manifest->transactions_count); ?> txns
+                                <?php endif; ?>
+                            </option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </select>
                 </div>
 
                 <!-- Review Status -->

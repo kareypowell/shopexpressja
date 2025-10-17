@@ -26,7 +26,7 @@
     <!-- Filters -->
     <div class="bg-white shadow rounded-lg mb-6">
         <div class="px-4 py-5 sm:p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                 <!-- Search -->
                 <div class="lg:col-span-2">
                     <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
@@ -139,6 +139,29 @@
                             @endif
                         </div>
                     @endif
+                </div>
+
+                <!-- Manifest Filter -->
+                <div>
+                    <label for="filterManifest" class="block text-sm font-medium text-gray-700 mb-1">Manifest</label>
+                    <select 
+                        wire:model="filterManifest"
+                        id="filterManifest"
+                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-shiraz-500 focus:border-shiraz-500 sm:text-sm"
+                    >
+                        <option value="">All Manifests</option>
+                        @foreach($manifests as $manifest)
+                            <option value="{{ $manifest->id }}">
+                                {{ $manifest->name }}
+                                @if($manifest->type)
+                                    ({{ ucfirst($manifest->type) }})
+                                @endif
+                                @if($manifest->transactions_count > 0)
+                                    - {{ $manifest->transactions_count }} txns
+                                @endif
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <!-- Review Status -->
