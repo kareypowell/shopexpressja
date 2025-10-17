@@ -129,10 +129,18 @@ class BusinessReportService
     {
         // Get the sum of individual package costs from distribution items for packages in this manifest
         // This correctly accounts for the actual amount collected per package, not the total distribution amount
-        return DB::table('package_distribution_items as pdi')
+        $collected = DB::table('package_distribution_items as pdi')
             ->join('packages as p', 'pdi.package_id', '=', 'p.id')
             ->where('p.manifest_id', $manifestId)
             ->sum('pdi.total_cost') ?? 0;
+        
+        // Add write-offs for this manifest (write-offs reduce the amount owed, so they count as "collected")
+        $writeOffs = DB::table('customer_transactions')
+            ->where('type', 'write_off')
+            ->where('manifest_id', $manifestId)
+            ->sum('amount') ?? 0;
+        
+        return $collected + $writeOffs;
     }
 
     /**
@@ -163,6 +171,25 @@ class BusinessReportService
             ')
             ->groupBy('collection_date')
             ->orderBy('collection_date', 'desc')
+            ->get();
+        
+        // Get daily write-offs for the same period
+        $writeOffQuery = DB::table('customer_transactions')
+            ->where('type', 'write_off')
+            ->whereBetween('created_at', [$dateFrom, $dateTo]);
+        
+        if ($manifestIds) {
+            $writeOffQuery->whereIn('manifest_id', $manifestIds);
+        }
+        
+        $dailyWriteOffs = $writeOffQuery
+            ->selectRaw('
+                DATE(created_at) as write_off_date,
+                SUM(amount) as daily_write_off_amount,
+                COUNT(*) as write_off_count
+            ')
+            ->groupBy('write_off_date')
+            ->orderBy('write_off_date', 'desc')
             ->get();
 
         // Also get general payment transactions for context
@@ -195,10 +222,20 @@ class BusinessReportService
                 'unique_customers' => $collection->unique_customers
             ];
         });
+        
+        $dailyWriteOffData = $dailyWriteOffs->map(function($writeOff) {
+            return [
+                'date' => $writeOff->write_off_date,
+                'total_amount' => $writeOff->daily_write_off_amount,
+                'count' => $writeOff->write_off_count
+            ];
+        });
 
         return [
             'daily_collections' => $dailyCollections,
+            'daily_write_offs' => $dailyWriteOffData,
             'total_collected' => $distributionCollections->sum('daily_amount'),
+            'total_write_offs' => $dailyWriteOffs->sum('daily_write_off_amount'),
             'total_transactions' => $distributionCollections->sum('distribution_count'),
             'unique_customers' => $distributionCollections->sum('unique_customers'),
             'average_payment' => $distributionCollections->count() > 0 ? 

@@ -255,8 +255,9 @@ class ReportDashboard extends Component
     private function getSalesChartData()
     {
         $collections = $this->reportData['collections']['daily_collections'] ?? [];
+        $writeOffs = $this->reportData['collections']['daily_write_offs'] ?? [];
         
-        if (empty($collections)) {
+        if (empty($collections) && empty($writeOffs)) {
             // Fallback to demo data if no real data
             return [
                 'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
@@ -269,27 +270,30 @@ class ReportDashboard extends Component
             ];
         }
 
+        // Merge and get all unique dates
+        $allDates = collect($collections)->pluck('date')
+            ->merge(collect($writeOffs)->pluck('date'))
+            ->unique()
+            ->sort()
+            ->take(-30) // Last 30 entries
+            ->values();
+        
         $labels = [];
-        $data = [];
+        $collectionData = [];
+        $writeOffData = [];
         
-        // Collections is an array of objects with date, total_amount, etc.
-        $sortedCollections = collect($collections)
-            ->sortBy('date') // Sort by the date field
-            ->take(-30); // Last 30 entries
+        // Create lookup maps for quick access
+        $collectionsMap = collect($collections)->keyBy('date');
+        $writeOffsMap = collect($writeOffs)->keyBy('date');
         
-        foreach ($sortedCollections as $dayData) {
-            $date = $dayData['date'] ?? null;
-            $amount = $dayData['total_amount'] ?? 0;
-            
-            if ($date) {
-                $labels[] = Carbon::parse($date)->format('M j');
-                $data[] = (float) $amount;
-            }
+        foreach ($allDates as $date) {
+            $labels[] = Carbon::parse($date)->format('M j');
+            $collectionData[] = (float) ($collectionsMap->get($date)['total_amount'] ?? 0);
+            $writeOffData[] = (float) ($writeOffsMap->get($date)['total_amount'] ?? 0);
         }
 
         // If we still don't have data, use fallback
         if (empty($labels)) {
-            // Convert collections to array if it's a Collection, then use array_column
             $collectionsArray = is_array($collections) ? $collections : collect($collections)->toArray();
             $totalAmount = array_sum(array_column($collectionsArray, 'total_amount'));
             
@@ -305,15 +309,28 @@ class ReportDashboard extends Component
             ];
         }
 
+        $datasets = [[
+            'label' => 'Daily Collections ($)',
+            'data' => $collectionData,
+            'borderColor' => 'rgb(59, 130, 246)',
+            'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
+            'tension' => 0.1
+        ]];
+        
+        // Only add write-offs dataset if there's data
+        if (array_sum($writeOffData) > 0) {
+            $datasets[] = [
+                'label' => 'Daily Write-Offs ($)',
+                'data' => $writeOffData,
+                'borderColor' => 'rgb(239, 68, 68)',
+                'backgroundColor' => 'rgba(239, 68, 68, 0.1)',
+                'tension' => 0.1
+            ];
+        }
+
         return [
             'labels' => $labels,
-            'datasets' => [[
-                'label' => 'Daily Collections ($)',
-                'data' => $data,
-                'borderColor' => 'rgb(59, 130, 246)',
-                'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
-                'tension' => 0.1
-            ]]
+            'datasets' => $datasets
         ];
     }
 
