@@ -20,7 +20,8 @@ class BackfillTransactionManifestLinks extends Command
     protected $signature = 'backfill:transaction-manifest-links 
                             {--dry-run : Show what would be updated without making changes}
                             {--batch-size=100 : Number of transactions to process per batch}
-                            {--force : Skip confirmation prompt}';
+                            {--force : Skip confirmation prompt}
+                            {--v|verbose : Show detailed output}';
 
     /**
      * The console command description.
@@ -67,28 +68,26 @@ class BackfillTransactionManifestLinks extends Command
             }
         }
 
-        // Process transactions in batches
+        // Process transactions
         $updated = 0;
         $errors = 0;
         
-        $candidateTransactions->chunk($batchSize, function ($batch) use (&$updated, &$errors, $dryRun) {
-            foreach ($batch as $transaction) {
-                try {
-                    $result = $this->processTransaction($transaction, $dryRun);
-                    if ($result) {
-                        $updated++;
-                        if (!$dryRun) {
-                            $this->line("✓ Updated transaction #{$transaction->id}");
-                        } else {
-                            $this->line("✓ Would update transaction #{$transaction->id}");
-                        }
+        foreach ($candidateTransactions as $transaction) {
+            try {
+                $result = $this->processTransaction($transaction, $dryRun);
+                if ($result) {
+                    $updated++;
+                    if (!$dryRun) {
+                        $this->line("✓ Updated transaction #{$transaction->id}");
+                    } else {
+                        $this->line("✓ Would update transaction #{$transaction->id}");
                     }
-                } catch (\Exception $e) {
-                    $errors++;
-                    $this->error("✗ Error processing transaction #{$transaction->id}: " . $e->getMessage());
                 }
+            } catch (\Exception $e) {
+                $errors++;
+                $this->error("✗ Error processing transaction #{$transaction->id}: " . $e->getMessage());
             }
-        });
+        }
 
         $this->line('');
         if ($dryRun) {
@@ -111,13 +110,16 @@ class BackfillTransactionManifestLinks extends Command
      */
     private function getCandidateTransactions()
     {
-        return CustomerTransaction::where(function ($query) {
-            // Transactions not already linked to manifests
-            $query->where('reference_type', '!=', 'App\\Models\\Manifest')
-                  ->orWhereNull('reference_type');
-        })
+        // Check if manifest_id column exists
+        if (!Schema::hasColumn('customer_transactions', 'manifest_id')) {
+            $this->error("manifest_id column does not exist in customer_transactions table.");
+            $this->error("Please run: php artisan migrate");
+            return collect([]);
+        }
+
+        return CustomerTransaction::whereNull('manifest_id')
         ->where(function ($query) {
-            // But have references that could lead to manifests
+            // Have references that could lead to manifests
             $query->where('reference_type', 'App\\Models\\Package')
                   ->orWhere('reference_type', 'App\\Models\\PackageDistribution')
                   ->orWhere('reference_type', 'package_distribution')
@@ -206,6 +208,9 @@ class BackfillTransactionManifestLinks extends Command
         $manifestId = $this->findManifestForTransaction($transaction);
         
         if (!$manifestId) {
+            if ($this->option('verbose')) {
+                $this->warn("  No manifest found for transaction #{$transaction->id}");
+            }
             return false;
         }
 
@@ -218,25 +223,30 @@ class BackfillTransactionManifestLinks extends Command
             return true; // Would update
         }
 
-        // Prepare update data
-        $updateData = [
-            'reference_type' => 'App\\Models\\Manifest',
-            'reference_id' => $manifestId,
-        ];
-        
-        // Also update direct manifest_id column if it exists
-        if (\Schema::hasColumn('customer_transactions', 'manifest_id')) {
-            $updateData['manifest_id'] = $manifestId;
+        // Check if manifest_id column exists
+        if (!Schema::hasColumn('customer_transactions', 'manifest_id')) {
+            throw new \Exception("manifest_id column does not exist in customer_transactions table. Please run the migration first.");
+        }
+
+        // Update only the manifest_id column, preserving original reference_type and reference_id
+        $updated = $transaction->update([
+            'manifest_id' => $manifestId,
+        ]);
+
+        if (!$updated) {
+            if ($this->option('verbose')) {
+                $this->warn("  Failed to update transaction #{$transaction->id}");
+            }
+            return false;
+        }
+
+        // Update metadata to track backfill information
+        $metadata = $transaction->metadata ?? [];
+        if (!is_array($metadata)) {
+            $metadata = [];
         }
         
-        // Update the transaction to link to the manifest
-        $transaction->update($updateData);
-
-        // Update metadata to preserve original reference information
-        $metadata = $transaction->metadata ?? [];
         $metadata['backfill_info'] = [
-            'original_reference_type' => $transaction->getOriginal('reference_type'),
-            'original_reference_id' => $transaction->getOriginal('reference_id'),
             'backfilled_at' => now()->toISOString(),
             'manifest_id' => $manifestId,
             'manifest_name' => $manifest->name,
@@ -268,6 +278,18 @@ class BackfillTransactionManifestLinks extends Command
                 $manifestIds = $distribution->packages()->pluck('manifest_id')->filter()->unique();
                 if ($manifestIds->count() === 1) {
                     return $manifestIds->first();
+                } elseif ($manifestIds->count() > 1) {
+                    // Multiple manifests - use the most common one
+                    $manifestCounts = $distribution->packages()
+                        ->select('manifest_id', DB::raw('count(*) as count'))
+                        ->whereNotNull('manifest_id')
+                        ->groupBy('manifest_id')
+                        ->orderBy('count', 'desc')
+                        ->first();
+                    
+                    if ($manifestCounts) {
+                        return $manifestCounts->manifest_id;
+                    }
                 }
             }
         }
@@ -283,6 +305,18 @@ class BackfillTransactionManifestLinks extends Command
                 
                 if ($manifestIds->count() === 1) {
                     return $manifestIds->first();
+                } elseif ($manifestIds->count() > 1) {
+                    // Multiple manifests - use the most common one
+                    $manifestCounts = Package::whereIn('id', $packageIds)
+                        ->select('manifest_id', DB::raw('count(*) as count'))
+                        ->whereNotNull('manifest_id')
+                        ->groupBy('manifest_id')
+                        ->orderBy('count', 'desc')
+                        ->first();
+                    
+                    if ($manifestCounts) {
+                        return $manifestCounts->manifest_id;
+                    }
                 }
             }
         }
@@ -295,6 +329,18 @@ class BackfillTransactionManifestLinks extends Command
                 $manifestIds = $distribution->packages()->pluck('manifest_id')->filter()->unique();
                 if ($manifestIds->count() === 1) {
                     return $manifestIds->first();
+                } elseif ($manifestIds->count() > 1) {
+                    // Multiple manifests - use the most common one
+                    $manifestCounts = $distribution->packages()
+                        ->select('manifest_id', DB::raw('count(*) as count'))
+                        ->whereNotNull('manifest_id')
+                        ->groupBy('manifest_id')
+                        ->orderBy('count', 'desc')
+                        ->first();
+                    
+                    if ($manifestCounts) {
+                        return $manifestCounts->manifest_id;
+                    }
                 }
             }
         }
