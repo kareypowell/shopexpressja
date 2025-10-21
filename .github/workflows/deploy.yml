@@ -25,7 +25,7 @@ jobs:
         run: chmod -R 777 storage bootstrap/cache
 
       - name: Generate key
-       run: php artisan key:generate
+        run: php artisan key:generate
       
       - name: Deploy to DigitalOcean
         uses: appleboy/ssh-action@master
