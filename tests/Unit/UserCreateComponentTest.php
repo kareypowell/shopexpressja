@@ -306,7 +306,7 @@ class UserCreateComponentTest extends TestCase
 
         // Check profile was created for customer
         $this->assertNotNull($user->profile);
-        $this->assertStringStartsWith('SHS', $user->profile->account_number);
+        $this->assertStringStartsWith('ALQS8149-', $user->profile->account_number);
         $this->assertEquals('1234567890', $user->profile->telephone_number);
         $this->assertEquals('123456789', $user->profile->tax_number);
         $this->assertEquals('123 Main St', $user->profile->street_address);

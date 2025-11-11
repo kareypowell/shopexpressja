@@ -206,7 +206,7 @@ class CustomerCreateComponentTest extends TestCase
 
         // Check profile was created
         $this->assertNotNull($user->profile);
-        $this->assertStringStartsWith('SHS', $user->profile->account_number);
+        $this->assertStringStartsWith('ALQS8149-', $user->profile->account_number);
         $this->assertEquals('1234567890', $user->profile->telephone_number);
         $this->assertEquals('123456789', $user->profile->tax_number);
         $this->assertEquals('123 Main St', $user->profile->street_address);
@@ -275,8 +275,8 @@ class CustomerCreateComponentTest extends TestCase
             ->call('create');
 
         $user = User::where('email', 'test@example.com')->first();
-        $this->assertStringStartsWith('SHS', $user->profile->account_number);
-        $this->assertEquals(10, strlen($user->profile->account_number));
+        $this->assertStringStartsWith('ALQS8149-', $user->profile->account_number);
+        $this->assertEquals(12, strlen($user->profile->account_number));
     }
 
     /** @test */

@@ -7,36 +7,40 @@ use App\Models\Profile;
 class AccountNumberService
 {
     /**
-     * Generate a unique account number with 'SHS' prefix and 7-digit number.
-     * Implements collision detection to ensure uniqueness.
+     * Generate a unique account number with 'ALQS8149-' prefix and sequential 3-digit suffix (100-999).
+     * Uses sequential numbering starting from 100.
      *
      * @return string The generated unique account number
      */
     public function generate(): string
     {
-        $maxAttempts = 100; // Prevent infinite loops
-        $attempts = 0;
+        $nextNumber = $this->getNextSequentialNumber();
+        
+        if ($nextNumber > 999) {
+            throw new \RuntimeException('Account number limit reached. Maximum is ALQS8149-999');
+        }
 
-        do {
-            $accountNumber = $this->generateAccountNumber();
-            $attempts++;
-            
-            if ($attempts >= $maxAttempts) {
-                throw new \RuntimeException('Unable to generate unique account number after ' . $maxAttempts . ' attempts');
-            }
-        } while ($this->accountNumberExists($accountNumber));
-
-        return $accountNumber;
+        return 'ALQS8149-' . $nextNumber;
     }
 
     /**
-     * Generate a random account number with SHS prefix.
+     * Get the next sequential account number.
+     * Finds the highest existing number and increments by 1.
      *
-     * @return string
+     * @return int
      */
-    private function generateAccountNumber(): string
+    private function getNextSequentialNumber(): int
     {
-        return 'ALQS' . mt_rand(1000, 9999);
+        $lastAccount = Profile::where('account_number', 'LIKE', 'ALQS8149-%')
+            ->orderByRaw('CAST(SUBSTRING(account_number, 10) AS UNSIGNED) DESC')
+            ->first();
+
+        if (!$lastAccount) {
+            return 100; // Start from 100 if no accounts exist
+        }
+
+        $lastNumber = (int) substr($lastAccount->account_number, 9);
+        return $lastNumber + 1;
     }
 
     /**
